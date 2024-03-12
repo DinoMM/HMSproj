@@ -1,0 +1,46 @@
+﻿
+@inject LayoutService layoutService
+
+<Router AppAssembly="@typeof(MauiProgram).Assembly"
+        AdditionalAssemblies="new[] { 
+typeof(SkladModul.Objednavka).Assembly,
+typeof(SkladModul.Prijemka).Assembly,
+typeof(SkladModul.Sklad).Assembly
+}">
+    
+    <Found Context="routeData">
+        <CascadingValue Value="this">
+           
+            <RouteView RouteData="routeData" DefaultLayout="layoutService.LayoutType" />
+            
+        </CascadingValue>
+
+    </Found>
+    <NotFound>
+        <span>Routing is not available</span>
+    </NotFound>
+    
+</Router>
+
+
+@code {
+    public class LayoutService 
+    {
+        public Type LayoutType { get; private set; } = typeof(Layout.MainLayout);
+
+
+        public event Action OnLayoutChanged = default!;
+
+        public bool SetLayout(Type layout)
+        {
+            if (layout != LayoutType)
+            {
+                LayoutType = layout;
+                OnLayoutChanged?.Invoke();
+                return true;
+            }
+            return false;
+        }
+
+    }
+}

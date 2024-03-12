@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Views\Objednavka\AddObjednav.razor.css" />
+    <None Remove="Views\Objednavka\PridPolozky.razor.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Views\Objednavka\AddObjednav.razor.css" />
+    <Content Include="Views\Objednavka\PridPolozky.razor.css" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <SupportedPlatform Include="browser" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <Folder Include="ViewModels\Sklad\" />
+    <Folder Include="ViewModels\Prijemka\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DBLayer\DBLayer.csproj" />
+    <ProjectReference Include="..\UniComponents\UniComponents.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,40 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModalInfo" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">@Header</h5>
+                @* <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> *@
+            </div>
+            <div class="modal-body" id="modalTextLabel">
+                @((MarkupString)Text)
+            </div>
+            <div class="modal-footer">
+                @* <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> *@
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="FuncAction">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    
+    [Parameter]
+    public string Header { get; set; } = "Oznam";
+
+    [Parameter]
+    [EditorRequired]
+    public string Text { get; set; }
+
+    [Parameter]
+    public EventCallback FuncAction { get; set; }
+
+    public async Task OpenModal()
+    {
+        await JSRuntime.InvokeVoidAsync("eval", "$('#exampleModalInfo').modal('show');");   //(pomohol som si z internetu tutoriály/AI)
+    }
+}

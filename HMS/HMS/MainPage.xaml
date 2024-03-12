@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:HMS"
+             xmlns:pages="clr-namespace:HMS.Components.Pages"
+             x:Class="HMS.MainPage"
+             BackgroundColor="LightGray">
+
+    <!--<Grid x:Name="MainGrid" RowDefinitions="0.1*, 0.1*, 0.6*, 0.1*" ColumnDefinitions="0.2*, 0.7*, 0.1*">-->
+    <!--tu sa nastavi prva stranka x:Name="blazorWebView"-->
+    <BlazorWebView HostPage="wwwroot/index.html">
+
+        <BlazorWebView.RootComponents>
+            <RootComponent Selector="#app" ComponentType="{x:Type local:Components.Routes}" />
+        </BlazorWebView.RootComponents>
+    </BlazorWebView>
+    <!--<BlazorWebView.RootComponents >
+                <RootComponent Selector="#app" ComponentType="{x:Type pages:Index}" />
+            </BlazorWebView.RootComponents>-->
+
+
+    <!--<BlazorWebView HostPage="wwwroot/index.html" Grid.Row="2" Grid.Column="0" >
+            <BlazorWebView.RootComponents >
+                <RootComponent Selector="#app" ComponentType="{x:Type pages:Other}" />
+            </BlazorWebView.RootComponents>
+        </BlazorWebView>-->
+    <!--</Grid>-->
+
+</ContentPage>

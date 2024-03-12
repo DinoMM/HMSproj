@@ -1,0 +1,43 @@
+﻿@namespace SkladModul
+@page "/Prijemka"
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <!-- Label -->
+            <div class="d-flex justify-content-center">
+                <h2>Príjemky</h2>
+            </div>
+            <!-- End of Label -->
+            <!-- Buttons -->
+            <div class="d-flex justify-content-center">
+                <button type="button" class="btn btn-primary m-2">➕Pridať príjemku</button>
+                <button type="button" class="btn btn-primary m-2">➖Odstrániť vybranú príjemku</button>
+                <button type="button" class="btn btn-primary m-2">✔Spracovať vybranú príjemku</button>
+                <button type="button" class="btn btn-primary m-2">❌Zavrieť</button>
+            </div>
+            <!-- End of Buttons -->
+            
+            <!-- Data Grid -->
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Číslo ID</th>
+                        <th scope="col">Číslo faktúry</th>
+                        <th scope="col">Dátum prijatia</th>
+                        <th scope="col">Spracovaná</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows will go here -->
+                </tbody>
+            </table>
+            <!-- End of Data Grid -->
+        </div>
+    </div>
+</div>
+
+
+@code {
+
+}

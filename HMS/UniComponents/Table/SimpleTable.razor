@@ -1,0 +1,24 @@
+﻿@namespace UniComponents
+<table class="table table-striped">
+    <thead>
+        <tr>
+            @THEAD
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            @TBODY
+        </tr>
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public RenderFragment THEAD { get; set; }
+
+    [Parameter]
+    public RenderFragment TBODY { get; set; }
+
+
+}
+

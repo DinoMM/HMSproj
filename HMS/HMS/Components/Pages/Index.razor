@@ -1,0 +1,68 @@
+﻿@page "/"
+@using DBLayer
+@using HMS.ViewModels
+@* @using Microsoft.AspNetCore.Identity *@
+@* @using Microsoft.AspNetCore.Components.Authorization *@
+@using System.Diagnostics
+@* @using System.Security.Claims; *@
+
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject Routes.LayoutService layoutService
+@inject IndexViewModel ViewModel
+@inject DbInitializeService initDB;
+
+@inject DBContext db
+
+
+<div class="d-flex justify-content-center align-items-center vh-100">
+    <div class="p-3 w-50 ">
+        <div class="list-group text-center border border-2 border-black ">
+
+            @foreach (var item in ViewModel.ModulesList)
+            {
+                <a @onclick="@(() => NavigationManager.NavigateTo(item.Item2))" class="list-group-item list-group-item-action">@item.Item1</a>
+
+            }
+        </div>
+           </div>
+    <button @onclick="ViewModel.OpenInfoModalCommand.Execute">Pridaj</button>
+</div> 
+
+ @* <Main></Main>  *@
+ @* <AddObjednav></AddObjednav> *@
+ @* <PridPolozky></PridPolozky> *@
+ @* <ZobrazenieObjednavky></ZobrazenieObjednavky> *@
+
+@* <Main></Main> *@
+@* <PridatPrijemku></PridatPrijemku> *@
+@* <VypisFakturCisla></VypisFakturCisla> *@
+
+@* <Main></Main> *@
+@* <Odpis></Odpis> *@
+@* <PridatPolozku></PridatPolozku> *@
+@* <Uzavierka></Uzavierka> *@
+
+@* <VytvorenieUzivatela></VytvorenieUzivatela> *@
+
+@* <InfoModal Text="Toto je infomodal yeah"></InfoModal> *@
+
+<InfoModal @ref="ViewModel.InfoModal" Text="Ahoj" ></InfoModal>
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await initDB.TryMustHaveValues();
+
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+        }
+    }
+
+
+
+}

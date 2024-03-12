@@ -1,0 +1,68 @@
+﻿@namespace SkladModul
+@page "/Objednavka"
+
+<div class="container">
+    <div class="row g-0">
+        <div class="col-1"></div>
+        <div class="col-10">
+            <div class="row h-25">
+                <h1 class="text-center">Objednávky</h1>
+                <div class="col">
+                    <button class="btn btn-primary w-100 mt-3" type="button" @onclick="@(() => NavigationManager.NavigateTo("/Objednavka/AddObj"))">➕Pridať objednávku</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-primary w-100 mt-3" type="button">➖Odstrániť vybranú objednávku</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-primary w-100 mt-3" type="button">📄Otvoriť objednávku ako PDF</button>
+                </div>
+                <div class="col">
+                    <button class="btn btn-primary w-100 mt-3" type="button" @onclick="@(() => NavigationManager.NavigateTo("/"))">❌Zavrieť objednávky</button>
+
+                </div>
+            </div>
+        </div>
+
+            <div class="row h-50">
+                <div class="col">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Názov Objednávky</th>
+                                <th scope="col">Číslo ID</th>
+                                <th scope="col">Popis</th>
+                                <th scope="col">Stav</th>
+                                <th scope="col">Dátum vytvorenia</th>
+                                <th scope="col">Celková cena</th>
+                                <th scope="col">Celková cena s DPH</th>
+                            </tr>
+                        </thead>
+                    <tbody>
+                        <tr>
+                            <td>Objednávka 1</td>
+                            <td>12345</td>
+                            <td>This is a description of the order.</td>
+                            <td>In Progress</td>
+                            <td>2024-03-10</td>
+                            <td>$100.00</td>
+                            <td>$120.00</td>
+                        </tr>
+                    </tbody>
+
+                    </table>
+                </div>
+            </div>
+            <div class="row h-25"></div>
+        
+        <div class="col-1"></div>
+    </div>
+</div>
+
+
+@code {
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+    }
+}

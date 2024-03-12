@@ -1,0 +1,50 @@
+﻿@namespace SkladModul
+@page "/Sklad"
+
+<div class="container">
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-3">
+            <input type="text" class="form-control" id="searchBox" placeholder="Vyhľadaj položku..." />
+        </div>
+        <div class="col-8">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-primary">➕Pridať položku</button>
+                <button type="button" class="btn btn-primary">➖Odobrať položku</button>
+                <button type="button" class="btn btn-primary">➗Spraviť Výdaj</button>
+                <button type="button" class="btn btn-primary">➰Uzavrieť obdobie</button>
+                <button type="button" class="btn btn-primary">❌Koniec</button>
+            </div>
+        </div>
+        <div class="col-1"></div>
+    </div>
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-9">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Názov Položky</th>
+                        <th scope="col">ČísloID</th>
+                        <th scope="col">Množstvo</th>
+                        <th scope="col">Merná jednotka</th>
+                        <th scope="col">Cena za 1/MJ</th>
+                        <th scope="col">Cena za 1/MJ s DPH</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table data goes here -->
+                </tbody>
+            </table>
+        </div>
+        <div class="col-1"></div>
+    </div>
+    <div class="row">
+        <div class="col-12"></div>
+    </div>
+</div>
+
+
+@code {
+
+}

@@ -1,0 +1,72 @@
+﻿@namespace SkladModul
+@page "/Objednavka/PridatPolozky"
+@inject PridPolozkyViewModel ViewModel
+
+<div class="container">
+    <div class="row p-1">Položky objednávky</div>
+
+    <div class="row h-25">
+        <div class="col col-1">
+            <button type="button" class="btn btn-primary">Uložiť</button>
+        </div>
+        <div class="col col-1 me-2">
+            <button type="button" class="btn btn-secondary" onclick="@(() => NavigationManager.NavigateTo("/Objednavka"))">Späť</button>
+        </div>
+        
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <UniComponents.SimpleTable>
+                <THEAD>
+                <th></th>
+                <th>ČísloID</th>
+                <th>Názov Položky</th>
+                <th>Množstvo</th>
+                <th>Merná jednotka</th>
+                <th>Cena za 1/MJ</th>
+                <th>Cena za 1/MJ s DPH</th>
+                <th>Celková Cena</th>
+                <th>Celková Cena s DPH</th>
+                </THEAD>
+                <TBODY>
+                    @foreach (var item in ViewModel.ZoznamObjednavky)
+                    {
+                    <td><input type="checkbox" /></td>
+
+                    <td>@item.PolozkaSkladu</td>
+                    <td>@(string.IsNullOrEmpty(item.Nazov) ? item.PolozkaSkladuX.Nazov : item.Nazov)</td>
+                    <td>@item.Mnozstvo</td>
+                    <td>@item.PolozkaSkladuX.MernaJednotka</td>
+                    <td>@item.Cena</td>
+                    <td>@item.CenaDPH</td>
+                    <td>@item.CelkovaCena</td>
+                    <td>@item.CelkovaCenaDPH</td>
+                    }
+                </TBODY>
+            </UniComponents.SimpleTable>
+        </div>
+    </div>
+
+</div>
+
+
+@code {
+    private bool ObjOK = false;
+    protected override void OnInitialized()
+    {
+        if (!ObjOK) //prvotna kontrola ci viewmodel ma dobre nahodenu objednavku
+        {
+            ObjOK = ViewModel.IsOBJValidna(false);
+            ViewModel.Exitujuca = ViewModel.IsOBJValidna();
+        }
+        if (!ObjOK)
+        {
+            // Debug.Writeline("Objednavka nieje vlozena spravne v PridPolozkyViewModel");
+            NavigationManager.NavigateTo("/Objednavka");
+            return;
+        }
+
+        //ViewModel.LoadZoznamObjednavky();
+    }
+}
