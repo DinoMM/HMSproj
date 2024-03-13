@@ -65,6 +65,7 @@ namespace HMS
 
             builder.Services.AddTransient<AddObjednavViewModel>();
             builder.Services.AddScoped<PridPolozkyViewModel>();
+            builder.Services.AddTransient<ObjednavkaViewModel>(); 
             #endregion
 
 

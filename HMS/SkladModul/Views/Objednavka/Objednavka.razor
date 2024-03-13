@@ -1,5 +1,8 @@
 ﻿@namespace SkladModul
 @page "/Objednavka"
+@inject ObjednavkaViewModel ViewModel
+
+@using Sve.Blazor.InfiniteScroll.Components
 
 <div class="container">
     <div class="row g-0">
@@ -23,46 +26,56 @@
             </div>
         </div>
 
-            <div class="row h-50">
-                <div class="col">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Názov Objednávky</th>
-                                <th scope="col">Číslo ID</th>
-                                <th scope="col">Popis</th>
-                                <th scope="col">Stav</th>
-                                <th scope="col">Dátum vytvorenia</th>
-                                <th scope="col">Celková cena</th>
-                                <th scope="col">Celková cena s DPH</th>
-                            </tr>
-                        </thead>
-                    <tbody>
-                        <tr>
-                            <td>Objednávka 1</td>
-                            <td>12345</td>
-                            <td>This is a description of the order.</td>
-                            <td>In Progress</td>
-                            <td>2024-03-10</td>
-                            <td>$100.00</td>
-                            <td>$120.00</td>
-                        </tr>
-                    </tbody>
+        <div class="row h-25" >
+            <div class="col" style="max-height: 30rem;overflow: auto;">
+                <Sve.Blazor.InfiniteScroll.Components.InfiniteScroll ObserverTargetId="observerTarget" ObservableTargetReached="(e) => Method()">
+                    <SimpleTable>
+                        <THEAD>
+                        <th scope="col">ID</th>
+                        <th scope="col">Dodavateľ</th>
+                        <th scope="col">Popis</th>
+                            @* <th scope="col">Stav</th> *@
+                        <th scope="col">Dátum vytvorenia</th>
+                        @* <th scope="col">Celková cena</th>
+                        <th scope="col">Celková cena s DPH</th> *@
 
-                    </table>
-                </div>
+                        </THEAD>
+                        <TBODY>
+                            @foreach (var item in ViewModel.ZoznamObjednavok)
+                            {
+                                <tr>
+                                    <td>@item.ID</td>
+                                    <td>@item.Odberatel</td>
+                                    <td>@item.Popis</td>
+                                    <td>@item.DatumVznik</td>
+                                    
+                                </tr>
+                            }
+                            <span id="observerTarget"></span>
+                        </TBODY>
+
+                    </SimpleTable>
+                </Sve.Blazor.InfiniteScroll.Components.InfiniteScroll>
             </div>
-            <div class="row h-25"></div>
-        
+        </div>
+        <div class="row h-25"></div>
+
         <div class="col-1"></div>
     </div>
 </div>
 
 
-@code {
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
 
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        // ViewModel.NacitajDalsieCommand.Execute(null);
     }
+
+    public void Method()
+    {
+        ViewModel.NacitajDalsieCommand.Execute(null);
+    }
+
 }
