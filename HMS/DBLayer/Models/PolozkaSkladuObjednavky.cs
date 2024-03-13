@@ -20,7 +20,7 @@ namespace DBLayer.Models
         public string PolozkaSkladu { get; set; }
         public PolozkaSkladu PolozkaSkladuX { get; set; }
         public string? Nazov { get; set; }      //mozno zmenit nazov ak treba
-        public double Mnozstvo { get; set; }    
+        public double Mnozstvo { get; set; }
         public double Cena { get; set; }
 
         [NotMapped]
@@ -29,7 +29,7 @@ namespace DBLayer.Models
         public double CenaDPH { get => (Cena * 120) / 100; }
         [NotMapped]
         public double CelkovaCenaDPH { get => (double)Mnozstvo * CenaDPH; }
-
+        
         public object Clone()       //deep copy
         {
             PolozkaSkladuObjednavky clone = new PolozkaSkladuObjednavky();
@@ -47,6 +47,14 @@ namespace DBLayer.Models
         public PolozkaSkladuObjednavky Clon()
         {
             return (PolozkaSkladuObjednavky)Clone();
+        }
+
+        public void SetZPolozkySkladu(PolozkaSkladu polozka)
+        {
+            PolozkaSkladuX = polozka;
+            PolozkaSkladu = polozka.ID;
+            Nazov = polozka.Nazov;
+            Cena = polozka.Cena;
         }
 
     }

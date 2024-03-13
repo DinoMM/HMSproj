@@ -6,6 +6,7 @@
 @using System.Diagnostics
 @* @using System.Security.Claims; *@
 
+
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 @inject Routes.LayoutService layoutService
@@ -54,6 +55,8 @@
     protected override async Task OnInitializedAsync()
     {
         await initDB.TryMustHaveValues();
+        //await ViewModel.InfoModal.OpenModal(true);
+        //await Application.Current.MainPage.DisplayAlert("title", "toto je vnutro", "zrusit");
 
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -61,6 +64,7 @@
         if (firstRender)
         {
         }
+        
     }
 
 

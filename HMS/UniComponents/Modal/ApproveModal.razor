@@ -2,7 +2,7 @@
 @inject IJSRuntime JSRuntime 
 
 <!-- Modal -->
-<div class="modal fade" id="staticBackdropApprove" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+<div class="modal fade" id="@ID" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -13,8 +13,8 @@
                 @((MarkupString)Text)
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="FuncOnSucc">Áno</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick="FuncOnDiss">Nie</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(async () => { await FuncOnSucc.InvokeAsync(); CloseModal(true); })>Áno</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(async () => { await FuncOnDiss.InvokeAsync(); CloseModal(false); })>Nie</button>
             </div>
         </div>
     </div>
@@ -42,10 +42,40 @@
     [EditorRequired]
     public EventCallback FuncOnDiss { get; set; }
 
+    private TaskCompletionSource<bool> tcs;
+    private bool tstop = false;
 
-    public async Task OpenModal()
+    /// <summary>
+    /// Unikatne ID podla ktoreho vieme rozoznat medzi viacerimi modalmi
+    /// </summary>
+    [Parameter]
+    public string ID { get; set; } = "staticBackdropApprove";
+
+
+    public async Task<bool> OpenModal(bool stop = false)
     {
-        await JSRuntime.InvokeVoidAsync("eval", "$('#staticBackdropApprove').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+        tstop = stop;
+        if (stop)
+        {
+            tcs = new TaskCompletionSource<bool>();
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            await tcs.Task;             //fyzické statie programu
+            return tcs.Task.Result;
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            return true;
+        }
+        
+    }
+
+    private void CloseModal(bool ans)
+    {
+        if (tstop)
+        {
+            tcs.SetResult(ans); //zastavi fyzické státie programu
+        }
     }
 }
 

@@ -47,8 +47,8 @@ namespace SkladModul.ViewModels.Objednavka
         private void ZmenaDod(ChangeEventArgs param)
         {
             Ico = (string)param.Value!;
-            List<Dodavatel> list = new() { new Dodavatel() { ICO = "123", Nazov = "EEJO" } };
-            var najDod = list.FirstOrDefault(x => x.ICO == Ico); //_db.Dodavatelia
+            //List<Dodavatel> list = new() { new Dodavatel() { ICO = "123", Nazov = "EEJO" } };
+            var najDod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == Ico); 
             if (najDod is null)
             {
                 CorrectDod = false;
@@ -66,8 +66,8 @@ namespace SkladModul.ViewModels.Objednavka
         private void ZmenaOdo(ChangeEventArgs param)
         {
             Odberatel.ICO = (string)param.Value!;
-            List<Dodavatel> list = new() { new Dodavatel() { ICO = "123", Nazov = "EEJO" } };
-            var najDod = list.FirstOrDefault(x => x.ICO == Odberatel.ICO); //_db.Dodavatelia
+            //List<Dodavatel> list = new() { new Dodavatel() { ICO = "123", Nazov = "EEJO" } };
+            var najDod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == Odberatel.ICO);
             if (najDod is null)
             {
                 CorrectOdo = false;

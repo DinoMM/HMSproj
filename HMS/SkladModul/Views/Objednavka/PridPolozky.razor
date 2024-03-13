@@ -1,72 +1,190 @@
 ﻿@namespace SkladModul
 @page "/Objednavka/PridatPolozky"
+@using System.Diagnostics
 @inject PridPolozkyViewModel ViewModel
 
+<ApproveModal @ref=AprovMod ID="deletemodal"
+              Text="Naozaj chcete odstrániť tento riadok?"
+              FuncOnSucc="DeleteCommand"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+<ApproveModal @ref=AprovModSave ID="savemodal"
+              Text="Chcete uložiť zmeny?"
+              FuncOnSucc="SaveCommand"
+              FuncOnDiss="(() => declined = true)">
+</ApproveModal>
+<ApproveModal @ref=AprovModEmpty ID="emptyobjmodal"
+              Text="Objednávka je prázdna, chcete ju zrušiť?"
+              FuncOnSucc="DeleteEmpty"
+              FuncOnDiss="(() => declined = true)">
+</ApproveModal>
+<InfoModal @ref="InfoMod" ID="infocantsave"
+           Text="Nepodarilo sa uložiť zmeny, skontrolujte objednávku">
+</InfoModal>
+
 <div class="container">
-    <div class="row p-1">Položky objednávky</div>
+    <div class="row p-1">Položky objednávky: @ViewModel.Objednavka.ID</div>
 
     <div class="row h-25">
         <div class="col col-1">
-            <button type="button" class="btn btn-primary">Uložiť</button>
+            <button type="button" class="btn btn-primary" @onclick="Save">Uložiť</button>
         </div>
         <div class="col col-1 me-2">
-            <button type="button" class="btn btn-secondary" onclick="@(() => NavigationManager.NavigateTo("/Objednavka"))">Späť</button>
+            <button type="button" class="btn btn-secondary" @onclick="Close">Späť</button>
         </div>
-        
+
+        <div class="col col-2">
+            <button type="button" disabled="@ViewModel.Uprava" @onclick=@(async () => {ViewModel.PridatPolozkuCommand.Execute(null);await ClearInput();}) class="btn btn-success">Pridať položku</button>
+        </div>
+
+
     </div>
 
     <div class="row">
         <div class="col">
             <UniComponents.SimpleTable>
                 <THEAD>
-                <th></th>
                 <th>ČísloID</th>
                 <th>Názov Položky</th>
                 <th>Množstvo</th>
                 <th>Merná jednotka</th>
-                <th>Cena za 1/MJ</th>
-                <th>Cena za 1/MJ s DPH</th>
+                <th>Cena</th>
+                <th>Cena s DPH</th>
                 <th>Celková Cena</th>
                 <th>Celková Cena s DPH</th>
+                <th></th>
                 </THEAD>
                 <TBODY>
                     @foreach (var item in ViewModel.ZoznamObjednavky)
                     {
-                    <td><input type="checkbox" /></td>
-
-                    <td>@item.PolozkaSkladu</td>
-                    <td>@(string.IsNullOrEmpty(item.Nazov) ? item.PolozkaSkladuX.Nazov : item.Nazov)</td>
-                    <td>@item.Mnozstvo</td>
-                    <td>@item.PolozkaSkladuX.MernaJednotka</td>
-                    <td>@item.Cena</td>
-                    <td>@item.CenaDPH</td>
-                    <td>@item.CelkovaCena</td>
-                    <td>@item.CelkovaCenaDPH</td>
+                        <tr>
+                            <td><input type="text" readonly disabled="disabled" value="@item.PolozkaSkladu" size="8" /></td>
+                            <td><input type="text" value="@item.Nazov" @onchange=@((ChangeEventArgs arg) => {item.Nazov = arg.Value.ToString(); ViewModel.Zmena = true; } ) /></td>
+                            <td><input type="number" @bind-value="item.Mnozstvo" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" size="7" /></td>
+                            <td>@item.PolozkaSkladuX.MernaJednotka</td>
+                            <td><input type="number" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" size="7" /></td>
+                            <td>@item.CenaDPH.ToString("F3")</td>
+                            <td>@item.CelkovaCena.ToString("F3")</td>
+                            <td>@item.CelkovaCenaDPH.ToString("F3")</td>
+                            <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                        </tr>
                     }
+                    <tr>
+                        <td><input type="text" id="vyhlid" @onchange=ViewModel.VyhladajPolozkuCommand.Execute @onfocus=@(() => ViewModel.Uprava = true) @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" /></td>
+                        <td><input type="text" readonly disabled="disabled" @bind="ViewModel.NovaPoloz.Nazov" /> </td>
+                        <td></td>
+                        <td>@ViewModel.NovaPoloz.PolozkaSkladuX?.MernaJednotka</td>
+                        <td>@ViewModel.NovaPoloz.Cena</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
                 </TBODY>
             </UniComponents.SimpleTable>
         </div>
     </div>
 
+    <script>
+        window.clearInput = function (inputId) {
+            document.getElementById(inputId).value = "";
+        }
+    </script>
 </div>
 
 
 @code {
-    private bool ObjOK = false;
+    private bool objOK = false;
+    private bool declined = false;
+    private string vyhladavac = "";
+    ApproveModal AprovMod = new();
+    ApproveModal AprovModSave = new();
+    ApproveModal AprovModEmpty = new();
+    InfoModal InfoMod = new();
+
+    DBLayer.Models.PolozkaSkladuObjednavky marked;
     protected override void OnInitialized()
     {
-        if (!ObjOK) //prvotna kontrola ci viewmodel ma dobre nahodenu objednavku
+        if (!objOK) //prvotna kontrola ci viewmodel ma dobre nahodenu objednavku
         {
-            ObjOK = ViewModel.IsOBJValidna(false);
-            ViewModel.Exitujuca = ViewModel.IsOBJValidna();
+            objOK = ViewModel.IsOBJValidna(false);
+            ViewModel.Existujuca = ViewModel.IsOBJValidna();
         }
-        if (!ObjOK)
+        if (!objOK)
         {
-            // Debug.Writeline("Objednavka nieje vlozena spravne v PridPolozkyViewModel");
+            Debug.WriteLine("Objednavka nieje vlozena spravne v PridPolozkyViewModel");
             NavigationManager.NavigateTo("/Objednavka");
             return;
         }
-
-        //ViewModel.LoadZoznamObjednavky();
+        ViewModel.NovaPoloz = new();
+        ViewModel.LoadZoznamObjednavky();
     }
+
+    private async Task Delete(DBLayer.Models.PolozkaSkladuObjednavky poloz)
+    {
+        marked = poloz;
+        await AprovMod.OpenModal();
+    }
+
+    private void DeleteCommand()
+    {
+        ViewModel.VymazatCommand.Execute(marked);
+    }
+
+    private async Task<bool> Save()
+    {
+        return await AprovModSave.OpenModal(true);
+    }
+
+    private async Task SaveCommand()
+    {
+        declined = false; //user povedal ze chce ulozit
+        ViewModel.UlozCommand.Execute(null);
+        if (ViewModel.Zmena)    //ak je stale Zmena true, znamena ze sa ukladanie nepodarilo, inak sa podarilo
+        {
+            await InfoMod.OpenModal();
+        }
+    }
+
+    private void DeleteEmpty()
+    {
+        declined = false;
+        ViewModel.OdstranCeluObjednavkuCommand.Execute(null);
+    }
+
+    private async Task Close()
+    {
+        if (ViewModel.Zmena)    //ak je nespravena zmena tak sa opytame uzivatela
+        {
+            declined = await Save();
+        }
+        if (ViewModel.Zmena && !declined) //ak je stale nespravena zmena a user povedal ze nechce ulozit, tak vratime zmeny do povodneho stavu
+        {
+            if (ViewModel.VratDoPovodnehoStavu())   //vrati zoznam do povodneho stavu a pokial neni prazdny tak zavrie
+            {
+                NavigationManager.NavigateTo("/Objednavka");
+                ViewModel.VycistiHodnotyForce();
+                return;
+            }
+            declined = await AprovModEmpty.OpenModal(true);
+            if (declined)      //ak je zoznam prazdny tak ho vymaze po schvaleni uzivatela, inak nic
+            {
+                NavigationManager.NavigateTo("/Objednavka");
+                ViewModel.VycistiHodnotyForce();
+                return;
+            }
+            return;
+        }
+        if (!ViewModel.Zmena)
+        {
+            NavigationManager.NavigateTo("/Objednavka");
+            ViewModel.VycistiHodnotyForce();
+        }
+    }
+
+    private async Task ClearInput()
+    {
+        await JSRuntime.InvokeVoidAsync("clearInput", "vyhlid");
+    }
+
 }

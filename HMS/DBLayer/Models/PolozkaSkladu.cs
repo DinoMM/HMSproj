@@ -43,5 +43,28 @@ namespace DBLayer.Models
         public PolozkaSkladu Clon() {
             return (PolozkaSkladu)Clone();
         }
+
+        public static string DajNoveID(DBContext db)
+        {
+            int adder = 1;
+            string newID;
+            do
+            {
+                int cislo;
+                if (db.PolozkySkladu.Count() != 0)
+                {
+                    cislo = int.Parse(db.PolozkySkladu.Last().ID) + adder;
+                }
+                else
+                {
+                    cislo = 1;
+                }
+                //moznost pridat prefix
+                newID = cislo.ToString("D7");
+                ++adder;
+
+            } while (db.PolozkySkladu.FirstOrDefault(d => d.ID == newID) != null);
+            return newID;
+        }
     }
 }

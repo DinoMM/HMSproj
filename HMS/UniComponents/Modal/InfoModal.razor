@@ -2,7 +2,7 @@
 @inject IJSRuntime JSRuntime
 
 <!-- Modal -->
-<div class="modal fade" id="exampleModalInfo" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="@ID" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -14,7 +14,7 @@
             </div>
             <div class="modal-footer">
                 @* <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button> *@
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="FuncAction">OK</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(async () => { CloseModal(); await FuncAction.InvokeAsync(); })>OK</button>
             </div>
         </div>
     </div>
@@ -22,7 +22,6 @@
 
 
 @code {
-    
     [Parameter]
     public string Header { get; set; } = "Oznam";
 
@@ -33,8 +32,32 @@
     [Parameter]
     public EventCallback FuncAction { get; set; }
 
-    public async Task OpenModal()
+    [Parameter]
+    public string ID { get; set; } = "exampleModalInfo";
+
+    private TaskCompletionSource<bool> tcs;
+    private bool tstop = false;
+
+    public async Task OpenModal(bool stop = false)
     {
-        await JSRuntime.InvokeVoidAsync("eval", "$('#exampleModalInfo').modal('show');");   //(pomohol som si z internetu tutoriály/AI)
+        tstop = stop;
+        if (stop)
+        {
+            tcs = new TaskCompletionSource<bool>();
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");
+            await tcs.Task;
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");   //(pomohol som si z internetu tutoriály/AI)
+        }
+    }
+
+    private void CloseModal()
+    {
+        if (tstop)
+        {
+            tcs.SetResult(true);
+        }    
     }
 }

@@ -53,7 +53,14 @@ namespace DBLayer.Models
             string newID;
             do
             {
-                int cislo = int.Parse(db.Objednavky.Last().ID) + adder;
+                int cislo;
+                if (db.Objednavky.Count() != 0)
+                {
+                    cislo = int.Parse(db.Objednavky.DefaultIfEmpty().Max(x => x != null ? x.ID : "1") ?? "1") + adder;
+                }
+                else {
+                    cislo = 1;
+                }
                 //moznost pridat prefix
                 newID = cislo.ToString("D7");
                 ++adder;
