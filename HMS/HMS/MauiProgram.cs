@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SkladModul.ViewModels.Objednavka;
+using UniComponents;
 
 
 namespace HMS
@@ -57,6 +58,7 @@ namespace HMS
 
             builder.Services.AddSingleton<UserService>();
             builder.Services.AddSingleton<DbInitializeService>();
+            builder.Services.AddSingleton<Navigator>();
 
             builder.Services.AddSingleton<LayoutService>();
 

@@ -1,0 +1,7 @@
+﻿.fixed-size-button {
+    width: 180px; /* Adjust as needed */
+    height: 55px; /* Adjust as needed */
+}
+.table tbody tr.selected-row {
+    --bs-table-bg: #9d9b9bef;
+}

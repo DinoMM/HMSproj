@@ -8,11 +8,13 @@
 
   <ItemGroup>
     <None Remove="Views\Objednavka\AddObjednav.razor.css" />
+    <None Remove="Views\Objednavka\Objednavka.razor.css" />
     <None Remove="Views\Objednavka\PridPolozky.razor.css" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="Views\Objednavka\AddObjednav.razor.css" />
+    <Content Include="Views\Objednavka\Objednavka.razor.css" />
     <Content Include="Views\Objednavka\PridPolozky.razor.css" />
   </ItemGroup>
 

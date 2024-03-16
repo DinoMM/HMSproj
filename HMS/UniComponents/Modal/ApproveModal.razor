@@ -51,7 +51,11 @@
     [Parameter]
     public string ID { get; set; } = "staticBackdropApprove";
 
-
+    /// <summary>
+    ///  Otvori modal pod ulozenym ID, vracia hodnotu podla toho, ci uzivatel klikol ano alebo nie
+    /// </summary>
+    /// <param name="stop"> Vrati true ak uzivatel prijal, inak false</param>
+    /// <returns></returns>
     public async Task<bool> OpenModal(bool stop = false)
     {
         tstop = stop;

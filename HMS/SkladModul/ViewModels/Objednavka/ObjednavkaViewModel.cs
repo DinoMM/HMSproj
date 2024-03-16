@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DBLayer;
+using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -20,10 +21,12 @@ namespace SkladModul.ViewModels.Objednavka
         private DateTime posledneNacitanyDatum = DateTime.Today;
 
         private readonly DBContext _db;
+        private readonly PridPolozkyViewModel _polozkyViewModel;
 
-        public ObjednavkaViewModel(DBContext db)
+        public ObjednavkaViewModel(DBContext db, PridPolozkyViewModel polozkyViewModel)
         {
             _db = db;
+            _polozkyViewModel = polozkyViewModel;
         }
 
         [RelayCommand]
@@ -43,8 +46,25 @@ namespace SkladModul.ViewModels.Objednavka
 
             foreach (var item in newDalsie)
             {
-                ZoznamObjednavok.Add(item);
+                if (!ZoznamObjednavok.Contains(item))
+                {
+                    ZoznamObjednavok.Add(item);
+                }
             }
+        }
+
+        [RelayCommand]
+        private void Vymazat(OBJ poloz)
+        {
+            ZoznamObjednavok.Remove(poloz);
+            _db.Objednavky.Remove(poloz);
+            _db.SaveChanges();
+        }
+
+        [RelayCommand]
+        private void OtvorOBJ(OBJ poloz) {
+            _polozkyViewModel.Objednavka = poloz;
+            
         }
     }
 }

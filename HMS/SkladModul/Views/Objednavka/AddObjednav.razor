@@ -64,7 +64,7 @@
         <div class="row g-3 pt-2 align-items-center justify-content-center">
             <div class="col-auto">
                 <button type="button" disabled="@(!ViewModel.CorrectDod || !ViewModel.CorrectOdo)" @onclick="GoNext" class="btn btn-primary">Vytvoriť</button>
-                <button type="button" class="btn btn-secondary" @onclick="@(() => NavigationManager.NavigateTo("/Objednavka"))">Späť</button>
+                <button type="button" class="btn btn-secondary" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">Späť</button>
             </div>
         </div>
        
@@ -78,6 +78,6 @@
     private void GoNext()
     {
         ViewModel.NastavObjednavkuCommand.Execute(null);
-        NavigationManager.NavigateTo("/Objednavka/PridatPolozky");
+        Navigator.NavigateTo(Navigator.SwitchLast("/PridatPolozky"));
     }
 }

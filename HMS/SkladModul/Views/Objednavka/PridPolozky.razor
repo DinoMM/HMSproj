@@ -11,23 +11,23 @@
 <ApproveModal @ref=AprovModSave ID="savemodal"
               Text="Chcete uložiť zmeny?"
               FuncOnSucc="SaveCommand"
-              FuncOnDiss="(() => declined = true)">
+              FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
 <ApproveModal @ref=AprovModEmpty ID="emptyobjmodal"
               Text="Objednávka je prázdna, chcete ju zrušiť?"
               FuncOnSucc="DeleteEmpty"
-              FuncOnDiss="(() => declined = true)">
+              FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
 <InfoModal @ref="InfoMod" ID="infocantsave"
            Text="Nepodarilo sa uložiť zmeny, skontrolujte objednávku">
 </InfoModal>
 
-<div class="container">
+<div class="container" >
     <div class="row p-1">Položky objednávky: @ViewModel.Objednavka.ID</div>
 
     <div class="row h-25">
         <div class="col col-1">
-            <button type="button" class="btn btn-primary" @onclick="Save">Uložiť</button>
+            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false))>Uložiť</button>
         </div>
         <div class="col col-1 me-2">
             <button type="button" class="btn btn-secondary" @onclick="Close">Späť</button>
@@ -41,7 +41,7 @@
     </div>
 
     <div class="row">
-        <div class="col">
+        <div class="col" style="height: 30rem; overflow:auto;">
             <UniComponents.SimpleTable>
                 <THEAD>
                 <th>ČísloID</th>
@@ -55,21 +55,22 @@
                 <th></th>
                 </THEAD>
                 <TBODY>
+                    
                     @foreach (var item in ViewModel.ZoznamObjednavky)
                     {
                         <tr>
                             <td><input type="text" readonly disabled="disabled" value="@item.PolozkaSkladu" size="8" /></td>
                             <td><input type="text" value="@item.Nazov" @onchange=@((ChangeEventArgs arg) => {item.Nazov = arg.Value.ToString(); ViewModel.Zmena = true; } ) /></td>
-                            <td><input type="number" @bind-value="item.Mnozstvo" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" size="7" /></td>
+                            <td><input type="number" @bind-value="item.Mnozstvo" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" class="w-75" /></td>
                             <td>@item.PolozkaSkladuX.MernaJednotka</td>
-                            <td><input type="number" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" size="7" /></td>
+                            <td><input type="number" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" class="w-75" /></td>
                             <td>@item.CenaDPH.ToString("F3")</td>
                             <td>@item.CelkovaCena.ToString("F3")</td>
                             <td>@item.CelkovaCenaDPH.ToString("F3")</td>
                             <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
                         </tr>
                     }
-                    <tr>
+                    <tr style="position:sticky; bottom: 0;">
                         <td><input type="text" id="vyhlid" @onchange=ViewModel.VyhladajPolozkuCommand.Execute @onfocus=@(() => ViewModel.Uprava = true) @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" /></td>
                         <td><input type="text" readonly disabled="disabled" @bind="ViewModel.NovaPoloz.Nazov" /> </td>
                         <td></td>
@@ -95,14 +96,14 @@
 
 @code {
     private bool objOK = false;
-    private bool declined = false;
+    private bool answer = false;
     private string vyhladavac = "";
     ApproveModal AprovMod = new();
     ApproveModal AprovModSave = new();
     ApproveModal AprovModEmpty = new();
     InfoModal InfoMod = new();
-
     DBLayer.Models.PolozkaSkladuObjednavky marked;
+
     protected override void OnInitialized()
     {
         if (!objOK) //prvotna kontrola ci viewmodel ma dobre nahodenu objednavku
@@ -113,7 +114,7 @@
         if (!objOK)
         {
             Debug.WriteLine("Objednavka nieje vlozena spravne v PridPolozkyViewModel");
-            NavigationManager.NavigateTo("/Objednavka");
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
         ViewModel.NovaPoloz = new();
@@ -131,58 +132,90 @@
         ViewModel.VymazatCommand.Execute(marked);
     }
 
-    private async Task<bool> Save()
+
+    private async Task<bool> Save(bool askUser)  //vrati hodnotu na zaklade toho co uzivatel klikne(true - suhlasi, inak false)
     {
-        return await AprovModSave.OpenModal(true);
+        if (askUser)
+        {
+            return await AprovModSave.OpenModal(true);
+        }
+        await SaveCommand();
+        return true;        //true lebo ztivatel klikol Uloz
     }
 
     private async Task SaveCommand()
     {
-        declined = false; //user povedal ze chce ulozit
         ViewModel.UlozCommand.Execute(null);
         if (ViewModel.Zmena)    //ak je stale Zmena true, znamena ze sa ukladanie nepodarilo, inak sa podarilo
         {
-            await InfoMod.OpenModal();
+            await InfoMod.OpenModal();  //zobrazi sa info ze nieje mozne ulozit objednavku koli chybnym udajom
         }
     }
 
     private void DeleteEmpty()
     {
-        declined = false;
         ViewModel.OdstranCeluObjednavkuCommand.Execute(null);
     }
 
-    private async Task Close()
+    private async Task Close() //tlacidlo spat
     {
-        if (ViewModel.Zmena)    //ak je nespravena zmena tak sa opytame uzivatela
+
+        if (ViewModel.Zmena)    //je registrovaná zmena? //ano
         {
-            declined = await Save();
-        }
-        if (ViewModel.Zmena && !declined) //ak je stale nespravena zmena a user povedal ze nechce ulozit, tak vratime zmeny do povodneho stavu
-        {
-            if (ViewModel.VratDoPovodnehoStavu())   //vrati zoznam do povodneho stavu a pokial neni prazdny tak zavrie
+            answer = await Save(true);
+            if (ViewModel.Zmena)    //je registrovaná zmena? //ano
             {
-                NavigationManager.NavigateTo("/Objednavka");
-                ViewModel.VycistiHodnotyForce();
-                return;
+                if (answer)
+                {
+                    return; //nic
+                }
+                else
+                {
+                    if (ViewModel.VratDoPovodnehoStavu())   //Vratenie, Prazdny? //ano
+                    {
+                        answer = await AprovModEmpty.OpenModal(true);
+                        if (answer)
+                        {
+                            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                            ViewModel.VycistiHodnotyForce();
+                            return; //koniec
+                        }
+                        return; //nic
+                    }
+                    else //nie
+                    {
+                        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                        ViewModel.VycistiHodnotyForce();
+                        return; //koniec
+                    }
+                }
             }
-            declined = await AprovModEmpty.OpenModal(true);
-            if (declined)      //ak je zoznam prazdny tak ho vymaze po schvaleni uzivatela, inak nic
+            else //nie
             {
-                NavigationManager.NavigateTo("/Objednavka");
+                Navigator.NavigateTo(Navigator.RemoveLastUrl());
                 ViewModel.VycistiHodnotyForce();
-                return;
+                return; //koniec
             }
-            return;
         }
-        if (!ViewModel.Zmena)
+        else //nie
         {
-            NavigationManager.NavigateTo("/Objednavka");
-            ViewModel.VycistiHodnotyForce();
+            if (ViewModel.IsZoznamEmpty())
+            {
+                answer = await AprovModEmpty.OpenModal(true);
+                if (answer)
+                {
+                    Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                    ViewModel.VycistiHodnotyForce();
+                    return; //koniec
+                }
+                return; //nic
+            }
         }
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+        ViewModel.VycistiHodnotyForce();
     }
 
-    private async Task ClearInput()
+    private async Task ClearInput() //vycisti pisacie pole
     {
         await JSRuntime.InvokeVoidAsync("clearInput", "vyhlid");
     }

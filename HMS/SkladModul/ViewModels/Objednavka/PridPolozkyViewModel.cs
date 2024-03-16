@@ -154,7 +154,7 @@ namespace SkladModul.ViewModels.Objednavka
                 var poloz = _db.PolozkySkladuObjednavky.FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
                 if (poloz != null) //ak existuje tak ho nahradime, inak len pridáme
                 {
-                    poloz = item;
+                    poloz.SetZPolozkySkladuObjednavky(item);
                 }
                 else
                 {
@@ -177,16 +177,16 @@ namespace SkladModul.ViewModels.Objednavka
 
         }
 
-        public bool VratDoPovodnehoStavu()  //true - vratilo sa do povodne stavu uspesne, obsahuje prvky ; false - povodny stav bol prazdny
+        public bool VratDoPovodnehoStavu()  //true - zoznam bude prazdny po vrateni zmien, false - zoznam bude obsahovat hodnoty po vrateni zmien
         {
-            bool vrat = true;
+            bool prazdny = false;
             if (ZoznamObjednavkySave.Count == 0)
             {
-                vrat = false;
+                prazdny = true;
             }
             ZoznamObjednavky.Clear();
             ZoznamObjednavky = new(ZoznamObjednavkySave); 
-            return vrat;
+            return prazdny;
         }
 
         [RelayCommand]
@@ -230,5 +230,8 @@ namespace SkladModul.ViewModels.Objednavka
 
         }
 
+        public bool IsZoznamEmpty() {
+            return ZoznamObjednavky.Count == 0;
+        }
     }
 }

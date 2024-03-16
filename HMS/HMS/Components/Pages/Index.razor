@@ -8,6 +8,7 @@
 
 
 @inherits LayoutComponentBase
+@inject Navigator Navigator
 @inject NavigationManager NavigationManager
 @inject Routes.LayoutService layoutService
 @inject IndexViewModel ViewModel
@@ -22,18 +23,18 @@
 
             @foreach (var item in ViewModel.ModulesList)
             {
-                <a @onclick="@(() => NavigationManager.NavigateTo(item.Item2))" class="list-group-item list-group-item-action">@item.Item1</a>
+                <a @onclick="@(() => Navigator.NavigateTo(item.Item2,saveThisUrl: true ))" class="list-group-item list-group-item-action">@item.Item1</a>
 
             }
         </div>
-           </div>
-    <button @onclick="ViewModel.OpenInfoModalCommand.Execute">Pridaj</button>
-</div> 
+    </div>
+    @*<button @onclick="ViewModel.OpenInfoModalCommand.Execute">Pridaj</button>*@
+</div>
 
- @* <Main></Main>  *@
- @* <AddObjednav></AddObjednav> *@
- @* <PridPolozky></PridPolozky> *@
- @* <ZobrazenieObjednavky></ZobrazenieObjednavky> *@
+@* <Main></Main>  *@
+@* <AddObjednav></AddObjednav> *@
+@* <PridPolozky></PridPolozky> *@
+@* <ZobrazenieObjednavky></ZobrazenieObjednavky> *@
 
 @* <Main></Main> *@
 @* <PridatPrijemku></PridatPrijemku> *@
@@ -46,15 +47,16 @@
 
 @* <VytvorenieUzivatela></VytvorenieUzivatela> *@
 
-@* <InfoModal Text="Toto je infomodal yeah"></InfoModal> *@
 
-<InfoModal @ref="ViewModel.InfoModal" Text="Ahoj" ></InfoModal>
+@* <InfoModal Text="Toto je infomodal yeah"></InfoModal> *@
+@*<InfoModal @ref="ViewModel.InfoModal" Text="Ahoj"></InfoModal>*@
 
 @code {
 
     protected override async Task OnInitializedAsync()
     {
         await initDB.TryMustHaveValues();
+        Navigator.InitializeNavManazer(NavigationManager);
         //await ViewModel.InfoModal.OpenModal(true);
         //await Application.Current.MainPage.DisplayAlert("title", "toto je vnutro", "zrusit");
 
@@ -64,7 +66,7 @@
         if (firstRender)
         {
         }
-        
+
     }
 
 

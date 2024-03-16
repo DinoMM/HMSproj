@@ -1,0 +1,7 @@
+﻿thead tr {
+    position: sticky;
+    top: 0;
+    --bs-table-bg: #f1f1f1d5;
+    border:initial;
+
+}
