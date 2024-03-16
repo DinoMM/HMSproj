@@ -21,9 +21,13 @@ namespace DBLayer.Models
         [ForeignKey("OdberatelX")]
         public string Odberatel { get; set; } = default!;
         public Dodavatel OdberatelX { get; set; }
+        [ForeignKey("TvorcaX")]
+        public string Tvorca { get; set; } = default!;
+        public IdentityUserOwn TvorcaX { get; set; }
 
         public string? Popis { get; set; }
         public DateTime DatumVznik { get; set; } = DateTime.Today;
+        public StavOBJ Stav { get; set; } = StavOBJ.Vytvorena;
 
 
 
@@ -33,11 +37,14 @@ namespace DBLayer.Models
             clon.ID = ID;
             clon.Dodavatel = Dodavatel;
             clon.Odberatel = Odberatel;
+            clon.Tvorca = Tvorca;
             clon.Popis = Popis;
             clon.DatumVznik = DatumVznik;
+            clon.Stav = Stav;
 
             clon.DodavatelX = DodavatelX;
             clon.OdberatelX = OdberatelX;
+            clon.TvorcaX = TvorcaX;
             return clon;
         }
         public Objednavka Clon()
@@ -45,15 +52,19 @@ namespace DBLayer.Models
             return (Objednavka)Clone();
         }
 
-        public void SetFromObjednavka(Objednavka obj) {
+        public void SetFromObjednavka(Objednavka obj)
+        {
             ID = obj.ID;
             Dodavatel = obj.Dodavatel;
             Odberatel = obj.Odberatel;
             Popis = obj.Popis;
             DatumVznik = obj.DatumVznik;
+            Stav = obj.Stav;
+            Tvorca = obj.Tvorca;
 
             DodavatelX = obj.DodavatelX;
             OdberatelX = obj.OdberatelX;
+            TvorcaX = obj.TvorcaX;
         }
 
         public static string DajNoveID(DBContext db)
@@ -67,7 +78,8 @@ namespace DBLayer.Models
                 {
                     cislo = int.Parse(db.Objednavky.DefaultIfEmpty().Max(x => x != null ? x.ID : "1") ?? "1") + adder;
                 }
-                else {
+                else
+                {
                     cislo = 1;
                 }
                 //moznost pridat prefix
@@ -94,5 +106,17 @@ namespace DBLayer.Models
             //DodavatelX;
             //OdberatelX;
         }
+    }
+
+    /// <summary>
+    /// Jednotlive fazy pri existencii objednavok
+    /// </summary>
+    public enum StavOBJ
+    {
+        Vytvorena,
+        Schvalena,
+        Neschvalena,
+        Objednana,
+        Ukoncena
     }
 }

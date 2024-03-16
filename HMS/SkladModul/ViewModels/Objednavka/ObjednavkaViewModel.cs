@@ -35,6 +35,7 @@ namespace SkladModul.ViewModels.Objednavka
             var newDalsie = _db.Objednavky
                 .Include(x => x.DodavatelX)
                 .Include(x => x.OdberatelX)
+                .Include(x => x.TvorcaX)
                 .Where(x => posledneNacitanyDatum >= x.DatumVznik)
                 .OrderBy(x => x.DatumVznik)
                 .Take(10);

@@ -41,12 +41,14 @@
                         <THEAD>
                         <th scope="col">ID</th>
                         <th scope="col">Dodavateľ</th>
+                        <th scope="col">Stav</th>
+                        <th scope="col">Tvorca</th>
                         <th scope="col">Popis</th>
-                            @* <th scope="col">Stav</th> *@
+                        @* <th scope="col">Stav</th> *@
                         <th scope="col">Dátum vytvorenia</th>
                         <th scope="col"></th>
-                            @* <th scope="col">Celková cena</th>
-                        <th scope="col">Celková cena s DPH</th> *@
+                        @* <th scope="col">Celková cena</th>
+        <th scope="col">Celková cena s DPH</th> *@
 
                         </THEAD>
                         <TBODY>
@@ -57,6 +59,8 @@
 
                                     <td>@item.ID</td>
                                     <td>@item.DodavatelX.Nazov</td>
+                                    <td>@item.Stav</td>
+                                    <td>@item.TvorcaX.Surname</td>
                                     <td>@item.Popis</td>
                                     <td>@item.DatumVznik.ToShortDateString()</td>
                                     <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
