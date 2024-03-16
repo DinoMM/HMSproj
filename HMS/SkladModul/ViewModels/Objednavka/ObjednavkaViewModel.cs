@@ -63,7 +63,8 @@ namespace SkladModul.ViewModels.Objednavka
 
         [RelayCommand]
         private void OtvorOBJ(OBJ poloz) {
-            _polozkyViewModel.Objednavka = poloz;
+            //_polozkyViewModel.Objednavka = poloz;
+
             
         }
     }

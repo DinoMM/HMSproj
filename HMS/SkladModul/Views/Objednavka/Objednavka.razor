@@ -1,6 +1,7 @@
 ﻿@namespace SkladModul
 @page "/Objednavka"
 @inject ObjednavkaViewModel ViewModel
+@inject ObjectHolder Holder
 
 @using Sve.Blazor.InfiniteScroll.Components
 @using OBJ = DBLayer.Models.Objednavka
@@ -55,7 +56,7 @@
                                 <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick=@(() => OpenOBJ(item)) style="cursor: pointer;">
 
                                     <td>@item.ID</td>
-                                    <td>@item.OdberatelX.Nazov</td>
+                                    <td>@item.DodavatelX.Nazov</td>
                                     <td>@item.Popis</td>
                                     <td>@item.DatumVznik.ToShortDateString()</td>
                                     <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
@@ -99,9 +100,9 @@
     {
         if (item != null)
         {
-            ViewModel.OtvorOBJCommand.Execute(item);
-            string a = Navigator.ActualPageUrl;
-            Navigator.NavigateTo(Navigator.AddNextUrl("/PridatPolozky"));
+            //ViewModel.OtvorOBJCommand.Execute(item);
+            Holder.Container.Add(item.Clone());
+            Navigator.NavigateTo(Navigator.AddNextUrl("/AddObj"));
             marked = null;
         }
     }

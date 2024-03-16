@@ -53,6 +53,13 @@ namespace SkladModul.ViewModels.Objednavka
         {
             if (Existujuca)
             {
+                var obj = _db.Objednavky.FirstOrDefault(x => x.ID == Objednavka.ID);
+                if (obj != null)
+                {
+                    obj.SetFromObjednavka(Objednavka);
+                    Objednavka = obj;
+                }
+
                 var list = _db.PolozkySkladuObjednavky.Include(x => x.PolozkaSkladuX).Where(x => x.Objednavka == Objednavka.ID).ToList();
                 foreach (var item in list)
                 {
@@ -112,10 +119,10 @@ namespace SkladModul.ViewModels.Objednavka
         private void Uloz()
         {
 
-            if (!Zmena)
-            {
-                return;
-            }
+            //if (!Zmena)
+            //{
+            //    return;
+            //}
             //Zmena je true
             //kontrola hodnot, uprava na default ak sa najdu, treba posudit uzivatelom
             bool trebaCheck = false;
@@ -185,13 +192,15 @@ namespace SkladModul.ViewModels.Objednavka
                 prazdny = true;
             }
             ZoznamObjednavky.Clear();
-            ZoznamObjednavky = new(ZoznamObjednavkySave); 
+            ZoznamObjednavky = new(ZoznamObjednavkySave);
             return prazdny;
         }
 
         [RelayCommand]
-        private void OdstranCeluObjednavku() {
-            if (ZoznamObjednavky.Count != 0) {      //ak ma objednavka polozky
+        private void OdstranCeluObjednavku()
+        {
+            if (ZoznamObjednavky.Count != 0)
+            {      //ak ma objednavka polozky
                 return;
             }
 
@@ -218,7 +227,8 @@ namespace SkladModul.ViewModels.Objednavka
             _db.SaveChanges();
         }
 
-        public void VycistiHodnotyForce() {
+        public void VycistiHodnotyForce()
+        {
             ZoznamObjednavky.Clear();
             ZoznamObjednavkySave.Clear();
             ZoznamObjednavkyNaVymazanie.Clear();
@@ -230,7 +240,8 @@ namespace SkladModul.ViewModels.Objednavka
 
         }
 
-        public bool IsZoznamEmpty() {
+        public bool IsZoznamEmpty()
+        {
             return ZoznamObjednavky.Count == 0;
         }
     }

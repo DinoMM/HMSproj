@@ -1,6 +1,7 @@
 ﻿@namespace SkladModul
 @page "/Objednavka/AddObj"
 @inject AddObjednavViewModel ViewModel
+@inject ObjectHolder Holder
 
 <div class="d-flex justify-content-center align-items-center vh-100">
     <div class="container ">
@@ -41,7 +42,7 @@
                             <textarea id="PopisBox" @bind="ViewModel.Popis" class="form-control" style="resize: none;" />
                         </div>
                     </div>
-                    
+
                 </div>
 
                 <div class="tab-pane fade" id="profile">
@@ -63,17 +64,28 @@
         @* *** *@
         <div class="row g-3 pt-2 align-items-center justify-content-center">
             <div class="col-auto">
-                <button type="button" disabled="@(!ViewModel.CorrectDod || !ViewModel.CorrectOdo)" @onclick="GoNext" class="btn btn-primary">Vytvoriť</button>
+                <button type="button" disabled="@(!ViewModel.CorrectDod || !ViewModel.CorrectOdo)" @onclick="GoNext" class="btn btn-primary">@(ViewModel.Exist() ? "Otvoriť" : "Vytvoriť")</button>
+
                 <button type="button" class="btn btn-secondary" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">Späť</button>
             </div>
         </div>
-       
+
     </div>
 </div>
 
 
 
 @code {
+
+
+    protected override void OnInitialized()
+    {
+        var founded = Holder.Remove<DBLayer.Models.Objednavka>();   //pokusi sa ziskat objekt z uloziska
+        if (founded != null)
+        {
+            ViewModel.SetExistObjednavka(founded.Clon());      //nasla sa existujuca objednavka, nastavujeme model na upravu
+        }
+    }
 
     private void GoNext()
     {

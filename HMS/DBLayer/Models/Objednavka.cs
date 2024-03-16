@@ -27,8 +27,6 @@ namespace DBLayer.Models
 
 
 
-
-
         public object Clone()
         {
             var clon = new Objednavka();
@@ -45,6 +43,17 @@ namespace DBLayer.Models
         public Objednavka Clon()
         {
             return (Objednavka)Clone();
+        }
+
+        public void SetFromObjednavka(Objednavka obj) {
+            ID = obj.ID;
+            Dodavatel = obj.Dodavatel;
+            Odberatel = obj.Odberatel;
+            Popis = obj.Popis;
+            DatumVznik = obj.DatumVznik;
+
+            DodavatelX = obj.DodavatelX;
+            OdberatelX = obj.OdberatelX;
         }
 
         public static string DajNoveID(DBContext db)

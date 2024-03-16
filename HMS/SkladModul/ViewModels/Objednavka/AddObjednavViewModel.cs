@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UniComponents;
 
 namespace SkladModul.ViewModels.Objednavka
 {
@@ -29,6 +30,7 @@ namespace SkladModul.ViewModels.Objednavka
 
         private readonly PridPolozkyViewModel _PDViewModel;
         private readonly DBContext _db;
+
         public bool CorrectDod { get; set; } = false;
         public bool CorrectOdo { get; set; } = false;
 
@@ -48,7 +50,7 @@ namespace SkladModul.ViewModels.Objednavka
         {
             Ico = (string)param.Value!;
             //List<Dodavatel> list = new() { new Dodavatel() { ICO = "123", Nazov = "EEJO" } };
-            var najDod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == Ico); 
+            var najDod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == Ico);
             if (najDod is null)
             {
                 CorrectDod = false;
@@ -58,7 +60,7 @@ namespace SkladModul.ViewModels.Objednavka
             NazovDodavatela = najDod.Nazov;
             CorrectDod = true;
 
-            pridObj.Dodavatel = najDod.Nazov;
+            pridObj.Dodavatel = najDod.ICO;
             pridObj.DodavatelX = najDod;
         }
 
@@ -77,17 +79,35 @@ namespace SkladModul.ViewModels.Objednavka
             Odberatel.Nazov = najDod.Nazov;
             CorrectOdo = true;
 
-            pridObj.Odberatel = najDod.Nazov;
+            pridObj.Odberatel = najDod.ICO;
             pridObj.OdberatelX = najDod;
         }
 
         [RelayCommand]
-        private void NastavObjednavku() {
+        private void NastavObjednavku()
+        {
+            _PDViewModel.Objednavka.ID = pridObj.ID;
             _PDViewModel.Objednavka.Dodavatel = pridObj.Dodavatel;
             _PDViewModel.Objednavka.DodavatelX = pridObj.DodavatelX;
             _PDViewModel.Objednavka.Odberatel = pridObj.Odberatel;
             _PDViewModel.Objednavka.OdberatelX = pridObj.OdberatelX;
             _PDViewModel.Objednavka.Popis = Popis;
+            
+        }
+
+        public void SetExistObjednavka(DBLayer.Models.Objednavka obj)
+        {
+            pridObj = obj;
+            NazovDodavatela = pridObj.DodavatelX.Nazov;
+            Ico = pridObj.Dodavatel;
+            Odberatel = obj.OdberatelX;
+            CorrectDod = true;
+            CorrectOdo = true;
+        }
+
+        public bool Exist()
+        {
+            return !string.IsNullOrEmpty(pridObj?.ID);
         }
 
 
