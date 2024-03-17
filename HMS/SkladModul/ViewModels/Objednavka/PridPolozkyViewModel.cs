@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -27,14 +28,17 @@ namespace SkladModul.ViewModels.Objednavka
         private bool uprava = true;
 
         readonly DBContext _db;
+        readonly UserService _userService;
         public bool Existujuca { get; set; } = false;
         public bool Zmena { get; set; } = false;
+        public bool Deleted = false;
         private List<PolozkaSkladuObjednavky> ZoznamObjednavkySave = new();
         private List<PolozkaSkladuObjednavky> ZoznamObjednavkyNaVymazanie = new();
 
-        public PridPolozkyViewModel(DBContext db)
+        public PridPolozkyViewModel(DBContext db, UserService userService)
         {
             _db = db;
+            _userService = userService;
             zoznamObjednavky = new();
             novaPoloz = new();
         }
@@ -53,13 +57,7 @@ namespace SkladModul.ViewModels.Objednavka
         {
             if (Existujuca)
             {
-                var obj = _db.Objednavky.FirstOrDefault(x => x.ID == Objednavka.ID);
-                if (obj != null)
-                {
-                    obj.SetFromObjednavka(Objednavka);
-                    Objednavka = obj;
-                }
-
+                _db.Entry(Objednavka).State = EntityState.Unchanged; //oznacenie ze v objednavke nerobime ziadnu zmenu pre pripad nejakej nejastnosti
                 var list = _db.PolozkySkladuObjednavky.Include(x => x.PolozkaSkladuX).Where(x => x.Objednavka == Objednavka.ID).ToList();
                 foreach (var item in list)
                 {
@@ -83,7 +81,6 @@ namespace SkladModul.ViewModels.Objednavka
             Uprava = false;
             NovaPoloz = new();      //naslo polozku tak nacitame info
             NovaPoloz.SetZPolozkySkladu(res);
-
         }
 
         [RelayCommand]
@@ -91,13 +88,6 @@ namespace SkladModul.ViewModels.Objednavka
         {
             Zmena = true;
             Uprava = true;
-            if (!Existujuca)
-            {      //ak neexistuje objednavka tak vytvorime ID automaticky po pridani prvej polozky
-                Objednavka.ID = OBJ.DajNoveID(_db);
-                _db.Objednavky.Add(Objednavka);
-                Existujuca = true;
-            }
-
             NovaPoloz.Objednavka = Objednavka.ID;
             NovaPoloz.ObjednavkaX = Objednavka;
 
@@ -119,10 +109,10 @@ namespace SkladModul.ViewModels.Objednavka
         private void Uloz()
         {
 
-            //if (!Zmena)
-            //{
-            //    return;
-            //}
+            if (!Zmena)
+            {
+                return;
+            }
             //Zmena je true
             //kontrola hodnot, uprava na default ak sa najdu, treba posudit uzivatelom
             bool trebaCheck = false;
@@ -149,12 +139,6 @@ namespace SkladModul.ViewModels.Objednavka
             {
                 return;
             }
-            //hodnoty su v poriadku, mozeme ulozit
-            var obj = _db.Objednavky.FirstOrDefault(x => x.ID == Objednavka.ID);
-            if (obj == null)    //ak neexistuje objednávka tak pridame, inak nie je potrebne nic v nej menit
-            {
-                _db.Add(Objednavka);
-            }
 
             foreach (var item in ZoznamObjednavky)
             {
@@ -178,10 +162,10 @@ namespace SkladModul.ViewModels.Objednavka
 
             }
             ZoznamObjednavkyNaVymazanie.Clear();
+            ZoznamObjednavkySave = new(ZoznamObjednavky);
 
             Zmena = false;      //oznacenie ze vsetko je ulozene v db
             _db.SaveChanges();
-
         }
 
         public bool VratDoPovodnehoStavu()  //true - zoznam bude prazdny po vrateni zmien, false - zoznam bude obsahovat hodnoty po vrateni zmien
@@ -201,6 +185,7 @@ namespace SkladModul.ViewModels.Objednavka
         {
             if (ZoznamObjednavky.Count != 0)
             {      //ak ma objednavka polozky
+                Deleted = false;
                 return;
             }
 
@@ -220,11 +205,11 @@ namespace SkladModul.ViewModels.Objednavka
             {
                 _db.Remove(obj);
             }
-            _db.Remove(Objednavka);
             Objednavka = new();
             Existujuca = false;
 
             _db.SaveChanges();
+            Deleted = true;
         }
 
         public void VycistiHodnotyForce()
@@ -243,6 +228,25 @@ namespace SkladModul.ViewModels.Objednavka
         public bool IsZoznamEmpty()
         {
             return ZoznamObjednavky.Count == 0;
+        }
+
+        public bool Locked()
+        {
+            switch (Objednavka.Stav)
+            {
+                case StavOBJ.Vytvorena:
+                case StavOBJ.Neschvalena:
+                    return false;
+                case StavOBJ.Ukoncena:
+                    return true;
+                default:
+                    if (_userService.LoggedUserRole == RolesOwn.Admin ||
+                        _userService.LoggedUserRole == RolesOwn.Riaditel)
+                    {
+                        return false;
+                    }
+                    return true;
+            }
         }
     }
 }

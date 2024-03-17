@@ -1,7 +1,12 @@
 ﻿@namespace SkladModul
 @page "/Objednavka/AddObj"
 @inject AddObjednavViewModel ViewModel
-@inject ObjectHolder Holder
+
+<ApproveModal @ref=AprovModSave ID="savemodal"
+              Text="Chcete uložiť zmeny?"
+              FuncOnSucc="ViewModel.UlozCommand.Execute"
+              FuncOnDiss="ViewModel.NeulozCommand.Execute">
+</ApproveModal>
 
 <div class="d-flex justify-content-center align-items-center vh-100">
     <div class="container ">
@@ -27,13 +32,13 @@
                 <div class="tab-pane fade show active" id="home">
                     <div class="row g-3 p-1 align-items-center">
                         <div class="col-auto">
-                            <label for="ICO" class="col-form-label">*IČO dodavateľa:</label>
+                            <label for="ICO1" class="col-form-label">*IČO dodavateľa:</label>
                         </div>
                         <div class="col col-2">
-                            <input type="text" @onchange="ViewModel.ZmenaDodCommand.Execute" id="ICO" class="form-control" value=@(ViewModel.CorrectDod ? ViewModel.Ico : "")>
+                            <input type="text" @onchange="ViewModel.ZmenaDodCommand.Execute" id="ICO1" class="form-control" disabled=@ViewModel.Locked() value=@ViewModel.objednavka.Dodavatel>
                         </div>
                         <div class="col col-6">
-                            <input type="text" readonly @bind="ViewModel.NazovDodavatela" disabled="disabled" id="Nazov" class="form-control">
+                            <input type="text" readonly @bind="ViewModel.NazovDod" disabled="disabled" id="Nazov1" class="form-control">
                         </div>
                     </div>
 
@@ -42,7 +47,7 @@
                             <label for="PopisBox" class="col-form-label"> Popis objednávky:</label>
                         </div>
                         <div class="col col-5">
-                            <textarea id="PopisBox" @bind="ViewModel.Popis" class="form-control" style="resize: none;" />
+                            <textarea id="PopisBox" @bind="ViewModel.Popis" disabled=@ViewModel.Locked() class="form-control" style="resize: none;" />
                         </div>
                     </div>
                 </div>
@@ -50,13 +55,13 @@
                 <div class="tab-pane fade" id="profile">
                     <div class="row g-3 p-1 align-items-center">
                         <div class="col-auto">
-                            <label for="ICO" class="col-form-label">*IČO odberateľa:</label>
+                            <label for="ICO2" class="col-form-label">*IČO odberateľa:</label>
                         </div>
                         <div class="col col-2">
-                            <input type="text" @onchange="ViewModel.ZmenaOdoCommand.Execute" id="ICO" class="form-control" value=@(ViewModel.CorrectOdo ? ViewModel.Odberatel.ICO : "")>
+                            <input type="text" @onchange="ViewModel.ZmenaOdoCommand.Execute" disabled=@ViewModel.Locked() id="ICO2" class="form-control" value=@ViewModel.objednavka.Odberatel>
                         </div>
                         <div class="col col-6">
-                            <input type="text" readonly @bind="ViewModel.Odberatel.Nazov" disabled="disabled" id="Nazov" class="form-control">
+                            <input type="text" readonly @bind="ViewModel.NazovOdo" disabled="disabled" id="Nazov2" class="form-control">
                         </div>
                     </div>
                 </div>
@@ -67,16 +72,36 @@
                             <label for="stavobj" class="col-form-label">Stav:</label>
                         </div>
                         <div class="col-auto">
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    Select Option
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                                    <a class="dropdown-item" href="#">Option1</a>
-                                    <a class="dropdown-item" href="#">Option2</a>
-                                    <a class="dropdown-item" href="#">Option3</a>
-                                </div>
-                            </div>
+                            <select id="stavobj" class="form-select" @bind="@ViewModel.Stav" disabled="@(ViewModel.Stav == DBLayer.Models.StavOBJ.Ukoncena)" aria-label="Default select example">
+                                @if (ViewModel.Stav == DBLayer.Models.StavOBJ.Ukoncena)
+                                {
+                                    <option value="@DBLayer.Models.StavOBJ.Ukoncena.ToString()">@DBLayer.Models.StavOBJ.Ukoncena.ToString()</option>
+
+                                }
+                                else if (UserService.LoggedUserRole == DBLayer.RolesOwn.Admin || UserService.LoggedUserRole == DBLayer.RolesOwn.Riaditel)
+                                {
+                                    @foreach (var item in Enum.GetNames(typeof(DBLayer.Models.StavOBJ)).Take(Enum.GetNames(typeof(DBLayer.Models.StavOBJ)).Count() - 1))
+
+                                    {
+                                        <option value="@item">@item</option>
+                                    }
+                                }
+                                else if (ViewModel.Stav == DBLayer.Models.StavOBJ.Schvalena)
+                                {
+                                    <option value="@DBLayer.Models.StavOBJ.Schvalena.ToString()">@DBLayer.Models.StavOBJ.Schvalena.ToString()</option>
+                                    <option value="@DBLayer.Models.StavOBJ.Objednana.ToString()">@DBLayer.Models.StavOBJ.Objednana.ToString()</option>
+                                }
+                                else if (ViewModel.Stav == DBLayer.Models.StavOBJ.Neschvalena)
+                                {
+                                    <option value="@DBLayer.Models.StavOBJ.Neschvalena.ToString()">@DBLayer.Models.StavOBJ.Neschvalena.ToString()</option>
+                                }
+                                else
+                                {
+                                    <option value="@DBLayer.Models.StavOBJ.Vytvorena.ToString()">@DBLayer.Models.StavOBJ.Vytvorena.ToString()</option>
+                                }
+
+
+                            </select>
 
                         </div>
                     </div>
@@ -89,7 +114,7 @@
             <div class="col-auto">
                 <button type="button" disabled="@(!ViewModel.CorrectDod || !ViewModel.CorrectOdo)" @onclick="GoNext" class="btn btn-primary">@(ViewModel.Exist() ? "Otvoriť" : "Vytvoriť")</button>
 
-                <button type="button" class="btn btn-secondary" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">Späť</button>
+                <button type="button" class="btn btn-secondary" @onclick="GoBack">Späť</button>
             </div>
         </div>
 
@@ -99,14 +124,14 @@
 
 
 @code {
-
+    ApproveModal AprovModSave = new();
 
     protected override void OnInitialized()
     {
-        var founded = Holder.Remove<DBLayer.Models.Objednavka>();   //pokusi sa ziskat objekt z uloziska
+        var founded = objectHolder.Remove<DBLayer.Models.Objednavka>();   //pokusi sa ziskat objekt z uloziska
         if (founded != null)
         {
-            ViewModel.SetExistObjednavka(founded.Clon());      //nasla sa existujuca objednavka, nastavujeme model na upravu
+            ViewModel.SetExistObjednavka(founded);      //nasla sa existujuca objednavka, nastavujeme model na upravu
         }
     }
 
@@ -114,5 +139,14 @@
     {
         ViewModel.NastavObjednavkuCommand.Execute(null);
         Navigator.NavigateTo(Navigator.SwitchLast("/PridatPolozky"));
+    }
+
+    private async Task GoBack()
+    {
+        if (ViewModel.PozriZmeny())
+        {
+            await AprovModSave.OpenModal(true);
+        }
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
 }

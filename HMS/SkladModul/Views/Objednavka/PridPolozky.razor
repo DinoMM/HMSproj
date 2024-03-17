@@ -15,7 +15,7 @@
 </ApproveModal>
 <ApproveModal @ref=AprovModEmpty ID="emptyobjmodal"
               Text="Objednávka je prázdna, chcete ju zrušiť?"
-              FuncOnSucc="DeleteEmpty"
+              FuncOnSucc="ViewModel.OdstranCeluObjednavkuCommand.Execute"
               FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
 <InfoModal @ref="InfoMod" ID="infocantsave"
@@ -27,14 +27,14 @@
 
     <div class="row h-25">
         <div class="col col-1">
-            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false))>Uložiť</button>
+            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false)) disabled="@ViewModel.Locked()">Uložiť</button>
         </div>
         <div class="col col-1 me-2">
             <button type="button" class="btn btn-secondary" @onclick="Close">Späť</button>
         </div>
 
         <div class="col col-2">
-            <button type="button" disabled="@ViewModel.Uprava" @onclick=@(async () => {ViewModel.PridatPolozkuCommand.Execute(null);await ClearInput();}) class="btn btn-success">Pridať položku</button>
+            <button type="button" disabled="@(ViewModel.Uprava || ViewModel.Locked())" @onclick=@(async () => {ViewModel.PridatPolozkuCommand.Execute(null);await ClearInput();}) class="btn btn-success">Pridať položku</button>
         </div>
 
 
@@ -60,27 +60,33 @@
                     {
                         <tr>
                             <td><input type="text" readonly disabled="disabled" value="@item.PolozkaSkladu" size="8" /></td>
-                            <td><input type="text" value="@item.Nazov" @onchange=@((ChangeEventArgs arg) => {item.Nazov = arg.Value.ToString(); ViewModel.Zmena = true; } ) /></td>
-                            <td><input type="number" @bind-value="item.Mnozstvo" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" class="w-75" /></td>
+                            <td><input type="text" disabled="@ViewModel.Locked()" value="@item.Nazov" @onchange=@((ChangeEventArgs arg) => {item.Nazov = arg.Value.ToString(); ViewModel.Zmena = true; } ) /></td>
+                            <td><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.Mnozstvo" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" class="w-75" /></td>
                             <td>@item.PolozkaSkladuX.MernaJednotka</td>
-                            <td><input type="number" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" class="w-75" /></td>
+                            <td><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" class="w-75" /></td>
                             <td>@item.CenaDPH.ToString("F3")</td>
                             <td>@item.CelkovaCena.ToString("F3")</td>
                             <td>@item.CelkovaCenaDPH.ToString("F3")</td>
-                            <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                            @if (!ViewModel.Locked())
+                            {
+                                <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                            }
                         </tr>
                     }
-                    <tr style="position:sticky; bottom: 0;">
-                        <td><input type="text" id="vyhlid" @onchange=ViewModel.VyhladajPolozkuCommand.Execute @onfocus=@(() => ViewModel.Uprava = true) @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" /></td>
-                        <td><input type="text" readonly disabled="disabled" @bind="ViewModel.NovaPoloz.Nazov" /> </td>
-                        <td></td>
-                        <td>@ViewModel.NovaPoloz.PolozkaSkladuX?.MernaJednotka</td>
-                        <td>@ViewModel.NovaPoloz.Cena</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                    </tr>
+                    @if (!ViewModel.Locked())
+                    {
+                        <tr style="position:sticky; bottom: 0;">
+                            <td><input type="text" id="vyhlid" @onchange=ViewModel.VyhladajPolozkuCommand.Execute @onfocus=@(() => ViewModel.Uprava = true) @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" /></td>
+                            <td><input type="text" readonly disabled="disabled" @bind="ViewModel.NovaPoloz.Nazov" /> </td>
+                            <td></td>
+                            <td>@ViewModel.NovaPoloz.PolozkaSkladuX?.MernaJednotka</td>
+                            <td>@ViewModel.NovaPoloz.Cena</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                    }
                 </TBODY>
             </UniComponents.SimpleTable>
         </div>
@@ -95,7 +101,6 @@
 
 
 @code {
-    private bool objOK = false;
     private bool answer = false;
     private string vyhladavac = "";
     ApproveModal AprovMod = new();
@@ -106,17 +111,26 @@
 
     protected override void OnInitialized()
     {
-        if (!objOK) //prvotna kontrola ci viewmodel ma dobre nahodenu objednavku
+        var founded = objectHolder.Remove<DBLayer.Models.Objednavka>();   //pokusi sa ziskat objekt z uloziska
+        if (founded != null)
         {
-            objOK = ViewModel.IsOBJValidna(false);
-            ViewModel.Existujuca = ViewModel.IsOBJValidna();
+            ViewModel.Objednavka = founded;      //nasla sa existujuca objednavka, nastavujeme model na upravu
+            ViewModel.Existujuca = true;
+            if (!ViewModel.IsOBJValidna())
+            {
+                Debug.WriteLine("Objednavka nieje vlozena spravne v PridPolozkyViewModel");
+                Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                return;
+
+            }
         }
-        if (!objOK)
+        else
         {
             Debug.WriteLine("Objednavka nieje vlozena spravne v PridPolozkyViewModel");
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
+
         ViewModel.NovaPoloz = new();
         ViewModel.LoadZoznamObjednavky();
     }
@@ -133,7 +147,8 @@
     }
 
 
-    private async Task<bool> Save(bool askUser)  //vrati hodnotu na zaklade toho co uzivatel klikne(true - suhlasi, inak false)
+    private async Task<bool>
+    Save(bool askUser)  //vrati hodnotu na zaklade toho co uzivatel klikne(true - suhlasi, inak false)
     {
         if (askUser)
         {
@@ -152,13 +167,15 @@
         }
     }
 
-    private void DeleteEmpty()
-    {
-        ViewModel.OdstranCeluObjednavkuCommand.Execute(null);
-    }
 
     private async Task Close() //tlacidlo spat
     {
+        if (!ViewModel.Locked()) //ak je zamknute tak len odideme
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            ViewModel.VycistiHodnotyForce();
+            return;
+        }
 
         if (ViewModel.Zmena)    //je registrovaná zmena? //ano
         {
@@ -171,22 +188,33 @@
                 }
                 else
                 {
-                    if (ViewModel.VratDoPovodnehoStavu())   //Vratenie, Prazdny? //ano
+                    if (ViewModel.IsZoznamEmpty())
                     {
                         answer = await AprovModEmpty.OpenModal(true);
                         if (answer)
                         {
-                            Navigator.NavigateTo(Navigator.RemoveLastUrl());
-                            ViewModel.VycistiHodnotyForce();
-                            return; //koniec
+                            if (ViewModel.Deleted)
+                            {
+                                Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                                ViewModel.VycistiHodnotyForce();
+                                return; //koniec
+                            }
+                        }
+                        else
+                        {
+                            if (ViewModel.VratDoPovodnehoStavu())   //Vratenie, Prazdny? //ano
+                            {
+
+                                return; //nic
+                            }
+                            else //nie
+                            {
+                                Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                                ViewModel.VycistiHodnotyForce();
+                                return; //koniec
+                            }
                         }
                         return; //nic
-                    }
-                    else //nie
-                    {
-                        Navigator.NavigateTo(Navigator.RemoveLastUrl());
-                        ViewModel.VycistiHodnotyForce();
-                        return; //koniec
                     }
                 }
             }

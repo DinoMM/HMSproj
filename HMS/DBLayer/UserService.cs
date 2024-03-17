@@ -43,7 +43,7 @@ namespace DBLayer
                 return false;
             }
             RolesOwn role;
-            if (Enum.TryParse((await _userManager.GetRolesAsync(user)).FirstOrDefault(), out role)) //ziskanie roly usera
+            if (!Enum.TryParse((await _userManager.GetRolesAsync(user)).FirstOrDefault(), out role)) //ziskanie roly usera
             {
                 return false;
             }

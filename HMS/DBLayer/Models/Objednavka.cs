@@ -97,7 +97,8 @@ namespace DBLayer.Models
                 return false;
             }
             if (string.IsNullOrEmpty(obj.Dodavatel) ||
-                string.IsNullOrEmpty(obj.Dodavatel))
+                string.IsNullOrEmpty(obj.Odberatel) ||
+                string.IsNullOrEmpty(obj.Tvorca))
             {
                 return false;
             }

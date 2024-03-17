@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using DBLayer;
 using DBLayer.Models;
 using Microsoft.AspNetCore.Components;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,105 +12,199 @@ using System.Text;
 using System.Threading.Tasks;
 using UniComponents;
 
+using OBJ = DBLayer.Models.Objednavka;
+
 namespace SkladModul.ViewModels.Objednavka
 {
     public partial class AddObjednavViewModel : ObservableObject
     {
         [ObservableProperty]
-        private string ico = default!;
+        private string icoDod = default!;
 
         [ObservableProperty]
-        private string nazovDodavatela = default!;
+        private string nazovDod = default!;
+
+        [ObservableProperty]
+        private string icoOdo = default!;
+
+        [ObservableProperty]
+        private string nazovOdo = default!;
 
         [ObservableProperty]
         private string popis = default!;
 
         [ObservableProperty]
-        Dodavatel odberatel = new();
+        StavOBJ stav = StavOBJ.Vytvorena;
 
 
-        private readonly PridPolozkyViewModel _PDViewModel;
+        //private readonly PridPolozkyViewModel _PDViewModel;
+        private readonly ObjectHolder _objectHolder;
         private readonly DBContext _db;
+        private readonly UserService _userService;
 
         public bool CorrectDod { get; set; } = false;
         public bool CorrectOdo { get; set; } = false;
 
-        private DBLayer.Models.Objednavka? pridObj;
+        public OBJ objednavka { get; set; }
 
 
-        public AddObjednavViewModel(DBContext db, PridPolozkyViewModel PDViewModel)
+        public AddObjednavViewModel(DBContext db, ObjectHolder objectHolder, UserService userService)
         {
-            _PDViewModel = PDViewModel;
             _db = db;
-            _PDViewModel.ResetOBJ();
-            pridObj = new();
+            _userService = userService;
+            _objectHolder = objectHolder;
+            objednavka = new();
         }
 
         [RelayCommand]
         private void ZmenaDod(ChangeEventArgs param)
         {
-            Ico = (string)param.Value!;
-            //List<Dodavatel> list = new() { new Dodavatel() { ICO = "123", Nazov = "EEJO" } };
-            var najDod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == Ico);
-            if (najDod is null)
+            string vlozeneIco = (string)param.Value!;
+            var najDod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == vlozeneIco);
+            if (najDod == null)
             {
                 CorrectDod = false;
-                NazovDodavatela = default!;
+                NazovDod = default!;
                 return;
             }
-            NazovDodavatela = najDod.Nazov;
+            NazovDod = najDod.Nazov;
             CorrectDod = true;
 
-            pridObj.Dodavatel = najDod.ICO;
-            pridObj.DodavatelX = najDod;
+            objednavka.Dodavatel = najDod.ICO;
+            objednavka.DodavatelX = najDod;
         }
 
         [RelayCommand]
         private void ZmenaOdo(ChangeEventArgs param)
         {
-            Odberatel.ICO = (string)param.Value!;
-            //List<Dodavatel> list = new() { new Dodavatel() { ICO = "123", Nazov = "EEJO" } };
-            var najDod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == Odberatel.ICO);
-            if (najDod is null)
+            string vlozeneIco = (string)param.Value!;
+            var najDod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == vlozeneIco);
+            if (najDod == null)
             {
                 CorrectOdo = false;
-                Odberatel.Nazov = default!;
+                NazovOdo = default!;
                 return;
             }
-            Odberatel.Nazov = najDod.Nazov;
+            NazovOdo = najDod.Nazov;
             CorrectOdo = true;
 
-            pridObj.Odberatel = najDod.ICO;
-            pridObj.OdberatelX = najDod;
+            objednavka.Odberatel = najDod.ICO;
+            objednavka.OdberatelX = najDod;
         }
 
         [RelayCommand]
         private void NastavObjednavku()
         {
-            _PDViewModel.Objednavka.ID = pridObj.ID;
-            _PDViewModel.Objednavka.Dodavatel = pridObj.Dodavatel;
-            _PDViewModel.Objednavka.DodavatelX = pridObj.DodavatelX;
-            _PDViewModel.Objednavka.Odberatel = pridObj.Odberatel;
-            _PDViewModel.Objednavka.OdberatelX = pridObj.OdberatelX;
-            _PDViewModel.Objednavka.Popis = Popis;
-            
+            if (Locked())
+            {
+                _objectHolder.Add(objednavka);
+                return;
+            }
+
+            objednavka.Stav = Stav;
+            objednavka.Popis = Popis;
+            bool nova = false;
+            if (string.IsNullOrEmpty(objednavka.ID))    //ak neni ID tak vygenerujeme
+            {
+                objednavka.ID = OBJ.DajNoveID(_db);
+                nova = true;
+            }
+
+            if (string.IsNullOrEmpty(objednavka.Tvorca))
+            {
+                objednavka.Tvorca = _userService.LoggedUser.Id;
+            }
+
+            if (objednavka.TvorcaX == null)
+            {
+                var pouz = _db.Users.FirstOrDefault(x => x.Id == objednavka.Tvorca);
+                if (pouz != null)
+                {
+                    objednavka.TvorcaX = pouz;
+                }
+            }
+
+            if (nova)
+            {
+                _db.Objednavky.Add(objednavka);
+            }
+            else
+            {
+                var obj = _db.Objednavky.FirstOrDefault(x => x.ID == objednavka.ID);
+                if (obj != null)
+                {
+                    obj.SetFromObjednavka(objednavka);
+                }
+            }
+            _db.SaveChanges();
+
+            _objectHolder.Add(objednavka);
         }
 
-        public void SetExistObjednavka(DBLayer.Models.Objednavka obj)
+        public void SetExistObjednavka(OBJ obj)
         {
-            pridObj = obj;
-            NazovDodavatela = pridObj.DodavatelX.Nazov;
-            Ico = pridObj.Dodavatel;
-            Odberatel = obj.OdberatelX;
+            objednavka = obj;
+            IcoDod = objednavka.Dodavatel;
+            NazovDod = objednavka.DodavatelX.Nazov;
+            IcoDod = objednavka.Odberatel;
+            NazovOdo = objednavka.OdberatelX.Nazov;
+            Stav = objednavka.Stav;
+            Popis = objednavka.Popis ?? "";
             CorrectDod = true;
             CorrectOdo = true;
         }
 
         public bool Exist()
         {
-            return !string.IsNullOrEmpty(pridObj?.ID);
+            return !string.IsNullOrEmpty(objednavka?.ID);
         }
 
+        public bool Locked()
+        {
+            switch (objednavka.Stav)
+            {
+                case StavOBJ.Vytvorena:
+                case StavOBJ.Neschvalena:
+                    return false;
+                case StavOBJ.Ukoncena:
+                    return true;
+                default:
+                    if (_userService.LoggedUserRole == RolesOwn.Admin ||
+                        _userService.LoggedUserRole == RolesOwn.Riaditel)
+                    {
+                        return false;
+                    }
+                    return true;
+            }
+
+        }
+        public bool PozriZmeny()
+        {
+            if (objednavka.Popis != null)
+            {
+                return _db.Entry(objednavka).State == EntityState.Modified ||
+                   !objednavka.Popis.Equals(Popis) ||
+                    objednavka.Stav != Stav;
+            }
+            else
+            {
+                return _db.Entry(objednavka).State == EntityState.Modified ||
+                  !(string.IsNullOrEmpty(objednavka.Popis) && string.IsNullOrEmpty(Popis)) ||
+                   objednavka.Stav != Stav;
+            }
+        }
+        [RelayCommand]
+        private void Uloz()
+        {
+            objednavka.Popis = Popis;
+            objednavka.Stav = Stav;
+            _db.SaveChanges();
+        }
+        [RelayCommand]
+        private void Neuloz()
+        {
+            _db.Entry(objednavka).State = EntityState.Unchanged;
+        }
 
     }
 }
