@@ -1,7 +1,7 @@
 ﻿@namespace UniComponents
 @inject IJSRuntime JSRuntime
 
-<div class="modal fade" id="exampleModalForm" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+<div class="modal fade" id="@ID" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -16,7 +16,7 @@
                         {
                             case "number":
                                 <div class="mb-3">
-                                    <label class="col-form-label" id=@("labelnumber" + Inputs.IndexOf(item)) >@item.Item1</label>
+                                    <label class="col-form-label" id=@("labelnumber" + Inputs.IndexOf(item))>@item.Item1</label>
                                     <input type="number" class="form-control" id=@("inputnumber" + Inputs.IndexOf(item)) @onchange="(e) => func(e,item)">
                                 </div>
                                 break;
@@ -57,23 +57,28 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zavrieť</button>
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick="FuncOnSucc" >Poslať</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(async () => { await FuncOnSucc.InvokeAsync(); CloseModal(true); })>Poslať</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(async () => { CloseModal(false); }) >Zavrieť</button>
             </div>
         </div>
     </div>
 </div>
 
 @code {
+    [Parameter]
+    public string ID { get; set; } = "exampleModalForm";
 
     [Parameter]
     public string Header { get; set; } = "Formular";
+
+    private TaskCompletionSource<bool> tcs;
+    private bool tstop = false;
 
     private List<(string, string)> _inputs;
     /// <summary>
     /// @(new List<(string, string)>() { ("Nazov1", "string"), ("Nazov2", "string")}) ||
     /// Item1 - Nazov, ktory sa zobrazi ||
-    /// Item2 - Typ, ktory ma byt input ("number", "string", "textArea", "bool") ||
+    /// Item2 - Typ, ktory ma byt input ("number", "string", "textArea", "bool", "email") ||
     /// </summary>
     [Parameter]
     [EditorRequired]
@@ -117,9 +122,34 @@
     [EditorRequired]
     public EventCallback FuncOnSucc { get; set; }
 
-    public async Task OpenModal()
+    /// <summary>
+    ///  Otvori modal pod ulozenym ID, vracia hodnotu podla toho, ci uzivatel klikol ano alebo nie
+    /// </summary>
+    /// <param name="stop"> Vrati true ak uzivatel prijal, inak false</param>
+    /// <returns></returns>
+    public async Task<bool> OpenModal(bool stop = false)
     {
-        await JSRuntime.InvokeVoidAsync("eval", "$('#exampleModalForm').modal('show');");   //(pomohol som si z internetu tutoriály/AI)
+        tstop = stop;
+        if (stop)
+        {
+            tcs = new TaskCompletionSource<bool>();
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");   //(pomohol som si z internetu tutoriály/AI)
+            await tcs.Task;             //fyzické statie programu
+            return tcs.Task.Result;
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");   //(pomohol som si z internetu tutoriály/AI)
+            return true;
+        }
+    }
+
+    private void CloseModal(bool ans)
+    {
+        if (tstop)
+        {
+            tcs.SetResult(ans); //zastavi fyzické státie programu
+        }
     }
 
     private void func(ChangeEventArgs e, (string, string) item)
@@ -147,8 +177,8 @@
                 case "bool":
                     Outputs[Inputs.IndexOf(item)] = Convert.ToBoolean(e.Value.ToString());
                     break;
-                default: 
-                Console.WriteLine("Chyba pri vkladani do FastFormModal"); break;
+                default:
+                    Console.WriteLine("Chyba pri vkladani do FastFormModal"); break;
             }
         }
     }

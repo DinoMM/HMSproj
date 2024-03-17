@@ -39,15 +39,12 @@
                 <Sve.Blazor.InfiniteScroll.Components.InfiniteScroll ObserverTargetId="observerTarget" ObservableTargetReached="() => ViewModel.NacitajDalsieCommand.Execute(null)">
                     <SimpleTable>
                         <THEAD>
-                        <th scope="col">ID</th>
-                        <th scope="col">Dodavateľ</th>
-                        <th scope="col">Stav</th>
-                        <th scope="col">Tvorca</th>
-                        @* <th scope="col">Stav</th> *@
-                        <th scope="col">Dátum vytvorenia</th>
+                        <th class="col-resize" scope="col">ID</th>
+                        <th class="col-resize" scope="col">Dodavateľ</th>
+                        <th class="col-resize" scope="col">Stav</th>
+                        <th class="col-resize" scope="col">Tvorca</th>
+                        <th class="col-resize" scope="col">Dátum vytvorenia</th>
                         <th scope="col"></th>
-                        @* <th scope="col">Celková cena</th>
-        <th scope="col">Celková cena s DPH</th> *@
 
                         </THEAD>
                         <TBODY>
@@ -56,11 +53,11 @@
 
                                 <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick=@(() => OpenOBJ(item)) style="cursor: pointer;">
 
-                                    <td>@item.ID</td>
-                                    <td>@item.DodavatelX.Nazov</td>
-                                    <td>@item.Stav</td>
-                                    <td>@item.TvorcaX.Surname</td>
-                                    <td>@item.DatumVznik.ToShortDateString()</td>
+                                    <td class="col-resize">@item.ID</td>
+                                    <td class="col-resize">@item.DodavatelX.Nazov</td>
+                                    <td class="col-resize">@item.Stav</td>
+                                    <td class="col-resize">@item.TvorcaX.Surname</td>
+                                    <td class="col-resize" >@item.DatumVznik.ToShortDateString()</td>
                                     @if (item.Stav == DBLayer.Models.StavOBJ.Vytvorena ||
                                         item.Stav == DBLayer.Models.StavOBJ.Neschvalena ||
                                         UserService.LoggedUserRole == DBLayer.RolesOwn.Admin ||
@@ -69,7 +66,6 @@
                                     {
                                     <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
                                     }
-
                                 </tr>
 
                             }

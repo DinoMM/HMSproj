@@ -1,8 +1,26 @@
 ﻿@namespace SkladModul
 @page "/Sklad"
+@inject SkladViewModel ViewModel
+
+<SelectModal @ref="SelectModObd" ID="selectmodalobdobie"
+             SelectionList="@ViewModel.GetObdobia()"
+             Value="@ViewModel.Obdobie"></SelectModal>
+<SelectModal @ref="SelectModSkl" ID="selectmodalsklad"
+             SelectionList="@ViewModel.GetSklady()"
+             Value="@ViewModel.Sklad"></SelectModal>
 
 <div class="container">
-    <div class="row">
+
+    <div class="row pb-1">
+        <div class="col-2">
+            <a class="btn btn-primary" id="uctobd" style="cursor:pointer" @onclick="ChangeObd">Obdobie:@ViewModel.Obdobie </a>
+        </div>
+        <div class="col-2">
+            <a class="btn btn-primary" id="skldpick" style="cursor:pointer"  @onclick="ChangeSkl">Sklad:@ViewModel.Sklad </a>
+        </div>
+    </div>
+
+    <div class="row pb-1">
         <div class="col-1"></div>
         <div class="col-3">
             <input type="text" class="form-control" id="searchBox" placeholder="Vyhľadaj položku..." />
@@ -11,13 +29,15 @@
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary">➕Pridať položku</button>
                 <button type="button" class="btn btn-primary">➖Odobrať položku</button>
-                <button type="button" class="btn btn-primary">➗Spraviť Výdaj</button>
+                <button type="button" class="btn btn-primary">⬆Spraviť Príjem</button>
+                <button type="button" class="btn btn-primary">⬇Spraviť Výdaj</button>
                 <button type="button" class="btn btn-primary">➰Uzavrieť obdobie</button>
-                <button type="button" class="btn btn-primary">❌Koniec</button>
+                <button type="button" class="btn btn-primary" @onclick=@(() =>Navigator.NavigateTo(Navigator.RemoveLastUrl()))>❌Koniec</button>
             </div>
         </div>
         <div class="col-1"></div>
     </div>
+
     <div class="row">
         <div class="col-1"></div>
         <div class="col-9">
@@ -39,12 +59,35 @@
         </div>
         <div class="col-1"></div>
     </div>
+
     <div class="row">
         <div class="col-12"></div>
     </div>
+
 </div>
+
+<script>
+    window.changeText = (id, newText) => {
+    var element = document.getElementById(id);
+    element.textContent = newText;
+}
+</script>
 
 
 @code {
+    SelectModal SelectModObd = new();
+    SelectModal SelectModSkl = new();
 
+    private async Task ChangeObd()
+    {
+        await SelectModObd.OpenModal(true);
+        ViewModel.Obdobie = SelectModObd.Value;
+        await JSRuntime.InvokeVoidAsync("changeText", "uctobd", "Obdobie:" + ViewModel.Obdobie);
+    }
+    private async Task ChangeSkl()
+    {
+        await SelectModSkl.OpenModal(true);
+        ViewModel.Sklad = SelectModSkl.Value;
+        await JSRuntime.InvokeVoidAsync("changeText", "skldpick", "Sklad:" + ViewModel.Sklad);
+    }
 }

@@ -1,0 +1,92 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+
+<div class="modal fade" id="@ID" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabelS">@Header</h5>
+            </div>
+            <div class="modal-body" id="modalASTextLabel" style="height: 10rem; overflow-y: auto;">
+
+                <select id="modalselectorselect" class="form-select" @bind="@Value" aria-label="Default select example">
+                    @foreach (var item in SelectionList)
+                    {
+                        <option value="@item">@item</option>
+                    }
+
+                </select>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(async () => { await FuncOnSucc.InvokeAsync(); CloseModal(true); })>Áno</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(async () => { CloseModal(false); })>Nie</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Header { get; set; } = "Výber";
+
+    /// <summary>
+    /// List z ktoreho sa bude zobrazovať výber
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public List<string> SelectionList { get; set; } = new();
+
+    /// <summary>
+    /// Hodnota, ktorá sa bude zobrazovať ako prvá a hodnota, ktorá bude po zatvorení uložená z tohto výberu
+    /// </summary>
+    [Parameter]
+    [EditorRequired]
+    public string Value { get; set; } = default!;
+
+    /// <summary>
+    /// Nazov funkcie, ktora sa uskutocni po stlaceni ano
+    /// </summary>
+    [Parameter]
+    public EventCallback FuncOnSucc { get; set; }
+
+    private TaskCompletionSource<bool> tcs;
+    private bool tstop = false;
+
+    /// <summary>
+    /// Unikatne ID podla ktoreho vieme rozoznat medzi viacerimi modalmi
+    /// </summary>
+    [Parameter]
+    public string ID { get; set; } = "staticBackdropSelect";
+
+    /// <summary>
+    ///  Otvori modal pod ulozenym ID, vracia hodnotu podla toho, ci uzivatel klikol ano alebo nie
+    /// </summary>
+    /// <param name="stop"> Vrati true ak uzivatel prijal, inak false</param>
+    /// <returns></returns>
+    public async Task<bool> OpenModal(bool stop = false)
+    {
+        tstop = stop;
+        if (stop)
+        {
+            tcs = new TaskCompletionSource<bool>();
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            await tcs.Task;             //fyzické statie programu
+            return tcs.Task.Result;
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            return true;
+        }
+
+    }
+
+    private void CloseModal(bool ans)
+    {
+        if (tstop)
+        {
+            tcs.SetResult(ans); //zastavi fyzické státie programu
+        }
+    }
+}

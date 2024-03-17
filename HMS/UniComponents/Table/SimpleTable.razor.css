@@ -2,6 +2,24 @@
     position: sticky;
     top: 0;
     --bs-table-bg: #f1f1f1d5;
-    border:initial;
-
+    border: initial;
 }
+
+.resizable {
+    overflow: auto;
+}
+
+    .resizable .col-resize {
+        position: relative;
+    }
+
+        .resizable .col-resize::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: -2px;
+            bottom: 0;
+            width: 5px;
+            cursor: col-resize;
+            border-right: 1px solid #dee2e6;
+        }

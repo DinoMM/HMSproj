@@ -1,14 +1,44 @@
 ﻿@namespace UniComponents
-<table class="table table-striped table-hover">
-    <thead>
-        <tr>
-            @THEAD
-        </tr>
-    </thead>
-    <tbody>
-        @TBODY
-    </tbody>
-</table>
+@inject IJSRuntime JSRuntime
+<div class="resizable">
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                @THEAD
+            </tr>
+        </thead>
+        <tbody>
+            @TBODY
+        </tbody>
+    </table>
+</div>
+
+<script>
+    window.resizeColumns = function() {
+         const thElms = document.querySelectorAll(".col-resize");
+
+        thElms.forEach(thElm => {
+            let startOffset = thElm.offsetWidth;
+
+            thElm.addEventListener("mousedown", function(e) {
+                let startX = e.clientX;
+
+                document.addEventListener("mousemove", doDrag, false);
+                document.addEventListener("mouseup", stopDrag, false);
+
+                function doDrag(e) {
+                    thElm.style.width = (startOffset + e.clientX - startX) + "px";
+                }
+
+                function stopDrag(e) {
+                    document.removeEventListener("mousemove", doDrag, false);
+                    document.removeEventListener("mouseup", stopDrag, false);
+                }
+            });
+        });
+    }
+</script>
+
 
 @code {
     [Parameter]
@@ -17,6 +47,13 @@
     [Parameter]
     public RenderFragment TBODY { get; set; }
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("resizeColumns");
+        }
+    }
 
 }
 
