@@ -63,11 +63,11 @@ namespace DBLayer
                 .HasForeignKey(o => o.Odberatel)
                 .OnDelete(DeleteBehavior.NoAction); // No action delete rule for Odberatel
 
-            //modelBuilder.Entity<PolozkaSkladuMnozstvo>()    //definovanie 2 foreign klucov
-            //.HasKey(e => new { e.PolozkaSkladu, e.Sklad });
+            modelBuilder.Entity<PolozkaSkladuMnozstvo>()    //definovanie 2 foreign klucov
+            .HasKey(e => new { e.PolozkaSkladu, e.Sklad });
 
-            //modelBuilder.Entity<SkladUzivatel>()            //definovanie 2 foreign klucov
-            //.HasKey(e => new { e.Sklad, e.Uzivatel });
+            modelBuilder.Entity<SkladUzivatel>()            //definovanie 2 foreign klucov
+            .HasKey(e => new { e.Sklad, e.Uzivatel });
 
         }
 
