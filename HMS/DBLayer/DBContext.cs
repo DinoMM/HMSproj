@@ -39,6 +39,9 @@ namespace DBLayer
         public DbSet<Objednavka> Objednavky { get; set; }
         public DbSet<PolozkaSkladu> PolozkySkladu { get; set; }
         public DbSet<PolozkaSkladuObjednavky> PolozkySkladuObjednavky { get; set; }
+        public DbSet<Sklad> Sklady { get; set; }
+        public DbSet<PolozkaSkladuMnozstvo> PolozkaSkladuMnozstva { get; set; }
+        public DbSet<SkladUzivatel> SkladUzivatelia { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -48,7 +51,7 @@ namespace DBLayer
 
             modelBuilder.Entity<IdentityUserLogin<string>>().HasKey(x => x.UserId);
 
-            modelBuilder.Entity<Objednavka>()
+            modelBuilder.Entity<Objednavka>()   //pre cyklicke mazanie
             .HasOne(o => o.DodavatelX)
             .WithMany()
             .HasForeignKey(o => o.Dodavatel)
@@ -60,17 +63,12 @@ namespace DBLayer
                 .HasForeignKey(o => o.Odberatel)
                 .OnDelete(DeleteBehavior.NoAction); // No action delete rule for Odberatel
 
-            //modelBuilder.Entity<Objednavka>()
-            //    .HasOne(o => o.DodavatelX)
-            //    .WithMany()
-            //    .HasForeignKey(o => o.Dodavatel)
-            //    .OnDelete(DeleteBehavior.Cascade); // or DeleteBehavior.Restrict
+            //modelBuilder.Entity<PolozkaSkladuMnozstvo>()    //definovanie 2 foreign klucov
+            //.HasKey(e => new { e.PolozkaSkladu, e.Sklad });
 
-            //modelBuilder.Entity<Objednavka>()
-            //    .HasOne(o => o.OdberatelX)
-            //    .WithMany()
-            //    .HasForeignKey(o => o.Odberatel)
-            //    .OnDelete(DeleteBehavior.NoAction); // or DeleteBehavior.Restrict
+            //modelBuilder.Entity<SkladUzivatel>()            //definovanie 2 foreign klucov
+            //.HasKey(e => new { e.Sklad, e.Uzivatel });
+
         }
 
         public class YourDbContextFactory : IDesignTimeDbContextFactory<DBContext>    //Pre manazovanie migraci je potrebna tato trieda (pomohol som si z internetu tutoriály/AI)

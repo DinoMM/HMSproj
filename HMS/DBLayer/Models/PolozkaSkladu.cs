@@ -18,6 +18,7 @@ namespace DBLayer.Models
         [Required]
         [StringLength(32, MinimumLength = 3, ErrorMessage = "Merná jednotka musi byť v rozmedzi 1 - 32 znakov")]
         public string MernaJednotka { get; set; } = default!;
+        [NotMapped]
         public double Mnozstvo { get; set; } = 0;
         [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty")]
         public double Cena { get; set; } = 0;
