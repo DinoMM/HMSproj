@@ -1,0 +1,164 @@
+﻿@namespace SkladModul
+@page "/Sklad"
+@using DBLayer.Models
+@inject SkladViewModel ViewModel
+
+<SelectModal @ref="SelectModObd" ID="selectmodalobdobie"
+             SelectionList="@ViewModel.GetObdobia()"
+             Value="@ViewModel.Obdobie"></SelectModal>
+<SelectModal @ref="SelectModSkl" ID="selectmodalsklad"
+             SelectionList="@ViewModel.Sklady.Select(x => x.ID).ToList()"
+             Value="@ViewModel.Sklad.ID"></SelectModal>
+<ApproveModal @ref=AprovMod ID="deletemodal"
+              Text="Naozaj chcete odstrániť tento riadok?<br>POZOR môžu sa vymazať prvky, ktoré sú spojené s touto položkou!"
+              FuncOnSucc="EventCallback.Empty"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+<InfoModal @ref="InfoModHasConneciton" ID="infomodalhascon"
+           Text="Nemožno vymazať položku lebo je obsiahnutá v sklade alebo k neukončenej objednávke.">
+</InfoModal>
+
+<div class="container">
+
+    <div class="row pb-1">
+        <div class="col-2">
+            <a class="btn btn-primary" id="uctobd" style="cursor:pointer" @onclick="ChangeObd">Obdobie:@ViewModel.Obdobie </a>
+        </div>
+        <div class="col-2">
+            <a class="btn btn-primary" id="skldpick" style="cursor:pointer" @onclick="ChangeSkl">Sklad:@ViewModel.Sklad.ID </a>
+        </div>
+    </div>
+
+    <div class="row pb-1">
+        <div class="col-1"></div>
+        <div class="col-3">
+            <input type="text" class="form-control" id="searchBox" placeholder="Vyhľadaj položku..." />
+        </div>
+        <div class="col-8">
+            <div class="btn-group" role="group">
+                @if (Sklad.ZMENAPOLOZIEKROLE.Contains(UserService.LoggedUserRole))
+                {
+                    <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad")))" type="button" class="btn btn-primary">➕Pridať položku</button>
+                }
+                @if (Sklad.SKLADOVEPOHYBYROLE.Contains(UserService.LoggedUserRole))
+                {
+                    <button type="button" class="btn btn-primary">⬆Spraviť Príjem</button>
+                    <button type="button" class="btn btn-primary">⬇Spraviť Výdaj</button>
+                    <button type="button" class="btn btn-primary">➰Uzavrieť obdobie</button>
+                }
+                <button type="button" class="btn btn-primary" @onclick=@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))>❌Koniec</button>
+            </div>
+        </div>
+        <div class="col-1"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-9" style="max-height: 30rem;overflow: auto;">
+            <SimpleTable>
+                <THEAD>
+
+                <th class="col-resize" scope="col">ID</th>
+                <th class="col-resize" scope="col">Názov</th>
+                <th class="col-resize" scope="col">Merná jednotka</th>
+                <th class="col-resize" scope="col">Cena</th>
+                <th class="col-resize" scope="col">Cena s DPH</th>
+                <th class="col-resize" scope="col"></th>
+
+                </THEAD>
+                <TBODY>
+                    @foreach (var item in ViewModel.ZoznamPoloziekSkladu)
+                    {
+
+                        <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open(item))" style="cursor: pointer;">
+                            <td class="col-resize">@item.ID </td>
+                            <td class="col-resize">@item.Nazov </td>
+                            <td class="col-resize">@item.MernaJednotka </td>
+                            <td class="col-resize">@item.Cena.ToString("F3") </td>
+                            <td class="col-resize">@item.CenaDPH.ToString("F3") </td>
+                            <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                        </tr>
+
+                    }
+                    <span id="observerTarget"></span>
+                </TBODY>
+
+            </SimpleTable>
+        </div>
+        <div class="col-1"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-12"></div>
+    </div>
+
+</div>
+
+<script>
+    window.changeText = (id, newText) => {
+    var element = document.getElementById(id);
+    element.textContent = newText;
+}
+</script>
+
+
+@code {
+
+    SelectModal SelectModObd = new();
+    SelectModal SelectModSkl = new();
+    ApproveModal AprovMod = new();
+    InfoModal InfoModHasConneciton = new();
+    PolozkaSkladu? marked;
+
+
+    private async Task ChangeObd()
+    {
+        await SelectModObd.OpenModal(true);
+        ViewModel.Obdobie = SelectModObd.Value;
+        await JSRuntime.InvokeVoidAsync("changeText", "uctobd", "Obdobie:" + ViewModel.Obdobie);
+    }
+    private async Task ChangeSkl()
+    {
+        await SelectModSkl.OpenModal(true);
+        ViewModel.SetSklad(SelectModSkl.Value);
+        await JSRuntime.InvokeVoidAsync("changeText", "skldpick", "Sklad:" + ViewModel.Sklad.ID);
+        await JSRuntime.InvokeVoidAsync("changeText", "uctobd", "Obdobie:" + ViewModel.Obdobie);
+    }
+
+    protected override void OnInitialized()
+    {
+        if (!Sklad.POVOLENEROLE.Contains(UserService.LoggedUserRole))
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.LoadPolozky();
+    }
+
+    private async Task Delete(PolozkaSkladu poloz)
+    {
+        if (ViewModel.MoznoVymazat(poloz))
+        {
+            if (await AprovMod.OpenModal(true))
+            {
+                ViewModel.VymazPolozku(poloz);
+            }
+        }
+        else
+        {
+            await InfoModHasConneciton.OpenModal();
+        }
+
+    }
+    private void Open(PolozkaSkladu poloz)
+    {
+        objectHolder.Add(poloz);
+        Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad"));
+    }
+
+
+
+}

@@ -58,6 +58,12 @@
         if (tstop)
         {
             tcs.SetResult(true);
-        }    
+        }
+    }
+
+    public void UpdateText(string newText)
+    {
+        Text = newText;
+        StateHasChanged(); // Trigger a re-render
     }
 }

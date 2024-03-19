@@ -1,0 +1,148 @@
+﻿@namespace SkladModul
+@page "/Sklad/ModifPolozSklad"
+@inject ModifPolozSkladViewModel ViewModel
+@using Microsoft.AspNetCore.Components.Forms
+
+<InfoModal @ref="InfoMod" ID="infosaved"
+           Text="Zmeny boli uložené.">
+</InfoModal>
+<ApproveModal @ref="ApproveMod" ID="approvedelete"
+              Text="Chcete zrušiť odznačené určenia? táto akcia sa nedá vrátiť!"
+              FuncOnSucc="EventCallback.Empty"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+<ApproveModal @ref="ApproveModNSave" ID="approvenotsave"
+              Text="Nemáte uložené zmeny, chcete odísť bez uloženia?"
+              FuncOnSucc="EventCallback.Empty"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+
+<EditForm Model="ViewModel.Polozka" OnValidSubmit="Save" OnInvalidSubmit="() => ViewModel.Saved = false">
+    <DataAnnotationsValidator />
+    <div class="container px-5">
+        <div class="row">
+            <div class="col">
+                <h1 class="text-center">Modifikovanie položky skladu</h1>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <label>ID (Automaticky)</label>
+                <input type="text" value=@ViewModel.Polozka.ID disabled="disabled" class="form-control w-50" placeholder="" readonly>
+            </div>
+            <div class="col">
+                <label>Merná jednotka</label>
+                <input type="text" @bind-value=@ViewModel.Polozka.MernaJednotka @bind-value:event="oninput" @onchange="() => ViewModel.Saved = false" class="form-control w-75" placeholder="Zatajte mernú jednotku">
+                <ValidationMessage For="@(() => ViewModel.Polozka.MernaJednotka)" />
+            </div>
+
+        </div>
+
+        <div class="row">
+
+            <div class="col">
+                <label>Názov</label>
+                <input type="text" @bind-value=@ViewModel.Polozka.Nazov @bind-value:event="oninput" @onchange="() =>ViewModel.Saved = false" class="form-control w-75" placeholder="Zadajte názov">
+                <ValidationMessage For="@(() => ViewModel.Polozka.Nazov)" />
+            </div>
+            <div class="col">
+                <div class="container px-0">
+                    <div class="row gx-0">
+                        <div class="col">
+                            <label>Cena</label>
+                            <input type="number" @bind-value=@ViewModel.Polozka.Cena @bind-value:event="oninput" @onchange="() =>ViewModel.Saved = false" step="0.010" class="form-control w-50" />
+                            <ValidationMessage For="@(() => ViewModel.Polozka.Cena)" />
+                        </div>
+                        <div class="col">
+                            <label>CenaDPH</label>
+                            <input type="text" value="@ViewModel.Polozka.CenaDPH.ToString("F3")" class="form-control w-50" readonly disabled="disabled" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-6">
+                <label>Určenie</label>
+                <div class="list-group w-75" style="height: 8rem; overflow-y: auto">
+                    @foreach (var item in ViewModel.ZoznamSkladov)
+                    {
+                        <a @onclick="@(() => { ViewModel.VyberSklad(item); ViewModel.Saved = false; })" class="list-group-item list-group-item-action @(ViewModel.ZoznamOnacenych.Contains(item) ? "active" : "")" style="cursor:pointer">@item.ID - @item.Nazov</a>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row pt-2">
+            <div class="col text-center">
+                <button type="submit" class="btn btn-primary">Vytvoriť</button>
+                <button type="button" @onclick="Close" class="btn btn-secondary">Koniec</button>
+            </div>
+        </div>
+
+    </div>
+</EditForm>
+
+
+@code {
+    InfoModal InfoMod = new();
+    ApproveModal ApproveMod = new();
+    ApproveModal ApproveModNSave = new();
+    //EditForm? Form { get; set; } = new();
+
+    protected override void OnInitialized()
+    {
+        var founded = objectHolder.Remove<DBLayer.Models.PolozkaSkladu>();   //pokusi sa ziskat objekt z uloziska
+        if (founded != null)
+        {
+            ViewModel.SetExist(founded);      //nasla sa existujuca polozka, nastavujeme model na upravu
+        }
+    }
+
+    private async Task Save()
+    {
+        await ViewModel.Uloz(ApproveMod);
+        if (ViewModel.Saved)
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+        await InfoMod.OpenModal();
+        ViewModel.Saved = true;
+    }
+
+    private async Task Close()
+    {
+        if (ViewModel.Saved)
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+        }
+        else
+        {
+            if (await ApproveModNSave.OpenModal(true))
+            {
+                ViewModel.VratZmeny();
+                Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            }
+        }
+    }
+
+
+
+    //private async Task Proceed()
+    //{
+    //    //if (Form.EditContext.Validate())
+
+
+    //    //Form.EditContext.GetValidationMessages())
+    //    /*Form?.EditContext?.AddValidationMessage(
+    //         FieldIdentifier,
+    //        "Your custom validation error message"
+    //    )*/
+    //}
+
+}

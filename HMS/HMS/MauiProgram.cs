@@ -73,6 +73,7 @@ namespace HMS
             builder.Services.AddTransient<ObjednavkaViewModel>();
 
             builder.Services.AddTransient<SkladViewModel>();
+            builder.Services.AddTransient<ModifPolozSkladViewModel>();
             #endregion
 
 

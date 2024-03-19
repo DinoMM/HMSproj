@@ -15,7 +15,7 @@ namespace DBLayer.Models
         public Sklad SkladX { get; set; }
         [ForeignKey("UzivatelX")]
         public string Uzivatel { get; set; } = default!;
-        public PolozkaSkladu UzivatelX { get; set; }
+        public IdentityUserOwn UzivatelX { get; set; }
 
         
     }

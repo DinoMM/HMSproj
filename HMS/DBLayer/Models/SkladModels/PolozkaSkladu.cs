@@ -16,7 +16,7 @@ namespace DBLayer.Models
         [StringLength(128,MinimumLength = 3,ErrorMessage = "Nazov musi byť v rozmedzi 3 - 128 znakov" )]
         public string Nazov { get; set; } = default!;
         [Required]
-        [StringLength(32, MinimumLength = 3, ErrorMessage = "Merná jednotka musi byť v rozmedzi 1 - 32 znakov")]
+        [StringLength(32, MinimumLength = 1, ErrorMessage = "Merná jednotka musi byť v rozmedzi 1 - 32 znakov")]
         public string MernaJednotka { get; set; } = default!;
         [NotMapped]
         public double Mnozstvo { get; set; } = 0;
@@ -54,7 +54,7 @@ namespace DBLayer.Models
                 int cislo;
                 if (db.PolozkySkladu.Count() != 0)
                 {
-                    cislo = int.Parse(db.PolozkySkladu.Last().ID) + adder;
+                    cislo = int.Parse(db.PolozkySkladu.DefaultIfEmpty().Max(x => x != null ? x.ID : "1") ?? "1") + adder;
                 }
                 else
                 {

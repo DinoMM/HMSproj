@@ -35,7 +35,7 @@ namespace DBLayer
                         await _roleManager.CreateAsync(new IdentityRole(roleStr));
                     }
                 }
-                
+
                 var res = await _userManager.FindByNameAsync("admin");  //pridanie admina
                 if (res == null)
                 {
@@ -45,7 +45,8 @@ namespace DBLayer
                 }
 
                 var dod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == "123456"); //pridanie dodavatelov
-                if (dod == null) {
+                if (dod == null)
+                {
                     var prevadzka = new Dodavatel() { ICO = "123456", Nazov = "HotelX", Obec = "Piešťany", Adresa = "Hurbanova 37, 921 01" };
                     _db.Dodavatelia.Add(prevadzka);
                 }
@@ -63,9 +64,42 @@ namespace DBLayer
                 }
 
                 var pol = _db.PolozkySkladu.FirstOrDefault(x => x.Nazov == "Toaletný papier");
-                if (pol == null) {
+                if (pol == null)
+                {
                     var polozka = new PolozkaSkladu() { ID = PolozkaSkladu.DajNoveID(_db), Cena = 0.79, MernaJednotka = "KS", Nazov = "Toaletný papier" };
                     _db.PolozkySkladu.Add(polozka);
+                }
+                var skl = _db.Sklady.FirstOrDefault(x => x.ID == "HKS");
+                if (skl == null)
+                {
+                    var polozka = new Sklad() { ID = "HKS", Nazov = "House keeping sklad" };
+                    _db.Sklady.Add(polozka);
+                }
+                skl = _db.Sklady.FirstOrDefault(x => x.ID == "KS");
+                if (skl == null)
+                {
+                    var polozka = new Sklad() { ID = "KS", Nazov = "Kitchen sklad" };
+                    _db.Sklady.Add(polozka);
+                }
+                var admn = _db.Users.FirstOrDefault(x => x.UserName == "admin");
+                var skuz = _db.SkladUzivatelia.FirstOrDefault(x => x.Sklad == "HKS" && x.Uzivatel == admn.Id);
+                if (skuz == null)
+                {
+                    var polozka = new SkladUzivatel() { Sklad = "HKS", Uzivatel = admn.Id };
+                    _db.SkladUzivatelia.Add(polozka);
+                }
+                skuz = _db.SkladUzivatelia.FirstOrDefault(x => x.Sklad == "KS" && x.Uzivatel == admn.Id);
+                if (skuz == null)
+                {
+                    var polozka = new SkladUzivatel() { Sklad = "KS", Uzivatel = admn.Id };
+                    _db.SkladUzivatelia.Add(polozka);
+                }
+                pol = _db.PolozkySkladu.FirstOrDefault(x => x.Nazov == "Toaletný papier");
+                var polsm = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.Sklad == "HKS" && x.PolozkaSkladu == pol.ID);
+                if (polsm == null)
+                {
+                    var polozka = new PolozkaSkladuMnozstvo() { Sklad = "HKS", PolozkaSkladu = pol.ID };
+                    _db.PolozkaSkladuMnozstva.Add(polozka);
                 }
 
                 await _db.SaveChangesAsync();
