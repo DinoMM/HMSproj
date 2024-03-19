@@ -10,6 +10,9 @@ namespace DBLayer.Models
 {
     public class PolozkaSkladuMnozstvo
     {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public long ID { get; set; }
         [ForeignKey("PolozkaSkladuX")]
         public string PolozkaSkladu { get; set; } = default!;
         public PolozkaSkladu PolozkaSkladuX { get; set; }

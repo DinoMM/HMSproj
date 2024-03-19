@@ -1,0 +1,77 @@
+﻿@namespace SkladModul
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-center font-weight-bold">Výdajky za obdobie</h2>
+            <button class="btn btn-primary float-left mb-3" type="button">Zrušiť</button>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">Názov Položky</th>
+                        <th scope="col">ČísloID</th>
+                        <th scope="col">Množstvo</th>
+                        <th scope="col">Merná jednotka</th>
+                        <th scope="col">Cena za 1/MJ</th>
+                        <th scope="col">Cena za 1/MJ s DPH</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows of data will go here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- Vytvoriť výdajku section -->
+    <div class="row">
+        <div class="col-12">
+            <h4 class="float-left mb-3 font-weight-bold">Vytvoriť výdajku</h4>
+            <div class="border border-dark">
+                <div class="row">
+                    <div class="col-6">
+                        <label class="mt-2">Vydané množstvo</label>
+                        <input type="text" class="form-control" placeholder="">
+                    </div>
+                    <div class="col-6">
+                        <label class="mt-2">Pre stredisko</label>
+                        <input type="text" class="form-control" placeholder="">
+                    </div>
+                </div>
+                <button class="btn btn-primary mt-3" type="button">Vytvoriť</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- História výdajok section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h4 class="float-left mb-3 font-weight-bold">História výdajok</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th scope="col">Množstvo</th>
+                        <th scope="col">Dátum výdaja</th>
+                        <th scope="col">Pre oddelenie</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows of data will go here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+</div>
+
+
+@code {
+
+}

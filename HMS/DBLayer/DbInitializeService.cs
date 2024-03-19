@@ -47,19 +47,19 @@ namespace DBLayer
                 var dod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == "123456"); //pridanie dodavatelov
                 if (dod == null)
                 {
-                    var prevadzka = new Dodavatel() { ICO = "123456", Nazov = "HotelX", Obec = "Piešťany", Adresa = "Hurbanova 37, 921 01" };
+                    var prevadzka = new Dodavatel() { ICO = "123456", Nazov = "HotelX", Obec = "Piešťany", Adresa = "Hurbanova 37, 921 01", Iban="SK1247885698" };
                     _db.Dodavatelia.Add(prevadzka);
                 }
                 dod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == "111222");
                 if (dod == null)
                 {
-                    var prevadzka = new Dodavatel() { ICO = "111222", Nazov = "FastStore s.r.o.", Obec = "Trnava", Adresa = "Radlínska 453, 917 01" };
+                    var prevadzka = new Dodavatel() { ICO = "111222", Nazov = "FastStore s.r.o.", Obec = "Trnava", Adresa = "Radlínska 453, 917 01", Iban = "SK347744698" };
                     _db.Dodavatelia.Add(prevadzka);
                 }
                 dod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == "333444");
                 if (dod == null)
                 {
-                    var prevadzka = new Dodavatel() { ICO = "333444", Nazov = "UniTrans s.r.o.", Obec = "Bratislava", Adresa = "Sedmáková 845, 811 03" };
+                    var prevadzka = new Dodavatel() { ICO = "333444", Nazov = "UniTrans s.r.o.", Obec = "Bratislava", Adresa = "Sedmáková 845, 811 03", Iban = "SK567777748" };
                     _db.Dodavatelia.Add(prevadzka);
                 }
 
@@ -101,7 +101,9 @@ namespace DBLayer
                     var polozka = new PolozkaSkladuMnozstvo() { Sklad = "HKS", PolozkaSkladu = pol.ID };
                     _db.PolozkaSkladuMnozstva.Add(polozka);
                 }
-
+                //var prijem = new Prijemka() { ID = "aaa" };
+                //_db.Prijemky.Add(prijem);
+                //var prijempoloz = new PrijemkaPolozka() {  Skupina="aaa",}
                 await _db.SaveChangesAsync();
                 _done = true;
             }

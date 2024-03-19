@@ -14,6 +14,7 @@ namespace DBLayer.Models
         public string Nazov { get; set; } = default!;
         public string Obec { get; set; } = default!;
         public string Adresa { get; set; } = default!;
+        public string Iban { get; set; } = default!;
 
     }
 }
