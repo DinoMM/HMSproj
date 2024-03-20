@@ -13,11 +13,11 @@ namespace DBLayer.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long ID { get; set; } = default!;
+        public long ID { get; set; }
         [ForeignKey("SkupinaX")]
         public string Skupina { get; set; } = default!;
         public PohSkup SkupinaX { get; set; }
-        public string Nazov { get; set; } = default!;
+        public string? Nazov { get; set; } = default!;
         public double Mnozstvo { get; set; }
         public double Cena { get; set; }
         [NotMapped]
@@ -27,27 +27,27 @@ namespace DBLayer.Models
         [NotMapped]
         public double CelkovaCenaDPH { get => (double)Mnozstvo * CenaDPH; }
 
-        public static string DajNoveID(DbSet<PohJednotka> dbset)
-        {
-            int adder = 1;
-            string newID;
-            do
-            {
-                int cislo;
-                if (dbset.Count() != 0)
-                {
-                    cislo = int.Parse(dbset.DefaultIfEmpty().Max(x => x != null ? x.ID : "1") ?? "1") + adder;
-                }
-                else
-                {
-                    cislo = 1;
-                }
-                //moznost pridat prefix
-                newID = cislo.ToString("D9");
-                ++adder;
+        //public static string DajNoveID(DbSet<PohJednotka> dbset)
+        //{
+        //    int adder = 1;
+        //    string newID;
+        //    do
+        //    {
+        //        int cislo;
+        //        if (dbset.Count() != 0)
+        //        {
+        //            cislo = int.Parse(dbset.DefaultIfEmpty().Max(x => x != null ? x.ID : "1") ?? "1") + adder;
+        //        }
+        //        else
+        //        {
+        //            cislo = 1;
+        //        }
+        //        //moznost pridat prefix
+        //        newID = cislo.ToString("D9");
+        //        ++adder;
 
-            } while (dbset.FirstOrDefault(d => d.ID == newID) != null);
-            return newID;
-        }
+        //    } while (dbset.FirstOrDefault(d => d.ID == newID) != null);
+        //    return newID;
+        //}
     }
 }

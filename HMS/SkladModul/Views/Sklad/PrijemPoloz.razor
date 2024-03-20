@@ -1,35 +1,68 @@
 ﻿@namespace SkladModul
+@page "/Sklad/Prijem"
+@inject PrijemPolozViewModel ViewModel
 
 <div class="container">
-    <div class="row">
-        <div class="col-12">
-            <h2 class="text-center font-weight-bold">Výdajky za obdobie</h2>
-            <button class="btn btn-primary float-left mb-3" type="button">Zrušiť</button>
+
+    <div class="row pb-1">
+        <div class="col-2">
+            <a class="btn btn-primary" id="uctobd" style="cursor:pointer">Obdobie:@DBLayer.Models.Sklad.ShortFromObdobie(ViewModel.Obdobie) </a>
+        </div>
+        <div class="col-2">
+            <a class="btn btn-primary" id="skldpick" style="cursor:pointer">Sklad:@ViewModel.Sklad.ID </a>
         </div>
     </div>
+
     <div class="row">
         <div class="col-12">
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th scope="col">Názov Položky</th>
-                        <th scope="col">ČísloID</th>
-                        <th scope="col">Množstvo</th>
-                        <th scope="col">Merná jednotka</th>
-                        <th scope="col">Cena za 1/MJ</th>
-                        <th scope="col">Cena za 1/MJ s DPH</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Rows of data will go here -->
-                </tbody>
-            </table>
+            <h2 class="text-center font-weight-bold">Príjemky za obdobie</h2>
+            <div class="col">
+                    <button @onclick="() => Navigator.NavigateTo(Navigator.RemoveLastUrl())" class="btn btn-primary  mb-3" type="button">Zrušiť</button>
+                    <button @onclick="Create" class="btn btn-primary  mb-3" type="button">Vytvoriť</button>
+                </div>
+            </div>
+
+
+
+    </div>
+
+    <div class="row">
+        <div class="col-12" style="height:30rem; overflow:auto">
+            <SimpleTable>
+                <THEAD>
+                <th class="col-resize" scope="col">ID</th>
+                <th class="col-resize" scope="col">Vznik</th>
+                <th class="col-resize" scope="col">OK</th>
+                <th class="col-resize" scope="col">Objednavka</th>
+                <th class="col-resize" scope="col">Dodaci</th>
+                <th class="col-resize" scope="col">Faktúra</th>
+                <th class="col-resize" scope="col"></th>
+                </THEAD>
+                <TBODY>
+                    @foreach (var item in ViewModel.ZoznamPrijemok)
+                    {
+
+                        <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open(item))" style="cursor: pointer;">
+                            <td class="col-resize">@item.ID </td>
+                            <td class="col-resize">@item.Vznik.ToShortDateString() </td>
+                            <td class="col-resize">@item.Spracovana </td>
+                            <td class="col-resize">@item.Objednavka </td>
+                            <td class="col-resize">@item.DodaciID </td>
+                            <td class="col-resize">@item.FakturaID </td>
+                            <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                        </tr>
+
+                    }
+                </TBODY>
+
+            </SimpleTable>
+
         </div>
     </div>
 
 
     <!-- Vytvoriť výdajku section -->
-    <div class="row">
+    <!--<div class="row">
         <div class="col-12">
             <h4 class="float-left mb-3 font-weight-bold">Vytvoriť výdajku</h4>
             <div class="border border-dark">
@@ -46,10 +79,9 @@
                 <button class="btn btn-primary mt-3" type="button">Vytvoriť</button>
             </div>
         </div>
-    </div>
-
+    </div>-->
     <!-- História výdajok section -->
-    <div class="row mt-5">
+    <!--<div class="row mt-5">
         <div class="col-12">
             <h4 class="float-left mb-3 font-weight-bold">História výdajok</h4>
             <table class="table table-striped">
@@ -60,12 +92,12 @@
                         <th scope="col">Pre oddelenie</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <!-- Rows of data will go here -->
-                </tbody>
+                <tbody>-->
+    <!-- Rows of data will go here -->
+    <!--</tbody>
             </table>
         </div>
-    </div>
+    </div>-->
 
 
 
@@ -73,5 +105,40 @@
 
 
 @code {
+    DBLayer.Models.Prijemka? marked;
+
+    protected override void OnInitialized()
+    {
+        var founded1 = objectHolder.Remove<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska
+        if (founded1 == null)
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+        var founded2 = objectHolder.Remove<string>();   //pokusi sa ziskat objekt z uloziska
+        if (founded2 != null)
+        {
+            ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
+
+            ViewModel.LoadZoznam();
+        }
+        else
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+    }
+
+    private void Open(DBLayer.Models.Prijemka poloz)
+    {
+
+    }
+    private void Delete(DBLayer.Models.Prijemka poloz)
+    {
+
+    }
+    private void Create()
+    {
+    }
 
 }

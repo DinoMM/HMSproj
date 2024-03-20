@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.SqlServer.Server;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -33,15 +34,28 @@ namespace DBLayer.Models
         public static List<RolesOwn> SKLADOVEPOHYBYROLE { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Skladnik };
 
 
-        public DateTime GetActual() {
+        public DateTime GetActual()
+        {
             return new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         }
 
-        public string ShortformObdobie() {
+        public string ShortformObdobie()
+        {
             return Obdobie.ToString("MMyy");
         }
+        public static string ShortFromObdobie(DateTime date)
+        {
+            return date.ToString("MMyy");
+        }
+        public static DateTime DateFromShortForm(string miniObd)
+        {
+            DateTime date = DateTime.ParseExact(miniObd, "MMyy", System.Globalization.CultureInfo.InvariantCulture);
+            date = new DateTime(date.Year, date.Month, 1);
+            return date;
+        }
 
-        public void NextObdobie() {
+        public void NextObdobie()
+        {
             Obdobie.AddMonths(1);
         }
 

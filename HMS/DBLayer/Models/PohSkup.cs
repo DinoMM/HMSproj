@@ -13,7 +13,7 @@ namespace DBLayer.Models
         [Key]
         public string ID { get; set; } = default!;
         public DateTime Vznik { get; set; } = DateTime.Today;
-        public string Poznamka { get; set; } = default!;
+        public string? Poznamka { get; set; } = default!;
         public bool Spracovana { get; set; } = false;
 
 

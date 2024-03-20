@@ -47,7 +47,7 @@ namespace DBLayer
                 var dod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == "123456"); //pridanie dodavatelov
                 if (dod == null)
                 {
-                    var prevadzka = new Dodavatel() { ICO = "123456", Nazov = "HotelX", Obec = "Piešťany", Adresa = "Hurbanova 37, 921 01", Iban="SK1247885698" };
+                    var prevadzka = new Dodavatel() { ICO = "123456", Nazov = "HotelX", Obec = "Piešťany", Adresa = "Hurbanova 37, 921 01", Iban = "SK1247885698" };
                     _db.Dodavatelia.Add(prevadzka);
                 }
                 dod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == "111222");
@@ -63,11 +63,11 @@ namespace DBLayer
                     _db.Dodavatelia.Add(prevadzka);
                 }
 
-                var pol = _db.PolozkySkladu.FirstOrDefault(x => x.Nazov == "Toaletný papier");
+                PolozkaSkladu? pol = _db.PolozkySkladu.FirstOrDefault(x => x.Nazov == "Toaletný papier");
                 if (pol == null)
                 {
-                    var polozka = new PolozkaSkladu() { ID = PolozkaSkladu.DajNoveID(_db), Cena = 0.79, MernaJednotka = "KS", Nazov = "Toaletný papier" };
-                    _db.PolozkySkladu.Add(polozka);
+                    pol = new PolozkaSkladu() { ID = PolozkaSkladu.DajNoveID(_db), Cena = 0.79, MernaJednotka = "KS", Nazov = "Toaletný papier" };
+                    pol = _db.PolozkySkladu.Add(pol).Entity;
                 }
                 var skl = _db.Sklady.FirstOrDefault(x => x.ID == "HKS");
                 if (skl == null)
@@ -94,16 +94,27 @@ namespace DBLayer
                     var polozka = new SkladUzivatel() { Sklad = "KS", Uzivatel = admn.Id };
                     _db.SkladUzivatelia.Add(polozka);
                 }
-                pol = _db.PolozkySkladu.FirstOrDefault(x => x.Nazov == "Toaletný papier");
+                //pol = _db.PolozkySkladu.FirstOrDefault(x => x.ID == "0000001");
                 var polsm = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.Sklad == "HKS" && x.PolozkaSkladu == pol.ID);
                 if (polsm == null)
                 {
                     var polozka = new PolozkaSkladuMnozstvo() { Sklad = "HKS", PolozkaSkladu = pol.ID };
                     _db.PolozkaSkladuMnozstva.Add(polozka);
                 }
-                //var prijem = new Prijemka() { ID = "aaa" };
-                //_db.Prijemky.Add(prijem);
-                //var prijempoloz = new PrijemkaPolozka() {  Skupina="aaa",}
+
+                var otrt = _db.Prijemky.FirstOrDefault(x => x.ID == "000000001");
+                if (otrt == null)
+                {
+                    var polozka = new Prijemka() { ID = "000000001", Poznamka = "oo" };
+                    _db.Prijemky.Add(polozka);
+                }
+                var eere = _db.PrijemkyPolozky.FirstOrDefault(x => x.Skupina == "000000001");
+                if (eere == null)
+                {
+                    var polozka = new PrijemkaPolozka() { Nazov = "eee", Skupina = "000000001", PolozkaSkladuMnozstva = 2 };
+                    _db.PrijemkyPolozky.Add(polozka);
+                }
+
                 await _db.SaveChangesAsync();
                 _done = true;
             }

@@ -42,7 +42,7 @@
                 }
                 @if (Sklad.SKLADOVEPOHYBYROLE.Contains(UserService.LoggedUserRole))
                 {
-                    <button type="button" class="btn btn-primary">⬆Spraviť Príjem</button>
+                    <button type="button" @onclick="Prijem" class="btn btn-primary">⬆Spraviť Príjem</button>
                     <button type="button" class="btn btn-primary">⬇Spraviť Výdaj</button>
                     <button type="button" class="btn btn-primary">➰Uzavrieť obdobie</button>
                 }
@@ -94,12 +94,10 @@
 
 </div>
 
-<script>
-    window.changeText = (id, newText) => {
+<script>window.changeText = (id, newText) => {
     var element = document.getElementById(id);
     element.textContent = newText;
-}
-</script>
+}</script>
 
 
 @code {
@@ -157,6 +155,13 @@
     {
         objectHolder.Add(poloz);
         Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad"));
+    }
+
+    private void Prijem()
+    {
+        objectHolder.Add(ViewModel.Sklad);
+        objectHolder.Add(ViewModel.Obdobie);
+        Navigator.NavigateTo(Navigator.AddNextUrl("/Prijem"));
     }
 
 

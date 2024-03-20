@@ -71,7 +71,10 @@ namespace SkladModul.ViewModels.Sklad
 
         public async Task LoadPolozky()
         {
-            await _db.PolozkySkladu.ForEachAsync(x => ZoznamPoloziekSkladu.Add(x));
+            if (ZoznamPoloziekSkladu.Count == 0)
+            {
+                await _db.PolozkySkladu.ForEachAsync(x => ZoznamPoloziekSkladu.Add(x));
+            }
         }
 
         public void VymazPolozku(PolozkaS poloz)

@@ -42,8 +42,8 @@ namespace DBLayer
         public DbSet<Sklad> Sklady { get; set; }
         public DbSet<PolozkaSkladuMnozstvo> PolozkaSkladuMnozstva { get; set; }
         public DbSet<SkladUzivatel> SkladUzivatelia { get; set; }
-        public DbSet<Prijemka> Prijemky { get; set; }
         public DbSet<PrijemkaPolozka> PrijemkyPolozky { get; set; }
+        public DbSet<Prijemka> Prijemky { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -68,8 +68,8 @@ namespace DBLayer
             //modelBuilder.Entity<PolozkaSkladuMnozstvo>()    //definovanie 2 foreign klucov
             //.HasKey(e => new { e.PolozkaSkladu, e.Sklad });
 
-            //modelBuilder.Entity<SkladUzivatel>()            //definovanie 2 foreign klucov
-            //.HasKey(e => new { e.Sklad, e.Uzivatel });
+            modelBuilder.Entity<SkladUzivatel>()            //definovanie 2 foreign klucov
+            .HasKey(e => new { e.Sklad, e.Uzivatel });
 
         }
 

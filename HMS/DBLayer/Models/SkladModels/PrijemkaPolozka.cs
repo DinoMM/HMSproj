@@ -10,7 +10,7 @@ namespace DBLayer.Models
     public class PrijemkaPolozka : PohJednotka
     {
         [ForeignKey("PolozkaSkladuMnozstvaX")]
-        public string PolozkaSkladuMnozstva { get; set; } = default!;
+        public long PolozkaSkladuMnozstva { get; set; }
         public PolozkaSkladuMnozstvo PolozkaSkladuMnozstvaX { get; set; }
     }
 }
