@@ -1,6 +1,6 @@
 ﻿@namespace UniComponents
 @inject IJSRuntime JSRuntime
-
+@implements IModal
 <!-- Modal -->
 <div class="modal fade" id="@ID" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -38,7 +38,7 @@
     private TaskCompletionSource<bool> tcs;
     private bool tstop = false;
 
-    public async Task OpenModal(bool stop = false)
+    public async Task<bool> OpenModal(bool stop = false)
     {
         tstop = stop;
         if (stop)
@@ -51,6 +51,7 @@
         {
             await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");   //(pomohol som si z internetu tutoriály/AI)
         }
+        return true;
     }
 
     private void CloseModal()

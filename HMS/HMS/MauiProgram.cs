@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using SkladModul.ViewModels.Objednavka;
 using UniComponents;
 using SkladModul.ViewModels.Sklad;
+using HMS.Components.Services;
 
 
 namespace HMS
@@ -62,6 +63,7 @@ namespace HMS
             builder.Services.AddSingleton<DbInitializeService>();
             builder.Services.AddSingleton<Navigator>();
             builder.Services.AddSingleton<ObjectHolder>();
+            builder.Services.AddSingleton<IAppLifeCycleService, AppLifecycleService>();
 
             builder.Services.AddSingleton<LayoutService>();
 

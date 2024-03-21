@@ -11,6 +11,22 @@
               FuncOnSucc="EventCallback.Empty"
               FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
+<ApproveModal @ref="ApproveProcess" ID="approvenprocess"
+              Text="Zmena spracovania uloží pridané položky. Chcete pokračovať?"
+              FuncOnSucc="EventCallback.Empty"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+<InfoModal @ref="InfoModsuccObj" ID="infoloadobj"
+           Text="Položky z objednávky boli načítané."
+           FuncAction="Save">
+</InfoModal>
+<InfoModal @ref="InfoModNotFounObj" ID="infonotloadobj"
+           Text="Objednávka nebola nájdená.">
+</InfoModal>
+<InfoModal @ref="InfoModNSomeNotLink" ID="infosomemissing"
+           Text="Niektoré položky z objednávky neboli určené pre tento sklad.">
+</InfoModal>
+
 
 <div class="row pb-1">
     <div class="col-2">
@@ -48,10 +64,7 @@
                 <div class="row">
                     <div class="col-6">
                         <label>Spracovaná</label>
-                        <select value="@ViewModel.Polozka.Spracovana" @onchange="() =>ViewModel.Saved = false" class="form-select " placeholder="">
-                            <option value="@(false)">Nie</option>
-                            <option value="@(true)">Áno</option>
-                        </select>
+                        <input type="text" value=@(ViewModel.Polozka.Spracovana ? "Áno" : "Nie") disabled="disabled" readonly class="form-control" placeholder="" />
                     </div>
                 </div>
                 <div class="row">
@@ -78,7 +91,7 @@
                     </div>
                     <div class="col">
                         <label>Načítať</label><br>
-                        <button class="btn btn-secondary btn-sm"><i class="bi bi-box-arrow-in-down"></i></button>
+                        <a  disabled="@(ViewModel.ObsahujePolozky() || !ViewModel.Saved)" @onclick="@(() => ViewModel.NacitajZObjednavky(InfoModsuccObj, InfoModNotFounObj, InfoModNSomeNotLink))" style="cursor: pointer" id="load" class="btn btn-secondary btn-sm"><i class="bi bi-box-arrow-in-down"></i></a>
                     </div>
                 </div>
 
@@ -89,29 +102,24 @@
                         <ValidationMessage For="@(() => ViewModel.Polozka.FakturaID)" />
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-4">
+                        <label>Celková suma</label>
+                        <input type="text" value="@(ViewModel.CelkovaSuma.ToString("F3"))" disabled="disabled"  class="form-control" placeholder="">
+                    </div>
+                    <div class="col-5">
+                        <label>Celková suma DPH</label>
+                        <input type="text"  value="@((ViewModel.CelkovaSuma * 120 / 100).ToString("F3"))" disabled="disabled"  class="form-control" placeholder="">
+                    </div>
+                </div>
             </div>
 
         </div>
 
-
-
-        @*<div class="row">
-                <div class="col-6">
-                    <label>Určenie</label>
-                    <div class="list-group w-75" style="height: 8rem; overflow-y: auto">
-                        @foreach (var item in ViewModel.ZoznamSkladov)
-                        {
-                            <a @onclick="@(() => { ViewModel.VyberSklad(item); ViewModel.Saved = false; })" class="list-group-item list-group-item-action @(ViewModel.ZoznamOnacenych.Contains(item) ? "active" : "")" style="cursor:pointer">@item.ID - @item.Nazov</a>
-                        }
-
-                    </div>
-                </div>
-            </div>*@
-
-
         <div class="row pt-2">
             <div class="col text-center">
                 <button type="submit" class="btn btn-primary">@(ViewModel.Saved ? "Otvoriť" : "Uložiť")</button>
+                <button type="button" disabled="@(!ViewModel.Saved || ViewModel.Polozka.Spracovana)" @onclick="Finnish" class="btn btn-secondary">Spracovať</button>
                 <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
             </div>
         </div>
@@ -121,7 +129,11 @@
 
 @code {
     InfoModal InfoMod = new();
+    InfoModal InfoModsuccObj = new();
+    InfoModal InfoModNotFounObj = new();
+    InfoModal InfoModNSomeNotLink = new();
     ApproveModal ApproveModNSave = new();
+    ApproveModal ApproveProcess = new();
 
     protected override void OnInitialized()
     {
@@ -140,12 +152,14 @@
         var founded3 = objectHolder.Remove<DBLayer.Models.Prijemka>();
         if (founded3 == null)
         {
+            ViewModel.VycistiSa();
             ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
         }
         else
         {
             ViewModel.SetProp(founded1, founded2, founded3);
         }
+        ViewModel.CelkovaCenaCalc();
     }
 
     private async Task Save()
@@ -159,15 +173,42 @@
         }
         else
         {
-            objectHolder.Add((DBLayer.Models.PohSkup)ViewModel.Polozka);
+            objectHolder.Add((DBLayer.Models.PohSkup)ViewModel.Polozka);        //nutne poslane polia
             objectHolder.Add(typeof(DBLayer.Models.Prijemka));
-            Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozPrijemka"));
+            if (!ViewModel.Polozka.Spracovana)
+            {
+                Navigator.NavigateTo(Navigator.AddNextUrl($"/ModifPolozPrijemka/{false}"));
+            }
+            else
+            {
+                Navigator.NavigateTo(Navigator.AddNextUrl($"/ModifPolozPrijemka/{true}"));      //readonly rezim
+            }
         }
 
 
     }
-    private void Close()
+    private async Task Close()
     {
-        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+        if (!ViewModel.Saved)
+        {
+            if (await ApproveModNSave.OpenModal(true))
+            {
+                ViewModel.NeulozZmeny();
+                ViewModel.VycistiSa();
+                Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                return; //koniec
+            }
+            return; //nic
+        }
+        ViewModel.VycistiSa();
+        Navigator.NavigateTo(Navigator.RemoveLastUrl()); //koniec
+    }
+
+    private async Task Finnish()
+    {
+        if (ViewModel.Saved)
+        {
+            ViewModel.SpracujPrijemku();
+        }
     }
 }

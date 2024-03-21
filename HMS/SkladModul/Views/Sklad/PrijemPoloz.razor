@@ -2,6 +2,12 @@
 @page "/Sklad/Prijem"
 @inject PrijemPolozViewModel ViewModel
 
+<ApproveModal @ref=AprovMod ID="deletemodal"
+              Text="Naozaj chcete odstrániť tento riadok?"
+              FuncOnSucc="@(() => ViewModel.VymazCommand.Execute(marked))"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+
 <div class="container">
 
     <div class="row pb-1">
@@ -17,10 +23,11 @@
         <div class="col-12">
             <h2 class="text-center font-weight-bold">Príjemky za obdobie</h2>
             <div class="col">
-                    <button @onclick="() => Navigator.NavigateTo(Navigator.RemoveLastUrl())" class="btn btn-primary  mb-3" type="button">Zrušiť</button>
-                    <button @onclick="Create" class="btn btn-primary  mb-3" type="button">Vytvoriť</button>
-                </div>
+                <button @onclick="() => Navigator.NavigateTo(Navigator.RemoveLastUrl())" class="btn btn-primary  mb-3" type="button">Späť</button>
+                <button @onclick="Create" class="btn btn-primary  mb-3" type="button">➕Pridať príjemku</button>
+                <button @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary  mb-3" type="button">📩Otvoriť príjemku</button>
             </div>
+        </div>
 
 
 
@@ -49,7 +56,10 @@
                             <td class="col-resize">@item.Objednavka </td>
                             <td class="col-resize">@item.DodaciID </td>
                             <td class="col-resize">@item.FakturaID </td>
-                            <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                            @if (!item.Spracovana)
+                            {
+                                <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                            }
                         </tr>
 
                     }
@@ -60,51 +70,11 @@
         </div>
     </div>
 
-
-    <!-- Vytvoriť výdajku section -->
-    <!--<div class="row">
-        <div class="col-12">
-            <h4 class="float-left mb-3 font-weight-bold">Vytvoriť výdajku</h4>
-            <div class="border border-dark">
-                <div class="row">
-                    <div class="col-6">
-                        <label class="mt-2">Vydané množstvo</label>
-                        <input type="text" class="form-control" placeholder="">
-                    </div>
-                    <div class="col-6">
-                        <label class="mt-2">Pre stredisko</label>
-                        <input type="text" class="form-control" placeholder="">
-                    </div>
-                </div>
-                <button class="btn btn-primary mt-3" type="button">Vytvoriť</button>
-            </div>
-        </div>
-    </div>-->
-    <!-- História výdajok section -->
-    <!--<div class="row mt-5">
-        <div class="col-12">
-            <h4 class="float-left mb-3 font-weight-bold">História výdajok</h4>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th scope="col">Množstvo</th>
-                        <th scope="col">Dátum výdaja</th>
-                        <th scope="col">Pre oddelenie</th>
-                    </tr>
-                </thead>
-                <tbody>-->
-    <!-- Rows of data will go here -->
-    <!--</tbody>
-            </table>
-        </div>
-    </div>-->
-
-
-
 </div>
 
 
 @code {
+    ApproveModal AprovMod = new();
     DBLayer.Models.Prijemka? marked;
 
     protected override void OnInitialized()
@@ -131,10 +101,14 @@
 
     private void Open(DBLayer.Models.Prijemka poloz)
     {
-
+        objectHolder.Add(poloz);
+        Create();
     }
-    private void Delete(DBLayer.Models.Prijemka poloz)
+    private async Task Delete(DBLayer.Models.Prijemka poloz)
     {
+        //bez kontroly
+        await AprovMod.OpenModal(true);
+        marked = null;
 
     }
     private void Create()

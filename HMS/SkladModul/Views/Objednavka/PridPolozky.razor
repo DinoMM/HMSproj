@@ -170,7 +170,7 @@
 
     private async Task Close() //tlacidlo spat
     {
-        if (!ViewModel.Locked()) //ak je zamknute tak len odideme
+        if (ViewModel.Locked()) //ak je zamknute tak len odideme
         {
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             ViewModel.VycistiHodnotyForce();

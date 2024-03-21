@@ -7,6 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\**" />
+    <Compile Remove="ViewModels\Prijemka\**" />
+    <Content Remove="Models\**" />
+    <Content Remove="ViewModels\Prijemka\**" />
+    <EmbeddedResource Remove="Models\**" />
+    <EmbeddedResource Remove="ViewModels\Prijemka\**" />
+    <None Remove="Models\**" />
+    <None Remove="ViewModels\Prijemka\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Views\Objednavka\AddObjednav.razor.css" />
     <None Remove="Views\Objednavka\Objednavka.razor.css" />
     <None Remove="Views\Objednavka\PridPolozky.razor.css" />
@@ -28,11 +39,6 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.2" />
     <PackageReference Include="Sve.Blazor.InfiniteScroll" Version="1.0.0-alpha" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Models\" />
-    <Folder Include="ViewModels\Prijemka\" />
   </ItemGroup>
 
   <ItemGroup>

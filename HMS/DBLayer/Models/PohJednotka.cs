@@ -27,7 +27,10 @@ namespace DBLayer.Models
         [NotMapped]
         public double CelkovaCenaDPH { get => (double)Mnozstvo * CenaDPH; }
 
+        public object Clone();
         
+
+
 
         //public static string DajNoveID(DbSet<PohJednotka> dbset)
         //{

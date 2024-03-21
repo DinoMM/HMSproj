@@ -14,9 +14,11 @@
 @inject IndexViewModel ViewModel
 @inject DbInitializeService initDB
 @inject UserService UserService
+@inject HMS.Components.Services.IAppLifeCycleService AppLifecycleService
 
 @inject DBContext db
 
+@implements IDisposable
 Prihlaseny: @UserService.LoggedUser?.UserName
 <div class="d-flex justify-content-center align-items-center vh-100">
     <div class="p-3 w-50 ">
@@ -60,6 +62,9 @@ Prihlaseny: @UserService.LoggedUser?.UserName
         Navigator.InitializeNavManazer(NavigationManager);
         await UserService.LogInUserAsync("admin", "Heslo123");
         StateHasChanged();
+
+        AppLifecycleService.Destroying += OnAppDestroying;      //pridanie app eventu
+
         //await ViewModel.InfoModal.OpenModal(true);
         //await Application.Current.MainPage.DisplayAlert("title", "toto je vnutro", "zrusit");
 
@@ -72,6 +77,13 @@ Prihlaseny: @UserService.LoggedUser?.UserName
 
     }
 
+    private void OnAppDestroying() {
+        Debug.WriteLine("Applikacia sa zatvára.");
+    }
+
+    public void Dispose() {
+        AppLifecycleService.Destroying -= OnAppDestroying;
+    }
 
 
 }

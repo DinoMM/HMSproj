@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Ssklad = DBLayer.Models.Sklad;
 using Pprijemka = DBLayer.Models.Prijemka;
+using CommunityToolkit.Mvvm.Input;
 
 namespace SkladModul.ViewModels.Sklad
 {
@@ -36,18 +37,16 @@ namespace SkladModul.ViewModels.Sklad
 
         public void LoadZoznam()
         {
-            //string shortOb = Ssklad.ShortFromObdobie(Obdobie);
-          /*  var najd = _db.Prijemky.Where(x => x.Vznik >= Obdobie).ToList();
-            foreach (var item in najd)
-            {
-                var existuje = _db.PrijemkyPolozky.Include(x => x.PolozkaSkladuMnozstvaX)
-                    .FirstOrDefault(x => x.PolozkaSkladuMnozstvaX.Sklad == Sklad.ID && x.Skupina == item.ID);
-                if (existuje != null)
-                {
-                    ZoznamPrijemok.Add(item);
-                }
-            }*/
-            
+            ZoznamPrijemok = new(_db.Prijemky.Include(x => x.SkladX).Where(x => x.Vznik >= Obdobie && x.Sklad == Sklad.ID)
+                .OrderByDescending(x => x.Vznik));
+        }
+
+        [RelayCommand]
+        private void Vymaz(Pprijemka poloz)
+        {
+            ZoznamPrijemok.Remove(poloz);
+            _db.Prijemky.Remove(poloz);
+            _db.SaveChanges();
 
         }
     }

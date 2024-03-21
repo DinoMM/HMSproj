@@ -40,8 +40,25 @@ namespace DBLayer.Models
             PolozkaSkladuX = polozka;
 
             Nazov = polozka.Nazov;
-            Mnozstvo = 0;
+            Mnozstvo = polozka.Mnozstvo;
             Cena = polozka.Cena;
+        }
+
+        public object Clone() {
+            var novy = new PrijemkaPolozka();
+            novy.ID = ID;
+            novy.Cena = Cena;
+            novy.Mnozstvo = Mnozstvo;
+            novy.Nazov = Nazov;
+            novy.PolozkaSkladu = PolozkaSkladu;
+            novy.Skupina = Skupina;
+
+            novy.SkupinaX = SkupinaX;
+            novy.PolozkaSkladuX = PolozkaSkladuX;
+            return novy;
+        }
+        public PrijemkaPolozka Clon() {
+            return (PrijemkaPolozka)Clone();
         }
     }
 }

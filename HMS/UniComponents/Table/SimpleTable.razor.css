@@ -23,3 +23,7 @@
             cursor: col-resize;
             border-right: 1px solid #dee2e6;
         }
+
+.table tbody tr.selected-row {
+    --bs-table-bg: #9d9b9bef;
+}
