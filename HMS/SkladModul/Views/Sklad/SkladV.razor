@@ -46,7 +46,7 @@
                     <button type="button" class="btn btn-primary">⬇Spraviť Výdaj</button>
                     <button type="button" class="btn btn-primary">➰Uzavrieť obdobie</button>
                 }
-                <button type="button" class="btn btn-primary" @onclick=@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))>❌Koniec</button>
+                <button type="button" class="btn btn-primary" @onclick="Close">❌Koniec</button>
             </div>
         </div>
         <div class="col-1"></div>
@@ -109,6 +109,7 @@
     PolozkaSkladu? marked;
 
 
+
     private async Task ChangeObd()
     {
         await SelectModObd.OpenModal(true);
@@ -128,6 +129,17 @@
         if (!Sklad.POVOLENEROLE.Contains(UserService.LoggedUserRole))
         {
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
+        }
+        var founded1 = objectHolder.Remove<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska
+        if (founded1 == null)
+        {
+            return;
+        }
+        var founded2 = objectHolder.Remove<string>();   //pokusi sa ziskat objekt z uloziska
+        if (founded2 != null)
+        {
+            ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
+
         }
     }
 
@@ -163,7 +175,11 @@
         objectHolder.Add(ViewModel.Obdobie);
         Navigator.NavigateTo(Navigator.AddNextUrl("/Prijem"));
     }
-
+    private void Close() {
+        var founded1 = objectHolder.Remove<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska //asi netreba
+        var founded2 = objectHolder.Remove<string>();   //pokusi sa ziskat objekt z uloziska //asi netreba
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
 
 
 }

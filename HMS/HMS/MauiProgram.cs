@@ -72,9 +72,11 @@ namespace HMS
             builder.Services.AddScoped<PridPolozkyViewModel>();
             builder.Services.AddTransient<ObjednavkaViewModel>();
 
-            builder.Services.AddSingleton<SkladViewModel>();
+            builder.Services.AddScoped<SkladViewModel>();
             builder.Services.AddTransient<ModifPolozSkladViewModel>();
             builder.Services.AddTransient<PrijemPolozViewModel>();
+            builder.Services.AddScoped<ModifPrijemkaViewModel>();
+            builder.Services.AddTransient<ModifPolozPohJednotkaViewModel>();
             #endregion
 
 

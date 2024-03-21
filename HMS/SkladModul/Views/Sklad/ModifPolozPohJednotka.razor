@@ -1,0 +1,288 @@
+﻿@namespace SkladModul
+@page "/Sklad/Prijem/ModifPrijemka/ModifPolozPrijemka"
+
+@inject ModifPolozPohJednotkaViewModel  ViewModel
+
+<ApproveModal @ref=AprovMod ID="deletemodal"
+              Text="Naozaj chcete odstrániť tento riadok?"
+              FuncOnSucc="DeleteCommand"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+<ApproveModal @ref=AprovModSave ID="savemodal"
+              Text="Chcete uložiť zmeny?"
+              FuncOnSucc="SaveCommand"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+<ApproveModal @ref=AprovModEmpty ID="emptyobjmodal"
+              Text="Objednávka je prázdna, chcete ju zrušiť?"
+              FuncOnSucc="ViewModel.OdstranCeluObjednavkuCommand.Execute"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+<InfoModal @ref="InfoMod" ID="infocantsave"
+           Text="Nepodarilo sa uložiť zmeny, skontrolujte objednávku">
+</InfoModal>
+
+<div class="container">
+    <div class="row p-1">Položky: @ViewModel.PohSkupina.ID</div>
+
+    <div class="row h-25">
+        <div class="col col-1">
+            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false)) disabled="@ViewModel.Locked()">Uložiť</button>
+        </div>
+        <div class="col col-1 me-2">
+            <button type="button" class="btn btn-secondary" @onclick="Close">Späť</button>
+        </div>
+
+        <div class="col col-2">
+            <button type="button" disabled="@(ViewModel.Uprava || ViewModel.Locked())" @onclick=@(async () => {ViewModel.PridatPolozkuCommand.Execute(null);await ClearInput();}) class="btn btn-success">Pridať položku</button>
+        </div>
+
+
+    </div>
+
+    <div class="row">
+        <div class="col" style="height: 30rem; overflow:auto;">
+            <UniComponents.SimpleTable>
+                <THEAD>
+                    @if (ViewModel.TypeOfPohJednotka == typeof(DBLayer.Models.PrijemkaPolozka))
+                    {
+
+                    <th>ČísloID</th>
+                }
+
+                    <th>Názov Položky</th>
+                    <th>Množstvo</th>
+                    <th>Cena</th>
+
+                    @if (ViewModel.TypeOfPohJednotka == typeof(DBLayer.Models.PrijemkaPolozka))
+                    {
+                        <th>Merná jednotka</th>
+                    }
+                    <th>Cena s DPH</th>
+                    <th>Celková Cena</th>
+                    <th>Celková Cena s DPH</th>
+                    <th></th>
+                    </THEAD>
+                    <TBODY>
+
+                        @foreach (dynamic item in ViewModel.ZoznamPohSkupiny)
+                        {
+
+                            <tr>
+                                @if (ViewModel.TypeOfPohJednotka == typeof(DBLayer.Models.PrijemkaPolozka))
+                                {
+                                    <td><input type="text" readonly disabled="disabled" value="@(((DBLayer.Models.PrijemkaPolozka)item).PolozkaSkladuMnozstvaX.PolozkaSkladu)" size="8" /></td>
+                                }
+                                <td><input type="text" disabled="@ViewModel.Locked()" value="@(((DBLayer.Models.PohJednotka)item).Nazov)" @onchange=@((ChangeEventArgs arg) => {((DBLayer.Models.PohJednotka)item).Nazov = arg.Value.ToString(); ViewModel.Zmena = true; } ) /></td>
+                                <td><input type="number" disabled="@ViewModel.Locked()" @bind-value="((DBLayer.Models.PohJednotka)item).Mnozstvo" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" class="w-75" /></td>
+                                <td><input type="number" disabled="@ViewModel.Locked()" @bind-value="((DBLayer.Models.PohJednotka)item).Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" class="w-75" /></td>
+                                @if (ViewModel.TypeOfPohJednotka == typeof(DBLayer.Models.PrijemkaPolozka))
+                                {
+                                    <th>@(((DBLayer.Models.PrijemkaPolozka)item).PolozkaSkladuMnozstvaX.PolozkaSkladuX.MernaJednotka)</th>
+                                }
+                                <td>@(((DBLayer.Models.PohJednotka)item).CenaDPH.ToString("F3"))</td>
+                                <td>@(((DBLayer.Models.PohJednotka)item).CelkovaCena.ToString("F3"))</td>
+                                <td>@(((DBLayer.Models.PohJednotka)item).CelkovaCenaDPH.ToString("F3"))</td>
+                                @if (!ViewModel.Locked())
+                                {
+                                    <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                                }
+                            </tr>
+                        }
+                        @if (!ViewModel.Locked())
+                        {
+                            <tr style="position:sticky; bottom: 0;">
+                                <td><input type="text" id="vyhlid" @onchange=ViewModel.VyhladajPolozkuCommand.Execute @onfocus=@(() => ViewModel.Uprava = true) @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" /></td>
+                                <td><input type="text" readonly disabled="disabled" @bind="ViewModel.NovaPoloz.Nazov" /> </td>
+                                <td></td>
+                                @*<td>@ViewModel.NovaPoloz.PolozkaSkladuX?.MernaJednotka</td>*@
+                                <td>@ViewModel.NovaPoloz.Cena</td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                                <td></td>
+                            </tr>
+                        }
+                    </TBODY>
+                </UniComponents.SimpleTable>
+            </div>
+        </div>
+
+        <script>window.clearInput = function (inputId) {
+            document.getElementById(inputId).value = "";
+        }</script>
+    </div>
+
+
+    @code {
+        private bool answer = false;
+        private string vyhladavac = "";
+        ApproveModal AprovMod = new();
+        ApproveModal AprovModSave = new();
+        ApproveModal AprovModEmpty = new();
+        InfoModal InfoMod = new();
+        dynamic marked;
+
+        protected override void OnInitialized()
+        {
+            var founded1 = objectHolder.Remove<DBLayer.Models.PohSkup>();   //pokusi sa ziskat objekt z uloziska
+            if (founded1 != null)
+            {
+                ViewModel.PohSkupina = founded1;      //nasla sa existujuca objednavka, nastavujeme model na upravu
+                ViewModel.Existujuca = true;
+                if (!ViewModel.IsOBJValidna())
+                {
+                    Debug.WriteLine("Skupina nieje validna z objectHoldera");
+                    Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                    return;
+
+                }
+                var founded2 = objectHolder.Remove<Type>();
+                if (founded2 is not null)
+                {
+                    ViewModel.TypeOfPohSkupina = founded2;
+                    if (founded2 == typeof(DBLayer.Models.Prijemka))
+                    {      //vymazat
+                        ViewModel.TypeOfPohJednotka = typeof(DBLayer.Models.PrijemkaPolozka);
+
+                    }
+                }
+                else
+                {
+                    Debug.WriteLine("Typ skupiny nieje vlozeny v objectHolderi");
+                    Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                    return;
+                }
+            }
+            else
+            {
+                Debug.WriteLine("Skupina nieje vlozena spravne v objectHolderi");
+                Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                return;
+            }
+            ViewModel.Sklad = objectHolder.Find<DBLayer.Models.Sklad>();
+
+            ViewModel.NovaPoloz = (DBLayer.Models.PohJednotka)Activator.CreateInstance(ViewModel.TypeOfPohJednotka);
+            //ViewModel.LoadZoznamObjednavky();
+        }
+
+        private async Task Delete(dynamic poloz)
+        {
+            marked = poloz;
+            await AprovMod.OpenModal();
+        }
+
+        private void DeleteCommand()
+        {
+            ViewModel.VymazatCommand.Execute(marked);
+        }
+
+
+        private async Task<bool>
+        Save(bool askUser)  //vrati hodnotu na zaklade toho co uzivatel klikne(true - suhlasi, inak false)
+        {
+            if (askUser)
+            {
+                return await AprovModSave.OpenModal(true);
+            }
+            await SaveCommand();
+            return true;        //true lebo ztivatel klikol Uloz
+        }
+
+        private async Task SaveCommand()
+        {
+            ViewModel.UlozCommand.Execute(null);
+            if (ViewModel.Zmena)    //ak je stale Zmena true, znamena ze sa ukladanie nepodarilo, inak sa podarilo
+            {
+                await InfoMod.OpenModal();  //zobrazi sa info ze nieje mozne ulozit objednavku koli chybnym udajom
+            }
+        }
+
+
+        private async Task Close() //tlacidlo spat
+        {
+            if (!ViewModel.Locked()) //ak je zamknute tak len odideme
+            {
+                Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                ViewModel.VycistiHodnotyForce();
+                return;
+            }
+
+            if (ViewModel.Zmena)    //je registrovaná zmena? //ano
+            {
+                answer = await Save(true);
+                if (ViewModel.Zmena)    //je registrovaná zmena? //ano
+                {
+                    if (answer)
+                    {
+                        return; //nic
+                    }
+                    else
+                    {
+                        if (ViewModel.IsZoznamEmpty())
+                        {
+                            answer = await AprovModEmpty.OpenModal(true);
+                            if (answer)
+                            {
+                                if (ViewModel.Deleted)
+                                {
+                                    Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                                    ViewModel.VycistiHodnotyForce();
+                                    return; //koniec
+                                }
+                            }
+                            else
+                            {
+                                if (ViewModel.VratDoPovodnehoStavu())   //Vratenie, Prazdny? //ano
+                                {
+
+                                    return; //nic
+                                }
+                                else //nie
+                                {
+                                    Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                                    ViewModel.VycistiHodnotyForce();
+                                    return; //koniec
+                                }
+                            }
+                            return; //nic
+                        }
+                    }
+                }
+                else //nie
+                {
+                    Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                    ViewModel.VycistiHodnotyForce();
+                    return; //koniec
+                }
+            }
+            else //nie
+            {
+                if (ViewModel.IsZoznamEmpty())
+                {
+                    answer = await AprovModEmpty.OpenModal(true);
+                    if (answer)
+                    {
+                        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                        ViewModel.VycistiHodnotyForce();
+                        return; //koniec
+                    }
+                    return; //nic
+                }
+            }
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            ViewModel.VycistiHodnotyForce();
+        }
+
+        private async Task ClearInput() //vycisti pisacie pole
+        {
+            await JSRuntime.InvokeVoidAsync("clearInput", "vyhlid");
+        }
+
+    }
+
+
+    @code {
+        [Parameter]
+        public bool ReadOnly { get; set; } = false;
+    }

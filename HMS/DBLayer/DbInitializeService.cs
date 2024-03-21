@@ -101,7 +101,6 @@ namespace DBLayer
                     var polozka = new PolozkaSkladuMnozstvo() { Sklad = "HKS", PolozkaSkladu = pol.ID };
                     _db.PolozkaSkladuMnozstva.Add(polozka);
                 }
-
                 var otrt = _db.Prijemky.FirstOrDefault(x => x.ID == "000000001");
                 if (otrt == null)
                 {

@@ -17,7 +17,7 @@ namespace DBLayer.Models
         public bool Spracovana { get; set; } = false;
 
 
-        public static string DajNoveID(DbSet<PohSkup> dbset)
+        public static string DajNoveID<T>(DbSet<T> dbset) where T : PohSkup
         {
             int adder = 1;
             string newID;

@@ -6,10 +6,10 @@
 
     <div class="row pb-1">
         <div class="col-2">
-            <a class="btn btn-primary" id="uctobd" style="cursor:pointer">Obdobie:@DBLayer.Models.Sklad.ShortFromObdobie(ViewModel.Obdobie) </a>
+            <a class="btn btn-secondary" id="uctobd" style="cursor:pointer">Obdobie:@DBLayer.Models.Sklad.ShortFromObdobie(ViewModel.Obdobie) </a>
         </div>
         <div class="col-2">
-            <a class="btn btn-primary" id="skldpick" style="cursor:pointer">Sklad:@ViewModel.Sklad.ID </a>
+            <a class="btn btn-secondary" id="skldpick" style="cursor:pointer">Sklad:@ViewModel.Sklad.ID </a>
         </div>
     </div>
 
@@ -109,13 +109,13 @@
 
     protected override void OnInitialized()
     {
-        var founded1 = objectHolder.Remove<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska
+        var founded1 = objectHolder.Find<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska
         if (founded1 == null)
         {
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
-        var founded2 = objectHolder.Remove<string>();   //pokusi sa ziskat objekt z uloziska
+        var founded2 = objectHolder.Find<string>();   //pokusi sa ziskat objekt z uloziska
         if (founded2 != null)
         {
             ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
@@ -139,6 +139,7 @@
     }
     private void Create()
     {
+        Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPrijemka"));
     }
 
 }

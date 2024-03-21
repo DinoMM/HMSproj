@@ -6,18 +6,20 @@ using System.Text;
 using System.Threading.Tasks;
 using DBLayer;
 using PolozkaS = DBLayer.Models.PolozkaSkladu;
+using Ssklad = DBLayer.Models.Sklad;
 using CommunityToolkit.Mvvm.Input;
 using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
+using DBLayer.Models;
 
 namespace SkladModul.ViewModels.Sklad
 {
     public partial class SkladViewModel : ObservableObject
     {
         public string Obdobie { get; set; }
-        public List<DBLayer.Models.Sklad> Sklady { get; set; }
-        public DBLayer.Models.Sklad Sklad { get; set; }
+        public List<Ssklad> Sklady { get; set; }
+        public Ssklad Sklad { get; set; }
 
         [ObservableProperty]
         ObservableCollection<PolozkaS> zoznamPoloziekSkladu = new();
@@ -54,6 +56,12 @@ namespace SkladModul.ViewModels.Sklad
 
         }
 
+        public void SetProp(Ssklad sk, string ob)
+        {
+            Sklad = sk;
+            Obdobie = ob;
+        }
+
         public List<string> GetObdobia()
         {
             var list = new List<string>() { Sklad.ShortformObdobie() };
@@ -87,8 +95,10 @@ namespace SkladModul.ViewModels.Sklad
         public bool MoznoVymazat(PolozkaS poloz)
         {
             var activcon = _db.PolozkaSkladuMnozstva.Where(x => x.PolozkaSkladu == poloz.ID);
-            foreach (var item in activcon) {
-                if (item.Mnozstvo != 0) {
+            foreach (var item in activcon)
+            {
+                if (item.Mnozstvo != 0)
+                {
                     return false;
                 }
             }

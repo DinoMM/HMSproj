@@ -4,7 +4,8 @@
              xmlns:local="clr-namespace:HMS"
              xmlns:pages="clr-namespace:HMS.Components.Pages"
              x:Class="HMS.MainPage"
-             BackgroundColor="LightGray">
+             BackgroundColor="LightGray"
+             >
 
     <!--<Grid x:Name="MainGrid" RowDefinitions="0.1*, 0.1*, 0.6*, 0.1*" ColumnDefinitions="0.2*, 0.7*, 0.1*">-->
     <!--tu sa nastavi prva stranka x:Name="blazorWebView"-->

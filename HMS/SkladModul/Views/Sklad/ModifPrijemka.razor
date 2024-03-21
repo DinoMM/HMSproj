@@ -1,0 +1,173 @@
+﻿@namespace SkladModul
+@page "/Sklad/Prijem/ModifPrijemka"
+@inject ModifPrijemkaViewModel  ViewModel
+@using Microsoft.AspNetCore.Components.Forms
+
+<InfoModal @ref="InfoMod" ID="infosaved"
+           Text="Zmeny boli uložené.">
+</InfoModal>
+<ApproveModal @ref="ApproveModNSave" ID="approvenotsave"
+              Text="Nemáte uložené zmeny, chcete odísť bez uloženia?"
+              FuncOnSucc="EventCallback.Empty"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+
+<div class="row pb-1">
+    <div class="col-2">
+        <a class="btn btn-secondary" id="uctobd" style="cursor:pointer">Obdobie:@DBLayer.Models.Sklad.ShortFromObdobie(ViewModel.Obdobie) </a>
+    </div>
+    <div class="col-2">
+        <a class="btn btn-secondary" id="skldpick" style="cursor:pointer">Sklad:@ViewModel.Sklad.ID </a>
+    </div>
+</div>
+
+<EditForm Model="ViewModel.Polozka" OnValidSubmit="Save" OnInvalidSubmit="() => ViewModel.Saved = false">
+    <DataAnnotationsValidator />
+    <div class="container px-5">
+        <div class="row">
+            <div class="col">
+                <h1 class="text-center">Modifikovanie Príjemky</h1>
+            </div>
+        </div>
+
+        <div class="row">
+
+            <div class="col">
+                <div class="row">
+                    <div class="col-6">
+                        <label>ID (Automaticky)</label>
+                        <input type="text" value=@ViewModel.Polozka.ID disabled="disabled" class="form-control" placeholder="" readonly>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label>Dátum vytvorenia</label>
+                        <input type="text" value="@ViewModel.Polozka.Vznik.ToShortDateString()" disabled="disabled" class="form-control " placeholder="" readonly>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label>Spracovaná</label>
+                        <select value="@ViewModel.Polozka.Spracovana" @onchange="() =>ViewModel.Saved = false" class="form-select " placeholder="">
+                            <option value="@(false)">Nie</option>
+                            <option value="@(true)">Áno</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label>Poznámka</label>
+                        <textarea class="form-control" @bind-value=@ViewModel.Polozka.Poznamka @bind-value:event="oninput" @onchange="() =>ViewModel.Saved = false" style="max-height: 300px"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="row">
+                    <div class="col-6">
+                        <label>Dodací list</label>
+                        <input type="text" @bind-value=@ViewModel.Polozka.DodaciID @bind-value:event="oninput" @onchange="() =>ViewModel.Saved = false" class="form-control" placeholder="ID dodacieho listu">
+                        <ValidationMessage For="@(() => ViewModel.Polozka.DodaciID)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6 ">
+                        <label class="">Objednávka</label>
+                        <input type="text" @bind-value=@ViewModel.Polozka.Objednavka @bind-value:event="oninput" @onchange="() =>ViewModel.Saved = false" class="form-control " placeholder="ID existujúcej objednávky">
+                        <ValidationMessage For="@(() => ViewModel.Polozka.Objednavka)" />
+                    </div>
+                    <div class="col">
+                        <label>Načítať</label><br>
+                        <button class="btn btn-secondary btn-sm"><i class="bi bi-box-arrow-in-down"></i></button>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-6">
+                        <label>Faktúra</label>
+                        <input type="text" @bind-value=@ViewModel.Polozka.FakturaID @bind-value:event="oninput" @onchange="() =>ViewModel.Saved = false" class="form-control" placeholder="ID faktúry">
+                        <ValidationMessage For="@(() => ViewModel.Polozka.FakturaID)" />
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+
+        @*<div class="row">
+                <div class="col-6">
+                    <label>Určenie</label>
+                    <div class="list-group w-75" style="height: 8rem; overflow-y: auto">
+                        @foreach (var item in ViewModel.ZoznamSkladov)
+                        {
+                            <a @onclick="@(() => { ViewModel.VyberSklad(item); ViewModel.Saved = false; })" class="list-group-item list-group-item-action @(ViewModel.ZoznamOnacenych.Contains(item) ? "active" : "")" style="cursor:pointer">@item.ID - @item.Nazov</a>
+                        }
+
+                    </div>
+                </div>
+            </div>*@
+
+
+        <div class="row pt-2">
+            <div class="col text-center">
+                <button type="submit" class="btn btn-primary">@(ViewModel.Saved ? "Otvoriť" : "Uložiť")</button>
+                <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
+            </div>
+        </div>
+
+    </div>
+</EditForm>
+
+@code {
+    InfoModal InfoMod = new();
+    ApproveModal ApproveModNSave = new();
+
+    protected override void OnInitialized()
+    {
+        var founded1 = objectHolder.Find<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska
+        if (founded1 == null)
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+        var founded2 = objectHolder.Find<string>();   //pokusi sa ziskat objekt z uloziska
+        if (founded2 == null)
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+        var founded3 = objectHolder.Remove<DBLayer.Models.Prijemka>();
+        if (founded3 == null)
+        {
+            ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
+        }
+        else
+        {
+            ViewModel.SetProp(founded1, founded2, founded3);
+        }
+    }
+
+    private async Task Save()
+    {
+
+        if (!ViewModel.Saved)
+        {
+            ViewModel.Uloz();
+            await InfoMod.OpenModal();
+            ViewModel.Saved = true;
+        }
+        else
+        {
+            objectHolder.Add((DBLayer.Models.PohSkup)ViewModel.Polozka);
+            objectHolder.Add(typeof(DBLayer.Models.Prijemka));
+            Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozPrijemka"));
+        }
+
+
+    }
+    private void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+}

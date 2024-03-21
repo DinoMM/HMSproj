@@ -9,15 +9,15 @@ using System.Threading.Tasks;
 
 namespace DBLayer.Models
 {
-    public abstract class PohJednotka
+    public interface PohJednotka
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long ID { get; set; }
         [ForeignKey("SkupinaX")]
-        public string Skupina { get; set; } = default!;
+        public string Skupina { get; set; }
         public PohSkup SkupinaX { get; set; }
-        public string? Nazov { get; set; } = default!;
+        public string? Nazov { get; set; }
         public double Mnozstvo { get; set; }
         public double Cena { get; set; }
         [NotMapped]
@@ -26,6 +26,8 @@ namespace DBLayer.Models
         public double CenaDPH { get => (Cena * 120) / 100; }
         [NotMapped]
         public double CelkovaCenaDPH { get => (double)Mnozstvo * CenaDPH; }
+
+        
 
         //public static string DajNoveID(DbSet<PohJednotka> dbset)
         //{
