@@ -104,13 +104,13 @@ namespace DBLayer
                 var otrt = _db.Prijemky.FirstOrDefault(x => x.ID == "000000001");
                 if (otrt == null)
                 {
-                    var polozka = new Prijemka() { ID = "000000001", Poznamka = "oo" };
+                    var polozka = new Prijemka() { ID = "000000001", Sklad = "HKS", Poznamka = "oo" };
                     _db.Prijemky.Add(polozka);
                 }
                 var eere = _db.PrijemkyPolozky.FirstOrDefault(x => x.Skupina == "000000001");
                 if (eere == null)
                 {
-                    var polozka = new PrijemkaPolozka() { Nazov = "eee", Skupina = "000000001", PolozkaSkladuMnozstva = 2 };
+                    var polozka = new PrijemkaPolozka() { Nazov = "eee", Skupina = "000000001", PolozkaSkladu = "0000001" };
                     _db.PrijemkyPolozky.Add(polozka);
                 }
 

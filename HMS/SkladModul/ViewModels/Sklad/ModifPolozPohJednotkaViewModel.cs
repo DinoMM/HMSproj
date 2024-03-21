@@ -71,7 +71,7 @@ namespace SkladModul.ViewModels.Sklad
         [RelayCommand]
         private void VyhladajPolozku(ChangeEventArgs param)     //vyhlada polozku na zaklade inputu a ked najde, nastavuje novupolozku
         {
-            if (TypeOfPohJednotka == typeof(DBLayer.Models.PrijemkaPolozka))
+           /* if (TypeOfPohJednotka == typeof(DBLayer.Models.PrijemkaPolozka))
             {
                 var res = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX).FirstOrDefault(x => x.PolozkaSkladu == (string)param.Value && x.Sklad == Sklad.ID);   //zmenit na polozkymnozstva a sklad
                 if (res == null)
@@ -83,7 +83,7 @@ namespace SkladModul.ViewModels.Sklad
                 Uprava = false;
                 NovaPoloz = (PohJednotka)Activator.CreateInstance(TypeOfPohJednotka);       //naslo polozku tak nacitame info
                 ((DBLayer.Models.PrijemkaPolozka)NovaPoloz).SetZPolozSkladuMnozstva(res);
-            }
+            }*/
         }
 
         [RelayCommand]

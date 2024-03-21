@@ -30,18 +30,18 @@ namespace DBLayer.Models
         //Pridane
 
 
-        [ForeignKey("PolozkaSkladuMnozstvaX")]
-        public long PolozkaSkladuMnozstva { get; set; }
-        public PolozkaSkladuMnozstvo PolozkaSkladuMnozstvaX { get; set; }
+        [ForeignKey("PolozkaSkladuX")]
+        public string PolozkaSkladu { get; set; }
+        public PolozkaSkladu PolozkaSkladuX { get; set; }
 
-        public void SetZPolozSkladuMnozstva(PolozkaSkladuMnozstvo polozka)
+        public void SetZPolozSkladuMnozstva(PolozkaSkladu polozka)
         {
-            PolozkaSkladuMnozstva = polozka.ID;
-            PolozkaSkladuMnozstvaX = polozka;
+            PolozkaSkladu = polozka.ID;
+            PolozkaSkladuX = polozka;
 
-            Nazov = polozka.PolozkaSkladuX.Nazov;
+            Nazov = polozka.Nazov;
             Mnozstvo = 0;
-            Cena = polozka.PolozkaSkladuX.Cena;
+            Cena = polozka.Cena;
         }
     }
 }

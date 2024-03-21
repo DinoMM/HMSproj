@@ -37,7 +37,7 @@ namespace SkladModul.ViewModels.Sklad
         public void LoadZoznam()
         {
             //string shortOb = Ssklad.ShortFromObdobie(Obdobie);
-            var najd = _db.Prijemky.Where(x => x.Vznik >= Obdobie).ToList();
+          /*  var najd = _db.Prijemky.Where(x => x.Vznik >= Obdobie).ToList();
             foreach (var item in najd)
             {
                 var existuje = _db.PrijemkyPolozky.Include(x => x.PolozkaSkladuMnozstvaX)
@@ -46,7 +46,7 @@ namespace SkladModul.ViewModels.Sklad
                 {
                     ZoznamPrijemok.Add(item);
                 }
-            }
+            }*/
             
 
         }

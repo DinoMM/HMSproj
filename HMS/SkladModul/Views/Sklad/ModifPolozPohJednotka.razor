@@ -71,14 +71,14 @@
                             <tr>
                                 @if (ViewModel.TypeOfPohJednotka == typeof(DBLayer.Models.PrijemkaPolozka))
                                 {
-                                    <td><input type="text" readonly disabled="disabled" value="@(((DBLayer.Models.PrijemkaPolozka)item).PolozkaSkladuMnozstvaX.PolozkaSkladu)" size="8" /></td>
+                                    <td><input type="text" readonly disabled="disabled" value="@(((DBLayer.Models.PrijemkaPolozka)item).PolozkaSkladu)" size="8" /></td>
                                 }
                                 <td><input type="text" disabled="@ViewModel.Locked()" value="@(((DBLayer.Models.PohJednotka)item).Nazov)" @onchange=@((ChangeEventArgs arg) => {((DBLayer.Models.PohJednotka)item).Nazov = arg.Value.ToString(); ViewModel.Zmena = true; } ) /></td>
                                 <td><input type="number" disabled="@ViewModel.Locked()" @bind-value="((DBLayer.Models.PohJednotka)item).Mnozstvo" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" class="w-75" /></td>
                                 <td><input type="number" disabled="@ViewModel.Locked()" @bind-value="((DBLayer.Models.PohJednotka)item).Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" class="w-75" /></td>
                                 @if (ViewModel.TypeOfPohJednotka == typeof(DBLayer.Models.PrijemkaPolozka))
                                 {
-                                    <th>@(((DBLayer.Models.PrijemkaPolozka)item).PolozkaSkladuMnozstvaX.PolozkaSkladuX.MernaJednotka)</th>
+                                    <th>@(((DBLayer.Models.PrijemkaPolozka)item).PolozkaSkladuX.MernaJednotka)</th>
                                 }
                                 <td>@(((DBLayer.Models.PohJednotka)item).CenaDPH.ToString("F3"))</td>
                                 <td>@(((DBLayer.Models.PohJednotka)item).CelkovaCena.ToString("F3"))</td>
