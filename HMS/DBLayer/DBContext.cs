@@ -42,8 +42,10 @@ namespace DBLayer
         public DbSet<Sklad> Sklady { get; set; }
         public DbSet<PolozkaSkladuMnozstvo> PolozkaSkladuMnozstva { get; set; }
         public DbSet<SkladUzivatel> SkladUzivatelia { get; set; }
-        public DbSet<PrijemkaPolozka> PrijemkyPolozky { get; set; }
+        public DbSet<PrijemkaPolozka> PrijemkyPolozky { get; set; }     //ten isty typ pre Prijem/Vydaj
         public DbSet<Prijemka> Prijemky { get; set; }
+        public DbSet<Vydajka> Vydajky { get; set; }
+        public DbSet<PrijemkaPolozka> VydajkyPolozky { get; set; }      //ten isty typ pre Prijem/Vydaj
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

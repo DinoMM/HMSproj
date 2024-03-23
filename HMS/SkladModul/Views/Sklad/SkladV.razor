@@ -46,7 +46,7 @@
                 @if (Sklad.SKLADOVEPOHYBYROLE.Contains(UserService.LoggedUserRole))
                 {
                     <button type="button" @onclick="Prijem" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬆Spraviť Príjem</button>
-                    <button type="button" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬇Spraviť Výdaj</button>
+                    <button type="button" @onclick="Vydaj" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬇Spraviť Výdaj</button>
                     <button type="button" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">➰Uzavrieť obdobie</button>
                 }
             </div>
@@ -175,8 +175,11 @@
     }
     private void Open(PolozkaSkladu poloz)
     {
-        objectHolder.Add(poloz);
-        Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad"));
+        if (Sklad.ZMENAPOLOZIEKROLE.Contains(UserService.LoggedUserRole))
+        {
+            objectHolder.Add(poloz);
+            Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad"));
+        }
     }
 
     private void Prijem()
@@ -185,6 +188,13 @@
         objectHolder.Add(ViewModel.Obdobie);
         Navigator.NavigateTo(Navigator.AddNextUrl("/Prijem"));
     }
+    private void Vydaj()
+    {
+        objectHolder.Add(ViewModel.Sklad);
+        objectHolder.Add(ViewModel.Obdobie);
+        Navigator.NavigateTo(Navigator.AddNextUrl("/Vydaj"));
+    }
+
     private void Close()
     {
         var founded1 = objectHolder.Remove<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska //asi netreba
@@ -192,7 +202,8 @@
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
 
-    public void Dispose() {
+    public void Dispose()
+    {
         ViewModel.ClearNumZoznam();
     }
 }
