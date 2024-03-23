@@ -28,7 +28,7 @@ namespace SkladModul.ViewModels.Sklad
 
         public DateTime Obdobie { get; set; }
         public Ssklad Sklad { get; set; }
-        public bool Saved { get; set; } = false;
+        public bool Saved { get; set; } = true;
         public double CelkovaSuma { get; set; } = 0;
 
         DBContext _db;
@@ -52,7 +52,6 @@ namespace SkladModul.ViewModels.Sklad
             }
 
         }
-
         public async void Uloz()
         {
 
@@ -70,7 +69,6 @@ namespace SkladModul.ViewModels.Sklad
 
             _db.SaveChanges();
         }
-
         public void NeulozZmeny()
         {
             if (!string.IsNullOrEmpty(Polozka.ID))
@@ -88,16 +86,17 @@ namespace SkladModul.ViewModels.Sklad
             CelkovaSuma = 0;
         }
 
-        public void SpracujPrijemku()
+        public async Task SpracujPrijemku(IModal zoznampradnymodal)
         {
             if (!Polozka.Spracovana)
             {
                 if (!ObsahujePolozky())
                 {
+                    await zoznampradnymodal.OpenModal();
                     return;
                 }
 
-                var polozky = _db.PrijemkyPolozky.Where(x => x.Skupina == Polozka.ID);  //polozky prijemky
+                var polozky = _db.PrijemkyPolozky.Where(x => x.Skupina == Polozka.ID).ToList();  //polozky prijemky
                 foreach (var item in polozky)       //pridanie poloziek do skladu
                 {
                     var found = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.PolozkaSkladu && x.Sklad == Polozka.Sklad);

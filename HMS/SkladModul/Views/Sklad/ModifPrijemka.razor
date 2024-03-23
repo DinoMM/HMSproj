@@ -26,6 +26,9 @@
 <InfoModal @ref="InfoModNSomeNotLink" ID="infosomemissing"
            Text="Niektoré položky z objednávky neboli určené pre tento sklad.">
 </InfoModal>
+<InfoModal @ref="InfoModListEmpty" ID="infolistisempty"
+           Text="Nemožno spracovať lebo zoznam položiek tejto príjemky je prázdny.">
+</InfoModal>
 
 
 <div class="row pb-1">
@@ -132,8 +135,10 @@
     InfoModal InfoModsuccObj = new();
     InfoModal InfoModNotFounObj = new();
     InfoModal InfoModNSomeNotLink = new();
+    InfoModal InfoModListEmpty = new();
     ApproveModal ApproveModNSave = new();
     ApproveModal ApproveProcess = new();
+
 
     protected override void OnInitialized()
     {
@@ -208,7 +213,7 @@
     {
         if (ViewModel.Saved)
         {
-            ViewModel.SpracujPrijemku();
+            await ViewModel.SpracujPrijemku(InfoModListEmpty);
         }
     }
 }

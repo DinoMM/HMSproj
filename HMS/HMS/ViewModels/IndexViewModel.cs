@@ -34,7 +34,6 @@ namespace HMS.ViewModels
             }
             modulesList = new ObservableCollection<(string, string)>();
             modulesList.Add(("Objednávky", "/Objednavka"));
-            modulesList.Add(("Prijemky", "/Prijemka"));
             modulesList.Add(("Sklad", "/Sklad"));
 
         }

@@ -203,7 +203,11 @@ namespace SkladModul.ViewModels.Objednavka
         [RelayCommand]
         private void Neuloz()
         {
-            _db.Entry(objednavka).State = EntityState.Unchanged;
+            if (!string.IsNullOrEmpty(objednavka.ID))
+            {
+                _db.Entry(objednavka).State = EntityState.Unchanged;
+                _db.SaveChanges();
+            }
         }
 
     }

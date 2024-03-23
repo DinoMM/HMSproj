@@ -3,6 +3,7 @@
 @using DBLayer.Models
 @inject SkladViewModel ViewModel
 
+
 <SelectModal @ref="SelectModObd" ID="selectmodalobdobie"
              SelectionList="@ViewModel.GetObdobia()"
              Value="@ViewModel.Obdobie"></SelectModal>
@@ -17,6 +18,7 @@
 <InfoModal @ref="InfoModHasConneciton" ID="infomodalhascon"
            Text="Nemožno vymazať položku lebo je obsiahnutá v sklade alebo k neukončenej objednávke.">
 </InfoModal>
+@implements IDisposable
 
 <div class="container">
 
@@ -31,22 +33,22 @@
 
     <div class="row pb-1">
         <div class="col-1"></div>
-        <div class="col-3">
+        <div class="col-3 d-flex justify-content-bottom ">
             <input type="text" class="form-control" id="searchBox" placeholder="Vyhľadaj položku..." />
         </div>
         <div class="col-8">
             <div class="btn-group" role="group">
+                <button type="button" class="btn btn-primary" @onclick="Close">❌Koniec</button>
                 @if (Sklad.ZMENAPOLOZIEKROLE.Contains(UserService.LoggedUserRole))
                 {
                     <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad")))" type="button" class="btn btn-primary">➕Pridať položku</button>
                 }
                 @if (Sklad.SKLADOVEPOHYBYROLE.Contains(UserService.LoggedUserRole))
                 {
-                    <button type="button" @onclick="Prijem" class="btn btn-primary">⬆Spraviť Príjem</button>
-                    <button type="button" class="btn btn-primary">⬇Spraviť Výdaj</button>
-                    <button type="button" class="btn btn-primary">➰Uzavrieť obdobie</button>
+                    <button type="button" @onclick="Prijem" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬆Spraviť Príjem</button>
+                    <button type="button" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬇Spraviť Výdaj</button>
+                    <button type="button" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">➰Uzavrieť obdobie</button>
                 }
-                <button type="button" class="btn btn-primary" @onclick="Close">❌Koniec</button>
             </div>
         </div>
         <div class="col-1"></div>
@@ -63,10 +65,15 @@
                 <th class="col-resize" scope="col">Merná jednotka</th>
                 <th class="col-resize" scope="col">Cena</th>
                 <th class="col-resize" scope="col">Cena s DPH</th>
+                <th class="col-resize" scope="col"><button @onclick=@ViewModel.LoadMnozstvo disabled="@ViewModel.NacitaneMnozstvo" class="btn btn-sm @(ViewModel.NacitaneMnozstvo ? "btn-light" : "btn-dark")">Množstvo</button> </th>
                 <th class="col-resize" scope="col"></th>
 
                 </THEAD>
                 <TBODY>
+                    @if (!ViewModel.ZoznamPoloziekSkladu.Any())
+                    {
+                        <h2>Načítavanie..</h2>
+                    }
                     @foreach (var item in ViewModel.ZoznamPoloziekSkladu)
                     {
 
@@ -76,6 +83,7 @@
                             <td class="col-resize">@item.MernaJednotka </td>
                             <td class="col-resize">@item.Cena.ToString("F3") </td>
                             <td class="col-resize">@item.CenaDPH.ToString("F3") </td>
+                            <td class="col-resize">@(ViewModel.NacitaneMnozstvo ? item.Mnozstvo : "-")</td>
                             <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
                         </tr>
 
@@ -119,7 +127,7 @@
     private async Task ChangeSkl()
     {
         await SelectModSkl.OpenModal(true);
-        ViewModel.SetSklad(SelectModSkl.Value);
+        await ViewModel.SetSklad(SelectModSkl.Value);
         await JSRuntime.InvokeVoidAsync("changeText", "skldpick", "Sklad:" + ViewModel.Sklad.ID);
         await JSRuntime.InvokeVoidAsync("changeText", "uctobd", "Obdobie:" + ViewModel.Obdobie);
     }
@@ -141,6 +149,8 @@
             ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
 
         }
+        ViewModel.NacitaneMnozstvo = false;
+
     }
 
     protected override async Task OnInitializedAsync()
@@ -175,11 +185,14 @@
         objectHolder.Add(ViewModel.Obdobie);
         Navigator.NavigateTo(Navigator.AddNextUrl("/Prijem"));
     }
-    private void Close() {
+    private void Close()
+    {
         var founded1 = objectHolder.Remove<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska //asi netreba
         var founded2 = objectHolder.Remove<string>();   //pokusi sa ziskat objekt z uloziska //asi netreba
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
 
-
+    public void Dispose() {
+        ViewModel.ClearNumZoznam();
+    }
 }

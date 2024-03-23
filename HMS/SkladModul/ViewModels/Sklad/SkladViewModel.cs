@@ -20,6 +20,7 @@ namespace SkladModul.ViewModels.Sklad
         public string Obdobie { get; set; }
         public List<Ssklad> Sklady { get; set; }
         public Ssklad Sklad { get; set; }
+        public bool NacitaneMnozstvo { get; set; } = false;
 
         [ObservableProperty]
         ObservableCollection<PolozkaS> zoznamPoloziekSkladu = new();
@@ -47,6 +48,14 @@ namespace SkladModul.ViewModels.Sklad
                     Sklady = skladuziv.Select(x => x.SkladX).ToList();
                     Sklad = Sklady.FirstOrDefault();
                     Obdobie = Sklad.ShortformObdobie();
+
+                    if (Ssklad.ZMENAPOLOZIEKROLE.Contains(_userService.LoggedUserRole))
+                    {
+                        if (Sklady.FirstOrDefault(x => x.ID == "ALL") == null)  //prida moznost pre zobrazenie vsetkych skladovych poloziek
+                        {
+                            Sklady.Add(new Ssklad() { ID = "ALL", Nazov = "Zobrazenie všetkých položiek", Obdobie = DateTime.Today });
+                        }
+                    }
                 }
                 else
                 {
@@ -67,13 +76,20 @@ namespace SkladModul.ViewModels.Sklad
             var list = new List<string>() { Sklad.ShortformObdobie() };
             return list;
         }
-        public void SetSklad(string ID)
+        public async Task SetSklad(string ID)
         {
             var found = Sklady.FirstOrDefault(x => x.ID == ID);
             if (found != null)
             {
-                Sklad = found;
-                Obdobie = Sklad.ShortformObdobie();
+                if (Sklad.ID != found.ID)
+                {
+                    Sklad = found;
+                    Obdobie = Sklad.ShortformObdobie();
+
+                    ZoznamPoloziekSkladu.Clear();
+                    await LoadPolozky();
+                    NacitaneMnozstvo = false;
+                }
             }
         }
 
@@ -81,7 +97,18 @@ namespace SkladModul.ViewModels.Sklad
         {
             if (ZoznamPoloziekSkladu.Count == 0)
             {
-                await _db.PolozkySkladu.ForEachAsync(x => ZoznamPoloziekSkladu.Add(x));
+
+                if (Sklad.ID == "ALL")
+                {
+                    await _db.PolozkySkladu.ForEachAsync(x => ZoznamPoloziekSkladu.Add(x));
+                    return;
+                }
+
+                await _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
+                    .Include(x => x.SkladX)
+                    .Where(x => x.Sklad == Sklad.ID)
+                    .ForEachAsync(x => ZoznamPoloziekSkladu.Add(x.PolozkaSkladuX));
+
             }
         }
 
@@ -112,5 +139,35 @@ namespace SkladModul.ViewModels.Sklad
             }
             return true;
         }
+
+        public void LoadMnozstvo()
+        {
+            if (ZoznamPoloziekSkladu.Count != 0)
+            {
+                ClearNumZoznam();
+                foreach (var item in ZoznamPoloziekSkladu)
+                {
+                    var founded = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.ID);
+                    if (founded != null)
+                    {
+                        item.Mnozstvo = founded.Mnozstvo;
+                    }
+                    else
+                    {
+                        Debug.WriteLine("Pri načitavani množstva nebolo možné nájsť položku skladu");
+                    }
+                }
+                NacitaneMnozstvo = true;
+            }
+        }
+
+        public void ClearNumZoznam() {
+            foreach (var item in ZoznamPoloziekSkladu)
+            {
+                item.Mnozstvo = 0;
+            }
+
+        }
+      
     }
 }

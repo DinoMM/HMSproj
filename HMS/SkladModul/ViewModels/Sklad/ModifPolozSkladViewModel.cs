@@ -100,8 +100,11 @@ namespace SkladModul.ViewModels.Sklad
 
         public void VratZmeny()
         {
-            _db.Entry(Polozka).State = EntityState.Unchanged;
-            _db.SaveChanges();
+            if (!string.IsNullOrEmpty(Polozka.ID))
+            {
+                _db.Entry(Polozka).State = EntityState.Unchanged;
+                _db.SaveChanges();
+            }
         }
     }
 }

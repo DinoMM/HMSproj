@@ -23,7 +23,7 @@ namespace DBLayer.Models
         [NotMapped]
         public static List<RolesOwn> POVOLENEROLE { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.Nakupca, RolesOwn.Skladnik, };
         /// <summary>
-        /// povolene role pre pridavanie a mazanie poloziek
+        /// povolene role pre pridavanie a mazanie poloziek, zobrazovanie celeho skladu poloziek
         /// </summary>
         [NotMapped]
         public static List<RolesOwn> ZMENAPOLOZIEKROLE { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Nakupca };
@@ -32,8 +32,7 @@ namespace DBLayer.Models
         /// </summary>
         [NotMapped]
         public static List<RolesOwn> SKLADOVEPOHYBYROLE { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Skladnik };
-
-
+       
         public DateTime GetActual()
         {
             return new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);

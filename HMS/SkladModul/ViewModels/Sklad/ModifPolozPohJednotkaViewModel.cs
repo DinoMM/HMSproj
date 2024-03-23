@@ -43,10 +43,6 @@ namespace SkladModul.ViewModels.Sklad
             zoznamPohSkupiny = new();
         }
 
-
-
-
-
         public bool IsOBJValidna(bool ajId = true)  //kontrola ci objednavka ma vsetky povinne polia vyplnene, na zaklade ID sa zisti aj ci je uz objednavka v systeme
         {
             return !string.IsNullOrEmpty(PohSkupina.ID);
