@@ -29,6 +29,9 @@
 <InfoModal @ref="InfoModListEmpty" ID="infolistisempty"
            Text="Nemožno spracovať lebo zoznam položiek tejto príjemky je prázdny.">
 </InfoModal>
+<InfoModal @ref="InfoModWrongSeason" ID="infowrongseason"
+           Text="Nemožno vytvoriť novú príjemku v starom období.">
+</InfoModal>
 
 
 <div class="row pb-1">
@@ -94,7 +97,7 @@
                     </div>
                     <div class="col">
                         <label>Načítať</label><br>
-                        <a  disabled="@(ViewModel.ObsahujePolozky() || !ViewModel.Saved)" @onclick="@(() => ViewModel.NacitajZObjednavky(InfoModsuccObj, InfoModNotFounObj, InfoModNSomeNotLink))" style="cursor: pointer" id="load" class="btn btn-secondary btn-sm"><i class="bi bi-box-arrow-in-down"></i></a>
+                        <a disabled="@(ViewModel.ObsahujePolozky() || !ViewModel.Saved)" @onclick="@(() => ViewModel.NacitajZObjednavky(InfoModsuccObj, InfoModNotFounObj, InfoModNSomeNotLink))" style="cursor: pointer" id="load" class="btn btn-secondary btn-sm"><i class="bi bi-box-arrow-in-down"></i></a>
                     </div>
                 </div>
 
@@ -108,11 +111,11 @@
                 <div class="row">
                     <div class="col-4">
                         <label>Celková suma</label>
-                        <input type="text" value="@(ViewModel.CelkovaSuma.ToString("F3"))" disabled="disabled"  class="form-control" placeholder="">
+                        <input type="text" value="@(ViewModel.CelkovaSuma.ToString("F3"))" disabled="disabled" class="form-control" placeholder="">
                     </div>
                     <div class="col-5">
                         <label>Celková suma DPH</label>
-                        <input type="text"  value="@((ViewModel.CelkovaSuma * 120 / 100).ToString("F3"))" disabled="disabled"  class="form-control" placeholder="">
+                        <input type="text" value="@((ViewModel.CelkovaSuma * 120 / 100).ToString("F3"))" disabled="disabled" class="form-control" placeholder="">
                     </div>
                 </div>
             </div>
@@ -136,11 +139,12 @@
     InfoModal InfoModNotFounObj = new();
     InfoModal InfoModNSomeNotLink = new();
     InfoModal InfoModListEmpty = new();
+    InfoModal InfoModWrongSeason = new();
     ApproveModal ApproveModNSave = new();
     ApproveModal ApproveProcess = new();
 
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         var founded1 = objectHolder.Find<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska
         if (founded1 == null)
@@ -164,6 +168,13 @@
         {
             ViewModel.SetProp(founded1, founded2, founded3);
         }
+        if (!ViewModel.AktualneObdobie)     //pri novej prijemke ci je aktulalne obdobie
+        {
+            await InfoModWrongSeason.OpenModal(true);
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
         ViewModel.CelkovaCenaCalc();
     }
 
@@ -213,7 +224,10 @@
     {
         if (ViewModel.Saved)
         {
-            await ViewModel.SpracujPrijemku(InfoModListEmpty);
+            if (await ApproveProcess.OpenModal(true))
+            {
+                await ViewModel.SpracujPrijemku(InfoModListEmpty);
+            }
         }
     }
 }

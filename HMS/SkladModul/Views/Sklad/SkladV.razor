@@ -45,8 +45,8 @@
                 }
                 @if (Sklad.SKLADOVEPOHYBYROLE.Contains(UserService.LoggedUserRole))
                 {
-                    <button type="button" @onclick="Prijem" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬆Spraviť Príjem</button>
-                    <button type="button" @onclick="Vydaj" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬇Spraviť Výdaj</button>
+                    <button type="button" @onclick="Prijem" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬇Spravovať Príjem</button>
+                    <button type="button" @onclick="Vydaj" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬆Spravovať Výdaj</button>
                     <button type="button" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">➰Uzavrieť obdobie</button>
                 }
             </div>
@@ -84,7 +84,14 @@
                             <td class="col-resize">@item.Cena.ToString("F3") </td>
                             <td class="col-resize">@item.CenaDPH.ToString("F3") </td>
                             <td class="col-resize">@(ViewModel.NacitaneMnozstvo ? item.Mnozstvo : "-")</td>
-                            <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                            @if (Sklad.ZMENAPOLOZIEKROLE.Contains(UserService.LoggedUserRole))
+                            {
+                                <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                            }
+                            else
+                            {
+                                <td class="col-resize"> </td>
+                            }
                         </tr>
 
                     }
@@ -150,7 +157,6 @@
 
         }
         ViewModel.NacitaneMnozstvo = false;
-
     }
 
     protected override async Task OnInitializedAsync()
@@ -178,6 +184,7 @@
         if (Sklad.ZMENAPOLOZIEKROLE.Contains(UserService.LoggedUserRole))
         {
             objectHolder.Add(poloz);
+            ViewModel.ZoznamPoloziekSkladu.Clear();
             Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad"));
         }
     }

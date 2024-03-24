@@ -147,7 +147,7 @@ namespace SkladModul.ViewModels.Sklad
                 ClearNumZoznam();
                 foreach (var item in ZoznamPoloziekSkladu)
                 {
-                    var founded = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.ID);
+                    var founded = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.ID && x.Sklad == Sklad.ID);
                     if (founded != null)
                     {
                         item.Mnozstvo = founded.Mnozstvo;

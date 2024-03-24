@@ -104,7 +104,7 @@ namespace DBLayer
                 var otrt = _db.Prijemky.FirstOrDefault(x => x.ID == "000000001");
                 if (otrt == null)
                 {
-                    var polozka = new Prijemka() { ID = "000000001", Sklad = "HKS", Poznamka = "oo" };
+                    var polozka = new Prijemka() { ID = "000000001", Sklad = "HKS", Poznamka = "oo", DodaciID="0", FakturaID="0", Objednavka="0" };
                     _db.Prijemky.Add(polozka);
                 }
                 var eere = _db.PrijemkyPolozky.FirstOrDefault(x => x.Skupina == "000000001");
@@ -113,6 +113,22 @@ namespace DBLayer
                     var polozka = new PrijemkaPolozka() { Nazov = "eee", Skupina = "000000001", PolozkaSkladu = "0000001" };
                     _db.PrijemkyPolozky.Add(polozka);
                 }
+                var vydjrk = _db.Vydajky.FirstOrDefault(x => x.Sklad == "HKS");
+                if (vydjrk == null)
+                {
+                    var polozka = new Vydajka() { ID = "000000002", Sklad = "HKS", Poznamka = "uu" };
+                    _db.Vydajky.Add(polozka);
+                }
+                var vydajpolre = _db.VydajkyPolozky.FirstOrDefault(x => x.Skupina == "000000002");
+                if (vydajpolre == null)
+                {
+                    var polozka = new PrijemkaPolozka() { Nazov = "uuu", Skupina = "000000002", PolozkaSkladu = "0000001" };
+                    _db.VydajkyPolozky.Add(polozka);
+                }
+
+                var dssdsd = new Sklad() { ID = "HKS", Nazov = "House keeping sklad" };
+                dssdsd.Obdobie = dssdsd.Obdobie.AddMonths(1);
+                _db.Sklady.Add(dssdsd);
 
                 await _db.SaveChangesAsync();
                 _done = true;

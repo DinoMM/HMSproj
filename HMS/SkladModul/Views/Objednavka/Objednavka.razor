@@ -57,14 +57,18 @@
                                     <td class="col-resize">@item.DodavatelX.Nazov</td>
                                     <td class="col-resize">@item.Stav</td>
                                     <td class="col-resize">@item.TvorcaX.Surname</td>
-                                    <td class="col-resize" >@item.DatumVznik.ToShortDateString()</td>
+                                    <td class="col-resize">@item.DatumVznik.ToShortDateString()</td>
                                     @if (item.Stav == DBLayer.Models.StavOBJ.Vytvorena ||
-                                        item.Stav == DBLayer.Models.StavOBJ.Neschvalena ||
-                                        UserService.LoggedUserRole == DBLayer.RolesOwn.Admin ||
-                                        UserService.LoggedUserRole == DBLayer.RolesOwn.Riaditel &&
-                                        item.Stav != DBLayer.Models.StavOBJ.Ukoncena)
+                                      item.Stav == DBLayer.Models.StavOBJ.Neschvalena ||
+                                      UserService.LoggedUserRole == DBLayer.RolesOwn.Admin ||
+                                      UserService.LoggedUserRole == DBLayer.RolesOwn.Riaditel &&
+                                      item.Stav != DBLayer.Models.StavOBJ.Ukoncena)
                                     {
-                                    <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                                        <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                                    }
+                                    else
+                                    {
+                                        <td class="col-resize"> </td>
                                     }
                                 </tr>
 

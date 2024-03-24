@@ -1,5 +1,7 @@
 ﻿@namespace SkladModul
 @page "/Sklad/Prijem/ModifPrijemka/ModifPolozPrijemka/{ReadOnly:bool}"
+@page "/Sklad/Vydaj/ModifVydajka/ModifPolozVydajka/{ReadOnly:bool}"
+@page "/Sklad/Prijem/ModifVydajka/ModifPolozVydajka/{ReadOnly:bool}"
 
 @inject ModifPolozPohJednotkaViewModel  ViewModel
 @using PohJednotka = DBLayer.Models.PohJednotka
@@ -22,6 +24,9 @@
 </ApproveModal>
 <InfoModal @ref="InfoMod" ID="infocantsave"
            Text="Nepodarilo sa uložiť zmeny, skontrolujte zoznam">
+</InfoModal>
+<InfoModal @ref="InfoModListBadValue" ID="infolistisbadvalue"
+           Text="Nemožno vydať viacej ako je na sklade:<br>">
 </InfoModal>
 
 <div class="container">
@@ -123,6 +128,7 @@
         ApproveModal AprovModSave = new();
         ApproveModal AprovModEmpty = new();
         InfoModal InfoMod = new();
+        InfoModal InfoModListBadValue = new();
         PohJednotka marked;
 
         [Parameter]
@@ -135,7 +141,7 @@
             {
                 ViewModel.PohSkupina = founded1;      //nasla sa existujuca objednavka, nastavujeme model na upravu
                 ViewModel.Existujuca = true;
-                if (!ViewModel.IsOBJValidna())
+                if (!ViewModel.IsSkupValidna())
                 {
                     Debug.WriteLine("Skupina nieje validna z objectHoldera");
                     Navigator.NavigateTo(Navigator.RemoveLastUrl());
@@ -146,8 +152,8 @@
                 if (founded2 is not null)
                 {
                     ViewModel.TypeOfPohSkupina = founded2;
-                    if (founded2 == typeof(DBLayer.Models.Prijemka))
-                    {      //vymazat
+                    if (founded2 == typeof(DBLayer.Models.Prijemka) || founded2 == typeof(DBLayer.Models.Vydajka))
+                    {
                         ViewModel.TypeOfPohJednotka = typeof(DBLayer.Models.PrijemkaPolozka);
 
                     }
@@ -195,7 +201,7 @@
 
         private async Task SaveCommand()
         {
-            ViewModel.UlozCommand.Execute(null);
+            await ViewModel.Uloz(InfoModListBadValue);
             if (ViewModel.Zmena)    //ak je stale Zmena true, znamena ze sa ukladanie nepodarilo, inak sa podarilo
             {
                 await InfoMod.OpenModal();  //zobrazi sa info ze nieje mozne ulozit objednavku koli chybnym udajom

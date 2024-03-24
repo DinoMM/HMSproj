@@ -12,6 +12,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Ssklad = DBLayer.Models.Sklad;
 using Pprijemka = DBLayer.Models.Prijemka;
+using Vvydajka = DBLayer.Models.Vydajka;
+using UniComponents;
 
 namespace SkladModul.ViewModels.Sklad
 {
@@ -43,7 +45,7 @@ namespace SkladModul.ViewModels.Sklad
             zoznamPohSkupiny = new();
         }
 
-        public bool IsOBJValidna(bool ajId = true)  //kontrola ci objednavka ma vsetky povinne polia vyplnene, na zaklade ID sa zisti aj ci je uz objednavka v systeme
+        public bool IsSkupValidna(bool ajId = true)  // ci ma ID
         {
             return !string.IsNullOrEmpty(PohSkupina.ID);
         }
@@ -53,11 +55,19 @@ namespace SkladModul.ViewModels.Sklad
             if (Existujuca)
             {
                 _db.Entry(PohSkupina).State = EntityState.Unchanged; //oznacenie ze v objednavke nerobime ziadnu zmenu pre pripad nejakej nejastnosti
-                var list = _db.PrijemkyPolozky.Include(x => x.PolozkaSkladuX).Where(x => x.Skupina == PohSkupina.ID).ToList();
+                List<PrijemkaPolozka>? list;
+                if (TypeOfPohSkupina == typeof(Pprijemka))
+                {
+                    list = _db.PrijemkyPolozky.Include(x => x.PolozkaSkladuX).Where(x => x.Skupina == PohSkupina.ID).ToList();
+                }
+                else  //Vydajka
+                {
+                    list = _db.VydajkyPolozky.Include(x => x.PolozkaSkladuX).Where(x => x.Skupina == PohSkupina.ID).ToList();
+                }
+
                 foreach (var item in list)
                 {
                     ZoznamPohSkupiny.Add(item.Clon());  //klon hodnoty aby sa nemenila databaza
-
                 }
                 zoznamPohSkupinySave.AddRange(ZoznamPohSkupiny);
             }
@@ -68,18 +78,43 @@ namespace SkladModul.ViewModels.Sklad
         {
             if (TypeOfPohJednotka == typeof(DBLayer.Models.PrijemkaPolozka))
             {
-                var res = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
-                    .FirstOrDefault(x => x.PolozkaSkladu == (string)param.Value &&
-                    x.Sklad == ((Pprijemka)PohSkupina).Sklad);
-                if (res == null)
+                PolozkaSkladuMnozstvo? najd;
+                if (TypeOfPohSkupina == typeof(Pprijemka))
+                {
+                    najd = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
+                       .FirstOrDefault(x => x.PolozkaSkladu == (string)param.Value &&
+                       x.Sklad == ((Pprijemka)PohSkupina).Sklad);
+                }
+                else //vydajka
+                {
+                    najd = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
+                       .FirstOrDefault(x => x.PolozkaSkladu == (string)param.Value &&
+                       x.Sklad == ((Vvydajka)PohSkupina).Sklad);
+                }
+
+                if (najd == null)
                 {
                     NovaPoloz = (PohJednotka)Activator.CreateInstance(TypeOfPohJednotka);
                     Uprava = true;
                     return;
                 }
+
+                if (TypeOfPohSkupina == typeof(Vvydajka))
+                {
+                    if (!string.IsNullOrEmpty(((Vvydajka)PohSkupina).SkladDo))  //ak je vydajka nastavena ako prevodka, musi to byt platny SkladDo
+                    {
+                        if (_db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.Sklad == ((Vvydajka)PohSkupina).SkladDo && x.PolozkaSkladu == najd.PolozkaSkladu) == null)
+                        { //ak mozno priradit polozku do zoznamu
+                            NovaPoloz = (PohJednotka)Activator.CreateInstance(TypeOfPohJednotka);
+                            Uprava = true;
+                            return;
+                        }
+                    }
+                }
+
                 Uprava = false;
                 NovaPoloz = (PohJednotka)Activator.CreateInstance(TypeOfPohJednotka);       //naslo polozku tak nacitame info
-                ((DBLayer.Models.PrijemkaPolozka)NovaPoloz).SetZPolozSkladuMnozstva(res.PolozkaSkladuX);
+                ((DBLayer.Models.PrijemkaPolozka)NovaPoloz).SetZPolozSkladuMnozstva(najd.PolozkaSkladuX);
             }
         }
 
@@ -105,10 +140,8 @@ namespace SkladModul.ViewModels.Sklad
             Zmena = true;
         }
 
-        [RelayCommand]
-        private void Uloz()
+        public async Task Uloz(IModal notresmodal)
         {
-
             if (!Zmena)
             {
                 return;
@@ -135,6 +168,22 @@ namespace SkladModul.ViewModels.Sklad
                     trebaCheck = true;
                 }
             }
+            if (TypeOfPohSkupina == typeof(Vvydajka)) {     //kontrola mnozstva
+                var listnemozno = Ssklad.MoznoVydať(ZoznamPohSkupiny.Cast<PrijemkaPolozka>(), ((Vvydajka)PohSkupina).SkladX, _db);
+                if (listnemozno.Count != 0)     //ak su polozky, ktore nemozny vydat zo skladu
+                {
+                    //modal nie je mozne vydat zo skladu
+                    var vypis = "Nemožno vydať viacej ako je na sklade:<br>";
+                    foreach (var item in listnemozno)
+                    {
+                        vypis += item + "<br>";
+                    }
+                    notresmodal.UpdateText(vypis);
+                    await notresmodal.OpenModal(true);
+                    return;
+                }
+            }
+
             if (trebaCheck)
             {
                 return;
@@ -142,7 +191,15 @@ namespace SkladModul.ViewModels.Sklad
 
             foreach (var item in ZoznamPohSkupiny)
             {
-                var poloz = _db.PrijemkyPolozky.FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
+                PrijemkaPolozka? poloz;
+                if (TypeOfPohSkupina == typeof(Pprijemka))
+                {
+                    poloz = _db.PrijemkyPolozky.FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
+                }
+                else  //vydajka
+                {
+                    poloz = _db.VydajkyPolozky.FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
+                }
                 if (poloz != null) //ak existuje tak ho nahradime, inak len pridáme
                 {
                     PolozkaSkladu doc = ((PrijemkaPolozka)item).PolozkaSkladuX;
@@ -151,17 +208,35 @@ namespace SkladModul.ViewModels.Sklad
                 }
                 else
                 {
-                    _db.PrijemkyPolozky.Add((PrijemkaPolozka)item);
+                    if (TypeOfPohSkupina == typeof(Pprijemka))
+                    {
+                        _db.PrijemkyPolozky.Add((PrijemkaPolozka)item);
+                    }
+                    else
+                    {
+                        _db.VydajkyPolozky.Add((PrijemkaPolozka)item);
+                    }
                 }
             }
             foreach (var item in zoznamPohSkupinyNaVymazanie)   //prejdenie zoznamu vymazanych ak nahodou bola polozka pred tym v databazi
             {
-                var poloz = _db.PrijemkyPolozky.FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
-                if (poloz != null) //ak existuje tak ho vymazeme, inak nic
+                PrijemkaPolozka? poloz;
+                if (TypeOfPohSkupina == typeof(Pprijemka))
                 {
-                    _db.PrijemkyPolozky.Remove(poloz);
+                    poloz = _db.PrijemkyPolozky.FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
+                    if (poloz != null) //ak existuje tak ho vymazeme, inak nic
+                    {
+                        _db.PrijemkyPolozky.Remove(poloz);
+                    }
                 }
-
+                else //vydajka
+                {
+                    poloz = _db.VydajkyPolozky.FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
+                    if (poloz != null) //ak existuje tak ho vymazeme, inak nic
+                    {
+                        _db.VydajkyPolozky.Remove(poloz);
+                    }
+                }
             }
             zoznamPohSkupinyNaVymazanie.Clear();
             zoznamPohSkupinySave = new(ZoznamPohSkupiny);
@@ -193,19 +268,39 @@ namespace SkladModul.ViewModels.Sklad
 
             foreach (var item in zoznamPohSkupinyNaVymazanie)   //prejdenie zoznamu vymazanych ak nahodou bola polozka pred tym v databazi
             {
-                var poloz = _db.PrijemkyPolozky.FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
-                if (poloz != null) //ak existuje tak ho vymazeme, inak nic
+                PrijemkaPolozka? poloz;
+                if (TypeOfPohSkupina == typeof(Pprijemka))
                 {
-                    _db.Remove(poloz);
+                    poloz = _db.PrijemkyPolozky.FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
+                    if (poloz != null) //ak existuje tak ho vymazeme, inak nic
+                    {
+                        _db.PrijemkyPolozky.Remove(poloz);
+                    }
+                }
+                else //vydajka
+                {
+                    poloz = _db.VydajkyPolozky.FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
+                    if (poloz != null) //ak existuje tak ho vymazeme, inak nic
+                    {
+                        _db.VydajkyPolozky.Remove(poloz);
+                    }
                 }
 
             }
             zoznamPohSkupinyNaVymazanie.Clear();
 
-            var obj = _db.Prijemky.FirstOrDefault(x => x.ID == PohSkupina.ID);
-            if (obj != null)    //ak existuje objednávka tak mazeme
+            PohSkup? skp;
+            if (TypeOfPohSkupina == typeof(Pprijemka))
             {
-                _db.Remove(obj);
+                skp = _db.Prijemky.FirstOrDefault(x => x.ID == PohSkupina.ID);
+            }
+            else //vydajka
+            {
+                skp = _db.Vydajky.FirstOrDefault(x => x.ID == PohSkupina.ID);
+            }
+            if (skp != null)    //ak existuje objednávka tak mazeme
+            {
+                _db.Remove(skp);
             }
             PohSkupina = (PohSkup)Activator.CreateInstance(TypeOfPohSkupina);
             Existujuca = false;

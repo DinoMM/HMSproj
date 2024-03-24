@@ -1,4 +1,4 @@
-﻿@*@namespace SkladModul
+﻿@namespace SkladModul
 @page "/Sklad/Vydaj"
 @inject VydajPolozViewModel ViewModel
 
@@ -21,11 +21,11 @@
 
     <div class="row">
         <div class="col-12">
-            <h2 class="text-center font-weight-bold">Príjemky za obdobie</h2>
+            <h2 class="text-center font-weight-bold">Výdajky za obdobie</h2>
             <div class="col">
                 <button @onclick="() => Navigator.NavigateTo(Navigator.RemoveLastUrl())" class="btn btn-primary  mb-3" type="button">Späť</button>
-                <button @onclick="Create" class="btn btn-primary  mb-3" type="button">➕Pridať príjemku</button>
-                <button @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary  mb-3" type="button">📩Otvoriť príjemku</button>
+                <button @onclick="Create" class="btn btn-primary  mb-3" type="button">➕Pridať výdajku</button>
+                <button @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary  mb-3" type="button">📩Otvoriť výdajku</button>
             </div>
         </div>
 
@@ -40,25 +40,25 @@
                 <th class="col-resize" scope="col">ID</th>
                 <th class="col-resize" scope="col">Vznik</th>
                 <th class="col-resize" scope="col">OK</th>
-                <th class="col-resize" scope="col">Objednavka</th>
-                <th class="col-resize" scope="col">Dodaci</th>
-                <th class="col-resize" scope="col">Faktúra</th>
+                <th class="col-resize" scope="col">Prevodka do</th>
                 <th class="col-resize" scope="col"></th>
                 </THEAD>
                 <TBODY>
-                    @foreach (var item in ViewModel.ZoznamPrijemok)
+                    @foreach (var item in ViewModel.ZoznamVydajok)
                     {
 
                         <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open(item))" style="cursor: pointer;">
                             <td class="col-resize">@item.ID </td>
                             <td class="col-resize">@item.Vznik.ToShortDateString() </td>
                             <td class="col-resize">@item.Spracovana </td>
-                            <td class="col-resize">@item.Objednavka </td>
-                            <td class="col-resize">@item.DodaciID </td>
-                            <td class="col-resize">@item.FakturaID </td>
+                            <td class="col-resize">@(string.IsNullOrEmpty(item.SkladDo) ? "-" : item.SkladDo) </td>
                             @if (!item.Spracovana)
                             {
                                 <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                            }
+                            else
+                            {
+                                <td class="col-resize"> </td>
                             }
                         </tr>
 
@@ -75,7 +75,7 @@
 
 @code {
     ApproveModal AprovMod = new();
-    DBLayer.Models.Prijemka? marked;
+    DBLayer.Models.Vydajka? marked;
 
     protected override void OnInitialized()
     {
@@ -99,12 +99,12 @@
         }
     }
 
-    private void Open(DBLayer.Models.Prijemka poloz)
+    private void Open(DBLayer.Models.Vydajka poloz)
     {
         objectHolder.Add(poloz);
         Create();
     }
-    private async Task Delete(DBLayer.Models.Prijemka poloz)
+    private async Task Delete(DBLayer.Models.Vydajka poloz)
     {
         //bez kontroly
         await AprovMod.OpenModal(true);
@@ -113,7 +113,7 @@
     }
     private void Create()
     {
-        Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPrijemka"));
+        Navigator.NavigateTo(Navigator.AddNextUrl("/ModifVydajka"));
     }
 
-}*@
+}

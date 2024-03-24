@@ -17,7 +17,7 @@ namespace SkladModul.ViewModels.Sklad
     public partial class VydajPolozViewModel : ObservableObject 
     {
         [ObservableProperty]
-        ObservableCollection<Vvydajka> zoznamPrijemok = new();
+        ObservableCollection<Vvydajka> zoznamVydajok = new();
         public DateTime Obdobie { get; set; }
         public Ssklad Sklad { get; set; }
 
@@ -36,17 +36,16 @@ namespace SkladModul.ViewModels.Sklad
 
         public void LoadZoznam()
         {
-            ZoznamPrijemok = new(_db.Vydajky.Include(x => x.SkladX).Where(x => x.Vznik >= Obdobie && x.Sklad == Sklad.ID)
+            ZoznamVydajok = new(_db.Vydajky.Include(x => x.SkladX).Where(x => x.Vznik >= Obdobie && x.Sklad == Sklad.ID)
                 .OrderByDescending(x => x.Vznik));
         }
 
         [RelayCommand]
         private void Vymaz(Vvydajka poloz)
         {
-            ZoznamPrijemok.Remove(poloz);
+            ZoznamVydajok.Remove(poloz);
             _db.Vydajky.Remove(poloz);
             _db.SaveChanges();
-
         }
     }
 }

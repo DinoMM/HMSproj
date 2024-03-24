@@ -34,7 +34,7 @@
     /// </summary>
     [Parameter]
     [EditorRequired]
-    public EventCallback FuncOnSucc { get; set; }       
+    public EventCallback FuncOnSucc { get; set; }
 
     /// <summary>
     /// Nazov funkcie, ktora sa uskutocni po stlaceni nie
@@ -72,7 +72,7 @@
             await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
             return true;
         }
-        
+
     }
 
     private void CloseModal(bool ans)
@@ -81,6 +81,12 @@
         {
             tcs.SetResult(ans); //zastavi fyzické státie programu
         }
+    }
+
+    public void UpdateText(string newText)
+    {
+        Text = newText;
+        StateHasChanged(); // Trigger a re-render
     }
 }
 

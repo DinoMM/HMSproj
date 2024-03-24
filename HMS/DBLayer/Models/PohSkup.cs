@@ -17,27 +17,27 @@ namespace DBLayer.Models
         public bool Spracovana { get; set; } = false;
 
 
-        public static string DajNoveID<T>(DbSet<T> dbset) where T : PohSkup
+        public static string DajNoveID<T>(DbSet<T> dbset, DBContext db) where T : PohSkup
         {
-            int adder = 1;
             string newID;
+            int cislo;
+            if (dbset.Count() != 0)
+            {
+                cislo = int.Parse(dbset.DefaultIfEmpty().Max(x => x != null ? x.ID : "1") ?? "1") + 1;
+            }
+            else
+            {
+                cislo = 1;
+            }
+
             do
             {
-                int cislo;
-                if (dbset.Count() != 0)
-                {
-                    cislo = int.Parse(dbset.DefaultIfEmpty().Max(x => x != null ? x.ID : "1") ?? "1") + adder;
-                }
-                else
-                {
-                    cislo = 1;
-                }
-                //moznost pridat prefix
                 newID = cislo.ToString("D9");
-                ++adder;
+                ++cislo;
 
-            } while (dbset.FirstOrDefault(d => d.ID == newID) != null);
+            } while (db.Find(typeof(PohSkup), newID) != null);
             return newID;
         }
+
     }
 }

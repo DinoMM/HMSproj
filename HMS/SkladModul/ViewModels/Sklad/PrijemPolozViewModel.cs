@@ -18,7 +18,7 @@ namespace SkladModul.ViewModels.Sklad
     public partial class PrijemPolozViewModel : ObservableObject
     {
         [ObservableProperty]
-        ObservableCollection<Pprijemka> zoznamPrijemok = new();
+        ObservableCollection<PohSkup> zoznamPrijemok = new();
         public DateTime Obdobie { get; set; }
         public Ssklad Sklad { get; set; }
 
@@ -37,8 +37,16 @@ namespace SkladModul.ViewModels.Sklad
 
         public void LoadZoznam()
         {
-            ZoznamPrijemok = new(_db.Prijemky.Include(x => x.SkladX).Where(x => x.Vznik >= Obdobie && x.Sklad == Sklad.ID)
-                .OrderByDescending(x => x.Vznik));
+            ZoznamPrijemok = new(_db.Prijemky.Include(x => x.SkladX)        
+                .Where(x => x.Vznik >= Obdobie && x.Sklad == Sklad.ID)
+                .ToList());     //zoznam prijemok
+            var prevodky = _db.Vydajky.Include(x => x.SkladX).Include(x => x.SkladDoX).Where(x => x.Vznik >= Obdobie && x.SkladDo == Sklad.ID)
+                .ToList();      //zoznam vydajok urcene pre aktualny sklad
+            foreach (var item in prevodky)  //pridanie prevodiek do zoznamu
+            {
+                ZoznamPrijemok.Add(item);
+            }
+            ZoznamPrijemok.OrderByDescending(x => x.Vznik);     //utriedenie
         }
 
         [RelayCommand]

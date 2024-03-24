@@ -9,5 +9,6 @@ namespace UniComponents
     public interface IModal
     {
         public Task<bool> OpenModal(bool stop = false);
+        public void UpdateText(string newText);
     }
 }

@@ -31,6 +31,8 @@ namespace SkladModul.ViewModels.Sklad
         public bool Saved { get; set; } = true;
         public double CelkovaSuma { get; set; } = 0;
 
+        public bool AktualneObdobie { get; set; } = true;       //true - mozno vytvorit novu prijemku
+
         DBContext _db;
 
         public ModifPrijemkaViewModel(DBContext db)
@@ -50,6 +52,16 @@ namespace SkladModul.ViewModels.Sklad
                     Saved = true;
                 }
             }
+            else //nova prijemka
+            {
+                var aktuldate = _db.Sklady.Where(x => x.ID == Sklad.ID)
+                    .Max(x => x.Obdobie);       //aktualne obdobie podla skladu
+                if (!(Obdobie >= aktuldate && Obdobie <= aktuldate.AddMonths(1)))  //ak neni aktualne obdobie (musi byt v minulosti)
+                {
+                    AktualneObdobie = false;
+                }
+            }
+
 
         }
         public async void Uloz()
@@ -57,7 +69,7 @@ namespace SkladModul.ViewModels.Sklad
 
             if (string.IsNullOrEmpty(Polozka.ID))
             {     //ak nema ID
-                Polozka.ID = PohSkup.DajNoveID(_db.Prijemky);
+                Polozka.ID = PohSkup.DajNoveID(_db.Prijemky, _db);
                 _db.Prijemky.Add(Polozka);
                 Polozka.Spracovana = false;     //pre istotu, nemoze byt nikdy spracovana ked sa vytvori a je prazdna
             }
@@ -86,13 +98,13 @@ namespace SkladModul.ViewModels.Sklad
             CelkovaSuma = 0;
         }
 
-        public async Task SpracujPrijemku(IModal zoznampradnymodal)
+        public async Task SpracujPrijemku(IModal zoznamprazdnymodal)
         {
             if (!Polozka.Spracovana)
             {
                 if (!ObsahujePolozky())
                 {
-                    await zoznampradnymodal.OpenModal();
+                    await zoznamprazdnymodal.OpenModal();
                     return;
                 }
 
@@ -158,7 +170,8 @@ namespace SkladModul.ViewModels.Sklad
                 return;
             }
 
-            if (foundedOBJ.Stav == StavOBJ.Vytvorena || foundedOBJ.Stav == StavOBJ.Neschvalena || foundedOBJ.Stav == StavOBJ.Ukoncena) {   //len aktivne objednavky
+            if (foundedOBJ.Stav == StavOBJ.Vytvorena || foundedOBJ.Stav == StavOBJ.Neschvalena || foundedOBJ.Stav == StavOBJ.Ukoncena)
+            {   //len aktivne objednavky
                 await notfoundModal.OpenModal();
                 return;
             }

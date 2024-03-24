@@ -55,6 +55,7 @@ namespace DBLayer
 
             modelBuilder.Entity<IdentityUserLogin<string>>().HasKey(x => x.UserId);
 
+
             modelBuilder.Entity<Objednavka>()   //pre cyklicke mazanie
             .HasOne(o => o.DodavatelX)
             .WithMany()
@@ -67,11 +68,47 @@ namespace DBLayer
                 .HasForeignKey(o => o.Odberatel)
                 .OnDelete(DeleteBehavior.NoAction); // No action delete rule for Odberatel
 
+
             //modelBuilder.Entity<PolozkaSkladuMnozstvo>()    //definovanie 2 foreign klucov
             //.HasKey(e => new { e.PolozkaSkladu, e.Sklad });
 
             modelBuilder.Entity<SkladUzivatel>()            //definovanie 2 foreign klucov
             .HasKey(e => new { e.Sklad, e.Uzivatel });
+
+
+            //modelBuilder.Entity<Vydajka>()   //pre cyklicke mazanie
+            //.HasOne(o => o.SkladX)
+            //.WithMany()
+            //.HasForeignKey(o => o.Sklad)
+            //.OnDelete(DeleteBehavior.Cascade); // Cascade delete rule for SkladOd
+
+            //modelBuilder.Entity<Vydajka>()
+            //    .HasOne(o => o.SkladDoX)
+            //    .WithMany()
+            //    .HasForeignKey(o => o.SkladDo)
+            //    .OnDelete(DeleteBehavior.NoAction); // No action delete rule for SkladDo
+
+            modelBuilder.Entity<Vydajka>()
+                .ToTable("Vydajka");
+
+            modelBuilder.Entity<Vydajka>()
+                .HasOne(o => o.SkladX)
+                .WithMany()
+                .HasForeignKey(o => o.Sklad)
+                .OnDelete(DeleteBehavior.Restrict); // Restrict delete rule for Sklad
+
+            modelBuilder.Entity<Vydajka>()
+                .HasOne(o => o.SkladDoX)
+                .WithMany()
+                .HasForeignKey(o => o.SkladDo)
+                .OnDelete(DeleteBehavior.Restrict); // Restrict delete rule for SkladDo
+
+           // modelBuilder.Entity<Sklad>()    //sklad ma unique obdobie
+           //.HasIndex(s => new { s.ID, s.Obdobie })
+           //.IsUnique();
+            //modelBuilder.Entity<Sklad>()
+            // .HasKey(s => new { s.ID, s.Obdobie });
+            modelBuilder.Entity<Sklad>().HasKey(vf => new { vf.ID, vf.Obdobie });
 
         }
 
@@ -86,6 +123,6 @@ namespace DBLayer
             }
         }
 
-       
+
     }
 }

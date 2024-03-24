@@ -4,7 +4,7 @@
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
               Text="Naozaj chcete odstrániť tento riadok?"
-              FuncOnSucc="@(() => ViewModel.VymazCommand.Execute(marked))"
+              FuncOnSucc="@(() => ViewModel.VymazCommand.Execute((DBLayer.Models.Prijemka)marked))"
               FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
 
@@ -40,28 +40,57 @@
                 <th class="col-resize" scope="col">ID</th>
                 <th class="col-resize" scope="col">Vznik</th>
                 <th class="col-resize" scope="col">OK</th>
+
                 <th class="col-resize" scope="col">Objednavka</th>
                 <th class="col-resize" scope="col">Dodaci</th>
                 <th class="col-resize" scope="col">Faktúra</th>
+
+                <th class="col-resize" scope="col">Prevodka z</th>
+
                 <th class="col-resize" scope="col"></th>
                 </THEAD>
                 <TBODY>
-                    @foreach (var item in ViewModel.ZoznamPrijemok)
+                    @if (!ViewModel.ZoznamPrijemok.Any())
                     {
+                        <h2>Načítavanie...</h2>
+                    }
+                    else
+                    {
+                        @foreach (var item in ViewModel.ZoznamPrijemok)
+                        {
 
-                        <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open(item))" style="cursor: pointer;">
-                            <td class="col-resize">@item.ID </td>
-                            <td class="col-resize">@item.Vznik.ToShortDateString() </td>
-                            <td class="col-resize">@item.Spracovana </td>
-                            <td class="col-resize">@item.Objednavka </td>
-                            <td class="col-resize">@item.DodaciID </td>
-                            <td class="col-resize">@item.FakturaID </td>
-                            @if (!item.Spracovana)
-                            {
-                                <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
-                            }
-                        </tr>
+                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open(item))" style="cursor: pointer;">
+                                <td class="col-resize">@item.ID </td>
+                                <td class="col-resize">@item.Vznik.ToShortDateString() </td>
+                                <td class="col-resize">@item.Spracovana </td>
+                                @if (item is DBLayer.Models.Prijemka)
+                                {
+                                    <td class="col-resize">@(((DBLayer.Models.Prijemka)item).Objednavka) </td>
+                                    <td class="col-resize">@(((DBLayer.Models.Prijemka)item).DodaciID) </td>
+                                    <td class="col-resize">@(((DBLayer.Models.Prijemka)item).FakturaID) </td>
+                                    <td class="col-resize">-</td>
+                                    @if (!item.Spracovana)
+                                    {
+                                        <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                                    }
+                                    else
+                                    {
+                                        <td class="col-resize"></td>
+                                    }
+                                }
+                                else
+                                {
+                                    <td class="col-resize">-</td>
+                                    <td class="col-resize">-</td>
+                                    <td class="col-resize">-</td>
+                                    <td class="col-resize">@(((DBLayer.Models.Vydajka)item).Sklad) </td>
+                                    <td class="col-resize"></td>
+                                }
 
+
+                            </tr>
+
+                        }
                     }
                 </TBODY>
 
@@ -75,7 +104,7 @@
 
 @code {
     ApproveModal AprovMod = new();
-    DBLayer.Models.Prijemka? marked;
+    DBLayer.Models.PohSkup? marked;
 
     protected override void OnInitialized()
     {
@@ -99,14 +128,23 @@
         }
     }
 
-    private void Open(DBLayer.Models.Prijemka poloz)
+    private void Open(DBLayer.Models.PohSkup poloz)
     {
-        objectHolder.Add(poloz);
-        Create();
+        if (poloz is DBLayer.Models.Prijemka)
+        {
+            objectHolder.Add(poloz);
+            Create();
+        }
+        else  //vydajka
+        {
+            objectHolder.Add(poloz);
+            Navigator.NavigateTo(Navigator.AddNextUrl("/ModifVydajka"));
+        }
     }
-    private async Task Delete(DBLayer.Models.Prijemka poloz)
+    private async Task Delete(DBLayer.Models.PohSkup poloz)
     {
         //bez kontroly
+        marked = poloz;
         await AprovMod.OpenModal(true);
         marked = null;
 
