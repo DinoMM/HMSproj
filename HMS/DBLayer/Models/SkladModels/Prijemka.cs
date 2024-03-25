@@ -16,5 +16,18 @@ namespace DBLayer.Models
         public string Sklad { get; set; } = default!;
         public Sklad SkladX { get; set; }
 
+
+        public static void PrijatNaSklad(IEnumerable<PrijemkaPolozka> polozky, Sklad skladDo, DBContext db)
+        {
+            foreach (var item in polozky)
+            {
+                var found = db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.PolozkaSkladu && x.Sklad == skladDo.ID);
+                if (found != null)
+                {
+                    found.Mnozstvo += item.Mnozstvo;
+                }
+            }
+            db.SaveChanges();
+        }
     }
 }

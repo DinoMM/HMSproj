@@ -17,6 +17,6 @@ namespace DBLayer.Models
         public string Uzivatel { get; set; } = default!;
         public IdentityUserOwn UzivatelX { get; set; }
 
-        
+
     }
 }

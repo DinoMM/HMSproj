@@ -9,14 +9,12 @@ namespace DBLayer.Models
 {
     public class Vydajka : PohSkup
     {
+        [ForeignKey("SkladX")]
         public string Sklad { get; set; } = default!;
-        public DateTime Obdobie { get; set; } = default!;
-        [ForeignKey("Sklad, Obdobie")]
         public Sklad SkladX { get; set; }
-        
+
+        [ForeignKey("SkladDoX")]
         public string? SkladDo { get; set; } = default!;
-        public DateTime? ObdobieDo { get; set; } = default!;
-        [ForeignKey("SkladDo, ObdobieDo")]
         public Sklad? SkladDoX { get; set; }
 
     }

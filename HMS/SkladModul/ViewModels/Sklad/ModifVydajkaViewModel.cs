@@ -25,6 +25,7 @@ namespace SkladModul.ViewModels.Sklad
         public bool Saved { get; set; } = true;
         public List<Ssklad> Sklady { get; set; } = new();
         public bool Readonly { get; set; } = false;
+        public bool AktualneObdobie { get; set; } = true;       //true - mozno vytvorit novu vydajku
 
         DBContext _db;
 
@@ -47,6 +48,13 @@ namespace SkladModul.ViewModels.Sklad
                     Readonly = Polozka.Sklad != Sklad.ID;       //ak aktualny sklad sa nerovna so skladom s polozkou tak pravdepodobne ide o prevodku
                 }
 
+            }
+            else //nova vydajka
+            {
+                if (!SkladObdobie.IsDateInMonth(Obdobie, Sklad.Obdobie))  //ak neni aktualne obdobie (vtedy je v minulosti a vydajku nemozno spravit)
+                {
+                    AktualneObdobie = false;
+                }
             }
 
         }
@@ -182,6 +190,12 @@ namespace SkladModul.ViewModels.Sklad
                         Debug.WriteLine("Chybna polozka v zozname pri spracovani prijemky");
                     }
                 }
+
+                if (!string.IsNullOrEmpty(Polozka.SkladDo)) //prevodka - pripocitanie do skladu
+                {
+                    DBLayer.Models.Prijemka.PrijatNaSklad(polozky, Polozka.SkladDoX, _db);
+                }
+
 
                 Polozka.Spracovana = true;
                 _db.SaveChanges();

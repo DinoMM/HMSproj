@@ -104,7 +104,7 @@ namespace DBLayer
                 var otrt = _db.Prijemky.FirstOrDefault(x => x.ID == "000000001");
                 if (otrt == null)
                 {
-                    var polozka = new Prijemka() { ID = "000000001", Sklad = "HKS", Poznamka = "oo", DodaciID="0", FakturaID="0", Objednavka="0" };
+                    var polozka = new Prijemka() { ID = "000000001", Sklad = "HKS", Poznamka = "oo", DodaciID = "0", FakturaID = "0", Objednavka = "0" };
                     _db.Prijemky.Add(polozka);
                 }
                 var eere = _db.PrijemkyPolozky.FirstOrDefault(x => x.Skupina == "000000001");
@@ -125,10 +125,18 @@ namespace DBLayer
                     var polozka = new PrijemkaPolozka() { Nazov = "uuu", Skupina = "000000002", PolozkaSkladu = "0000001" };
                     _db.VydajkyPolozky.Add(polozka);
                 }
-
-                var dssdsd = new Sklad() { ID = "HKS", Nazov = "House keeping sklad" };
-                dssdsd.Obdobie = dssdsd.Obdobie.AddMonths(1);
-                _db.Sklady.Add(dssdsd);
+                var skldobd = _db.SkladObdobi.FirstOrDefault(x => x.Obdobie == SkladObdobie.GetActualSeason() && x.Sklad == "HKS");
+                if (skldobd == null)
+                {
+                    var polozka = new SkladObdobie() { Obdobie = SkladObdobie.GetActualSeason(), Sklad = "HKS" };
+                    _db.SkladObdobi.Add(polozka);
+                }
+                skldobd = _db.SkladObdobi.FirstOrDefault(x => x.Obdobie == SkladObdobie.GetActualSeason() && x.Sklad == "KS");
+                if (skldobd == null)
+                {
+                    var polozka = new SkladObdobie() { Obdobie = SkladObdobie.GetActualSeason(), Sklad = "KS" };
+                    _db.SkladObdobi.Add(polozka);
+                }
 
                 await _db.SaveChangesAsync();
                 _done = true;

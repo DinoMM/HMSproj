@@ -27,6 +27,9 @@
 <InfoModal @ref="InfoModListBadDestin" ID="infolistbaddesti"
            Text="Nemožno vydať položky do skladu">
 </InfoModal>
+<InfoModal @ref="InfoModWrongSeason" ID="infowrongseason"
+           Text="Nemožno vytvoriť novú výdajku v starom období.">
+</InfoModal>
 
 
 <div class="row pb-1">
@@ -111,11 +114,12 @@
     InfoModal InfoModListEmpty = new();
     InfoModal InfoModListBadValue = new();
     InfoModal InfoModListBadDestin = new();
+    InfoModal InfoModWrongSeason = new();
     ApproveModal ApproveModNSave = new();
     ApproveModal ApproveProcess = new();
 
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         var founded1 = objectHolder.Find<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska
         if (founded1 == null)
@@ -138,6 +142,12 @@
         else
         {
             ViewModel.SetProp(founded1, founded2, founded3);
+        }
+        if (!ViewModel.AktualneObdobie)     //pri novej prijemke ci je aktulalne obdobie
+        {
+            await InfoModWrongSeason.OpenModal(true);
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
         }
         ViewModel.IniSklady();
     }

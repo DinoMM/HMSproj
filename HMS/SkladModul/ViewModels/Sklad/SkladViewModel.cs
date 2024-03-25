@@ -73,7 +73,10 @@ namespace SkladModul.ViewModels.Sklad
 
         public List<string> GetObdobia()
         {
-            var list = new List<string>() { Sklad.ShortformObdobie() };
+            var list = _db.SkladObdobi.Include(x => x.SkladX)
+                .Where(x => x.Sklad == Sklad.ID)
+                .Select(x => x.SkladX.ShortformObdobie())
+                .ToList();
             return list;
         }
         public async Task SetSklad(string ID)
@@ -100,14 +103,22 @@ namespace SkladModul.ViewModels.Sklad
 
                 if (Sklad.ID == "ALL")
                 {
-                    await _db.PolozkySkladu.ForEachAsync(x => ZoznamPoloziekSkladu.Add(x));
+                    var zozn =  _db.PolozkySkladu.ToList();
+                    foreach (var item in zozn)
+                    {
+                        ZoznamPoloziekSkladu.Add(item);
+                    }
                     return;
                 }
 
-                await _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
+                var zoz = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
                     .Include(x => x.SkladX)
-                    .Where(x => x.Sklad == Sklad.ID)
-                    .ForEachAsync(x => ZoznamPoloziekSkladu.Add(x.PolozkaSkladuX));
+                    .Where(x => x.Sklad == Sklad.ID).ToList();
+                //.ForEachAsync(x => ZoznamPoloziekSkladu.Add(x.PolozkaSkladuX));
+                foreach (var item in zoz)
+                {
+                    ZoznamPoloziekSkladu.Add(item.PolozkaSkladuX);
+                }
 
             }
         }
@@ -161,13 +172,14 @@ namespace SkladModul.ViewModels.Sklad
             }
         }
 
-        public void ClearNumZoznam() {
+        public void ClearNumZoznam()
+        {
             foreach (var item in ZoznamPoloziekSkladu)
             {
                 item.Mnozstvo = 0;
             }
 
         }
-      
+
     }
 }

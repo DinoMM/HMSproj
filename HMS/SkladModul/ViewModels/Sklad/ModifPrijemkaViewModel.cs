@@ -54,9 +54,7 @@ namespace SkladModul.ViewModels.Sklad
             }
             else //nova prijemka
             {
-                var aktuldate = _db.Sklady.Where(x => x.ID == Sklad.ID)
-                    .Max(x => x.Obdobie);       //aktualne obdobie podla skladu
-                if (!(Obdobie >= aktuldate && Obdobie <= aktuldate.AddMonths(1)))  //ak neni aktualne obdobie (musi byt v minulosti)
+                if (!SkladObdobie.IsDateInMonth(Obdobie, Sklad.Obdobie))  //ak neni aktualne obdobie (vtedy je v minulosti a prijemku nemozno spravit)
                 {
                     AktualneObdobie = false;
                 }

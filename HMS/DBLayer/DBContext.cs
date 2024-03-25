@@ -40,6 +40,7 @@ namespace DBLayer
         public DbSet<PolozkaSkladu> PolozkySkladu { get; set; }
         public DbSet<PolozkaSkladuObjednavky> PolozkySkladuObjednavky { get; set; }
         public DbSet<Sklad> Sklady { get; set; }
+        public DbSet<SkladObdobie> SkladObdobi { get; set; }
         public DbSet<PolozkaSkladuMnozstvo> PolozkaSkladuMnozstva { get; set; }
         public DbSet<SkladUzivatel> SkladUzivatelia { get; set; }
         public DbSet<PrijemkaPolozka> PrijemkyPolozky { get; set; }     //ten isty typ pre Prijem/Vydaj
@@ -103,12 +104,16 @@ namespace DBLayer
                 .HasForeignKey(o => o.SkladDo)
                 .OnDelete(DeleteBehavior.Restrict); // Restrict delete rule for SkladDo
 
-           // modelBuilder.Entity<Sklad>()    //sklad ma unique obdobie
-           //.HasIndex(s => new { s.ID, s.Obdobie })
-           //.IsUnique();
+            // modelBuilder.Entity<Sklad>()    //sklad ma unique obdobie
+            //.HasIndex(s => new { s.ID, s.Obdobie })
+            //.IsUnique();
             //modelBuilder.Entity<Sklad>()
             // .HasKey(s => new { s.ID, s.Obdobie });
-            modelBuilder.Entity<Sklad>().HasKey(vf => new { vf.ID, vf.Obdobie });
+            modelBuilder.Entity<SkladObdobie>()
+                .HasKey(s => new { s.Obdobie, s.Sklad });
+
+
+
 
         }
 

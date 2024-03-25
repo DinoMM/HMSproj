@@ -129,6 +129,7 @@
     {
         await SelectModObd.OpenModal(true);
         ViewModel.Obdobie = SelectModObd.Value;
+
         await JSRuntime.InvokeVoidAsync("changeText", "uctobd", "Obdobie:" + ViewModel.Obdobie);
     }
     private async Task ChangeSkl()
@@ -141,6 +142,7 @@
 
     protected override void OnInitialized()
     {
+        ViewModel.NacitaneMnozstvo = false;
         if (!Sklad.POVOLENEROLE.Contains(UserService.LoggedUserRole))
         {
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
@@ -154,9 +156,8 @@
         if (founded2 != null)
         {
             ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
-
         }
-        ViewModel.NacitaneMnozstvo = false;
+
     }
 
     protected override async Task OnInitializedAsync()
