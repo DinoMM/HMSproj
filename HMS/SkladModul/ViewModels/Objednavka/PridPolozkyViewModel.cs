@@ -30,7 +30,8 @@ namespace SkladModul.ViewModels.Objednavka
         readonly DBContext _db;
         readonly UserService _userService;
         public bool Existujuca { get; set; } = false;
-        public bool Zmena { get; set; } = false;
+        [ObservableProperty]
+        public bool zmena = false;
         public bool Deleted = false;
         private List<PolozkaSkladuObjednavky> ZoznamObjednavkySave = new();
         private List<PolozkaSkladuObjednavky> ZoznamObjednavkyNaVymazanie = new();
@@ -116,7 +117,7 @@ namespace SkladModul.ViewModels.Objednavka
             //Zmena je true
             //kontrola hodnot, uprava na default ak sa najdu, treba posudit uzivatelom
             bool trebaCheck = false;
-            trebaCheck = ZoznamObjednavky.Count == 0;
+            //trebaCheck = ZoznamObjednavky.Count == 0;
             foreach (var item in ZoznamObjednavky)
             {
                 if (string.IsNullOrWhiteSpace(item.Nazov))

@@ -19,6 +19,9 @@
             <div class="row h-25 ">
                 <h1 class="text-center">Objednávky</h1>
                 <div class="col">
+                    <button class="btn btn-primary fixed-size-button  mt-3" type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">❌Zavrieť objednávky</button>
+                </div>
+                <div class="col">
                     <button class="btn btn-primary fixed-size-button mt-3" type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/AddObj")))">➕Pridať objednávku</button>
                 </div>
                 <div class="col">
@@ -26,10 +29,6 @@
                 </div>
                 <div class="col">
                     <button class="btn btn-primary fixed-size-button mt-3" disabled=@(!IsChecked()) type="button">📄Otvoriť objednávku ako PDF</button>
-                </div>
-                <div class="col">
-                    <button class="btn btn-primary fixed-size-button  mt-3" type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">❌Zavrieť objednávky</button>
-
                 </div>
             </div>
         </div>
@@ -53,7 +52,7 @@
 
                                 <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick=@(() => OpenOBJ(item)) style="cursor: pointer;">
 
-                                    <td class="col-resize">@item.ID</td>
+                                    <td class="col-resize" style="cursor:text">@item.ID</td>
                                     <td class="col-resize">@item.DodavatelX.Nazov</td>
                                     <td class="col-resize">@item.Stav</td>
                                     <td class="col-resize">@item.TvorcaX.Surname</td>

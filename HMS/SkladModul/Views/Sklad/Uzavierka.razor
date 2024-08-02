@@ -1,5 +1,12 @@
 ﻿@namespace SkladModul
+@page "/Sklad/Uzavierka"
+@inject UzavierkaViewModel ViewModel
 
+<ApproveModal @ref=AprovMod ID="closeseason"
+              Text="Naozaj chcete uzavrieť aktuálne obdobie? <br> Vytvorí sa nové podľa aktuálneho mesiaca alebo nasledovnosti"
+              FuncOnSucc="EventCallback.Empty"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
 <div class="container">
     <div class="row">
         <div class="col-12 text-center">
@@ -8,29 +15,45 @@
     </div>
     <div class="row">
         <div class="col-12 text-center">
-            <button type="button" class="btn btn-primary m-2">Uzavrieť obdobie</button>
-            <button type="button" class="btn btn-secondary m-2">Zrušiť</button>
+            <button type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))" class="btn btn-secondary m-2">Späť</button>
+            <button type="button" class="btn btn-primary m-2"  >Uzavrieť obdobie</button>
         </div>
     </div>
     <div class="row">
-        <div class="col-12">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th scope="col">Názov Položky</th>
-                        <th scope="col">ČísloID</th>
-                        <th scope="col">Merná jednotka</th>
-                        <th scope="col">Cena za 1/MJ</th>
-                        <th scope="col">Cena za 1/MJ s DPH</th>
-                        <th scope="col">Aktuálne Množstvo</th>
-                        <th scope="col">Prijaté Množstvo</th>
-                        <th scope="col">Vydaté Množstvo</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Rows of data here -->
-                </tbody>
-            </table>
+        <div class="col-12" style="max-height: 30rem;overflow: auto;">
+            <SimpleTable>
+                <THEAD>
+                <th scope="col">ID</th>
+                <th scope="col">Názov Položky</th>
+                <th scope="col">Merná jednotka</th>
+                <th scope="col">Cena</th>
+                <th scope="col">Cena s DPH</th>
+                <th scope="col">Aktuálne Množstvo</th>
+                <th scope="col">Prijaté Množstvo</th>
+                <th scope="col">Vydaté Množstvo</th>
+                </THEAD>
+                <TBODY>
+                    @if (!ViewModel.ZoznamPoloziek.Any())
+                    {
+                        <h2>Načítavanie...</h2>
+                    }
+                    @foreach (var item in ViewModel.ZoznamPoloziek)
+                    {
+
+                        <tr>
+                            <td class="col-resize">@item.ID </td>
+                            <td class="col-resize">@item.Nazov </td>
+                            <td class="col-resize">@item.MernaJednotka </td>
+                            <td class="col-resize">@item.Cena.ToString("F3") </td>
+                            <td class="col-resize">@item.CenaDPH.ToString("F3") </td>
+                            <td class="col-resize">@ViewModel.GetAktualneMnozstvo(item)</td>
+                            <td class="col-resize">@ViewModel.GetPrijateMnozstvo(item)</td>
+                            <td class="col-resize">@ViewModel.GetVydateMnozstvo(item)</td>
+                        </tr>
+                    }
+                    <span id="observerTarget"></span>
+                </TBODY>
+            </SimpleTable>
         </div>
     </div>
 </div>
@@ -38,4 +61,26 @@
 
 @code {
 
+    ApproveModal AprovMod = new();
+
+    protected override void OnInitialized()
+    {
+        var founded1 = objectHolder.Find<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska
+        if (founded1 == null)
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+        var founded2 = objectHolder.Find<string>();   //pokusi sa ziskat objekt z uloziska
+        if (founded2 != null)
+        {
+            ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
+            ViewModel.LoadZoznamy();
+        }
+        else
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+    }
 }

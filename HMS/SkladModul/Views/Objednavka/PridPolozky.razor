@@ -1,5 +1,5 @@
 ﻿@namespace SkladModul
-@page "/Objednavka/PridatPolozky"
+@page "/Objednavka/AddObj/PridatPolozky"
 @using System.Diagnostics
 @inject PridPolozkyViewModel ViewModel
 
@@ -27,46 +27,41 @@
 
     <div class="row h-25">
         <div class="col col-1">
-            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false)) disabled="@ViewModel.Locked()">Uložiť</button>
-        </div>
-        <div class="col col-1 me-2">
             <button type="button" class="btn btn-secondary" @onclick="Close">Späť</button>
         </div>
-
-        <div class="col col-2">
-            <button type="button" disabled="@(ViewModel.Uprava || ViewModel.Locked())" @onclick=@(async () => {ViewModel.PridatPolozkuCommand.Execute(null);await ClearInput();}) class="btn btn-success">Pridať položku</button>
+        <div class="col col-1 me-2">
+            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false)) disabled="@(ViewModel.Locked() || !ViewModel.Zmena)">Uložiť</button>
         </div>
-
-
     </div>
 
     <div class="row">
         <div class="col" style="height: 30rem; overflow:auto;">
             <UniComponents.SimpleTable>
                 <THEAD>
-                <th>ČísloID</th>
-                <th>Názov Položky</th>
-                <th>Množstvo</th>
-                <th>Merná jednotka</th>
-                <th>Cena</th>
-                <th>Cena s DPH</th>
-                <th>Celková Cena</th>
-                <th>Celková Cena s DPH</th>
+                <th class="col-resize">ČísloID</th>
+                <th class="col-resize">Názov Položky</th>
+                <th class="col-resize">Množstvo</th>
+                <th class="col-resize">Merná jednotka</th>
+                <th class="col-resize">Cena</th>
+                <th class="col-resize">Cena s DPH</th>
+                <th class="col-resize">Celková Cena</th>
+                <th class="col-resize">Celková Cena s DPH</th>
                 <th></th>
                 </THEAD>
                 <TBODY>
 
                     @foreach (var item in ViewModel.ZoznamObjednavky)
+
                     {
                         <tr>
-                            <td><input type="text" readonly disabled="disabled" value="@item.PolozkaSkladu" size="8" /></td>
-                            <td><input type="text" disabled="@ViewModel.Locked()" value="@item.Nazov" @onchange=@((ChangeEventArgs arg) => {item.Nazov = arg.Value.ToString(); ViewModel.Zmena = true; } ) /></td>
-                            <td><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.Mnozstvo" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" class="w-75" /></td>
-                            <td>@item.PolozkaSkladuX.MernaJednotka</td>
-                            <td><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" class="w-75" /></td>
-                            <td>@item.CenaDPH.ToString("F3")</td>
-                            <td>@item.CelkovaCena.ToString("F3")</td>
-                            <td>@item.CelkovaCenaDPH.ToString("F3")</td>
+                            <td class="col-resize"><input type="text" readonly disabled="disabled" value="@item.PolozkaSkladu" size="8" /></td>
+                            <td class="col-resize"><input type="text" disabled="@ViewModel.Locked()" value="@item.Nazov" @onchange=@((ChangeEventArgs arg) => {item.Nazov = arg.Value.ToString(); ViewModel.Zmena = true; } ) /></td>
+                            <td class="col-resize"><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.Mnozstvo" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" class="w-75" /></td>
+                            <td class="col-resize">@item.PolozkaSkladuX.MernaJednotka</td>
+                            <td class="col-resize"><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" class="w-75" /></td>
+                            <td class="col-resize">@item.CenaDPH.ToString("F3")</td>
+                            <td class="col-resize">@item.CelkovaCena.ToString("F3")</td>
+                            <td class="col-resize">@item.CelkovaCenaDPH.ToString("F3")</td>
                             @if (!ViewModel.Locked())
                             {
                                 <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
@@ -76,15 +71,19 @@
                     @if (!ViewModel.Locked())
                     {
                         <tr style="position:sticky; bottom: 0;">
-                            <td><input type="text" id="vyhlid" @onchange=ViewModel.VyhladajPolozkuCommand.Execute @onfocus=@(() => ViewModel.Uprava = true) @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" /></td>
-                            <td><input type="text" readonly disabled="disabled" @bind="ViewModel.NovaPoloz.Nazov" /> </td>
-                            <td></td>
-                            <td>@ViewModel.NovaPoloz.PolozkaSkladuX?.MernaJednotka</td>
-                            <td>@ViewModel.NovaPoloz.Cena</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
+                            <td class="col-resize"><input type="text" id="vyhlid" @onchange=ViewModel.VyhladajPolozkuCommand.Execute @onfocus=@(() => ViewModel.Uprava = true) @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" /></td>
+                            <td class="col-resize"><input type="text" readonly disabled="disabled" @bind="ViewModel.NovaPoloz.Nazov" /> </td>
+                            <td class="col-resize">
+                                <div class="col col-2">
+                                    <button type="button" disabled="@(ViewModel.Uprava || ViewModel.Locked())" @onclick=@(async () => {ViewModel.PridatPolozkuCommand.Execute(null);await ClearInput();}) class="btn btn-success">Pridať</button>
+                                </div>
+                            </td>
+                            <td class="col-resize">@ViewModel.NovaPoloz.PolozkaSkladuX?.MernaJednotka</td>
+                            <td class="col-resize">@ViewModel.NovaPoloz.Cena</td>
+                            <td class="col-resize"></td>
+                            <td class="col-resize"></td>
+                            <td class="col-resize"></td>
+                            <td class="col-resize"></td>
                         </tr>
                     }
                 </TBODY>
@@ -92,11 +91,9 @@
         </div>
     </div>
 
-    <script>
-        window.clearInput = function (inputId) {
+    <script>window.clearInput = function (inputId) {
             document.getElementById(inputId).value = "";
-        }
-    </script>
+        }</script>
 </div>
 
 
@@ -111,7 +108,7 @@
 
     protected override void OnInitialized()
     {
-        var founded = objectHolder.Remove<DBLayer.Models.Objednavka>();   //pokusi sa ziskat objekt z uloziska
+        var founded = objectHolder.Find<DBLayer.Models.Objednavka>();   //pokusi sa ziskat objekt z uloziska -> nevyhadzuje ho z neho
         if (founded != null)
         {
             ViewModel.Objednavka = founded;      //nasla sa existujuca objednavka, nastavujeme model na upravu
@@ -191,20 +188,23 @@
                     if (ViewModel.IsZoznamEmpty())
                     {
                         answer = await AprovModEmpty.OpenModal(true);
-                        if (answer)
+                        if (answer) //ano
                         {
                             if (ViewModel.Deleted)
                             {
-                                Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                                objectHolder.Remove<DBLayer.Models.Objednavka>();
+                                Navigator.RemoveLastUrl();       //prva uroven vzad
+                                Navigator.NavigateTo(Navigator.RemoveLastUrl());    //druha uroven vzad
                                 ViewModel.VycistiHodnotyForce();
                                 return; //koniec
                             }
                         }
-                        else
+                        else //nie
                         {
                             if (ViewModel.VratDoPovodnehoStavu())   //Vratenie, Prazdny? //ano
                             {
-
+                                Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                                ViewModel.VycistiHodnotyForce();
                                 return; //nic
                             }
                             else //nie
@@ -232,11 +232,16 @@
                 answer = await AprovModEmpty.OpenModal(true);
                 if (answer)
                 {
-                    Navigator.NavigateTo(Navigator.RemoveLastUrl());
-                    ViewModel.VycistiHodnotyForce();
-                    return; //koniec
+                    if (ViewModel.Deleted)
+                    {
+                        objectHolder.Remove<DBLayer.Models.Objednavka>();
+                        Navigator.RemoveLastUrl();       //prva uroven vzad
+                        Navigator.NavigateTo(Navigator.RemoveLastUrl());    //druha uroven vzad
+                        ViewModel.VycistiHodnotyForce();
+                        return; //koniec
+                    }
                 }
-                return; //nic
+                //koniec
             }
         }
         Navigator.NavigateTo(Navigator.RemoveLastUrl());

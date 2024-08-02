@@ -38,7 +38,7 @@
         </div>
         <div class="col-8">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-primary" @onclick="Close">❌Koniec</button>
+                <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
                 @if (Sklad.ZMENAPOLOZIEKROLE.Contains(UserService.LoggedUserRole))
                 {
                     <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad")))" type="button" class="btn btn-primary">➕Pridať položku</button>
@@ -47,7 +47,7 @@
                 {
                     <button type="button" @onclick="Prijem" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬇Spravovať Príjem</button>
                     <button type="button" @onclick="Vydaj" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬆Spravovať Výdaj</button>
-                    <button type="button" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">➰Uzavrieť obdobie</button>
+                    <button type="button" @onclick="Uzavriet" disabled="@(ViewModel.Sklad.ID == "ALL" || !ViewModel.AktualneObdobie)" class="btn btn-primary">➰Uzavrieť obdobie</button>
                 }
             </div>
         </div>
@@ -72,7 +72,7 @@
                 <TBODY>
                     @if (!ViewModel.ZoznamPoloziekSkladu.Any())
                     {
-                        <h2>Načítavanie..</h2>
+                        <h2>Načítavanie...</h2>
                     }
                     @foreach (var item in ViewModel.ZoznamPoloziekSkladu)
                     {
@@ -129,6 +129,8 @@
     {
         await SelectModObd.OpenModal(true);
         ViewModel.Obdobie = SelectModObd.Value;
+
+        ViewModel.CheckIsLastObdobie();     //kontrola ci je obdobie aktualne
 
         await JSRuntime.InvokeVoidAsync("changeText", "uctobd", "Obdobie:" + ViewModel.Obdobie);
     }
@@ -201,6 +203,12 @@
         objectHolder.Add(ViewModel.Sklad);
         objectHolder.Add(ViewModel.Obdobie);
         Navigator.NavigateTo(Navigator.AddNextUrl("/Vydaj"));
+    }
+    private void Uzavriet()
+    {
+        objectHolder.Add(ViewModel.Sklad);
+        objectHolder.Add(ViewModel.Obdobie);
+        Navigator.NavigateTo(Navigator.AddNextUrl("/Uzavierka"));
     }
 
     private void Close()

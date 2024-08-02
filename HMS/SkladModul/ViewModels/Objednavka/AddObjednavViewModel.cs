@@ -36,6 +36,9 @@ namespace SkladModul.ViewModels.Objednavka
         [ObservableProperty]
         StavOBJ stav = StavOBJ.Vytvorena;
 
+        [ObservableProperty]
+        private bool prazdna = true;       //urcuje ci je objednavka prazdna
+
 
         //private readonly PridPolozkyViewModel _PDViewModel;
         private readonly ObjectHolder _objectHolder;
@@ -152,6 +155,10 @@ namespace SkladModul.ViewModels.Objednavka
             Popis = objednavka.Popis ?? "";
             CorrectDod = true;
             CorrectOdo = true;
+
+            if (Exist()) {      //ak existuje objednavka tak zistime ci je prazdna
+                Prazdna = !_db.PolozkySkladuObjednavky.Any(x => x.Objednavka == objednavka.ID);
+            }
         }
 
         public bool Exist()
@@ -206,6 +213,16 @@ namespace SkladModul.ViewModels.Objednavka
             if (!string.IsNullOrEmpty(objednavka.ID))
             {
                 _db.Entry(objednavka).State = EntityState.Unchanged;
+                _db.SaveChanges();
+            }
+        }
+
+        [RelayCommand]
+        private void Vymaz()        //vymaze objednavku, treba skontrolovat ci je prazdna pred tym
+        {
+            if (!string.IsNullOrEmpty(objednavka.ID) && Prazdna)
+            {
+                _db.Objednavky.Remove(objednavka);
                 _db.SaveChanges();
             }
         }

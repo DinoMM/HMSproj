@@ -81,6 +81,7 @@ namespace HMS
             builder.Services.AddTransient<ModifPolozPohJednotkaViewModel>();
             builder.Services.AddTransient<VydajPolozViewModel>();
             builder.Services.AddScoped<ModifVydajkaViewModel>();
+            builder.Services.AddTransient<UzavierkaViewModel>();
             #endregion
 
 

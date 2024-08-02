@@ -21,6 +21,7 @@ namespace SkladModul.ViewModels.Sklad
         public List<Ssklad> Sklady { get; set; }
         public Ssklad Sklad { get; set; }
         public bool NacitaneMnozstvo { get; set; } = false;
+        public bool AktualneObdobie { get; set; } = false;
 
         [ObservableProperty]
         ObservableCollection<PolozkaS> zoznamPoloziekSkladu = new();
@@ -47,15 +48,26 @@ namespace SkladModul.ViewModels.Sklad
                 {
                     Sklady = skladuziv.Select(x => x.SkladX).ToList();
                     Sklad = Sklady.FirstOrDefault();
-                    Obdobie = Sklad.ShortformObdobie();
+                    //Obdobie = Sklad.ShortformObdobie();
+                    var obd = _db.SkladObdobi.Include(x => x.SkladX)
+                        .Where(x => x.Sklad == Sklad.ID)
+                        .OrderByDescending(x => x.Obdobie)
+                        .FirstOrDefault()?.Obdobie;
+                    if (obd.HasValue)
+                    {
+                        Obdobie = Ssklad.ShortFromObdobie(obd.Value);
+                    }
+
+
 
                     if (Ssklad.ZMENAPOLOZIEKROLE.Contains(_userService.LoggedUserRole))
                     {
                         if (Sklady.FirstOrDefault(x => x.ID == "ALL") == null)  //prida moznost pre zobrazenie vsetkych skladovych poloziek
                         {
-                            Sklady.Add(new Ssklad() { ID = "ALL", Nazov = "Zobrazenie všetkých položiek", Obdobie = DateTime.Today });
+                            Sklady.Add(new Ssklad() { ID = "ALL", Nazov = "Zobrazenie všetkých položiek"/*, Obdobie = DateTime.Today*/ });
                         }
                     }
+                    CheckIsLastObdobie();     //kontrola ci je obdobie aktualne
                 }
                 else
                 {
@@ -69,14 +81,17 @@ namespace SkladModul.ViewModels.Sklad
         {
             Sklad = sk;
             Obdobie = ob;
+            CheckIsLastObdobie();     //kontrola ci je obdobie aktualne
         }
 
         public List<string> GetObdobia()
         {
             var list = _db.SkladObdobi.Include(x => x.SkladX)
                 .Where(x => x.Sklad == Sklad.ID)
-                .Select(x => x.SkladX.ShortformObdobie())
+                .OrderByDescending(x => x.Obdobie)
+                .Select(x => Ssklad.ShortFromObdobie(x.Obdobie))
                 .ToList();
+            list.Reverse();
             return list;
         }
         public async Task SetSklad(string ID)
@@ -87,7 +102,15 @@ namespace SkladModul.ViewModels.Sklad
                 if (Sklad.ID != found.ID)
                 {
                     Sklad = found;
-                    Obdobie = Sklad.ShortformObdobie();
+                    //Obdobie = Sklad.ShortformObdobie();
+                    var obd = _db.SkladObdobi.Include(x => x.SkladX)
+                        .Where(x => x.Sklad == Sklad.ID)
+                        .OrderByDescending(x => x.Obdobie)
+                        .FirstOrDefault()?.Obdobie;
+                    if (obd.HasValue)
+                    {
+                        Obdobie = Ssklad.ShortFromObdobie(obd.Value);
+                    }
 
                     ZoznamPoloziekSkladu.Clear();
                     await LoadPolozky();
@@ -103,7 +126,7 @@ namespace SkladModul.ViewModels.Sklad
 
                 if (Sklad.ID == "ALL")
                 {
-                    var zozn =  _db.PolozkySkladu.ToList();
+                    var zozn = _db.PolozkySkladu.ToList();
                     foreach (var item in zozn)
                     {
                         ZoznamPoloziekSkladu.Add(item);
@@ -119,7 +142,6 @@ namespace SkladModul.ViewModels.Sklad
                 {
                     ZoznamPoloziekSkladu.Add(item.PolozkaSkladuX);
                 }
-
             }
         }
 
@@ -170,6 +192,19 @@ namespace SkladModul.ViewModels.Sklad
                 }
                 NacitaneMnozstvo = true;
             }
+        }
+        public void CheckIsLastObdobie()
+        {
+            var obdob = GetObdobia();
+            foreach (var item in obdob)
+            {
+                if (Ssklad.DateFromShortForm(item) > Ssklad.DateFromShortForm(Obdobie))
+                {
+                    AktualneObdobie = false;
+                    return;
+                }
+            }
+            AktualneObdobie = true;
         }
 
         public void ClearNumZoznam()

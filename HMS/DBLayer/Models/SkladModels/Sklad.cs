@@ -17,7 +17,7 @@ namespace DBLayer.Models
         [Key]
         public string ID { get; set; } = default!;
         public string Nazov { get; set; } = default!;
-        public DateTime Obdobie { get; set; } = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1); //vrati vzdy prveho dany mesiac
+        //public DateTime Obdobie { get; set; } = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1); //vrati vzdy prveho dany mesiac
 
 
         /// <summary>
@@ -41,10 +41,10 @@ namespace DBLayer.Models
             return new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         }
 
-        public string ShortformObdobie()
-        {
-            return Obdobie.ToString("MMyy");
-        }
+        //public string ShortformObdobie()
+        //{
+        //    return Obdobie.ToString("MMyy");
+        //}
         public static string ShortFromObdobie(DateTime date)
         {
             return date.ToString("MMyy");
@@ -56,10 +56,10 @@ namespace DBLayer.Models
             return date;
         }
 
-        public void NextObdobie()
-        {
-            Obdobie.AddMonths(1);
-        }
+        //public void NextObdobie()
+        //{
+        //    Obdobie.AddMonths(1);
+        //}
 
         public static List<string> MoznoVydať(IEnumerable<PrijemkaPolozka> zoznamPoloziek, Sklad skld, in DBContext db)
         {

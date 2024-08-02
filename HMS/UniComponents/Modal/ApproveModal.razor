@@ -1,9 +1,8 @@
 ﻿@namespace UniComponents
-@inject IJSRuntime JSRuntime 
+@inject IJSRuntime JSRuntime
 @implements IModal
-
 <!-- Modal -->
-<div class="modal fade" id="@ID" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+<div class="modal fade" id="@ID" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true" @onkeydown="HandleKeyDown">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -81,12 +80,27 @@
         {
             tcs.SetResult(ans); //zastavi fyzické státie programu
         }
+        JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('hide');"); //(pomohol som si z internetu tutoriály/AI)
     }
 
     public void UpdateText(string newText)
     {
         Text = newText;
         StateHasChanged(); // Trigger a re-render
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")       //po stlaceni enteru sa vykona akcia Ano
+        {
+            await FuncOnSucc.InvokeAsync();
+            CloseModal(true);
+        }
+        if (e.Key == "Escape")       //po stlaceni escape sa vykona akcia Nie
+        {
+            await FuncOnDiss.InvokeAsync();
+            CloseModal(false);
+        }
     }
 }
 

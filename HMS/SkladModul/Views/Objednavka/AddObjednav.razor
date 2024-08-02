@@ -7,6 +7,11 @@
               FuncOnSucc="ViewModel.UlozCommand.Execute"
               FuncOnDiss="ViewModel.NeulozCommand.Execute">
 </ApproveModal>
+<ApproveModal @ref=AprovModDel ID="delmodal"
+              Text="Chcete odstrániť túto objednávku?"
+              FuncOnSucc="ViewModel.VymazCommand.Execute"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
 
 <div class="d-flex justify-content-center align-items-center vh-100">
     <div class="container ">
@@ -112,9 +117,10 @@
         @* *** *@
         <div class="row g-3 pt-2 align-items-center justify-content-center">
             <div class="col-auto">
-                <button type="button" disabled="@(!ViewModel.CorrectDod || !ViewModel.CorrectOdo)" @onclick="GoNext" class="btn btn-primary">@(ViewModel.Exist() ? "Otvoriť" : "Vytvoriť")</button>
+                <button type="button" class="btn btn-secondary me-2" @onclick="GoBack">Späť</button>
+                <button type="button" disabled="@(!ViewModel.CorrectDod || !ViewModel.CorrectOdo)" @onclick="GoNext" class="btn btn-primary me-2">@(ViewModel.Exist() ? "Otvoriť" : "Vytvoriť")</button>
+                <button type="button" class="btn btn-danger" @onclick="DelteObj" disabled="@(!ViewModel.Prazdna)">Vymazať</button>
 
-                <button type="button" class="btn btn-secondary" @onclick="GoBack">Späť</button>
             </div>
         </div>
 
@@ -124,7 +130,8 @@
 
 
 @code {
-    ApproveModal AprovModSave = new();
+        ApproveModal AprovModSave = new();
+        ApproveModal AprovModDel = new();
 
     protected override void OnInitialized()
     {
@@ -138,7 +145,7 @@
     private void GoNext()
     {
         ViewModel.NastavObjednavkuCommand.Execute(null);
-        Navigator.NavigateTo(Navigator.SwitchLast("/PridatPolozky"));
+        Navigator.NavigateTo(Navigator.AddNextUrl("/PridatPolozky"));
     }
 
     private async Task GoBack()
@@ -148,5 +155,13 @@
             await AprovModSave.OpenModal(true);
         }
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    private async void DelteObj()
+    {
+        if (await AprovModDel.OpenModal(true))
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+        }
     }
 }

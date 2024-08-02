@@ -54,7 +54,9 @@ namespace SkladModul.ViewModels.Sklad
             }
             else //nova prijemka
             {
-                if (!SkladObdobie.IsDateInMonth(Obdobie, Sklad.Obdobie))  //ak neni aktualne obdobie (vtedy je v minulosti a prijemku nemozno spravit)
+                var aktualDateSklad = _db.SkladObdobi.Include(x => x.SkladX).Where(x => x.Sklad == Sklad.ID).OrderByDescending(x => x.Obdobie).FirstOrDefault()?.Obdobie;
+
+                if (aktualDateSklad.HasValue && !SkladObdobie.IsDateInMonth(Obdobie, aktualDateSklad.Value))  //ak neni aktualne obdobie (vtedy je v minulosti a prijemku nemozno spravit)
                 {
                     AktualneObdobie = false;
                 }
