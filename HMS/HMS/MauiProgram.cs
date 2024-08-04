@@ -13,6 +13,7 @@ using SkladModul.ViewModels.Objednavka;
 using UniComponents;
 using SkladModul.ViewModels.Sklad;
 using HMS.Components.Services;
+using Blazored.SessionStorage;
 
 
 namespace HMS
@@ -66,6 +67,8 @@ namespace HMS
             builder.Services.AddSingleton<IAppLifeCycleService, AppLifecycleService>();
 
             builder.Services.AddSingleton<LayoutService>();
+
+            builder.Services.AddBlazoredSessionStorage();   //pridanie service pre spravu session storage (flagov)
 
             #region ViewModels
             builder.Services.AddScoped<IndexViewModel>();

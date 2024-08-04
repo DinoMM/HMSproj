@@ -24,12 +24,14 @@ namespace SkladModul.ViewModels.Sklad
         public bool Saved { get; set; } = false;
 
         DBContext _db;
-
-        public ModifPolozSkladViewModel(DBContext db)
+        readonly Blazored.SessionStorage.ISessionStorageService _sessionStorage;
+        public ModifPolozSkladViewModel(DBContext db, Blazored.SessionStorage.ISessionStorageService sessionStorage)
         {
             _db = db;
 
             zoznamSkladov = new(_db.Sklady.ToList());
+            _sessionStorage = sessionStorage;
+
         }
 
         public void SetExist(PolozkaS poloz)
@@ -93,15 +95,16 @@ namespace SkladModul.ViewModels.Sklad
                         }
                     }
                 }
-
+                await _sessionStorage.SetItemAsync("SkladPolozkyLoaded", false);    //chceme aktualizaciu poloziek
                 _db.SaveChanges();
             }
         }
 
-        public void VratZmeny()
+        public async Task VratZmeny()
         {
             if (!string.IsNullOrEmpty(Polozka.ID))
             {
+                await _sessionStorage.SetItemAsync("SkladPolozkyLoaded", false); //chceme aktualizaciu poloziek
                 _db.Entry(Polozka).State = EntityState.Unchanged;
                 _db.SaveChanges();
             }

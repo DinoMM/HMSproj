@@ -119,30 +119,16 @@
     {
         if (ViewModel.Saved)
         {
+
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
         }
         else
         {
             if (await ApproveModNSave.OpenModal(true))
             {
-                ViewModel.VratZmeny();
+                await ViewModel.VratZmeny();
                 Navigator.NavigateTo(Navigator.RemoveLastUrl());
             }
         }
     }
-
-
-
-    //private async Task Proceed()
-    //{
-    //    //if (Form.EditContext.Validate())
-
-
-    //    //Form.EditContext.GetValidationMessages())
-    //    /*Form?.EditContext?.AddValidationMessage(
-    //         FieldIdentifier,
-    //        "Your custom validation error message"
-    //    )*/
-    //}
-
 }

@@ -12,6 +12,7 @@ using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 using DBLayer.Models;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace SkladModul.ViewModels.Sklad
@@ -31,11 +32,13 @@ namespace SkladModul.ViewModels.Sklad
 
         readonly DBContext _db;
         readonly UserService _userService;
+        readonly Blazored.SessionStorage.ISessionStorageService _sessionStorage;
 
-        public SkladViewModel(DBContext db, UserService userService)
+        public SkladViewModel(DBContext db, UserService userService, Blazored.SessionStorage.ISessionStorageService sessionStorage)
         {
             _db = db;
             _userService = userService;
+            _sessionStorage = sessionStorage;
 
             if (_userService.LoggedUser == null)
             {
@@ -137,7 +140,7 @@ namespace SkladModul.ViewModels.Sklad
                 }
 
                 //pridanie relevantnych poloziek skladu podla SKLADU
-                var zoz = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)  
+                var zoz = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
                     .Include(x => x.SkladX)
                     .Where(x => x.Sklad == Sklad.ID).ToList();
                 //.ForEachAsync(x => ZoznamPoloziekSkladu.Add(x.PolozkaSkladuX));
@@ -145,10 +148,19 @@ namespace SkladModul.ViewModels.Sklad
                 {
                     ZoznamPoloziekSkladu.Add(item.PolozkaSkladuX);
                 }
+                await _sessionStorage.SetItemAsync("SkladPolozkyLoaded", true);
                 NacitavaniePoloziek = false;        //nacitanie poloziek skladu je dokoncene
             }
+            else // ak zoznam obsahuje polozky
+            {
+                if (!(await _sessionStorage.GetItemAsync<bool>("SkladPolozkyLoaded")))   //ak je nastavene ze chceme aktualizovat polozky
+                {
+                    await AktualizujPolozky();
+                }
+            }
         }
-        public async Task AktualizujPolozky() {
+        public async Task AktualizujPolozky()
+        {
             NacitavaniePoloziek = true;
             ZoznamPoloziekSkladu.Clear();
             await LoadPolozky();
