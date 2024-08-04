@@ -1,0 +1,17 @@
+﻿@namespace UniComponents
+
+<div style="display: flex; justify-content: center; align-items: center;">
+    <div class="spinner-border" style="@("width: " + Size +"rem; height: " + Size + "rem;")" role="status" aria-hidden="true">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <span style="@("font-size: " + Size + "rem;")">@Text</span>
+</div>
+
+
+@code {
+    [Parameter]
+    public double Size { get; set; } = 1.0;
+
+    [Parameter]
+    public string Text { get; set; } = "";
+}

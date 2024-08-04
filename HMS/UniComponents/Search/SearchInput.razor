@@ -1,0 +1,39 @@
+﻿@namespace UniComponents
+
+<input type="text" class="form-control" id="@ID" onkeyup="search('@("searchterm")', '@("tableid")', @NumCols)" placeholder="@PlaceHolder" />
+
+<script>
+         @*(pomohol som si z internetu tutoriály / AI)*@
+
+function search(searchInput, tableIdentif, numCols) {
+    var input = document.getElementById(searchInput);   //input vstup
+    var filter = input.value.toUpperCase();             //string ktory sa bude hladat
+    var table = document.getElementById(tableIdentif);  //tabulka
+    var tr = table.getElementsByTagName("tr");
+
+    for (var i = 1; i < tr.length; i++) {   //prehladavanie riadkov
+        var display = "none";
+        for (var j = 0; j < numCols; j++) { //prehladavanie stlpcov
+            var td = tr[i].getElementsByTagName("td")[j];
+            if (td) {
+                var txtValue = td.textContent || td.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    display = "";
+                }
+            }
+        }
+        tr[i].style.display = display;
+    }
+}
+</script>
+
+@code {
+    [Parameter]
+    public string ID { get; set; } = "searchterm";
+    [Parameter]
+    public string PlaceHolder { get; set; } = "Vyhľadaj položku...";
+    [Parameter]
+    public string TableID { get; set; } = "tableid";
+    [Parameter]
+    public int NumCols { get; set; } = 1;   //pocet stlpcov, ktore sa maju prehladavat od 0 po NumCols-1
+}

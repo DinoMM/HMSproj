@@ -33,8 +33,8 @@
 
     <div class="row pb-1">
         <div class="col-1"></div>
-        <div class="col-3 d-flex justify-content-bottom ">
-            <input type="text" class="form-control" id="searchBox" placeholder="Vyhľadaj položku..." />
+        <div class="col-3 d-flex justify-content-bottom mb-2">
+            <SearchInput NumCols="2" TableID="tableid"></SearchInput>
         </div>
         <div class="col-8">
             <div class="btn-group" role="group">
@@ -57,7 +57,7 @@
     <div class="row">
         <div class="col-1"></div>
         <div class="col-9" style="max-height: 30rem;overflow: auto;">
-            <SimpleTable>
+            <SimpleTable ID="tableid">
                 <THEAD>
 
                 <th class="col-resize" scope="col">ID</th>
@@ -70,30 +70,35 @@
 
                 </THEAD>
                 <TBODY>
-                    @if (!ViewModel.ZoznamPoloziekSkladu.Any())
+                    @if (ViewModel.NacitavaniePoloziek)
                     {
-                        <h2>Načítavanie...</h2>
+                        <div class="ms-1">
+                            <SpinnerLoading Size="2.0"></SpinnerLoading>
+                        </div>
                     }
-                    @foreach (var item in ViewModel.ZoznamPoloziekSkladu)
+                    else
                     {
+                        @foreach (var item in ViewModel.ZoznamPoloziekSkladu)
+                        {
 
-                        <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open(item))" style="cursor: pointer;">
-                            <td class="col-resize">@item.ID </td>
-                            <td class="col-resize">@item.Nazov </td>
-                            <td class="col-resize">@item.MernaJednotka </td>
-                            <td class="col-resize">@item.Cena.ToString("F3") </td>
-                            <td class="col-resize">@item.CenaDPH.ToString("F3") </td>
-                            <td class="col-resize">@(ViewModel.NacitaneMnozstvo ? item.Mnozstvo : "-")</td>
-                            @if (Sklad.ZMENAPOLOZIEKROLE.Contains(UserService.LoggedUserRole))
-                            {
-                                <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
-                            }
-                            else
-                            {
-                                <td class="col-resize"> </td>
-                            }
-                        </tr>
+                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open(item))" style="cursor: pointer;">
+                                <td class="col-resize">@item.ID </td>
+                                <td class="col-resize">@item.Nazov </td>
+                                <td class="col-resize">@item.MernaJednotka </td>
+                                <td class="col-resize">@item.Cena.ToString("F3") </td>
+                                <td class="col-resize">@item.CenaDPH.ToString("F3") </td>
+                                <td class="col-resize">@(ViewModel.NacitaneMnozstvo ? item.Mnozstvo : "-")</td>
+                                @if (Sklad.ZMENAPOLOZIEKROLE.Contains(UserService.LoggedUserRole))
+                                {
+                                    <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                                }
+                                else
+                                {
+                                    <td class="col-resize"> </td>
+                                }
+                            </tr>
 
+                        }
                     }
                     <span id="observerTarget"></span>
                 </TBODY>
@@ -113,6 +118,7 @@
     var element = document.getElementById(id);
     element.textContent = newText;
 }</script>
+
 
 
 @code {
@@ -215,6 +221,8 @@
     {
         var founded1 = objectHolder.Remove<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska //asi netreba
         var founded2 = objectHolder.Remove<string>();   //pokusi sa ziskat objekt z uloziska //asi netreba
+        ViewModel.ZoznamPoloziekSkladu.Clear();
+        ViewModel.Sklady.Clear();
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
 

@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 using DBLayer.Models;
 
+
 namespace SkladModul.ViewModels.Sklad
 {
     public partial class SkladViewModel : ObservableObject
@@ -22,13 +23,14 @@ namespace SkladModul.ViewModels.Sklad
         public Ssklad Sklad { get; set; }
         public bool NacitaneMnozstvo { get; set; } = false;
         public bool AktualneObdobie { get; set; } = false;
+        public bool NacitavaniePoloziek { get; private set; } = true;
 
         [ObservableProperty]
         ObservableCollection<PolozkaS> zoznamPoloziekSkladu = new();
 
 
-        DBContext _db;
-        UserService _userService;
+        readonly DBContext _db;
+        readonly UserService _userService;
 
         public SkladViewModel(DBContext db, UserService userService)
         {
@@ -124,7 +126,7 @@ namespace SkladModul.ViewModels.Sklad
             if (ZoznamPoloziekSkladu.Count == 0)
             {
 
-                if (Sklad.ID == "ALL")
+                if (Sklad.ID == "ALL")      //pri zobrazeni vsetkych poloziek pri mode ALL
                 {
                     var zozn = _db.PolozkySkladu.ToList();
                     foreach (var item in zozn)
@@ -134,7 +136,8 @@ namespace SkladModul.ViewModels.Sklad
                     return;
                 }
 
-                var zoz = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
+                //pridanie relevantnych poloziek skladu podla SKLADU
+                var zoz = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)  
                     .Include(x => x.SkladX)
                     .Where(x => x.Sklad == Sklad.ID).ToList();
                 //.ForEachAsync(x => ZoznamPoloziekSkladu.Add(x.PolozkaSkladuX));
@@ -142,7 +145,13 @@ namespace SkladModul.ViewModels.Sklad
                 {
                     ZoznamPoloziekSkladu.Add(item.PolozkaSkladuX);
                 }
+                NacitavaniePoloziek = false;        //nacitanie poloziek skladu je dokoncene
             }
+        }
+        public async Task AktualizujPolozky() {
+            NacitavaniePoloziek = true;
+            ZoznamPoloziekSkladu.Clear();
+            await LoadPolozky();
         }
 
         public void VymazPolozku(PolozkaS poloz)
@@ -213,8 +222,6 @@ namespace SkladModul.ViewModels.Sklad
             {
                 item.Mnozstvo = 0;
             }
-
         }
-
     }
 }
