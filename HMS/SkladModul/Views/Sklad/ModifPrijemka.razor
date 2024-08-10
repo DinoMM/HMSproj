@@ -97,7 +97,7 @@
                     </div>
                     <div class="col">
                         <label>Načítať</label><br>
-                        <a disabled="@(ViewModel.ObsahujePolozky() || !ViewModel.Saved)" @onclick="@(() => ViewModel.NacitajZObjednavky(InfoModsuccObj, InfoModNotFounObj, InfoModNSomeNotLink))" style="cursor: pointer" id="load" class="btn btn-secondary btn-sm"><i class="bi bi-box-arrow-in-down"></i></a>
+                        <a @onclick="@(() => ViewModel.NacitajZObjednavky(InfoModsuccObj, InfoModNotFounObj, InfoModNSomeNotLink))" style="cursor: pointer" id="load" class="btn btn-secondary btn-sm @((ViewModel.ObsahujePolozky() || ViewModel.Polozka.Spracovana) ? "disabled" : "")"><i class="bi bi-box-arrow-in-down"></i></a>
                     </div>
                 </div>
 
@@ -124,9 +124,10 @@
 
         <div class="row pt-2">
             <div class="col text-center">
+                <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
                 <button type="submit" class="btn btn-primary">@(ViewModel.Saved ? "Otvoriť" : "Uložiť")</button>
                 <button type="button" disabled="@(!ViewModel.Saved || ViewModel.Polozka.Spracovana)" @onclick="Finnish" class="btn btn-secondary">Spracovať</button>
-                <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
+
             </div>
         </div>
 
@@ -185,7 +186,6 @@
         {
             ViewModel.Uloz();
             await InfoMod.OpenModal();
-            ViewModel.Saved = true;
         }
         else
         {

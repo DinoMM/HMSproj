@@ -16,6 +16,11 @@ namespace DBLayer.Models
         public string Sklad { get; set; } = default!;
         public Sklad SkladX { get; set; }
 
+        /// <summary>
+        /// povolenie pre mazanie prijemky
+        /// </summary>
+        [NotMapped]
+        public static List<RolesOwn> TOTAL_MAZANIE_PRIJEMOK { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Uctovnik };
 
         public static void PrijatNaSklad(IEnumerable<PrijemkaPolozka> polozky, Sklad skladDo, DBContext db)
         {
@@ -29,5 +34,7 @@ namespace DBLayer.Models
             }
             db.SaveChanges();
         }
+
+
     }
 }

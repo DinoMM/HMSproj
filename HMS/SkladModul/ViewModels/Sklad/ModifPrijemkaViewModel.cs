@@ -16,6 +16,7 @@ using UniComponents;
 using System.Xml;
 using CommunityToolkit.Mvvm.Input;
 using System.Diagnostics;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SkladModul.ViewModels.Sklad
 {
@@ -78,7 +79,7 @@ namespace SkladModul.ViewModels.Sklad
                 Polozka.Sklad = Sklad.ID;
                 Polozka.SkladX = Sklad;
             }
-
+            Saved = true;
             _db.SaveChanges();
         }
         public void NeulozZmeny()
@@ -107,7 +108,7 @@ namespace SkladModul.ViewModels.Sklad
                     await zoznamprazdnymodal.OpenModal();
                     return;
                 }
-
+                #region pridavanie poloziek do skladu
                 var polozky = _db.PrijemkyPolozky.Where(x => x.Skupina == Polozka.ID).ToList();  //polozky prijemky
                 foreach (var item in polozky)       //pridanie poloziek do skladu
                 {
@@ -121,8 +122,90 @@ namespace SkladModul.ViewModels.Sklad
                         Debug.WriteLine("Chybna polozka v zozname pri spracovani prijemky");
                     }
                 }
+                #endregion
 
                 Polozka.Spracovana = true;
+                _db.SaveChanges();
+
+                #region kontrola vsetkych prijemok, ktore maju rovnaku objednavku ci nesplnaju pocty pre ukoncenie objednavky automaticky
+                PorovnaniePoloziekZObjednavky();
+                #endregion
+
+            }
+        }
+
+        public void PorovnaniePoloziekZObjednavky()
+        {
+            if (string.IsNullOrEmpty(Polozka.Objednavka) || string.IsNullOrEmpty(Polozka.ID)) //prazdne pole objednavky, ID
+            {
+                return;
+            }
+
+            var foundedObjednavka = _db.Objednavky.FirstOrDefault(x => x.ID == Polozka.Objednavka && x.Stav == StavOBJ.Schvalena);
+            if (foundedObjednavka == null)
+            {           //ak sa nenasla schvalena objednavka
+                return;
+            }
+            #region nacitanie poloziek z objednavky
+            var polozkyZObjednavky = _db.PolozkySkladuObjednavky.Where(x => x.Objednavka == Polozka.Objednavka).ToList();   //polozky z objednavky
+
+            var celkoveMnozstvaZObjednavky = polozkyZObjednavky.GroupBy(x => x.PolozkaSkladu) //spoji duplikaty do unikatneho listu
+            .Select(group => new PolozkaSkladu()
+            {
+                ID = group.Key,
+                Mnozstvo = group.Sum(item => item.Mnozstvo)
+            })
+            .ToList();
+            #endregion
+            #region nacitanie poloziek zo SCHVALENYCH prijemok
+            var prijemkySRovnakouObjednavkou = _db.Prijemky.Where(x => x.Objednavka == Polozka.Objednavka && x.Spracovana == true).ToList();  //vsetky schvalene prijemky s rovnakou objednavkou
+            if (prijemkySRovnakouObjednavkou.Count == 0)
+            {  //ak nie su ziadne prijemky s rovnakou objednavkou
+                return;
+            }
+
+            List<PolozkaSkladu> celkoveMnozstvaZPrijemok = new();   //finalny list bude obsahovat vsetky schvalene polozky z prijemok
+            foreach (var item in prijemkySRovnakouObjednavkou) // prejde setky prijemky s rovnakou objednavkou
+            {
+                var polozkyZItem = _db.PrijemkyPolozky.Where(x => x.Skupina == item.ID).ToList(); //ziska vsetky polozky z prijemky
+                var celkoveMnozstvaZPrijemky = polozkyZItem.GroupBy(x => x.PolozkaSkladu) //spoji duplikaty do unikatneho listu
+                .Select(group => new PolozkaSkladu()
+                {
+                    ID = group.Key,
+                    Mnozstvo = group.Sum(item => item.Mnozstvo)
+                })
+                .ToList();
+                celkoveMnozstvaZPrijemok.AddRange(celkoveMnozstvaZPrijemky); //tento list prida na koniec finalneho listu
+            }
+            celkoveMnozstvaZPrijemok = celkoveMnozstvaZPrijemok.GroupBy(x => x.ID) //spoji duplikaty do unikatneho listu - FINALNY LIST
+                .Select(group => new PolozkaSkladu()
+                {
+                    ID = group.Key,
+                    Mnozstvo = group.Sum(item => item.Mnozstvo)
+                })
+                .ToList();
+            #endregion
+            #region porovnanie poloziek z objednavky a prijemok
+            foreach (var item in celkoveMnozstvaZObjednavky)
+            {
+                if (celkoveMnozstvaZPrijemok.FirstOrDefault(x => (x.ID == item.ID && x.Mnozstvo < item.Mnozstvo)) != null) //ak polozky z prijemok, ktora by mala menej mnozstva ako polozky z objednavka
+                {
+                    if (foundedObjednavka.Stav == StavOBJ.Ukoncena)
+                    {
+                        foundedObjednavka.Stav = StavOBJ.Schvalena;
+                        _db.SaveChanges();
+                    }
+                    return; //ak sa najde jedna tak netreba hladat dalej
+                }
+                if (celkoveMnozstvaZPrijemok.RemoveAll(x => x.ID == item.ID) != 1) //vymaze polozku z finalneho listu a musi sa vzdy vymazat jedna polozka -> Ciel je mat prazdny finalny list
+                {
+                    return;
+                }
+            }
+            #endregion
+            if (foundedObjednavka.Stav == StavOBJ.Schvalena)
+            {
+                foundedObjednavka.Stav = StavOBJ.Ukoncena;
                 _db.SaveChanges();
             }
         }
@@ -154,6 +237,11 @@ namespace SkladModul.ViewModels.Sklad
 
         public async Task NacitajZObjednavky(IModal succmodal, IModal notfoundModal, IModal someExcluded)
         {
+            Uloz();     //automaticke ulozenie
+            if (!Saved)
+            {   //ak sa nepodarilo ulozit
+                return;
+            }
             if (ObsahujePolozky())
             {
                 return;
@@ -171,7 +259,7 @@ namespace SkladModul.ViewModels.Sklad
             }
 
             if (foundedOBJ.Stav == StavOBJ.Vytvorena || foundedOBJ.Stav == StavOBJ.Neschvalena || foundedOBJ.Stav == StavOBJ.Ukoncena)
-            {   //len aktivne objednavky
+            {   //len schvalene/aktivne  objednavky
                 await notfoundModal.OpenModal();
                 return;
             }

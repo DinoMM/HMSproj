@@ -4,9 +4,12 @@
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
               Text="Naozaj chcete odstrániť tento riadok?"
-              FuncOnSucc="@(() => ViewModel.VymazCommand.Execute((DBLayer.Models.Prijemka)marked))"
+              FuncOnSucc="EventCallback.Empty"
               FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
+<InfoModal @ref="InfoCantDelete" ID="infomodaldelete"
+           Text="Nemožno vymazať príjemku lebo obsahuje položky.">
+</InfoModal>
 
 <div class="container">
 
@@ -50,9 +53,9 @@
                 <th class="col-resize" scope="col"></th>
                 </THEAD>
                 <TBODY>
-                    @if (!ViewModel.ZoznamPrijemok.Any())
+                    @if (ViewModel.NacitavaniePoloziek)
                     {
-                        <h2>Načítavanie...</h2>
+                        <SpinnerLoading Size="2.0"></SpinnerLoading>
                     }
                     else
                     {
@@ -69,7 +72,7 @@
                                     <td class="col-resize">@(((DBLayer.Models.Prijemka)item).DodaciID) </td>
                                     <td class="col-resize">@(((DBLayer.Models.Prijemka)item).FakturaID) </td>
                                     <td class="col-resize">-</td>
-                                    @if (!item.Spracovana)
+                                    @if (!item.Spracovana || DBLayer.Models.Prijemka.TOTAL_MAZANIE_PRIJEMOK.Contains(UserService.LoggedUserRole))
                                     {
                                         <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
                                     }
@@ -104,6 +107,7 @@
 
 @code {
     ApproveModal AprovMod = new();
+    InfoModal InfoCantDelete = new();
     DBLayer.Models.PohSkup? marked;
 
     protected override void OnInitialized()
@@ -143,10 +147,14 @@
     }
     private async Task Delete(DBLayer.Models.PohSkup poloz)
     {
-        //bez kontroly
         marked = poloz;
-        await AprovMod.OpenModal(true);
-        marked = null;
+        if (await AprovMod.OpenModal(true)) {
+            if (ViewModel.Vymaz((DBLayer.Models.Prijemka)marked, DBLayer.Models.Prijemka.TOTAL_MAZANIE_PRIJEMOK.Contains(UserService.LoggedUserRole))) {
+                marked = null;
+                return;
+            }
+            await InfoCantDelete.OpenModal();       //polozka ma polozky, nemozno vymazat
+        }
 
     }
     private void Create()

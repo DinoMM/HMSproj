@@ -21,6 +21,7 @@ namespace SkladModul.ViewModels.Sklad
         ObservableCollection<PohSkup> zoznamPrijemok = new();
         public DateTime Obdobie { get; set; }
         public Ssklad Sklad { get; set; }
+        public bool NacitavaniePoloziek { get; set; } = true;
 
         DBContext _db;
 
@@ -34,10 +35,10 @@ namespace SkladModul.ViewModels.Sklad
             Sklad = sk;
             Obdobie = Ssklad.DateFromShortForm(ob);
         }
-
         public void LoadZoznam()
         {
-            ZoznamPrijemok = new(_db.Prijemky.Include(x => x.SkladX)        
+            NacitavaniePoloziek = true;
+            ZoznamPrijemok = new(_db.Prijemky.Include(x => x.SkladX)
                 .Where(x => x.Vznik >= Obdobie && x.Sklad == Sklad.ID)
                 .ToList());     //zoznam prijemok
             var prevodky = _db.Vydajky.Include(x => x.SkladX).Include(x => x.SkladDoX).Where(x => x.Vznik >= Obdobie && x.SkladDo == Sklad.ID)
@@ -47,15 +48,27 @@ namespace SkladModul.ViewModels.Sklad
                 ZoznamPrijemok.Add(item);
             }
             ZoznamPrijemok.OrderByDescending(x => x.Vznik);     //utriedenie
+            NacitavaniePoloziek = false;
         }
 
-        [RelayCommand]
-        private void Vymaz(Pprijemka poloz)
+        /// <summary>
+        /// Vymazanie prijemky s overenim
+        /// </summary>
+        /// <param name="poloz">vymazavana prijemka</param>
+        /// <param name="povolenie">true - najvyššie povolenie</param>
+        public bool Vymaz(Pprijemka poloz, bool povolenie)
         {
+            if (!povolenie)
+            {
+                if (_db.PrijemkyPolozky.Any(x => x.Skupina == poloz.ID))    //ak sa v prijemke nachadzaju polozky
+                {
+                    return false;
+                }
+            }
             ZoznamPrijemok.Remove(poloz);
             _db.Prijemky.Remove(poloz);
             _db.SaveChanges();
-
+            return true;
         }
     }
 }

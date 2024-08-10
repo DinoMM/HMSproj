@@ -66,6 +66,10 @@ namespace SkladModul.ViewModels.Objednavka
             var najDod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == vlozeneIco);
             if (najDod == null)
             {
+                if (CorrectOdo)
+                {
+                    return;
+                }
                 CorrectDod = false;
                 NazovDod = default!;
                 return;
@@ -84,6 +88,10 @@ namespace SkladModul.ViewModels.Objednavka
             var najDod = _db.Dodavatelia.FirstOrDefault(x => x.ICO == vlozeneIco);
             if (najDod == null)
             {
+                if (CorrectDod)
+                {
+                    return;
+                }
                 CorrectOdo = false;
                 NazovOdo = default!;
                 return;
@@ -156,7 +164,8 @@ namespace SkladModul.ViewModels.Objednavka
             CorrectDod = true;
             CorrectOdo = true;
 
-            if (Exist()) {      //ak existuje objednavka tak zistime ci je prazdna
+            if (Exist())
+            {      //ak existuje objednavka tak zistime ci je prazdna
                 Prazdna = !_db.PolozkySkladuObjednavky.Any(x => x.Objednavka == objednavka.ID);
             }
         }

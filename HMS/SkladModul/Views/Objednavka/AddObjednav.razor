@@ -16,7 +16,7 @@
 <div class="d-flex justify-content-center align-items-center vh-100">
     <div class="container ">
         <div class="row">
-            <h1>Vytvorenie objednávky > Voľba adries</h1>
+            <h1>Objednávka: @ViewModel.objednavka.ID</h1>
         </div>
 
         @* *** *@
@@ -118,7 +118,7 @@
         <div class="row g-3 pt-2 align-items-center justify-content-center">
             <div class="col-auto">
                 <button type="button" class="btn btn-secondary me-2" @onclick="GoBack">Späť</button>
-                <button type="button" disabled="@(!ViewModel.CorrectDod || !ViewModel.CorrectOdo)" @onclick="GoNext" class="btn btn-primary me-2">@(ViewModel.Exist() ? "Otvoriť" : "Vytvoriť")</button>
+                <button type="button" disabled="@(!ViewModel.CorrectDod || !ViewModel.CorrectOdo)" @onclick="GoNext" class="btn btn-primary me-2">@(ViewModel.Exist() ? ViewModel.PozriZmeny() ? "Uložiť" : "Otvoriť" : "Vytvoriť")</button>
                 <button type="button" class="btn btn-danger" @onclick="DelteObj" disabled="@(!ViewModel.Prazdna)">Vymazať</button>
 
             </div>
@@ -130,8 +130,8 @@
 
 
 @code {
-        ApproveModal AprovModSave = new();
-        ApproveModal AprovModDel = new();
+    ApproveModal AprovModSave = new();
+    ApproveModal AprovModDel = new();
 
     protected override void OnInitialized()
     {
@@ -144,6 +144,11 @@
 
     private void GoNext()
     {
+        if (ViewModel.PozriZmeny())
+        {
+            ViewModel.UlozCommand.Execute(null);
+            return;
+        }
         ViewModel.NastavObjednavkuCommand.Execute(null);
         Navigator.NavigateTo(Navigator.AddNextUrl("/PridatPolozky"));
     }
