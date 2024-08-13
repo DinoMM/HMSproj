@@ -159,6 +159,14 @@ namespace DBLayer.Models
             return listNemozno;
         }
 
+
+        /// <summary>
+        /// Načíta množstvo do položiek a zistí, či majú spojenie so skladom.
+        /// </summary>
+        /// <param name="zoznamPoloziek">Zoznam položiek, ktoré sa majú načítať a uloži do nich zrátané množstvá.</param>
+        /// <param name="skladdo">Sklad, ku ktorému sa majú položky priradiť.</param>
+        /// <param name="db">Databázový kontext.</param>
+        /// <returns>Zoznam položiek, ktoré nemajú spojenie so skladom.</returns>
         public static List<PolozkaSkladu> LoadMnozstvoPoloziek(IEnumerable<PolozkaSkladu> zoznamPoloziek, Sklad skladdo, in DBContext db)
         {
             var listNemozno = new List<PolozkaSkladu>();
@@ -187,7 +195,7 @@ namespace DBLayer.Models
             return listNemozno;
         }
 
-        public static List<PolozkaSkladu> GetPoctyZPrijemok(Sklad skladdo,in DBContext db)
+        public static List<PolozkaSkladu> GetPoctyZPrijemok(Sklad skladdo, in DBContext db)
         {
             //TODO: pridat obdobie
             var prijemky = db.Prijemky.Where(x => x.Spracovana == true && x.Sklad == skladdo.ID).ToList();  //vsetky schvalene prijemky
@@ -224,6 +232,21 @@ namespace DBLayer.Models
                 })
                 .ToList();
 
+        }
+        public static bool ExistujePouzitie(PolozkaSkladu polozka, in DBContext db)
+        {
+            if (db.PrijemkyPolozky.Any(x => x.PolozkaSkladu == polozka.ID)) {
+                return false;
+            }
+            if (db.VydajkyPolozky.Any(x => x.PolozkaSkladu == polozka.ID))
+            {
+                return false;
+            }
+            if (db.PolozkySkladuObjednavky.Any(x => x.PolozkaSkladu == polozka.ID))
+            {
+                return false;
+            }
+            return true;
         }
     }
 }

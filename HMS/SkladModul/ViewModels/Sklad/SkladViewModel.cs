@@ -52,16 +52,9 @@ namespace SkladModul.ViewModels.Sklad
                 if (skladuziv.Count > 0)
                 {
                     Sklady = skladuziv.Select(x => x.SkladX).ToList();
-                    Sklad = Sklady.FirstOrDefault();
-                    //Obdobie = Sklad.ShortformObdobie();
-                    var obd = _db.SkladObdobi.Include(x => x.SkladX)
-                        .Where(x => x.Sklad == Sklad.ID)
-                        .OrderByDescending(x => x.Obdobie)
-                        .FirstOrDefault()?.Obdobie;
-                    if (obd.HasValue)
-                    {
-                        Obdobie = Ssklad.ShortFromObdobie(obd.Value);
-                    }
+                    Sklad = Sklady.FirstOrDefault()!;
+                    Obdobie = Ssklad.ShortFromObdobie(SkladObdobie.GetActualObdobieFromSklad(Sklad, _db)); //ziska aktualne obdobie, ak neexistuje tak sa vytvori
+                    AktualneObdobie = true; //mali by sme mat urcite aktualne obdobie po vytvoreni ViewModela
 
                     if (Ssklad.ZMENAPOLOZIEKROLE.Contains(_userService.LoggedUserRole))
                     {
@@ -70,7 +63,8 @@ namespace SkladModul.ViewModels.Sklad
                             Sklady.Add(new Ssklad() { ID = "ALL", Nazov = "Zobrazenie všetkých položiek"/*, Obdobie = DateTime.Today*/ });
                         }
                     }
-                    CheckIsLastObdobie();     //kontrola ci je obdobie aktualne
+                    /*CheckIsObdobieActual();*/     //kontrola ci je obdobie aktualne, nastavenie priznakov
+
                 }
                 else
                 {
@@ -84,17 +78,25 @@ namespace SkladModul.ViewModels.Sklad
         {
             Sklad = sk;
             Obdobie = ob;
-            CheckIsLastObdobie();     //kontrola ci je obdobie aktualne
+            CheckIsObdobieActual();     //kontrola ci je obdobie aktualne
         }
 
-        public List<string> GetObdobia()
+        /// <summary>
+        /// Vráti všetky obdobia pre dany sklad, zoradene
+        /// </summary>
+        /// <returns></returns>
+        public List<string> GetObdobiaAsc()
         {
+            if (Sklad.ID == "ALL")
+            {
+                return new List<string> { Ssklad.ShortFromObdobie(DateTime.Today) };
+            }
+
             var list = _db.SkladObdobi.Include(x => x.SkladX)
                 .Where(x => x.Sklad == Sklad.ID)
-                .OrderByDescending(x => x.Obdobie)
+                .OrderBy(x => x.Obdobie)
                 .Select(x => Ssklad.ShortFromObdobie(x.Obdobie))
                 .ToList();
-            list.Reverse();
             return list;
         }
         public async Task SetSklad(string ID)
@@ -105,16 +107,14 @@ namespace SkladModul.ViewModels.Sklad
                 if (Sklad.ID != found.ID)
                 {
                     Sklad = found;
-                    //Obdobie = Sklad.ShortformObdobie();
-                    var obd = _db.SkladObdobi.Include(x => x.SkladX)
-                        .Where(x => x.Sklad == Sklad.ID)
-                        .OrderByDescending(x => x.Obdobie)
-                        .FirstOrDefault()?.Obdobie;
-                    if (obd.HasValue)
+                    if (Sklad.ID != "ALL")
                     {
-                        Obdobie = Ssklad.ShortFromObdobie(obd.Value);
+                        Obdobie = Ssklad.ShortFromObdobie(SkladObdobie.GetActualObdobieFromSklad(Sklad, in _db));
                     }
-
+                    else
+                    {
+                        Obdobie = Ssklad.ShortFromObdobie(DateTime.Today);
+                    }
                     ZoznamPoloziekSkladu.Clear();
                     await LoadPolozky();
                     NacitaneMnozstvo = false;
@@ -164,30 +164,27 @@ namespace SkladModul.ViewModels.Sklad
             await LoadPolozky();
         }
 
-        public void VymazPolozku(PolozkaS poloz)
+        public void VymazPolozku(PolozkaS poloz) //Natvrdo vymaze polozku zo skladu, pozor na integritu dat
         {
             _db.PolozkySkladu.Remove(poloz);
             ZoznamPoloziekSkladu.Remove(poloz);
             _db.SaveChanges();
         }
-
+        /// <summary>
+        /// Ak existuje pouzitie polozky alebo ma mnozstvo stale na sklade.
+        /// </summary>
+        /// <param name="poloz"></param>
+        /// <returns></returns>
         public bool MoznoVymazat(PolozkaS poloz)
         {
-            var activcon = _db.PolozkaSkladuMnozstva.Where(x => x.PolozkaSkladu == poloz.ID);
-            foreach (var item in activcon)
+            var found = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == poloz.ID);
+            if (found is not null && found.Mnozstvo > 0)
             {
-                if (item.Mnozstvo != 0)
-                {
-                    return false;
-                }
+                return false;
             }
-            var activObj = _db.PolozkySkladuObjednavky.Include(x => x.ObjednavkaX).Where(x => x.PolozkaSkladu == poloz.ID);
-            foreach (var item in activObj)
+            if (Ssklad.ExistujePouzitie(poloz, in _db))
             {
-                if (item.ObjednavkaX.Stav != DBLayer.Models.StavOBJ.Ukoncena)
-                {
-                    return false;
-                }
+                return false;
             }
             return true;
         }
@@ -197,40 +194,60 @@ namespace SkladModul.ViewModels.Sklad
             if (ZoznamPoloziekSkladu.Count != 0)
             {
                 ClearNumZoznam();
-                var nemozno = Ssklad.LoadMnozstvoPoloziek(ZoznamPoloziekSkladu, Sklad, _db );
-                if (nemozno.Count != 0)
+                if (Sklad.ID != "ALL")  //pre vsetky sklady nacita vsetky polozky
                 {
-                    Debug.WriteLine("Nemožno načítat množstvo niektorých položiek");
+                    var nemozno = Ssklad.LoadMnozstvoPoloziek(ZoznamPoloziekSkladu, Sklad, in _db); //pre existujuci sklad
+                    if (nemozno.Count != 0)
+                    {
+                        Debug.WriteLine("Nemožno načítat množstvo niektorých položiek");
+                    }
                 }
-                //foreach (var item in ZoznamPoloziekSkladu)
-                //{
-                //    var founded = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.ID && x.Sklad == Sklad.ID);
-                //    if (founded != null)
-                //    {
+                else //pre vsetky sklady nacita vsetky polozky - MOZE TRVAT DLHO
+                {
+                    var skladyBezAll = Sklady.Where(x => x.ID != "ALL").ToList(); //odstranime sklad ALL z listu
 
+                    var zoznamPoloziekSkladuSum = new List<PolozkaS>();
+                    foreach (var item in ZoznamPoloziekSkladu) { //pridavanie poloziek do zoznamu, musime spravit klony
+                        zoznamPoloziekSkladuSum.Add(item.Clon());
+                    }
 
-                //        item.Mnozstvo = founded.Mnozstvo;
-                //    }
-                //    else
-                //    {
-                //        Debug.WriteLine("Pri načitavani množstva nebolo možné nájsť položku skladu");
-                //    }
-                //}
+                    foreach (var item in skladyBezAll) //zosumuje vsetky sklady
+                    {
+                        Ssklad.LoadMnozstvoPoloziek(ZoznamPoloziekSkladu, item, in _db); //pre sklad
+                        foreach (var ytem in ZoznamPoloziekSkladu) //zosumuje mnozstva
+                        {
+                            zoznamPoloziekSkladuSum.FirstOrDefault(x => x.ID == ytem.ID).Mnozstvo += ytem.Mnozstvo;
+                        }
+                        ClearNumZoznam(); //vycistenie zoznamu
+                    }
+                    foreach (var ytem in ZoznamPoloziekSkladu)//pridanie spoctenych mnozstiev do originalneho zoznamu
+                    {
+                        ytem.Mnozstvo = zoznamPoloziekSkladuSum.FirstOrDefault(x => x.ID == ytem.ID).Mnozstvo;
+                    }
+                }
+
                 NacitaneMnozstvo = true;
             }
         }
-        public void CheckIsLastObdobie()
+        /// <summary>
+        /// Nastavi aktualne obdobie 'AktualneObdobie' ak je aktualne
+        /// </summary>
+        public void CheckIsObdobieActual()
         {
-            var obdob = GetObdobia();
-            foreach (var item in obdob)
+            if (Sklad.ID == "ALL")
             {
-                if (Ssklad.DateFromShortForm(item) > Ssklad.DateFromShortForm(Obdobie))
-                {
-                    AktualneObdobie = false;
-                    return;
-                }
+                return;
             }
-            AktualneObdobie = true;
+
+            if (SkladObdobie.GetActualObdobieFromSklad(Sklad, in _db) == Ssklad.DateFromShortForm(Obdobie)) // ak je obdobie aktualne
+            {
+                AktualneObdobie = true;
+            }
+            else
+            {
+                AktualneObdobie = false;
+            }
+
         }
 
         public void ClearNumZoznam()
