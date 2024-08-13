@@ -11,15 +11,11 @@ namespace DBLayer.Models
     public class SkladObdobie
     {
         [Key]
-        public DateTime Obdobie { get; set; } = GetActualSeason();
+        public DateTime Obdobie { get; set; } = GetSeassonFromToday();
         [ForeignKey("SkladX")]
         public string Sklad { get; set; } = default!;
         public Sklad SkladX { get; set; }
 
-        public static DateTime GetActualSeason()
-        {
-            return new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-        }
         public static DateTime GetSeasonFromDate(DateTime date)
         {
             return new DateTime(date.Year, date.Month, 1);
@@ -33,6 +29,15 @@ namespace DBLayer.Models
         public static bool IsDateInMonth(DateTime date, DateTime dateMonth)
         {
             return date >= dateMonth && date <= dateMonth.AddMonths(1);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns>Vrati datetime na zaklade dnesneho datumu zaokruhreny na prvy den v mesiaci</returns>
+        public static DateTime GetSeassonFromToday()
+        {
+            return new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         }
 
     }

@@ -34,17 +34,11 @@
 
     <div class="row h-25">
         <div class="col col-1">
-            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false)) disabled="@(ReadOnly || !ViewModel.Zmena)">Uložiť</button>
-        </div>
-        <div class="col col-1 me-2">
             <button type="button" class="btn btn-secondary" @onclick="Close">Späť</button>
         </div>
-
-        <div class="col col-2">
-            <button type="button" disabled="@(ViewModel.Uprava || ReadOnly)" @onclick=@(async () => {ViewModel.PridatPolozkuCommand.Execute(null);await ClearInput();}) class="btn btn-success">Pridať položku</button>
+        <div class="col col-1 me-2">
+            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false)) disabled="@(ReadOnly || !ViewModel.Zmena)">Uložiť</button>
         </div>
-
-
     </div>
 
     <div class="row">
@@ -101,7 +95,11 @@
                             <tr style="position:sticky; bottom: 0;">
                                 <td><input type="text" id="vyhlid" @onchange=ViewModel.VyhladajPolozkuCommand.Execute @onfocus=@(() => ViewModel.Uprava = true) @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" /></td>
                                 <td><input type="text" readonly disabled="disabled" @bind="ViewModel.NovaPoloz.Nazov" /> </td>
-                                <td></td>
+                                <td>
+                                    <div class="col col-2">
+                                        <button type="button" disabled="@(ViewModel.Uprava || ReadOnly)" @onclick=@(async () => {ViewModel.PridatPolozkuCommand.Execute(null);await ClearInput();}) class="btn btn-success">Pridať položku</button>
+                                    </div>
+                                </td>
                                 @*<td>@ViewModel.NovaPoloz.PolozkaSkladuX?.MernaJednotka</td>*@
                                 <td>@ViewModel.NovaPoloz.Cena</td>
                                 <td></td>
@@ -237,6 +235,7 @@
                             {
                                 if (ViewModel.Deleted)
                                 {
+                                    objectHolder.Remove<DBLayer.Models.PohSkup>();
                                     Navigator.RemoveLastUrl();              //dvojite odstranenie v pripade zrusenia skupiny
                                     Navigator.NavigateTo(Navigator.RemoveLastUrl());
                                     ViewModel.VycistiHodnotyForce();
@@ -247,8 +246,9 @@
                             {
                                 if (ViewModel.VratDoPovodnehoStavu())   //Vratenie, Prazdny? //ano
                                 {
-
-                                    return; //nic
+                                    Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                                    ViewModel.VycistiHodnotyForce();
+                                    return; //koniec
                                 }
                                 else //nie
                                 {

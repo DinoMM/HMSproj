@@ -149,7 +149,7 @@ namespace SkladModul.ViewModels.Sklad
             //Zmena je true
             //kontrola hodnot, uprava na default ak sa najdu, treba posudit uzivatelom
             bool trebaCheck = false;
-            trebaCheck = ZoznamPohSkupiny.Count == 0;
+            //trebaCheck = ZoznamPohSkupiny.Count == 0;
             foreach (var item in ZoznamPohSkupiny)
             {
                 if (string.IsNullOrWhiteSpace(item.Nazov))

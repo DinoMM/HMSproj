@@ -108,20 +108,17 @@ namespace SkladModul.ViewModels.Sklad
                     await zoznamprazdnymodal.OpenModal();
                     return;
                 }
-                #region pridavanie poloziek do skladu
+                #region kontrola, ci je mozne pridat vsetky polozky do skladu
+
                 var polozky = _db.PrijemkyPolozky.Where(x => x.Skupina == Polozka.ID).ToList();  //polozky prijemky
-                foreach (var item in polozky)       //pridanie poloziek do skladu
+
+                var nemoznoDodat = Ssklad.MoznoDodat(polozky, Sklad, _db); //ak su polozky spravne, tak ich pridame do skladu
+
+                if (nemoznoDodat.Count != 0) //ak sa nepodarilo pridat vsetky polozky
                 {
-                    var found = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.PolozkaSkladu && x.Sklad == Polozka.Sklad);
-                    if (found != null)
-                    {
-                        found.Mnozstvo += item.Mnozstvo;
-                    }
-                    else
-                    {
-                        Debug.WriteLine("Chybna polozka v zozname pri spracovani prijemky");
-                    }
+                    return;
                 }
+
                 #endregion
 
                 Polozka.Spracovana = true;
@@ -158,6 +155,7 @@ namespace SkladModul.ViewModels.Sklad
             .ToList();
             #endregion
             #region nacitanie poloziek zo SCHVALENYCH prijemok
+            //TODO pridat obdobie
             var prijemkySRovnakouObjednavkou = _db.Prijemky.Where(x => x.Objednavka == Polozka.Objednavka && x.Spracovana == true).ToList();  //vsetky schvalene prijemky s rovnakou objednavkou
             if (prijemkySRovnakouObjednavkou.Count == 0)
             {  //ak nie su ziadne prijemky s rovnakou objednavkou
@@ -165,7 +163,7 @@ namespace SkladModul.ViewModels.Sklad
             }
 
             List<PolozkaSkladu> celkoveMnozstvaZPrijemok = new();   //finalny list bude obsahovat vsetky schvalene polozky z prijemok
-            foreach (var item in prijemkySRovnakouObjednavkou) // prejde setky prijemky s rovnakou objednavkou
+            foreach (var item in prijemkySRovnakouObjednavkou) // prejde vsetky prijemky s rovnakou objednavkou
             {
                 var polozkyZItem = _db.PrijemkyPolozky.Where(x => x.Skupina == item.ID).ToList(); //ziska vsetky polozky z prijemky
                 var celkoveMnozstvaZPrijemky = polozkyZItem.GroupBy(x => x.PolozkaSkladu) //spoji duplikaty do unikatneho listu

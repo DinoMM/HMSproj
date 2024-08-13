@@ -63,8 +63,6 @@ namespace SkladModul.ViewModels.Sklad
                         Obdobie = Ssklad.ShortFromObdobie(obd.Value);
                     }
 
-
-
                     if (Ssklad.ZMENAPOLOZIEKROLE.Contains(_userService.LoggedUserRole))
                     {
                         if (Sklady.FirstOrDefault(x => x.ID == "ALL") == null)  //prida moznost pre zobrazenie vsetkych skladovych poloziek
@@ -199,18 +197,25 @@ namespace SkladModul.ViewModels.Sklad
             if (ZoznamPoloziekSkladu.Count != 0)
             {
                 ClearNumZoznam();
-                foreach (var item in ZoznamPoloziekSkladu)
+                var nemozno = Ssklad.LoadMnozstvoPoloziek(ZoznamPoloziekSkladu, Sklad, _db );
+                if (nemozno.Count != 0)
                 {
-                    var founded = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.ID && x.Sklad == Sklad.ID);
-                    if (founded != null)
-                    {
-                        item.Mnozstvo = founded.Mnozstvo;
-                    }
-                    else
-                    {
-                        Debug.WriteLine("Pri načitavani množstva nebolo možné nájsť položku skladu");
-                    }
+                    Debug.WriteLine("Nemožno načítat množstvo niektorých položiek");
                 }
+                //foreach (var item in ZoznamPoloziekSkladu)
+                //{
+                //    var founded = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.ID && x.Sklad == Sklad.ID);
+                //    if (founded != null)
+                //    {
+
+
+                //        item.Mnozstvo = founded.Mnozstvo;
+                //    }
+                //    else
+                //    {
+                //        Debug.WriteLine("Pri načitavani množstva nebolo možné nájsť položku skladu");
+                //    }
+                //}
                 NacitaneMnozstvo = true;
             }
         }
