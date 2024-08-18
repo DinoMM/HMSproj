@@ -5,7 +5,7 @@
 
 
 <SelectModal @ref="SelectModObd" ID="selectmodalobdobie"
-             SelectionList="@ViewModel.GetObdobiaAsc()"
+             SelectionList="@ViewModel.GetObdobiaDes()"
              Value="@ViewModel.Obdobie"></SelectModal>
 <SelectModal @ref="SelectModSkl" ID="selectmodalsklad"
              SelectionList="@ViewModel.Sklady.Select(x => x.ID).ToList()"
@@ -16,7 +16,7 @@
               FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
 <InfoModal @ref="InfoModHasConneciton" ID="infomodalhascon"
-           Text="Nemožno vymazať položku lebo je obsiahnutá v sklade alebo je niekto spomenutá.">
+           Text="Nemožno vymazať položku lebo je obsiahnutá v sklade alebo je niekde spomenutá.">
 </InfoModal>
 @implements IDisposable
 
@@ -137,6 +137,7 @@
         ViewModel.Obdobie = SelectModObd.Value;
 
         ViewModel.CheckIsObdobieActual();     //kontrola ci je obdobie aktualne
+        ViewModel.NacitaneMnozstvo = false;
 
         await JSRuntime.InvokeVoidAsync("changeText", "uctobd", "Obdobie:" + ViewModel.Obdobie);
     }

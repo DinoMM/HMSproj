@@ -27,7 +27,7 @@ namespace SkladModul.ViewModels.Sklad
         public bool Readonly { get; set; } = false;
         public bool AktualneObdobie { get; set; } = true;       //true - mozno vytvorit novu vydajku
 
-        DBContext _db;
+        readonly DBContext _db;
 
         public ModifVydajkaViewModel(DBContext db)
         {
@@ -38,7 +38,11 @@ namespace SkladModul.ViewModels.Sklad
         {
             Readonly = false;
             Sklad = sk;
-            Obdobie = Ssklad.DateFromShortForm(ob);
+            Obdobie = Ssklad.DateFromShortForm(ob); //bez kontroly
+
+            var actualObdobieSkladu = SkladObdobie.GetActualObdobieFromSklad(Sklad, _db); //ziska aktualne obdobie pre sklad
+            AktualneObdobie = actualObdobieSkladu == Obdobie;  //ak neni aktualne obdobie (vtedy je v minulosti a vydajku nemozno vytvorit)
+
             if (pr != null)
             {
                 Polozka = pr;
@@ -49,13 +53,9 @@ namespace SkladModul.ViewModels.Sklad
                 }
 
             }
-            else //nova vydajka
+            else //pre novu vydajku nastavime obdobie
             {
-                var aktualDateSklad = _db.SkladObdobi.Include(x => x.SkladX).Where(x => x.Sklad == Sklad.ID).OrderByDescending(x => x.Obdobie).FirstOrDefault()?.Obdobie;
-                if (aktualDateSklad.HasValue && !SkladObdobie.IsDateInMonth(Obdobie, aktualDateSklad.Value))  //ak neni aktualne obdobie (vtedy je v minulosti a vydajku nemozno spravit)
-                {
-                    AktualneObdobie = false;
-                }
+                Polozka.Obdobie = SkladObdobie.GetActualObdobieFromSklad(Sklad, _db);
             }
 
         }
@@ -73,7 +73,6 @@ namespace SkladModul.ViewModels.Sklad
                 Polozka.Sklad = Sklad.ID;
                 Polozka.SkladX = Sklad;
             }
-
 
             _db.SaveChanges();
         }
@@ -100,8 +99,8 @@ namespace SkladModul.ViewModels.Sklad
                 }
 
                 var polozky = _db.VydajkyPolozky.Where(x => x.Skupina == Polozka.ID).ToList();  //polozky vydajky
-                var listnemozno = Ssklad.MoznoVydať(polozky, Polozka.SkladX, _db);
-                if (listnemozno.Count != 0)     //ak su polozky, ktore nemozny vydat zo skladu
+                var listnemozno = Ssklad.MoznoVydať(polozky, Polozka.SkladX, Obdobie, _db);
+                if (listnemozno.Count != 0)     //ak su polozky, ktore nemozno vydat zo skladu
                 {
                     //modal nie je mozne vydat zo skladu
                     var vypis = "Nemožno vydať viacej ako je na sklade:<br>";
@@ -165,8 +164,8 @@ namespace SkladModul.ViewModels.Sklad
                 }
 
                 var polozky = _db.VydajkyPolozky.Where(x => x.Skupina == Polozka.ID).ToList();  //polozky vydajky
-                var listnemozno = Ssklad.MoznoVydať(polozky, Polozka.SkladX, _db);
-                if (listnemozno.Count != 0)     //ak su polozky, ktore nemozny vydat zo skladu
+                var listnemozno = Ssklad.MoznoVydať(polozky, Polozka.SkladX, Obdobie, _db);
+                if (listnemozno.Count != 0)     //ak su polozky, ktore nemozno vydat zo skladu
                 {
                     //modal nie je mozne vydat zo skladu
                     var vypis = "Nemožno vydať viacej ako je na sklade:<br>";
@@ -179,23 +178,23 @@ namespace SkladModul.ViewModels.Sklad
                     return;
                 }
 
-                foreach (var item in polozky)       //odobranie poloziek zo skladu ZO
-                {
-                    var found = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.PolozkaSkladu && x.Sklad == Polozka.Sklad);
-                    if (found != null)
-                    {
-                        found.Mnozstvo -= item.Mnozstvo;
-                    }
-                    else
-                    {
-                        Debug.WriteLine("Chybna polozka v zozname pri spracovani prijemky");
-                    }
-                }
+                //foreach (var item in polozky)       //odobranie poloziek zo skladu ZO
+                //{
+                //    var found = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.PolozkaSkladu && x.Sklad == Polozka.Sklad);
+                //    if (found != null)
+                //    {
+                //        found.Mnozstvo -= item.Mnozstvo;
+                //    }
+                //    else
+                //    {
+                //        Debug.WriteLine("Chybna polozka v zozname pri spracovani prijemky");
+                //    }
+                //}
 
-                if (!string.IsNullOrEmpty(Polozka.SkladDo)) //prevodka - pripocitanie do skladu
-                {
-                    DBLayer.Models.Prijemka.PrijatNaSklad(polozky, Polozka.SkladDoX, _db);
-                }
+                //if (!string.IsNullOrEmpty(Polozka.SkladDo)) //prevodka - pripocitanie do skladu
+                //{
+                //    DBLayer.Models.Prijemka.PrijatNaSklad(polozky, Polozka.SkladDoX, _db);
+                //}
 
 
                 Polozka.Spracovana = true;

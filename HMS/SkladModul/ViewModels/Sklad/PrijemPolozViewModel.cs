@@ -23,7 +23,7 @@ namespace SkladModul.ViewModels.Sklad
         public Ssklad Sklad { get; set; }
         public bool NacitavaniePoloziek { get; set; } = true;
 
-        DBContext _db;
+        readonly DBContext _db;
 
         public PrijemPolozViewModel(DBContext db)
         {
@@ -38,16 +38,19 @@ namespace SkladModul.ViewModels.Sklad
         public void LoadZoznam()
         {
             NacitavaniePoloziek = true;
-            ZoznamPrijemok = new(_db.Prijemky.Include(x => x.SkladX)
-                .Where(x => x.Vznik >= Obdobie && x.Sklad == Sklad.ID)
-                .ToList());     //zoznam prijemok
-            var prevodky = _db.Vydajky.Include(x => x.SkladX).Include(x => x.SkladDoX).Where(x => x.Vznik >= Obdobie && x.SkladDo == Sklad.ID)
-                .ToList();      //zoznam vydajok urcene pre aktualny sklad
-            foreach (var item in prevodky)  //pridanie prevodiek do zoznamu
+            var prijemky = _db.Prijemky.Include(x => x.SkladX)
+                .Where(x => x.Obdobie >= Obdobie && x.Sklad == Sklad.ID)
+                .ToList();     //zoznam prijemok
+            var prevodky = _db.Vydajky.Include(x => x.SkladX).Include(x => x.SkladDoX).Where(x => /*x.Obdobie >= Obdobie &&*/ x.SkladDo == Sklad.ID)
+                .ToList();      //zoznam prevodiek urcene pre aktualny sklad, ignorujeme obdobie kedze mozu mat rozdielne obdobia
+
+            List<PohSkup> spojPrAPre = new(prijemky); //spojenie zoznamov
+            spojPrAPre.AddRange(prevodky);//spojenie zoznamov
+            spojPrAPre = spojPrAPre.OrderByDescending(x =>  x.Vznik).ToList(); //zoradenie podla datumu
+            foreach (var item in spojPrAPre)  //pridanie prevodiek do zoznamu
             {
                 ZoznamPrijemok.Add(item);
             }
-            ZoznamPrijemok.OrderByDescending(x => x.Vznik);     //utriedenie
             NacitavaniePoloziek = false;
         }
 
@@ -65,10 +68,28 @@ namespace SkladModul.ViewModels.Sklad
                     return false;
                 }
             }
+
             ZoznamPrijemok.Remove(poloz);
             _db.Prijemky.Remove(poloz);
             _db.SaveChanges();
+            DBLayer.Models.Objednavka.NastavStavZPrijemok(poloz, _db); //nastavenie stavu objednavky
             return true;
+        }
+
+        public string GetObdobie(PohSkup polozka)
+        {
+            if (polozka is Pprijemka)
+            {
+                return Ssklad.ShortFromObdobie(((Pprijemka)polozka).Obdobie);
+            }
+            else
+            {
+                return Ssklad.ShortFromObdobie(((Vydajka)polozka).Obdobie);
+            }
+
+
+
+
         }
     }
 }

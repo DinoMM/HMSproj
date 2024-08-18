@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace DBLayer.Models
 {
-    public class Objednavka : ICloneable
+    public partial class Objednavka : ICloneable
     {
         [Key]
         public string ID { get; set; } = default!;
@@ -65,29 +65,6 @@ namespace DBLayer.Models
             DodavatelX = obj.DodavatelX;
             OdberatelX = obj.OdberatelX;
             TvorcaX = obj.TvorcaX;
-        }
-
-        public static string DajNoveID(DBContext db)
-        {
-            int adder = 1;
-            string newID;
-            do
-            {
-                int cislo;
-                if (db.Objednavky.Count() != 0)
-                {
-                    cislo = int.Parse(db.Objednavky.DefaultIfEmpty().Max(x => x != null ? x.ID : "1") ?? "1") + adder;
-                }
-                else
-                {
-                    cislo = 1;
-                }
-                //moznost pridat prefix
-                newID = cislo.ToString("D7");
-                ++adder;
-
-            } while (db.Objednavky.FirstOrDefault(d => d.ID == newID) != null);
-            return newID;
         }
 
         public static bool JeObjednavkaOK(Objednavka obj, bool ajID = true)

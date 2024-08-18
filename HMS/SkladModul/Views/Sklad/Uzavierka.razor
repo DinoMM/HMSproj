@@ -4,7 +4,7 @@
 
 <ApproveModal @ref=AprovMod ID="closeseason"
               Text="Naozaj chcete uzavrieť aktuálne obdobie? <br> Vytvorí sa nové podľa aktuálneho mesiaca alebo nasledovnosti"
-              FuncOnSucc="EventCallback.Empty"
+              FuncOnSucc="ViewModel.UzavrietObdobie"
               FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
 <div class="container">
@@ -12,11 +12,17 @@
         <div class="col-12 text-center">
             <h2 class="font-weight-bold">Uzávierka obdobia</h2>
         </div>
+        <div class="row">
+            <div class="col-12 text-center">
+                <h5>Cena prijatých položiek: @ViewModel.GetTotalSumPrijemky() €</h5>
+                <h5>Cena vydatých položiek: @ViewModel.GetTotalSumVydajky() €</h5>
+            </div>
+        </div>
     </div>
     <div class="row">
         <div class="col-12 text-center">
             <button type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))" class="btn btn-secondary m-2">Späť</button>
-            <button type="button" class="btn btn-primary m-2"  >Uzavrieť obdobie</button>
+            <button type="button" disabled="@(!ViewModel.MoznoUzavrietObdobie())" class="btn btn-primary m-2" @onclick="CloseSeasson">Uzavrieť obdobie</button>
         </div>
     </div>
     <div class="row">
@@ -28,28 +34,39 @@
                 <th scope="col">Merná jednotka</th>
                 <th scope="col">Cena</th>
                 <th scope="col">Cena s DPH</th>
+                <th scope="col">Cena prij.</th>
+                <th scope="col">Cena s DPH prij.</th>
+                <th scope="col">Začiatočné Množstvo</th>
                 <th scope="col">Aktuálne Množstvo</th>
                 <th scope="col">Prijaté Množstvo</th>
                 <th scope="col">Vydaté Množstvo</th>
                 </THEAD>
                 <TBODY>
-                    @if (!ViewModel.ZoznamPoloziek.Any())
+                    @if (ViewModel.NacitavaniePoloziek)
                     {
-                        <h2>Načítavanie...</h2>
+                        <div class="ms-1">
+                            <SpinnerLoading Size="2.0"></SpinnerLoading>
+                        </div>
                     }
-                    @foreach (var item in ViewModel.ZoznamPoloziek)
+                    else
                     {
+                        @foreach (var item in ViewModel.ZoznamPoloziek)
+                        {
 
-                        <tr>
-                            <td class="col-resize">@item.ID </td>
-                            <td class="col-resize">@item.Nazov </td>
-                            <td class="col-resize">@item.MernaJednotka </td>
-                            <td class="col-resize">@item.Cena.ToString("F3") </td>
-                            <td class="col-resize">@item.CenaDPH.ToString("F3") </td>
-                            <td class="col-resize">@ViewModel.GetAktualneMnozstvo(item)</td>
-                            <td class="col-resize">@ViewModel.GetPrijateMnozstvo(item)</td>
-                            <td class="col-resize">@ViewModel.GetVydateMnozstvo(item)</td>
-                        </tr>
+                            <tr>
+                                <td class="col-resize">@item.ID </td>
+                                <td class="col-resize">@item.Nazov </td>
+                                <td class="col-resize">@item.MernaJednotka </td>
+                                <td class="col-resize">@item.Cena.ToString("F3") </td>
+                                <td class="col-resize">@item.CenaDPH.ToString("F3") </td>
+                                <td class="col-resize">@ViewModel.GetPolozkaPrijemky(item).Cena.ToString("F4") </td>
+                                <td class="col-resize">@ViewModel.GetPolozkaPrijemky(item).CenaDPH.ToString("F4") </td>
+                                <td class="col-resize">@ViewModel.GetMnozstvoZaciatok(item)</td>
+                                <td class="col-resize">@ViewModel.GetAktualneMnozstvo(item)</td>
+                                <td class="col-resize">@ViewModel.GetPrijateMnozstvo(item)</td>
+                                <td class="col-resize">@ViewModel.GetVydateMnozstvo(item)</td>
+                            </tr>
+                        }
                     }
                     <span id="observerTarget"></span>
                 </TBODY>
@@ -75,12 +92,23 @@
         if (founded2 != null)
         {
             ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
-            ViewModel.LoadZoznamy();
+            if (ViewModel.CheckActualObdobie())
+            {
+                ViewModel.LoadZoznamy();
+            }
         }
         else
         {
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
+    }
+
+    public async Task CloseSeasson()
+    {
+        if (await AprovMod.OpenModal(true))
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+        };
     }
 }

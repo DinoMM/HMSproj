@@ -163,17 +163,17 @@
         if (founded3 == null)
         {
             ViewModel.VycistiSa();
-            ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
+            ViewModel.SetProp(founded1, founded2);      //ked na nenasla polozka, nastavujeme model na novu
+            if (!ViewModel.AktualneObdobie)     //pri novej prijemke ci je aktualne obdobie
+            {
+                await InfoModWrongSeason.OpenModal(true);
+                Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                return;
+            }
         }
         else
         {
-            ViewModel.SetProp(founded1, founded2, founded3);
-        }
-        if (!ViewModel.AktualneObdobie)     //pri novej prijemke ci je aktulalne obdobie
-        {
-            await InfoModWrongSeason.OpenModal(true);
-            Navigator.NavigateTo(Navigator.RemoveLastUrl());
-            return;
+            ViewModel.SetProp(founded1, founded2, founded3); //nasla sa existujuca polozka, nastavujeme model na upravu
         }
 
         ViewModel.CelkovaCenaCalc();
@@ -181,7 +181,6 @@
 
     private async Task Save()
     {
-
         if (!ViewModel.Saved)
         {
             ViewModel.Uloz();
@@ -200,9 +199,8 @@
                 Navigator.NavigateTo(Navigator.AddNextUrl($"/ModifPolozPrijemka/{true}"));      //readonly rezim
             }
         }
-
-
     }
+
     private async Task Close()
     {
         if (!ViewModel.Saved)

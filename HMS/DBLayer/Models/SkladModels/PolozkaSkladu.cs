@@ -1,4 +1,6 @@
-﻿using System;
+﻿using DBLayer.Migrations;
+using Microsoft.VisualBasic;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -8,12 +10,12 @@ using System.Threading.Tasks;
 
 namespace DBLayer.Models
 {
-    public class PolozkaSkladu : ICloneable
+    public partial class PolozkaSkladu : ICloneable
     {
         [Key]
         public string ID { get; set; } = default!;
         [Required]
-        [StringLength(128,MinimumLength = 3,ErrorMessage = "Nazov musi byť v rozmedzi 3 - 128 znakov" )]
+        [StringLength(128, MinimumLength = 3, ErrorMessage = "Nazov musi byť v rozmedzi 3 - 128 znakov")]
         public string Nazov { get; set; } = default!;
         [Required]
         [StringLength(32, MinimumLength = 1, ErrorMessage = "Merná jednotka musi byť v rozmedzi 1 - 32 znakov")]
@@ -26,7 +28,7 @@ namespace DBLayer.Models
         [NotMapped]
         public double CelkovaCena { get => (double)Mnozstvo * Cena; }
         [NotMapped]
-        public double CenaDPH { get => (Cena * 120) / 100;  }
+        public double CenaDPH { get => (Cena * 120) / 100; }
         [NotMapped]
         public double CelkovaCenaDPH { get => (double)Mnozstvo * CenaDPH; }
 
@@ -41,31 +43,70 @@ namespace DBLayer.Models
 
             return clone;
         }
-        public PolozkaSkladu Clon() {
+        public PolozkaSkladu Clon()
+        {
             return (PolozkaSkladu)Clone();
         }
 
-        public static string DajNoveID(DBContext db)
+        public static List<PolozkaSkladu> ZosumarizujListPoloziek(in List<PolozkaSkladuObjednavky> polozky)
         {
-            int adder = 1;
-            string newID;
-            do
+            return polozky.GroupBy(x => x.PolozkaSkladu) //spoji duplikaty do unikatneho listu
+            .Select(group => new PolozkaSkladu()
             {
-                int cislo;
-                if (db.PolozkySkladu.Count() != 0)
-                {
-                    cislo = int.Parse(db.PolozkySkladu.DefaultIfEmpty().Max(x => x != null ? x.ID : "1") ?? "1") + adder;
-                }
-                else
-                {
-                    cislo = 1;
-                }
-                //moznost pridat prefix
-                newID = cislo.ToString("D7");
-                ++adder;
+                ID = group.Key,
+                //Nazov = group.First().Nazov,
+                //MernaJednotka = group.First().MernaJednotka,
+                Mnozstvo = group.Sum(x => x.Mnozstvo),
+                Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo)
+            })
+            .ToList();
+        }
 
-            } while (db.PolozkySkladu.FirstOrDefault(d => d.ID == newID) != null);
-            return newID;
+        public static List<PolozkaSkladu> ZosumarizujListPoloziek(in List<PolozkaSkladu> polozky)
+        {
+            return polozky.GroupBy(x => x.ID) //spoji duplikaty do unikatneho listu
+            .Select(group => new PolozkaSkladu()
+            {
+                ID = group.Key,
+                //Nazov = group.First().Nazov,
+                //MernaJednotka = group.First().MernaJednotka,
+                Mnozstvo = group.Sum(x => x.Mnozstvo),
+                Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo)
+            })
+            .ToList();
+        }
+
+        public static List<PolozkaSkladu> ZosumarizujListPoloziek(in List<PrijemkaPolozka> polozky)
+        {
+            return polozky.GroupBy(x => x.PolozkaSkladu) //spoji duplikaty do unikatneho listu
+            .Select(group => new PolozkaSkladu()
+            {
+                ID = group.Key,
+                //Nazov = group.First().Nazov,
+                //MernaJednotka = group.First().MernaJednotka,
+                Mnozstvo = group.Sum(x => x.Mnozstvo),
+                Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo)
+            })
+            .ToList();
+        }
+
+        public static void SpracListySpolu(IEnumerable<PolozkaSkladu> listDo, in List<PolozkaSkladu> listZ, Action<PolozkaSkladu, PolozkaSkladu> procedure)
+        {
+            foreach (var item in listDo)       //prejdenie poloziek zo zoznamu
+            {
+                var found = listZ.FirstOrDefault(x => x.ID == item.ID);
+                if (found != null)
+                {
+                    procedure(item, found);
+                }
+            }
+        }
+        public static void ResetMnozstva(IEnumerable<PolozkaSkladu> list)
+        {
+            foreach (var item in list)
+            {
+                item.Mnozstvo = 0;
+            }
         }
     }
 }

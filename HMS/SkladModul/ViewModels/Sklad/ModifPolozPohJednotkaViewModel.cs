@@ -169,7 +169,7 @@ namespace SkladModul.ViewModels.Sklad
                 }
             }
             if (TypeOfPohSkupina == typeof(Vvydajka)) {     //kontrola mnozstva
-                var listnemozno = Ssklad.MoznoVydať(ZoznamPohSkupiny.Cast<PrijemkaPolozka>(), ((Vvydajka)PohSkupina).SkladX, _db);
+                var listnemozno = Ssklad.MoznoVydať(ZoznamPohSkupiny.Cast<PrijemkaPolozka>(), ((Vvydajka)PohSkupina).SkladX, ((Vvydajka)PohSkupina).Obdobie, _db);
                 if (listnemozno.Count != 0)     //ak su polozky, ktore nemozny vydat zo skladu
                 {
                     //modal nie je mozne vydat zo skladu

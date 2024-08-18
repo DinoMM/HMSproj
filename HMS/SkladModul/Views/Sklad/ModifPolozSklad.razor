@@ -79,8 +79,8 @@
 
         <div class="row pt-2">
             <div class="col text-center">
-                <button type="submit" class="btn btn-primary">Vytvoriť</button>
-                <button type="button" @onclick="Close" class="btn btn-secondary">Koniec</button>
+                <SimpleButton Type="button" Class="btn btn-secondary" ZmenaTextu="@(("" , "Späť"))" OnClick="Close"></SimpleButton>
+                <SimpleButton Disabled="@ViewModel.Saved" ZmenaStavuTextu="@ViewModel.Existuje()" ZmenaTextu="@(("Uložiť" , "Vytvoriť"))"></SimpleButton>
             </div>
         </div>
 

@@ -100,9 +100,10 @@
 
         <div class="row pt-2">
             <div class="col text-center">
+                <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
                 <button type="submit" class="btn btn-primary">@(ViewModel.Saved ? "Otvoriť" : "Uložiť")</button>
                 <button type="button" disabled="@(!ViewModel.Saved || ViewModel.Polozka.Spracovana || (!string.IsNullOrEmpty(ViewModel.Polozka.SkladDo) && !ViewModel.Readonly))" @onclick="Finnish" class="btn btn-secondary">Spracovať</button>
-                <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
+
             </div>
         </div>
 
@@ -137,24 +138,23 @@
         if (founded3 == null)
         {
             ViewModel.VycistiSa();
-            ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
+            ViewModel.SetProp(founded1, founded2);      //ked na nenasla polozka, nastavujeme model na novu
+            if (!ViewModel.AktualneObdobie)     //pri novej vydajke ci je aktualne obdobie
+            {
+                await InfoModWrongSeason.OpenModal(true);
+                Navigator.NavigateTo(Navigator.RemoveLastUrl());
+                return;
+            }
         }
         else
         {
-            ViewModel.SetProp(founded1, founded2, founded3);
-        }
-        if (!ViewModel.AktualneObdobie)     //pri novej prijemke ci je aktulalne obdobie
-        {
-            await InfoModWrongSeason.OpenModal(true);
-            Navigator.NavigateTo(Navigator.RemoveLastUrl());
-            return;
+            ViewModel.SetProp(founded1, founded2, founded3); //nasla sa existujuca polozka, nastavujeme model na upravu
         }
         ViewModel.IniSklady();
     }
 
     private async Task Save()
     {
-
         if (!ViewModel.Saved)
         {
             if (await ViewModel.Kontrola(InfoModListBadValue, InfoModListBadDestin))
@@ -177,9 +177,8 @@
                 Navigator.NavigateTo(Navigator.AddNextUrl($"/ModifPolozVydajka/{true}"));      //readonly rezim
             }
         }
-
-
     }
+
     private async Task Close()
     {
         if (!ViewModel.Saved)

@@ -42,6 +42,7 @@
                 <THEAD>
                 <th class="col-resize" scope="col">ID</th>
                 <th class="col-resize" scope="col">Vznik</th>
+                <th class="col-resize" scope="col">Obdobie</th>
                 <th class="col-resize" scope="col">OK</th>
 
                 <th class="col-resize" scope="col">Objednavka</th>
@@ -65,7 +66,10 @@
                             <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open(item))" style="cursor: pointer;">
                                 <td class="col-resize">@item.ID </td>
                                 <td class="col-resize">@item.Vznik.ToShortDateString() </td>
-                                <td class="col-resize">@item.Spracovana </td>
+                                <td class="col-resize">@ViewModel.GetObdobie(item) </td>
+                                <td class="col-resize">
+                                    <SimpleCheckMark Checked="@item.Spracovana" Size="5"></SimpleCheckMark>
+                                </td>
                                 @if (item is DBLayer.Models.Prijemka)
                                 {
                                     <td class="col-resize">@(((DBLayer.Models.Prijemka)item).Objednavka) </td>
@@ -148,8 +152,10 @@
     private async Task Delete(DBLayer.Models.PohSkup poloz)
     {
         marked = poloz;
-        if (await AprovMod.OpenModal(true)) {
-            if (ViewModel.Vymaz((DBLayer.Models.Prijemka)marked, DBLayer.Models.Prijemka.TOTAL_MAZANIE_PRIJEMOK.Contains(UserService.LoggedUserRole))) {
+        if (await AprovMod.OpenModal(true))
+        {
+            if (ViewModel.Vymaz((DBLayer.Models.Prijemka)marked, DBLayer.Models.Prijemka.TOTAL_MAZANIE_PRIJEMOK.Contains(UserService.LoggedUserRole)))
+            {
                 marked = null;
                 return;
             }

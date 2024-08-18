@@ -23,7 +23,7 @@ namespace SkladModul.ViewModels.Sklad
         public PolozkaS Polozka = new();
         public bool Saved { get; set; } = false;
 
-        DBContext _db;
+        readonly DBContext _db;
         readonly Blazored.SessionStorage.ISessionStorageService _sessionStorage;
         public ModifPolozSkladViewModel(DBContext db, Blazored.SessionStorage.ISessionStorageService sessionStorage)
         {
@@ -108,6 +108,11 @@ namespace SkladModul.ViewModels.Sklad
                 _db.Entry(Polozka).State = EntityState.Unchanged;
                 _db.SaveChanges();
             }
+        }
+
+        public bool Existuje()
+        {
+            return !string.IsNullOrEmpty(Polozka.ID);
         }
     }
 }

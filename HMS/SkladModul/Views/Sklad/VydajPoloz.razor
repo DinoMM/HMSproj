@@ -39,6 +39,7 @@
                 <THEAD>
                 <th class="col-resize" scope="col">ID</th>
                 <th class="col-resize" scope="col">Vznik</th>
+                <th class="col-resize" scope="col">Obdobie</th>
                 <th class="col-resize" scope="col">OK</th>
                 <th class="col-resize" scope="col">Prevodka do</th>
                 <th class="col-resize" scope="col"></th>
@@ -50,7 +51,10 @@
                         <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open(item))" style="cursor: pointer;">
                             <td class="col-resize">@item.ID </td>
                             <td class="col-resize">@item.Vznik.ToShortDateString() </td>
-                            <td class="col-resize">@item.Spracovana </td>
+                            <td class="col-resize">@(DBLayer.Models.Sklad.ShortFromObdobie(item.Obdobie)) </td>
+                            <td class="col-resize">
+                                <SimpleCheckMark Checked="@item.Spracovana" Size="5"></SimpleCheckMark>
+                            </td>
                             <td class="col-resize">@(string.IsNullOrEmpty(item.SkladDo) ? "-" : item.SkladDo) </td>
                             @if (!item.Spracovana)
                             {

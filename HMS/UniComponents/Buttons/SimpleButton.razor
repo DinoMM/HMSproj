@@ -1,0 +1,43 @@
+﻿@namespace UniComponents
+
+<button type="@Type" class="@Class" disabled="@Disabled" @onclick="OnClick">
+    @(ZmenaStavuTextu ? ZmenaTextu.Item1 : ZmenaTextu.Item2)
+</button>
+
+@code {
+    /// <summary>
+    /// Vypnutie tlačidla, Default false
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; } = false;
+
+    /// <summary>
+    /// Zmenenie textu tlačidla, Default true
+    /// </summary>
+    [Parameter]
+    public bool ZmenaStavuTextu { get; set; } = false;
+
+    /// <summary>
+    /// Možnosti textu tlačidla, Default ("Uložiť", "Vytvoriť") - true, false
+    /// </summary>
+    [Parameter]
+    public (string, string) ZmenaTextu { get; set; } = ("Uložiť", "Vytvoriť");
+
+    /// <summary>
+    /// Vnutro class, Default "btn btn-primary"
+    /// </summary>
+    [Parameter]
+    public string Class { get; set; } = "btn btn-primary";
+
+    /// <summary>
+    /// Vnutro type, Default "submit"
+    /// </summary>
+    [Parameter]
+    public string Type { get; set; } = "submit";
+
+    /// <summary>
+    /// Vnutro @onclick, Default EventCallback.Empty
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClick { get; set; } = EventCallback.Empty;
+}

@@ -34,7 +34,7 @@ namespace SkladModul.ViewModels.Sklad
 
         public bool AktualneObdobie { get; set; } = true;       //true - mozno vytvorit novu prijemku
 
-        DBContext _db;
+        readonly DBContext _db;
 
         public ModifPrijemkaViewModel(DBContext db)
         {
@@ -44,8 +44,12 @@ namespace SkladModul.ViewModels.Sklad
         public void SetProp(Ssklad sk, string ob, Pprijemka? pr = null)
         {
             Sklad = sk;
-            Obdobie = Ssklad.DateFromShortForm(ob);
-            if (pr != null)
+            Obdobie = Ssklad.DateFromShortForm(ob);     //bez kontroly
+
+            var actualObdobieSkladu = SkladObdobie.GetActualObdobieFromSklad(Sklad, _db); //ziska aktualne obdobie pre sklad
+            AktualneObdobie = actualObdobieSkladu == Obdobie;  //ak neni aktualne obdobie (vtedy je v minulosti a prijemku nemozno vytvorit)
+
+            if (pr != null) //ak mame prijemku, nastavime ju
             {
                 Polozka = pr;
                 if (!string.IsNullOrEmpty(Polozka.ID))
@@ -53,21 +57,13 @@ namespace SkladModul.ViewModels.Sklad
                     Saved = true;
                 }
             }
-            else //nova prijemka
+            else //pre novu prijemku nastavime obdobie
             {
-                var aktualDateSklad = _db.SkladObdobi.Include(x => x.SkladX).Where(x => x.Sklad == Sklad.ID).OrderByDescending(x => x.Obdobie).FirstOrDefault()?.Obdobie;
-
-                if (aktualDateSklad.HasValue && !SkladObdobie.IsDateInMonth(Obdobie, aktualDateSklad.Value))  //ak neni aktualne obdobie (vtedy je v minulosti a prijemku nemozno spravit)
-                {
-                    AktualneObdobie = false;
-                }
+                Polozka.Obdobie = SkladObdobie.GetActualObdobieFromSklad(Sklad, _db);
             }
-
-
         }
         public async void Uloz()
         {
-
             if (string.IsNullOrEmpty(Polozka.ID))
             {     //ak nema ID
                 Polozka.ID = PohSkup.DajNoveID(_db.Prijemky, _db);
@@ -125,89 +121,11 @@ namespace SkladModul.ViewModels.Sklad
                 _db.SaveChanges();
 
                 #region kontrola vsetkych prijemok, ktore maju rovnaku objednavku ci nesplnaju pocty pre ukoncenie objednavky automaticky
-                PorovnaniePoloziekZObjednavky();
+                DBLayer.Models.Objednavka.NastavStavZPrijemok(Polozka,in _db);
                 #endregion
 
             }
         }
-
-        public void PorovnaniePoloziekZObjednavky()
-        {
-            if (string.IsNullOrEmpty(Polozka.Objednavka) || string.IsNullOrEmpty(Polozka.ID)) //prazdne pole objednavky, ID
-            {
-                return;
-            }
-
-            var foundedObjednavka = _db.Objednavky.FirstOrDefault(x => x.ID == Polozka.Objednavka && x.Stav == StavOBJ.Schvalena);
-            if (foundedObjednavka == null)
-            {           //ak sa nenasla schvalena objednavka
-                return;
-            }
-            #region nacitanie poloziek z objednavky
-            var polozkyZObjednavky = _db.PolozkySkladuObjednavky.Where(x => x.Objednavka == Polozka.Objednavka).ToList();   //polozky z objednavky
-
-            var celkoveMnozstvaZObjednavky = polozkyZObjednavky.GroupBy(x => x.PolozkaSkladu) //spoji duplikaty do unikatneho listu
-            .Select(group => new PolozkaSkladu()
-            {
-                ID = group.Key,
-                Mnozstvo = group.Sum(item => item.Mnozstvo)
-            })
-            .ToList();
-            #endregion
-            #region nacitanie poloziek zo SCHVALENYCH prijemok
-            //TODO pridat obdobie
-            var prijemkySRovnakouObjednavkou = _db.Prijemky.Where(x => x.Objednavka == Polozka.Objednavka && x.Spracovana == true).ToList();  //vsetky schvalene prijemky s rovnakou objednavkou
-            if (prijemkySRovnakouObjednavkou.Count == 0)
-            {  //ak nie su ziadne prijemky s rovnakou objednavkou
-                return;
-            }
-
-            List<PolozkaSkladu> celkoveMnozstvaZPrijemok = new();   //finalny list bude obsahovat vsetky schvalene polozky z prijemok
-            foreach (var item in prijemkySRovnakouObjednavkou) // prejde vsetky prijemky s rovnakou objednavkou
-            {
-                var polozkyZItem = _db.PrijemkyPolozky.Where(x => x.Skupina == item.ID).ToList(); //ziska vsetky polozky z prijemky
-                var celkoveMnozstvaZPrijemky = polozkyZItem.GroupBy(x => x.PolozkaSkladu) //spoji duplikaty do unikatneho listu
-                .Select(group => new PolozkaSkladu()
-                {
-                    ID = group.Key,
-                    Mnozstvo = group.Sum(item => item.Mnozstvo)
-                })
-                .ToList();
-                celkoveMnozstvaZPrijemok.AddRange(celkoveMnozstvaZPrijemky); //tento list prida na koniec finalneho listu
-            }
-            celkoveMnozstvaZPrijemok = celkoveMnozstvaZPrijemok.GroupBy(x => x.ID) //spoji duplikaty do unikatneho listu - FINALNY LIST
-                .Select(group => new PolozkaSkladu()
-                {
-                    ID = group.Key,
-                    Mnozstvo = group.Sum(item => item.Mnozstvo)
-                })
-                .ToList();
-            #endregion
-            #region porovnanie poloziek z objednavky a prijemok
-            foreach (var item in celkoveMnozstvaZObjednavky)
-            {
-                if (celkoveMnozstvaZPrijemok.FirstOrDefault(x => (x.ID == item.ID && x.Mnozstvo < item.Mnozstvo)) != null) //ak polozky z prijemok, ktora by mala menej mnozstva ako polozky z objednavka
-                {
-                    if (foundedObjednavka.Stav == StavOBJ.Ukoncena)
-                    {
-                        foundedObjednavka.Stav = StavOBJ.Schvalena;
-                        _db.SaveChanges();
-                    }
-                    return; //ak sa najde jedna tak netreba hladat dalej
-                }
-                if (celkoveMnozstvaZPrijemok.RemoveAll(x => x.ID == item.ID) != 1) //vymaze polozku z finalneho listu a musi sa vzdy vymazat jedna polozka -> Ciel je mat prazdny finalny list
-                {
-                    return;
-                }
-            }
-            #endregion
-            if (foundedObjednavka.Stav == StavOBJ.Schvalena)
-            {
-                foundedObjednavka.Stav = StavOBJ.Ukoncena;
-                _db.SaveChanges();
-            }
-        }
-
         public double CelkovaCenaCalc()
         {
 

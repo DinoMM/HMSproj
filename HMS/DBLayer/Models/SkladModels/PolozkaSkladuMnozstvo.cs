@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DBLayer.Models
 {
-    public class PolozkaSkladuMnozstvo
+    public partial class PolozkaSkladuMnozstvo
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -22,5 +22,6 @@ namespace DBLayer.Models
         public Sklad SkladX { get; set; }
         [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty")]
         public double Mnozstvo { get; set; } = 0.0;
+
     }
 }
