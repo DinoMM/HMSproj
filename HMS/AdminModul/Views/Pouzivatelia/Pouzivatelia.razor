@@ -1,0 +1,150 @@
+﻿@namespace AdminModul
+@page "/Pouzivatelia"
+@inject PouzivateliaViewModel ViewModel
+
+
+<ApproveModal @ref=AprovMod ID="deletemodal"
+              Text="Naozaj chcete odstrániť tento riadok?<br>POZOR môžu sa vymazať prvky, ktoré sú spojené s touto položkou!"
+              FuncOnSucc="EventCallback.Empty"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+<InfoModal @ref="InfoModHasConneciton" ID="infomodalhascon"
+           Text="Nemožno vymazať osobu lebo je to aktualne prihlásená osoba alebo má role.">
+</InfoModal>
+
+<div class="container">
+
+    <div class="row pb-1">
+
+        <div class="col-1"></div>
+
+        <div class="col-3 d-flex justify-content-bottom mb-2">
+            <SearchInput NumCols="9" TableID="tableid"></SearchInput>
+        </div>
+
+        <div class="col-8">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
+                <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/")))" type="button" class="btn btn-primary">➕Vytvoriť uživateľa</button>
+                <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary">Otvoriť</button>
+            </div>
+        </div>
+
+        <div class="col-1"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-12" style="max-height: 30rem;overflow: auto;">
+            <SimpleTable ID="tableid">
+                <THEAD>
+
+                <th class="col-resize" scope="col">Meno</th>
+                <th class="col-resize" scope="col">Priezvisko</th>
+                <th class="col-resize" scope="col">Username</th>
+                <th class="col-resize" scope="col">Použivateľ</th>
+                <th class="col-resize" scope="col">Email</th>
+                <th class="col-resize" scope="col">Telefón</th>
+                <th class="col-resize" scope="col">IBAN</th>
+                <th class="col-resize" scope="col">Adresa</th>
+                <th class="col-resize" scope="col">Role</th>
+                <th class="col-resize" scope="col"></th>
+
+                </THEAD>
+                <TBODY>
+                    @if (ViewModel.NacitavaniePoloziek)
+                    {
+                        <div class="ms-1">
+                            <SpinnerLoading Size="2.0"></SpinnerLoading>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var item in ViewModel.ZoznamPouzivatelov)
+                        {
+
+                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
+                                <td class="col-resize">@item.Name</td>
+                                <td class="col-resize">@item.Surname</td>
+                                <td class="col-resize">@item.UserName</td>
+                                <td class="col-resize">
+                                    <SimpleCheckMark Checked="item.PasswordHash != null" Size="5"></SimpleCheckMark>
+                                </td>
+                                <td class="col-resize">@item.Email</td>
+                                <td class="col-resize">@item.PhoneNumber</td>
+                                <td class="col-resize">@*TODO iban*@</td>
+                                <td class="col-resize">@*TODO adresa*@</td>
+                                <td class="col-resize">@ViewModel.GetRoleString(item)</td>
+                                <td>
+                                    <a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger @(!ViewModel.MoznoVymazat(item) ? "disabled" : "")"></i></a>
+                                </td>
+
+                            </tr>
+                        }
+                    }
+                    <span id="observerTarget"></span>
+                </TBODY>
+
+            </SimpleTable>
+        </div>
+        <div class="col-1"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-12"></div>
+    </div>
+
+</div>
+
+
+
+
+
+@code {
+    private IdentityUserOwn? marked;
+    private ApproveModal AprovMod = new();
+    private InfoModal InfoModHasConneciton = new();
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.NacitajZoznamy();
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public void Open()
+    {
+        if (marked != null)
+        {
+            objectHolder.Add(marked);
+            Navigator.NavigateTo(Navigator.AddNextUrl("/"));
+        }
+    }
+
+    public async Task Delete(IdentityUserOwn user)
+    {
+        if (ViewModel.MoznoVymazat(user))
+        {
+            if (await AprovMod.OpenModal(true))
+            {
+                ViewModel.Vymazat(user);
+            }
+        }
+        else
+        {
+            await InfoModHasConneciton.OpenModal();
+        }
+    }
+}

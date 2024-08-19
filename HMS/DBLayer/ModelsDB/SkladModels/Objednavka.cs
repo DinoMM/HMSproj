@@ -12,7 +12,12 @@ namespace DBLayer.Models
 {
     public partial class Objednavka : ICloneable
     {
-        
+        /// <summary>
+        /// povolene role, aj keby bol uzivatel pripojeny ku skladu tak musi mat prislusnu rolu inak len na zobrazenie
+        /// </summary>
+        [NotMapped]
+        public static List<RolesOwn> POVOLENEROLE { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.Nakupca, RolesOwn.Skladnik, };
+
         public static string DajNoveID(DBContext db)
         {
             int adder = 1;

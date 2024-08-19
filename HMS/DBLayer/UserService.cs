@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DBLayer
 {
-    public class UserService    //vytverene AI
+    public class UserService    //pomoc AI
     {
         private readonly UserManager<IdentityUserOwn> _userManager;
 
@@ -23,7 +23,19 @@ namespace DBLayer
         public async Task<bool> CreateNewUserAsync(IdentityUserOwn user, string password, RolesOwn assignedRole = RolesOwn.None)
         {
             var result = await _userManager.CreateAsync(user, password);
-            if (!result.Succeeded) {
+            if (!result.Succeeded)
+            {
+                return false;
+            }
+            var res = _userManager.AddToRoleAsync(user, assignedRole.ToString());
+            return result.Succeeded;
+        }
+
+        public async Task<bool> CreateNewUserNoPSWDAsync(IdentityUserOwn user, RolesOwn assignedRole = RolesOwn.None)
+        {
+            var result = await _userManager.CreateAsync(user);
+            if (!result.Succeeded)
+            {
                 return false;
             }
             var res = _userManager.AddToRoleAsync(user, assignedRole.ToString());
@@ -43,22 +55,38 @@ namespace DBLayer
                 return false;
             }
             RolesOwn role;
-            if (!Enum.TryParse((await _userManager.GetRolesAsync(user)).FirstOrDefault(), out role)) //ziskanie roly usera
+            if (!Enum.TryParse((await _userManager.GetRolesAsync(user)).FirstOrDefault(), out role)) //ziskanie roly usera, prvej roly
             {
                 return false;
             }
-
+            //TODO pridat fukctionalitu pre viacero rolii
             LoggedUser = user;
             LoggedUserRole = role;
             return true;
         }
 
-        public void LogOutUser() {
+        public void LogOutUser()
+        {
             LoggedUser = default;
             LoggedUserRole = RolesOwn.None;
         }
 
-
+        public async Task<List<RolesOwn>> GetRolesFromUser(IdentityUserOwn user)
+        {
+            var list = await _userManager.GetRolesAsync(user);
+            RolesOwn rola = RolesOwn.None;
+            List<RolesOwn> roles = new();
+            foreach (var item in list)
+            {
+                if (!Enum.TryParse(item, out rola))
+                {
+                    Debug.WriteLine("Chyba pri ziskavani roly");
+                    break;
+                }
+                roles.Add(rola);
+            }
+            return roles;
+        }
 
 
     }

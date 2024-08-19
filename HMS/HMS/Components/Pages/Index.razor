@@ -19,15 +19,20 @@
 @inject DBContext db
 
 @implements IDisposable
-Prihlaseny: @UserService.LoggedUser?.UserName
+
+
+
+<label>Prihlaseny: @UserService.LoggedUser?.UserName </label>
 <div class="d-flex justify-content-center align-items-center vh-100">
     <div class="p-3 w-50 ">
         <div class="list-group text-center border border-2 border-black ">
 
             @foreach (var item in ViewModel.ModulesList)
             {
-                <a @onclick="@(() => Navigator.NavigateTo(item.Item2,saveThisUrl: true ))" class="list-group-item list-group-item-action">@item.Item1</a>
-
+                if (item.Item3.Contains(UserService.LoggedUserRole))
+                {
+                    <a @onclick="@(() => Navigator.NavigateTo(item.Item2, saveThisUrl: true))" class="list-group-item list-group-item-action">@item.Item1</a>
+                }
             }
         </div>
     </div>
@@ -77,11 +82,13 @@ Prihlaseny: @UserService.LoggedUser?.UserName
 
     }
 
-    private void OnAppDestroying() {
+    private void OnAppDestroying()
+    {
         Debug.WriteLine("Applikacia sa zatvára.");
     }
 
-    public void Dispose() {
+    public void Dispose()
+    {
         AppLifecycleService.Destroying -= OnAppDestroying;
     }
 

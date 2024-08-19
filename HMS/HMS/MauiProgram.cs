@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using SkladModul.ViewModels.Objednavka;
 using UniComponents;
 using SkladModul.ViewModels.Sklad;
+using AdminModul.ViewModels.Pouzivatelia;
 using HMS.Components.Services;
 using Blazored.SessionStorage;
 
@@ -85,6 +86,8 @@ namespace HMS
             builder.Services.AddTransient<VydajPolozViewModel>();
             builder.Services.AddScoped<ModifVydajkaViewModel>();
             builder.Services.AddTransient<UzavierkaViewModel>();
+
+            builder.Services.AddTransient<PouzivateliaViewModel>();
             #endregion
 
 

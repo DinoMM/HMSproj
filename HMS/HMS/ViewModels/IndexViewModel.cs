@@ -14,7 +14,8 @@ namespace HMS.ViewModels
         //private int myProperty;
 
         [ObservableProperty]
-        private ObservableCollection<(string, string)> modulesList;     //(nazov modulu, hyperlink)
+        private ObservableCollection<(string, string, List<RolesOwn>)> modulesList;     //(nazov modulu, hyperlink, list povolenych roli)
+
 
         //private readonly DBContext _db;
         private readonly UserService _userService;
@@ -32,9 +33,10 @@ namespace HMS.ViewModels
                 //vyhodit prihlasovacie okno
                 Debug.WriteLine("Uzivatel nie je prihlaseny");
             }
-            modulesList = new ObservableCollection<(string, string)>();
-            modulesList.Add(("Objednávky", "/Objednavka"));
-            modulesList.Add(("Sklad", "/Sklad"));
+            modulesList = new ObservableCollection<(string, string, List<RolesOwn>)>();
+            modulesList.Add(("Objednávky", "/Objednavka", DBLayer.Models.Objednavka.POVOLENEROLE));
+            modulesList.Add(("Sklad", "/Sklad", DBLayer.Models.Sklad.POVOLENEROLE));
+            modulesList.Add(("Používatelia", "/Pouzivatelia", new() { RolesOwn.Admin }));
 
         }
 

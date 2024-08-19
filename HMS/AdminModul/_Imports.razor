@@ -1,11 +1,12 @@
 ﻿@using Microsoft.AspNetCore.Components.Web
 @using Microsoft.JSInterop
-@using SkladModul.ViewModels.Objednavka
-@using SkladModul.ViewModels.Sklad
+@using AdminModul.ViewModels.Pouzivatelia
+
 @using UniComponents
 @using System.Diagnostics
 @using DBLayer
+@using DBLayer.Models
 @inject Navigator Navigator
 @inject IJSRuntime JSRuntime
-@inject DBLayer.UserService UserService
+@inject DBLayer.UserService userService
 @inject ObjectHolder objectHolder 
