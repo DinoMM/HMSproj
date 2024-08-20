@@ -88,6 +88,8 @@ namespace HMS
             builder.Services.AddTransient<UzavierkaViewModel>();
 
             builder.Services.AddTransient<PouzivateliaViewModel>();
+            builder.Services.AddTransient<AddPouzivatelViewModel>();
+            builder.Services.AddTransient<ZmenaPouzivatelaViewModel>();
             #endregion
 
 

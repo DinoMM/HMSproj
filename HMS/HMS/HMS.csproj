@@ -58,6 +58,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Compile Remove="Properties\ViewModelMVVM1.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
         <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
@@ -68,6 +72,10 @@
 
     <ItemGroup>
       <Folder Include="wwwroot\css\bootstrap\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Include="Properties\ViewModelMVVM1.cs" />
     </ItemGroup>
 
     <ItemGroup>

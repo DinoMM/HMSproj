@@ -1,0 +1,102 @@
+﻿@namespace AdminModul
+@page "/Pouzivatelia/AddPouzivatel"
+@inject AddPouzivatelViewModel ViewModel
+@using Microsoft.AspNetCore.Components.Forms
+
+<InfoModal @ref="InfoMod" ID="infosaved"
+           Text="Používateľ bol vytvorený." />
+
+<EditForm Model="ViewModel" OnValidSubmit="Create">
+    <DataAnnotationsValidator />
+    <div class="container px-5">
+        <div class="row">
+            <div class="col">
+                <h1 class="text-center">Vytvorenie používateľa</h1>
+            </div>
+        </div>
+
+        <div class="row">
+
+            <div class="col">
+
+                <div class="row">
+                    <div class="col-6">
+                        <label>UserName*</label>
+                        <InputText @bind-Value="@ViewModel.UserName" class="form-control" placeholder="Použivateľské meno" />
+                        <ValidationMessage For="@(() => ViewModel.UserName)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label>Meno*</label>
+                        <InputText @bind-Value="@ViewModel.Name" class="form-control" placeholder="Meno" />
+                        <ValidationMessage For="@(() => ViewModel.Name)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label>Priezvisko*</label>
+                        <InputText @bind-Value="@ViewModel.Surname" class="form-control" placeholder="Priezvisko" />
+                        <ValidationMessage For="@(() => ViewModel.Surname)" />
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col">
+                <div class="row">
+                    <div class="col-6">
+                        <label>Heslo*</label>
+                        <InputText @bind-Value="@ViewModel.Heslo" type="password" class="form-control" placeholder="Heslo" />
+                        <ValidationMessage For="@(() => ViewModel.Heslo)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label>Heslo znova*</label>
+                        <InputText @bind-Value="@ViewModel.HesloRovnake" type="password" class="form-control" placeholder="opakuj heslo" />
+                        <ValidationMessage For="@(() => ViewModel.HesloRovnake)" />
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row pt-2">
+            <div class="col text-center">
+                <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
+                <SimpleButton Type="submit" ZmenaTextu="@(("", "Vytvoriť"))"></SimpleButton>
+            </div>
+        </div>
+
+    </div>
+</EditForm>
+
+
+@code
+{
+    private InfoModal InfoMod = new();
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public async Task Create()
+    {
+        if (await ViewModel.Vytvorit())
+        {
+            await InfoMod.OpenModal(true);
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+        }
+    }
+}

@@ -25,7 +25,7 @@
         <div class="col-8">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-                <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/")))" type="button" class="btn btn-primary">➕Vytvoriť uživateľa</button>
+                <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/AddPouzivatel")))" type="button" class="btn btn-primary">➕Vytvoriť uživateľa</button>
                 <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary">Otvoriť</button>
             </div>
         </div>
@@ -76,7 +76,8 @@
                                 <td class="col-resize">@*TODO adresa*@</td>
                                 <td class="col-resize">@ViewModel.GetRoleString(item)</td>
                                 <td>
-                                    <a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger @(!ViewModel.MoznoVymazat(item) ? "disabled" : "")"></i></a>
+                                    @*<a @onclick="@(() => Delete(item))" style="@(!ViewModel.MoznoVymazat(item) ? "pointer-events: none;" : "") "><i href="#" class="bi bi-x-circle btn btn-danger @(!ViewModel.MoznoVymazat(item) ? "disabled" : "")"></i></a>*@
+                                    <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
                                 </td>
 
                             </tr>
@@ -129,7 +130,7 @@
         if (marked != null)
         {
             objectHolder.Add(marked);
-            Navigator.NavigateTo(Navigator.AddNextUrl("/"));
+            Navigator.NavigateTo(Navigator.AddNextUrl("/UpdatePouzivatela"));
         }
     }
 
@@ -147,4 +148,5 @@
             await InfoModHasConneciton.OpenModal();
         }
     }
+
 }

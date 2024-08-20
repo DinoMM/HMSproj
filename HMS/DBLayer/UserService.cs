@@ -20,6 +20,13 @@ namespace DBLayer
             _userManager = userManager;
         }
 
+        /// <summary>
+        /// Vytvorí nového používateľa s daným heslom a priradí mu rolu
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="password"></param>
+        /// <param name="assignedRole"></param>
+        /// <returns></returns>
         public async Task<bool> CreateNewUserAsync(IdentityUserOwn user, string password, RolesOwn assignedRole = RolesOwn.None)
         {
             var result = await _userManager.CreateAsync(user, password);

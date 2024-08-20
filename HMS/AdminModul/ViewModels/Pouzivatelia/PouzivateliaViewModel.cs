@@ -68,11 +68,12 @@ namespace AdminModul.ViewModels.Pouzivatelia
 
         public bool MoznoVymazat(IdentityUserOwn user)
         {
-            if (user.UserName != _userService.LoggedUser.UserName) //isty ako prihlaseny nemoze
+            if (user.UserName == _userService.LoggedUser.UserName) //isty ako prihlaseny nemoze
             {
                 return false;
             }
-            if (ZoznamPouzivatelovRoli.FirstOrDefault(x => x.Item1 == user).Item2.Count != 0) //nemoze mat ziadne role - ked nema role tak by nemal amt ani prepojenia k inym tabulkam
+            var roleUser = ZoznamPouzivatelovRoli.FirstOrDefault(x => x.Item1 == user).Item2;
+            if (roleUser.Count > 1 || !roleUser.Contains(RolesOwn.None)) //nemoze mat ziadne role - ked ma rolu NONE tak by nemal mat ani prepojenia k inym tabulkam
             {
                 return false;
             }
