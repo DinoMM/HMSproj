@@ -68,12 +68,12 @@
                                 <td class="col-resize">@item.Surname</td>
                                 <td class="col-resize">@item.UserName</td>
                                 <td class="col-resize">
-                                    <SimpleCheckMark Checked="item.PasswordHash != null" Size="5"></SimpleCheckMark>
+                                    <SimpleCheckMark Checked="@(!string.IsNullOrEmpty(item.UserName))" Size="5"></SimpleCheckMark>
                                 </td>
                                 <td class="col-resize">@item.Email</td>
                                 <td class="col-resize">@item.PhoneNumber</td>
-                                <td class="col-resize">@*TODO iban*@</td>
-                                <td class="col-resize">@*TODO adresa*@</td>
+                                <td class="col-resize">@item.IBAN</td>
+                                <td class="col-resize">@item.Adresa</td>
                                 <td class="col-resize">@ViewModel.GetRoleString(item)</td>
                                 <td>
                                     @*<a @onclick="@(() => Delete(item))" style="@(!ViewModel.MoznoVymazat(item) ? "pointer-events: none;" : "") "><i href="#" class="bi bi-x-circle btn btn-danger @(!ViewModel.MoznoVymazat(item) ? "disabled" : "")"></i></a>*@

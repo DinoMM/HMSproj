@@ -57,6 +57,7 @@ namespace AdminModul.ViewModels.Pouzivatelia
 
     public class UniqueUserNameAttribute : ValidationAttribute      //vlastny atribut pre kontrolu existujuceho UserName. Pomoc od AI
     {
+
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
             var dbContext = (DBContext)validationContext.GetService(typeof(DBContext));
@@ -70,4 +71,5 @@ namespace AdminModul.ViewModels.Pouzivatelia
             return ValidationResult.Success;
         }
     }
+
 }

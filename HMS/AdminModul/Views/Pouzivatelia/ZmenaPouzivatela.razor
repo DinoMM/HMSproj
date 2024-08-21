@@ -2,6 +2,18 @@
 @page "/Pouzivatelia/UpdatePouzivatela"
 @inject ZmenaPouzivatelaViewModel ViewModel
 @using Microsoft.AspNetCore.Components.Forms
+@using AdminModul.ViewModels.Pouzivatelia
+
+<FastFormModal @ref="ffucModal"
+               ID="ffusercreate"
+               Header="Údaje o používateľovi"
+               FuncOnSucc="EventCallback.Empty"
+               Inputs="@(new List<(string, string)>() { ("UserName", "string"), ("Heslo", "string"), ("Heslo znova", "string")})">
+</FastFormModal>
+<InfoModal @ref="InfoModPouzivatelAns" ID="infopouzans"
+           Text="" />
+<InfoModal @ref="InfoModSaved" ID="infosaved"
+           Text="Zmeny boli uložené" />
 
 <EditForm Model="ViewModel" OnValidSubmit="Save">
     <DataAnnotationsValidator />
@@ -20,12 +32,11 @@
 
         <div class="tab-content">
             <div class="tab-pane fade show active" id="profile">
-                <div class="row g-3 p-1 align-items-center">
-                    <div class="col-auto">
-                        <label for="ICO1" class="col-form-label">Username:</label>
-                    </div>
+                <div class="row g-3 p-3">
                     <div class="col col-6">
-                        <input type="text" value="@ViewModel.UserName" class="form-control" disabled="disabled" />
+                        <label class="col-form-label">UserName</label>
+                        <input type="text" value="@ViewModel.UserName" class="form-control mb-2" disabled="disabled" />
+                        <button type="button" class="btn btn-primary" disabled="@(!string.IsNullOrEmpty(ViewModel.UserName))" @onclick="PromoteToPouzivatel">Vytvoriť použivateľa</button>
                     </div>
                 </div>
             </div>
@@ -85,36 +96,101 @@
             </div>
 
             <div class="tab-pane fade" id="role">
-                <div class="row g-3 p-1 align-items-center">
-                    <div class="col-auto">
-                        <label for="stavobj" class="col-form-label">Stav:</label>
+                <div class="row g-3 p-3">
+
+                    <div class="col-4">
+                        <label>Určenie</label>
+                        <div class="list-group" style="height: 13rem; overflow-y: auto">
+                            @foreach (var item in ViewModel.RoleVsetky)
+                            {
+                                <a @onclick="@( () => OnClickRole(item))" class="list-group-item list-group-item-action @((ViewModel.RoleUsera.Contains(item) ? "list-group-item-success " : "") + (item == markedRole ? "active" : ""))" style="cursor:pointer">@item.ToString()</a>
+                            }
+
+                        </div>
                     </div>
-                    <div class="col-auto">
-                        @*<select id="stavobj" class="form-select" @bind="@" disabled="@()" aria-label="Default select example">
-                                @
-                                <option value="@">@</option>
-                                @
-                                <option value="@">@</option>
-                                <option value="@">@</option>
-                                <option value="@">@</option>
-                                <option value="@">@</option>
-                                <option value="@">@</option>
-                            </select>*@
+
+                    <div class="col-1"></div>
+                    <div class="col-1">
+                        <div class="d-flex h-100">
+                            <div class="vr"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-5">
+
+                        @*****@
+                        <label>Pridať rolu</label>
+                        <input type="checkbox" class="form-check-input" disabled="@ViewModel.CheckLock" @bind="@ViewModel.CheckBoxRole" onclick="@(() => { ViewModel.VyberRolu(markedRole); ViewModel.SavedRole = false; StateHasChanged(); })" style="width: 1.5em; height: 1.5em;" />
+
+                        @if (ViewModel.CheckBoxRole)
+                        {
+                            if (ViewModel.SavedRole)
+                            {
+
+                                @switch (markedRole)
+                                {
+                                    case RolesOwn.Skladnik:
+                                        {
+                                            if (ViewModel.MiniViewModel is not SkladnikViewModel)
+                                            {
+                                                ViewModel.MiniViewModel = new SkladnikViewModel(ViewModel.GetDB(), ViewModel.User);
+                                            }
+                                            var vwModel = (SkladnikViewModel)ViewModel.MiniViewModel;
+                                            SetLock(vwModel.LockedIn());
+
+                                            <div class="row">
+                                                <label>Určenie skladov</label>
+                                                <div class="list-group w-75" style="height: 10rem; overflow-y: auto">
+                                                    @foreach (var item in vwModel.ZoznamSklad)
+                                                    {
+                                                        <a @onclick="@(() => { vwModel.Vyber(item); vwModel.Saved = false; })" class="list-group-item list-group-item-action @(vwModel.Obsahuje(item) ? "active" : "")" style="cursor:pointer">@item.ID - @item.Nazov</a>
+                                                    }
+                                                </div>
+                                            </div>
+                                            <div class="row col-3">
+                                                <SimpleButton Type="button" Disabled="vwModel.Saved" OnClick="vwModel.Uloz" ZmenaTextu="@(("Uložiť", "Uložiť"))"></SimpleButton>
+                                            </div>
+
+
+                                            break;
+                                        }
+                                    default: break;
+                                }
+                            }
+                            else
+                            {
+                                <p class="h2 text-danger">Uložte zmeny</p>
+                            }
+                        }
+
+                        @*****@
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-3 pt-2 align-items-center justify-content-center">
-        <div class="col-auto">
+
+    <hr>
+
+
+    <div class="row align-items-center justify-content-center">
+        <div class="col-auto mb-2">
             <button type="button" class="btn btn-secondary me-2" @onclick="Close">Späť</button>
-            <button type="submit" class="btn btn-primary me-2">Uložiť</button>
+            <button type="submit" class="btn btn-primary ">Uložiť</button>
         </div>
     </div>
 </EditForm>
 
 @code {
+
+    private FastFormModal ffucModal = new();
+    private InfoModal InfoModPouzivatelAns = new();
+    private InfoModal InfoModSaved = new();
+
+    private RolesOwn markedRole = RolesOwn.None;
+
+
     protected override void OnInitialized()
     {
         if (!ViewModel.ValidateUser())
@@ -133,11 +209,17 @@
         ViewModel.SetUser(founded);
     }
 
+    protected async override Task OnInitializedAsync()
+    {
+        await ViewModel.SetUserRole();
+    }
+
     public async Task Save()
     {
         if (await ViewModel.Uloz())
         {
-
+            await InfoModSaved.OpenModal(true);
+            //Navigator.NavigateTo(Navigator.RemoveLastUrl());
         }
     }
 
@@ -145,4 +227,107 @@
     {
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
+
+    public async Task PromoteToPouzivatel()
+    {
+        if (!string.IsNullOrEmpty(ViewModel.UserName))
+        {
+            return;
+        }
+
+        if (!await ffucModal.OpenModal(true))
+        {
+            return;
+        }
+
+        InfoModPouzivatelAns.UpdateText("Osobe boli priradené údaje úspešne.");
+        var succ = await ViewModel.PromoteToPouzivatel((string)ffucModal.Outputs[0], (string)ffucModal.Outputs[1], (string)ffucModal.Outputs[2], InfoModPouzivatelAns);
+
+        await InfoModPouzivatelAns.OpenModal(true);
+        if (succ)
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+        }
+    }
+
+    public void OnClickRole(RolesOwn role)
+    {
+        markedRole = role;
+        ViewModel.CheckBoxRole = ViewModel.RoleUsera.Contains(role);
+        ViewModel.MiniViewModel = null;
+    }
+
+    public void SetLock(bool hodnota)
+    {
+        if (ViewModel.CheckLock != hodnota)
+        {
+            ViewModel.CheckLock = hodnota;
+            StateHasChanged();
+        }
+    }
+
+    #region Triedy
+    private class SkladnikViewModel
+    {
+        public List<SkladUzivatel> ZoznamOznacen = new();
+        public List<Sklad> ZoznamSklad = new();
+
+        public bool Saved { get; set; } = true;
+
+
+        readonly DBContext _db;
+        readonly IdentityUserOwn _user;
+        public SkladnikViewModel(DBContext db, IdentityUserOwn user)
+        {
+            _db = db;
+            _user = user;
+
+            ZoznamSklad = _db.Sklady.ToList();
+            ZoznamOznacen = _db.SkladUzivatelia.Where(x => x.Uzivatel == _user.Id).ToList();
+        }
+
+        public void Vyber(Sklad sklad)  //ak neni tak sa prida, ak je tak sa odobere
+        {
+            var found = ZoznamOznacen.FirstOrDefault(x => x.Sklad == sklad.ID);
+            if (found == null)
+            {
+                ZoznamOznacen.Add(new SkladUzivatel()
+                {
+                    Sklad = sklad.ID,
+                    Uzivatel = _user.Id
+                });
+            }
+            else
+            {
+                ZoznamOznacen.Remove(found);
+            }
+        }
+
+        public bool Obsahuje(Sklad sklad)
+        {
+            return ZoznamOznacen.FirstOrDefault(x => x.Sklad == sklad.ID) != null;
+        }
+
+        public void Uloz()
+        {
+            var zozOzn = _db.SkladUzivatelia.Where(x => x.Uzivatel == _user.Id).ToList();
+            foreach (var item in zozOzn)        //najskor vymazeme vsetky zaznamy
+            {
+                _db.SkladUzivatelia.Remove(item);
+            }
+            _db.SaveChanges();
+            foreach (var item in ZoznamOznacen)        //potom pridame
+            {
+                _db.SkladUzivatelia.Add(item);
+            }
+            _db.SaveChanges();
+            Saved = true;
+        }
+
+        public bool LockedIn()
+        {
+            return ZoznamOznacen.Count > 0 || !Saved;
+        }
+    }
+    #endregion
 }

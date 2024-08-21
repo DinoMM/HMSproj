@@ -95,6 +95,39 @@ namespace DBLayer
             return roles;
         }
 
+        public async Task<bool> ChangePassword(string userId, string password, string username)
+        {
+            var userfound = await _userManager.FindByIdAsync(userId);
+            if (userfound != null)
+            {
+                await _userManager.RemovePasswordAsync(userfound);
+                await _userManager.AddPasswordAsync(userfound, password);
+                await _userManager.SetUserNameAsync(userfound, username);
+                return true;
+            }
+            return false;
+        }
+
+        public async Task<bool> AddRoleToUser(string userId, RolesOwn roleName)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+            return (await _userManager.AddToRoleAsync(user, roleName.ToString())).Succeeded;
+        }
+
+        public async Task<bool> RemoveRoleFromUser(string userId, RolesOwn role)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+            return (await _userManager.RemoveFromRoleAsync(user, role.ToString())).Succeeded;
+        }
+
 
     }
     public enum RolesOwn
