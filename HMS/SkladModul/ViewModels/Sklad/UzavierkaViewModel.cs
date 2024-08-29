@@ -23,8 +23,10 @@ namespace SkladModul.ViewModels.Sklad
         private List<PolozkaSkladuMnozstvo> zoznamPoloziekSkladuMnozstva = new(); //zoznam poloziek s mnozstvami na zaciatku obdobia
         private List<PolozkaSkladu> zoznamAktualnehoMnozstva = new(); //zoznam aktualneho mnozstva po zohladneni prijmov a vydajov
         private List<PolozkaSkladu> zoznamPrijateho = new(); //zoznam prijatych mnozstiev
-        private List<PolozkaSkladu> zoznamPrijatehoZPrijemok = new(); //zoznam prijatych mnozstiev len z priejmok
+        private List<PolozkaSkladu> zoznamPrijatehoZPrijemok = new(); //zoznam prijatych mnozstiev len z prijemok
         private List<PolozkaSkladu> zoznamVydateho = new(); //zoznam vydatych mnozstiev
+        private List<PolozkaSkladu> zoznamPrevodiekZoSkladu = new(); //zoznam vydatych mnozstiev z prevodiek z tohto skladu
+        
 
         public bool NacitavaniePoloziek = true;
 
@@ -66,7 +68,9 @@ namespace SkladModul.ViewModels.Sklad
         }
         public string GetTotalSumVydajky()
         {
-            return zoznamVydateho.Sum(x => x.CelkovaCena).ToString("F3");
+            var sum1 = zoznamVydateho.Sum(x => x.CelkovaCena);
+            var sum2 = zoznamPrevodiekZoSkladu.Sum(x => x.CelkovaCena);
+            return (zoznamVydateho.Sum(x => x.CelkovaCena) - zoznamPrevodiekZoSkladu.Sum(x => x.CelkovaCena)).ToString("F3");
         }
 
         public void SetProp(Ssklad sk, string ob)
@@ -97,6 +101,8 @@ namespace SkladModul.ViewModels.Sklad
             var zoznamPrevodiek = Ssklad.GetPoctyZPrevodiek(Sklad, Obdobie, in _db);    //pripocitanie prevodiek do prijateho mnozstva
             zoznamPrijateho.AddRange(zoznamPrevodiek);
             zoznamPrijateho = PolozkaSkladu.ZosumarizujListPoloziek(in zoznamPrijateho);
+
+            zoznamPrevodiekZoSkladu = Ssklad.GetPoctyZPrevodiekZoSkladu(Sklad, Obdobie, in _db);    //pripocitanie prevodiek zo skladu do prijateho mnozstva
 
             NacitavaniePoloziek = false;
 

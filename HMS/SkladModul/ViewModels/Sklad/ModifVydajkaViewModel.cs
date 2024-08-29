@@ -129,10 +129,12 @@ namespace SkladModul.ViewModels.Sklad
 
                 Polozka.SkladDo = skl.ID;
                 Polozka.SkladDoX = skl;
+                Polozka.ObdobieDo = SkladObdobie.GetActualObdobieFromSklad(skl, _db);
                 return true;
             }
             Polozka.SkladDo = null;
             Polozka.SkladDoX = null;
+            Polozka.ObdobieDo = null;
             return true;
         }
 

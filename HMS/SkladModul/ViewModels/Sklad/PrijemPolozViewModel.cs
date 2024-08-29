@@ -41,7 +41,7 @@ namespace SkladModul.ViewModels.Sklad
             var prijemky = _db.Prijemky.Include(x => x.SkladX)
                 .Where(x => x.Obdobie >= Obdobie && x.Sklad == Sklad.ID)
                 .ToList();     //zoznam prijemok
-            var prevodky = _db.Vydajky.Include(x => x.SkladX).Include(x => x.SkladDoX).Where(x => /*x.Obdobie >= Obdobie &&*/ x.SkladDo == Sklad.ID)
+            var prevodky = _db.Vydajky.Include(x => x.SkladX).Include(x => x.SkladDoX).Where(x => x.ObdobieDo >= Obdobie && x.SkladDo == Sklad.ID)
                 .ToList();      //zoznam prevodiek urcene pre aktualny sklad, ignorujeme obdobie kedze mozu mat rozdielne obdobia
 
             List<PohSkup> spojPrAPre = new(prijemky); //spojenie zoznamov

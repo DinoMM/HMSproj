@@ -256,7 +256,20 @@ namespace DBLayer.Models
 
         public static List<PolozkaSkladu> GetPoctyZPrevodiek(Sklad skladDo, DateTime obdobie, in DBContext db)
         {
-            var prevodky = db.Vydajky.Where(x => x.Spracovana == true && x.SkladDo == skladDo.ID && x.Obdobie == obdobie).ToList();  //vsetky schvalene prevodky
+            var prevodky = db.Vydajky.Where(x => x.Spracovana == true && x.SkladDo == skladDo.ID && x.ObdobieDo == obdobie).ToList();  //vsetky schvalene prevodky
+
+            List<PolozkaSkladu> celkoveMnozstvaZPrevodky = new();   //finalny list bude obsahovat vsetky schvalene polozky z predoky
+            foreach (var ytem in prevodky) // prejde vsetky prevodky
+            {
+                celkoveMnozstvaZPrevodky.AddRange(Vydajka.ZosumarizujPolozkyVydajky(ytem, in db)); //tento list prida na koniec finalneho listu
+            }
+
+            return PolozkaSkladu.ZosumarizujListPoloziek(in celkoveMnozstvaZPrevodky);
+        }
+
+        public static List<PolozkaSkladu> GetPoctyZPrevodiekZoSkladu(Sklad skladZ, DateTime obdobie, in DBContext db)
+        {
+            var prevodky = db.Vydajky.Where(x => x.Spracovana == true && x.Sklad == skladZ.ID && x.Obdobie == obdobie && !string.IsNullOrEmpty(x.SkladDo)).ToList();  //vsetky schvalene prevodky
 
             List<PolozkaSkladu> celkoveMnozstvaZPrevodky = new();   //finalny list bude obsahovat vsetky schvalene polozky z predoky
             foreach (var ytem in prevodky) // prejde vsetky prevodky
