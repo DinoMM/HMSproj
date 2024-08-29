@@ -17,6 +17,7 @@ namespace DBLayer.Models
         public string? SkladDo { get; set; } = default!;
         public Sklad? SkladDoX { get; set; }
         public DateTime Obdobie { get; set; } = SkladObdobie.GetSeassonFromToday();
+        public DateTime? ObdobieDo { get; set; } = SkladObdobie.GetSeassonFromToday();
 
     }
 }
