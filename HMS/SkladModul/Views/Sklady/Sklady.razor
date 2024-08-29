@@ -1,6 +1,6 @@
 ﻿@namespace SkladModul
-@page "/Dodavatelia"
-@inject DodavateliaViewModel ViewModel
+@page "/Sklady"
+@inject SkladyViewModel ViewModel
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
               Text="Naozaj chcete odstrániť tento riadok?<br>POZOR môžu sa vymazať prvky, ktoré sú spojené s touto položkou!"
@@ -8,7 +8,7 @@
               FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
 <InfoModal @ref="InfoModHasConneciton" ID="infomodalhascon"
-           Text="Nemožno vymazať organizáciu lebo je pridelená k objednávkam.">
+           Text="Nemožno vymazať sklad lebo je pridelený k položke.">
 </InfoModal>
 
 <div class="container">
@@ -18,13 +18,13 @@
         <div class="col-1"></div>
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="5" PlaceHolder="Vyhľadaj organizáciu..." TableID="tableid"></SearchInput>
+            <SearchInput NumCols="2" PlaceHolder="Vyhľadaj sklad..." TableID="tableid"></SearchInput>
         </div>
 
         <div class="col-8">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">➕Pridať organizáciu</button>
+                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">➕Vytvoriť sklad</button>
                 <button type="button" @onclick="Open" disabled="@(marked == null && !ViewModel.ValidateUserCRUD())" class="btn btn-primary">Otvoriť</button>
             </div>
         </div>
@@ -38,11 +38,8 @@
             <SimpleTable ID="tableid">
                 <THEAD>
 
-                <th class="col-resize" scope="col">IČO</th>
+                <th class="col-resize" scope="col">Označenie</th>
                 <th class="col-resize" scope="col">Názov</th>
-                <th class="col-resize" scope="col">Obec</th>
-                <th class="col-resize" scope="col">Adresa</th>
-                <th class="col-resize" scope="col">IBAN</th>
                 <th class="col-resize" scope="col"></th>
 
                 </THEAD>
@@ -55,15 +52,12 @@
                     }
                     else
                     {
-                        @foreach (var item in ViewModel.ZoznamDodavatelov)
+                        @foreach (var item in ViewModel.ZoznamSkladov)
                         {
 
                             <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
-                                <td class="col-resize">@item.ICO</td>
+                                <td class="col-resize">@item.ID</td>
                                 <td class="col-resize">@item.Nazov</td>
-                                <td class="col-resize">@item.Obec</td>
-                                <td class="col-resize">@item.Adresa</td>
-                                <td class="col-resize">@item.Iban</td>
                                 <td>
                                     @if (ViewModel.ValidateUserCRUD())
                                     {
@@ -89,7 +83,7 @@
 </div>
 
 @code {
-    private DBLayer.Models.Dodavatel? marked = null;
+    private DBLayer.Models.Sklad? marked = null;
     private ApproveModal AprovMod = new();
     private InfoModal InfoModHasConneciton = new();
 
@@ -119,18 +113,18 @@
             if (ViewModel.ValidateUserCRUD())
             {
                 objectHolder.Add(marked);
-                Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDodavatel"));
+                Navigator.NavigateTo(Navigator.AddNextUrl("/CRUSklad"));
             }
         }
     }
 
-    public async Task Delete(DBLayer.Models.Dodavatel user)
+    public async Task Delete(DBLayer.Models.Sklad sklad)
     {
-        if (ViewModel.MoznoVymazat(user))
+        if (ViewModel.MoznoVymazat(sklad))
         {
             if (await AprovMod.OpenModal(true))
             {
-                await ViewModel.Vymazat(user);
+                ViewModel.Vymazat(sklad);
             }
         }
         else
@@ -143,7 +137,7 @@
     {
         if (ViewModel.ValidateUserCRUD())
         {
-            Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDodavatel"));
+            Navigator.NavigateTo(Navigator.AddNextUrl("/CRUSklad"));
         }
     }
 }

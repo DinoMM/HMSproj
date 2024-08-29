@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DBLayer;
+using DBLayer.Models;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using UniComponents;
@@ -35,11 +36,12 @@ namespace HMS.ViewModels
             }
             modulesList = new ObservableCollection<(string, string, List<RolesOwn>)>();
             modulesList.Add(("Objednávky", "/Objednavka", DBLayer.Models.Objednavka.POVOLENEROLE));
-            modulesList.Add(("Sklad", "/Sklad", DBLayer.Models.Sklad.POVOLENEROLE));
+            modulesList.Add(("Skladové hospodárstvo", "/Sklad", DBLayer.Models.Sklad.ROLE_R_SKLAD));
             modulesList.Add(("Používatelia", "/Pouzivatelia", new() { RolesOwn.Admin }));
             modulesList.Add(("Správa profesií", "/SpravaRoli", IdentityUserOwn.ROLE_CRUD_ROLI));
             modulesList.Add(("Zamestnanci", "/Zam", IdentityUserOwn.ROLE_R_ZAMESTNANCI));
             modulesList.Add(("Organizácie", "/Dodavatelia", IdentityUserOwn.ROLE_R_ZAMESTNANCI));
+            modulesList.Add(("Sklady", "/Sklady", Sklad.ROLE_R_SKLAD));
 
 
         }

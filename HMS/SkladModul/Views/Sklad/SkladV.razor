@@ -152,7 +152,7 @@
     protected override void OnInitialized()
     {
         ViewModel.NacitaneMnozstvo = false;
-        if (!Sklad.POVOLENEROLE.Contains(UserService.LoggedUserRole))
+        if (!Sklad.ROLE_R_SKLAD.Contains(UserService.LoggedUserRole))
         {
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
         }

@@ -67,8 +67,6 @@ namespace SkladModul.ViewModels.Dodavatelia
 
         public async Task<bool> Uloz()
         {
-
-
             if (!Existuje())
             {
                 Dod.ICO = ICO;
@@ -98,7 +96,6 @@ namespace SkladModul.ViewModels.Dodavatelia
 
     public class UniqueICOAttribute : ValidationAttribute      //vlastny atribut pre kontrolu existujuceho ICO. Pomoc od AI
     {
-
         protected override ValidationResult IsValid(object value, ValidationContext validationContext)
         {
             var dbContext = (DBContext)validationContext.GetService(typeof(DBContext));

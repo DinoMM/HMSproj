@@ -19,6 +19,7 @@ using LudskeZdrojeModul.ViewModels.SpravaRoli;
 using SkladModul;
 using SkladModul.ViewModels.Dodavatelia;
 using LudskeZdrojeModul.ViewModels.Zamestnanci;
+using SkladModul.ViewModels.Sklady;
 
 
 namespace HMS
@@ -110,6 +111,9 @@ namespace HMS
 
             builder.Services.AddTransient<ZamViewModel>();
             builder.Services.AddTransient<CRUZamestnanciViewModel>();
+
+            builder.Services.AddTransient<SkladyViewModel>();
+            builder.Services.AddTransient<CRUSkladViewModel>();
             #endregion
             #region UctovnyModul
 

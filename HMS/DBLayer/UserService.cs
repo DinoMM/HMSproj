@@ -68,16 +68,16 @@ namespace DBLayer
             RolesOwn role;
             if (!Enum.TryParse((await _userManager.GetRolesAsync(user)).FirstOrDefault(), out role)) //ziskanie roly usera, prvej roly
             {
-                return false;
+                role = RolesOwn.None;
             }
-
+            
             var rolesUser = await _userManager.GetRolesAsync(user); // ziskanie vsetkych roli usera
             foreach (var item in rolesUser)
             {
                 RolesOwn rrole;
                 if (!Enum.TryParse(item, out rrole)) //ziskanie roly usera
                 {
-                    return false;
+                    continue;
                 }
                 LoggedUserRoles.Add(rrole);
             }

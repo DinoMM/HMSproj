@@ -19,7 +19,7 @@ namespace DBLayer.Models
         /// povolene role, aj keby bol uzivatel pripojeny ku skladu tak musi mat prislusnu rolu inak len na zobrazenie
         /// </summary>
         [NotMapped]
-        public static List<RolesOwn> POVOLENEROLE { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.Nakupca, RolesOwn.Skladnik, };
+        public static List<RolesOwn> ROLE_R_SKLAD { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.Nakupca, RolesOwn.Skladnik, };
         /// <summary>
         /// povolene role pre pridavanie a mazanie poloziek, zobrazovanie celeho skladu poloziek
         /// </summary>
@@ -30,6 +30,11 @@ namespace DBLayer.Models
         /// </summary>
         [NotMapped]
         public static List<RolesOwn> SKLADOVEPOHYBYROLE { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Skladnik };
+        /// <summary>
+        /// povolenie pre prijem,vydaj,uzavretie skladu, nakupca by sa nemal starat o tieto veci
+        /// </summary>
+        [NotMapped]
+        public static List<RolesOwn> ROLE_CRUD_SKLAD { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Nakupca };
 
         /// <summary>
         /// Prejde zoznam prijímacích položiek a zistí, či je možné ich prijať.

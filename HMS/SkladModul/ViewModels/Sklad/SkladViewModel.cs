@@ -51,9 +51,16 @@ namespace SkladModul.ViewModels.Sklad
             {
                 var skladuziv = _db.SkladUzivatelia.Include(x => x.SkladX).Where(x => x.Uzivatel == _userService.LoggedUser.Id).ToList();
 
-                if (skladuziv.Count > 0)
+                if (skladuziv.Count > 0 || _userService.IsLoggedUserInRoles(Ssklad.ZMENAPOLOZIEKROLE))
                 {
-                    Sklady = skladuziv.Select(x => x.SkladX).ToList();
+                    if (_userService.IsLoggedUserInRoles(Ssklad.ZMENAPOLOZIEKROLE))
+                    {
+                        Sklady = _db.Sklady.ToList();
+                    }
+                    else
+                    {
+                        Sklady = skladuziv.Select(x => x.SkladX).ToList();
+                    }
                     Sklad = Sklady.FirstOrDefault()!;
                     Obdobie = Ssklad.ShortFromObdobie(SkladObdobie.GetActualObdobieFromSklad(Sklad, _db)); //ziska aktualne obdobie, ak neexistuje tak sa vytvori
                     AktualneObdobie = true; //mali by sme mat urcite aktualne obdobie po vytvoreni ViewModela
