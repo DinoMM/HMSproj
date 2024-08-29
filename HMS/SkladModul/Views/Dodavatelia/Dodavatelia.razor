@@ -1,6 +1,149 @@
 ﻿@namespace SkladModul
 @page "/Dodavatelia"
+@inject DodavateliaViewModel ViewModel
+
+<ApproveModal @ref=AprovMod ID="deletemodal"
+              Text="Naozaj chcete odstrániť tento riadok?<br>POZOR môžu sa vymazať prvky, ktoré sú spojené s touto položkou!"
+              FuncOnSucc="EventCallback.Empty"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+<InfoModal @ref="InfoModHasConneciton" ID="infomodalhascon"
+           Text="Nemožno vymazať organizáciu lebo je pridelená k objednávkam.">
+</InfoModal>
+
+<div class="container">
+
+    <div class="row pb-1">
+
+        <div class="col-1"></div>
+
+        <div class="col-3 d-flex justify-content-bottom mb-2">
+            <SearchInput NumCols="5" PlaceHolder="Vyhľadaj organizáciu..." TableID="tableid"></SearchInput>
+        </div>
+
+        <div class="col-8">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
+                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">➕Pridať organizáciu</button>
+                <button type="button" @onclick="Open" disabled="@(marked == null && !ViewModel.ValidateUserCRUD())" class="btn btn-primary">Otvoriť</button>
+            </div>
+        </div>
+
+        <div class="col-1"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-12" style="max-height: 30rem;overflow: auto;">
+            <SimpleTable ID="tableid">
+                <THEAD>
+
+                <th class="col-resize" scope="col">IČO</th>
+                <th class="col-resize" scope="col">Názov</th>
+                <th class="col-resize" scope="col">Obec</th>
+                <th class="col-resize" scope="col">Adresa</th>
+                <th class="col-resize" scope="col">IBAN</th>
+                <th class="col-resize" scope="col"></th>
+
+                </THEAD>
+                <TBODY>
+                    @if (ViewModel.NacitavaniePoloziek)
+                    {
+                        <div class="ms-1">
+                            <SpinnerLoading Size="2.0"></SpinnerLoading>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var item in ViewModel.ZoznamDodavatelov)
+                        {
+
+                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
+                                <td class="col-resize">@item.ICO</td>
+                                <td class="col-resize">@item.Nazov</td>
+                                <td class="col-resize">@item.Obec</td>
+                                <td class="col-resize">@item.Adresa</td>
+                                <td class="col-resize">@item.Iban</td>
+                                <td>
+                                    @if (ViewModel.ValidateUserCRUD())
+                                    {
+                                        <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
+                                    }
+                                </td>
+
+                            </tr>
+                        }
+                    }
+                    <span id="observerTarget"></span>
+                </TBODY>
+
+            </SimpleTable>
+        </div>
+        <div class="col-1"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-12"></div>
+    </div>
+
+</div>
 
 @code {
+    private DBLayer.Models.Dodavatel? marked;
+    private ApproveModal AprovMod = new();
+    private InfoModal InfoModHasConneciton = new();
 
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.NacitajZoznamy();
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public void Open()
+    {
+        if (marked != null)
+        {
+            if (ViewModel.ValidateUserCRUD())
+            {
+                objectHolder.Add(marked);
+                Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDodavatel"));
+            }
+        }
+    }
+
+    public async Task Delete(DBLayer.Models.Dodavatel user)
+    {
+        if (ViewModel.MoznoVymazat(user))
+        {
+            if (await AprovMod.OpenModal(true))
+            {
+                await ViewModel.Vymazat(user);
+            }
+        }
+        else
+        {
+            await InfoModHasConneciton.OpenModal();
+        }
+    }
+
+    public void Create()
+    {
+        if (ViewModel.ValidateUserCRUD())
+        {
+            Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDodavatel"));
+        }
+    }
 }

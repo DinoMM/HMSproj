@@ -39,7 +39,8 @@ namespace HMS.ViewModels
             modulesList.Add(("Používatelia", "/Pouzivatelia", new() { RolesOwn.Admin }));
             modulesList.Add(("Správa profesií", "/SpravaRoli", IdentityUserOwn.ROLE_CRUD_ROLI));
             modulesList.Add(("Zamestnanci", "/Zam", IdentityUserOwn.ROLE_R_ZAMESTNANCI));
-            
+            modulesList.Add(("Organizácie", "/Dodavatelia", IdentityUserOwn.ROLE_R_ZAMESTNANCI));
+
 
         }
 

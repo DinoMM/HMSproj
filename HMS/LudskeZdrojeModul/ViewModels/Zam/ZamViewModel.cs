@@ -65,10 +65,7 @@ namespace LudskeZdrojeModul.ViewModels.Zamestnanci
             ZoznamZamestnancov.Remove(user);
             ZoznamPouzivatelovRoli.Remove(ZoznamPouzivatelovRoli.FirstOrDefault(x => x.Item1 == user));
             await _userService.DeleteUser(user);
-            
-
         }
-
 
         public string GetRoleString(IdentityUserOwn user)
         {

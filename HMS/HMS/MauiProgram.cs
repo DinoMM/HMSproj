@@ -96,6 +96,7 @@ namespace HMS
             builder.Services.AddTransient<UzavierkaViewModel>();
 
             builder.Services.AddTransient<DodavateliaViewModel>();
+            builder.Services.AddTransient<CRUDodavatelViewModel>();
             #endregion
             #region AdminModul
             builder.Services.AddTransient<PouzivateliaViewModel>();

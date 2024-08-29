@@ -1,0 +1,121 @@
+﻿@namespace SkladModul
+@page "/Dodavatelia/CRUDodavatel"
+@inject CRUDodavatelViewModel ViewModel
+
+@using Microsoft.AspNetCore.Components.Forms
+
+<InfoModal @ref="InfoModSaved" ID="infosaved"
+           Text="Zmeny boli uložené" />
+
+<EditForm Model="ViewModel" OnValidSubmit="Save" OnInvalidSubmit="OnIvalid">
+    <DataAnnotationsValidator />
+    <div class="container px-5">
+        <div class="row">
+            <div class="col">
+                <h1 class="text-center">Informácie o organizácií</h1>
+            </div>
+        </div>
+
+        <div class="row">
+
+            <div class="col">
+
+                <div class="row">
+                    <div class="col-8">
+                        <label>IČO*</label>
+                        <InputText @bind-Value="@ViewModel.ICO" class="form-control" disabled="@(ViewModel.Existuje())" placeholder="Identifikačné číslo organizácie" />
+                        <ValidationMessage For="@(() => ViewModel.ICO)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-8">
+                        <label>Názov*</label>
+                        <InputText @bind-Value="@ViewModel.Nazov" class="form-control" placeholder="Názov" />
+                        <ValidationMessage For="@(() => ViewModel.Nazov)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-8">
+                        <label>Obec*</label>
+                        <InputText @bind-Value="@ViewModel.Obec" class="form-control" placeholder="Obec" />
+                        <ValidationMessage For="@(() => ViewModel.Obec)" />
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col">
+                <div class="row">
+                    <div class="col-9">
+                        <label>Adresa*</label>
+                        <InputTextArea @bind-Value="@ViewModel.Adresa" class="form-control" placeholder="Adresa" />
+                        <ValidationMessage For="@(() => ViewModel.Adresa)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-9">
+                        <label>IBAN</label>
+                        <InputText @bind-Value="@ViewModel.IBAN" class="form-control" placeholder="IBAN" />
+                        <ValidationMessage For="@(() => ViewModel.IBAN)" />
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row pt-2">
+            <div class="col text-center">
+                <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
+                <SimpleButton Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
+            </div>
+        </div>
+
+    </div>
+</EditForm>
+
+@code {
+    private InfoModal InfoModSaved = new();
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        var founded = objectHolder.Remove<DBLayer.Models.Dodavatel>();   //pokusi sa ziskat objekt z uloziska
+        if (founded == null)
+        {
+            return;
+        }
+
+        ViewModel.SetProp(founded);
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public async Task Save()
+    {
+        if (await ViewModel.Uloz())
+        {
+            await InfoModSaved.OpenModal(true);
+        }
+    }
+
+    public async Task OnIvalid(EditContext editContext)
+    {
+        if (ViewModel.Existuje() &&
+            ViewModel.Dod.ICO == ViewModel.ICO)    //ak model ma ico tak ignorujeme error ze ico uz existuje
+        {
+            if (editContext.GetValidationMessages().Count() == 1 &&
+                editContext.GetValidationMessages().Any(x => x == "IČO už existuje."))
+            {
+                await Save();
+            }
+        }
+    }
+}
