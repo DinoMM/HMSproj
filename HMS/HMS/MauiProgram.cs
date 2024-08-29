@@ -15,6 +15,10 @@ using SkladModul.ViewModels.Sklad;
 using AdminModul.ViewModels.Pouzivatelia;
 using HMS.Components.Services;
 using Blazored.SessionStorage;
+using LudskeZdrojeModul.ViewModels.SpravaRoli;
+using SkladModul;
+using SkladModul.ViewModels.Dodavatelia;
+using LudskeZdrojeModul.ViewModels.Zamestnanci;
 
 
 namespace HMS
@@ -52,8 +56,10 @@ namespace HMS
 
             }).AddEntityFrameworkStores<DBContext>()
                 .AddDefaultTokenProviders()
-                .AddRoles<IdentityRole>();      //(pomohol som si z internetu tutoriály/AI)
+                .AddRoles<IdentityRole>()
+                .AddUserValidator<CustomUserValidator<IdentityUserOwn>>();      //(pomohol som si z internetu tutoriály/AI)
 
+            
             //builder.Services.AddBlazorWebView()
             // .AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUserOwn>>();
 
@@ -62,6 +68,7 @@ namespace HMS
             //builder.Services.TryAddScoped<AuthenticationStateProvider, CurrentThreadUserAuthenticationStateProvider>();
 
             builder.Services.AddSingleton<UserService>();
+            builder.Services.AddSingleton<RoleService>();
             builder.Services.AddSingleton<DbInitializeService>();
             builder.Services.AddSingleton<Navigator>();
             builder.Services.AddSingleton<ObjectHolder>();
@@ -74,6 +81,7 @@ namespace HMS
             #region ViewModels
             builder.Services.AddScoped<IndexViewModel>();
 
+            #region SkladModul
             builder.Services.AddTransient<AddObjednavViewModel>();
             builder.Services.AddScoped<PridPolozkyViewModel>();
             builder.Services.AddTransient<ObjednavkaViewModel>();
@@ -87,9 +95,29 @@ namespace HMS
             builder.Services.AddScoped<ModifVydajkaViewModel>();
             builder.Services.AddTransient<UzavierkaViewModel>();
 
+            builder.Services.AddTransient<DodavateliaViewModel>();
+            #endregion
+            #region AdminModul
             builder.Services.AddTransient<PouzivateliaViewModel>();
             builder.Services.AddTransient<AddPouzivatelViewModel>();
             builder.Services.AddTransient<ZmenaPouzivatelaViewModel>();
+            #endregion
+            #region LudskeZdrojeModul
+            builder.Services.AddTransient<SpravaRoliViewModel>();
+            builder.Services.AddTransient<AddRoleViewModel>();
+            builder.Services.AddTransient<ZmenaRoleViewModel>();
+
+            builder.Services.AddTransient<ZamViewModel>();
+            builder.Services.AddTransient<CRUZamestnanciViewModel>();
+            #endregion
+            #region UctovnyModul
+
+            #endregion
+            #region NakupnyModul
+
+            #endregion
+
+
             #endregion
 
 

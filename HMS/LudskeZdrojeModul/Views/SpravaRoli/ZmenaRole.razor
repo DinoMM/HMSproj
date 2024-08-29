@@ -1,0 +1,90 @@
+﻿@namespace LudskeZdrojeModul
+@page "/SpravaRoli/ZmenaRole"
+@inject ZmenaRoleViewModel ViewModel
+
+<InfoModal @ref="InfoMod" ID="infosaved"
+           Text="Profesia bola upravená úspešne." />
+<InfoModal @ref="InfoModExist" ID="infoexist"
+           Text="Profesia už existuje." />
+
+<EditForm Model="ViewModel" OnValidSubmit="Update">
+    <DataAnnotationsValidator />
+    <div class="container px-5">
+        <div class="row">
+            <div class="col">
+                <h1 class="text-center">Úprava profesie</h1>
+            </div>
+        </div>
+
+        <div class="row">
+
+            <div class="col">
+
+                <div class="row">
+                    <div class="col-6">
+                        <label>Názov profesie</label>
+                        <InputText @bind-Value="@ViewModel.RoleName" class="form-control" placeholder="Názov profesie" />
+                        <ValidationMessage For="@(() => ViewModel.RoleName)" />
+                    </div>
+                </div>
+
+
+
+            </div>
+
+
+
+        </div>
+
+        <div class="row pt-2">
+            <div class="col text-center">
+                <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
+                <SimpleButton Type="submit" ZmenaTextu="@(("Upraviť", "Upraviť"))"></SimpleButton>
+            </div>
+        </div>
+
+    </div>
+</EditForm>
+
+
+@code
+{
+    private InfoModal InfoMod = new();
+    private InfoModal InfoModExist = new();
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        var founded = objectHolder.Remove<Microsoft.AspNetCore.Identity.IdentityRole>();   //pokusi sa ziskat objekt z uloziska
+        if (founded == null)
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        ViewModel.SetRole(founded);
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public async Task Update()
+    {
+        if (await ViewModel.Uloz())
+        {
+            await InfoMod.OpenModal(true);
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+        }
+        else
+        {
+            await InfoModExist.OpenModal();
+        }
+    }
+}

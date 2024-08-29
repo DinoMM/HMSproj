@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query.Internal;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using UniComponents;
@@ -80,6 +81,7 @@ namespace AdminModul.ViewModels.Pouzivatelia
             PhoneNumber = user.PhoneNumber ?? "";
             IBAN = user.IBAN ?? "";
             Adresa = user.Adresa ?? "";
+            
 
             RoleVsetky = Enum.GetValues(typeof(RolesOwn)).Cast<RolesOwn>().ToList();
             var first = RoleVsetky.FirstOrDefault();
@@ -92,7 +94,7 @@ namespace AdminModul.ViewModels.Pouzivatelia
 
         public async Task SetUserRole()
         {
-            RoleUsera = new(await _userService.GetRolesFromUser(User));
+            RoleUsera = new(await _userService.GetRolesOwnFromUser(User));
             CheckBoxRole = RoleUsera.Contains(RolesOwn.None);
         }
 
@@ -105,15 +107,24 @@ namespace AdminModul.ViewModels.Pouzivatelia
             User.PhoneNumber = PhoneNumber;
             User.IBAN = IBAN;
             User.Adresa = Adresa;
-
-            _db.SaveChanges();
-
-            var zozOzn = _db.UserRoles.Where(x => x.UserId == User.Id).ToList();
-            var zozRole = _db.Roles.ToList();
-            foreach (var item in zozOzn)        //najskor vymazeme vsetky zaznamy
+            if (!await _userService.UpdateUser(User))
             {
-                var role = zozRole.FirstOrDefault(x => x.Id == item.RoleId).Name;
-                await _userService.RemoveRoleFromUser(User.Id, (RolesOwn)Enum.Parse(typeof(RolesOwn), role));
+                return false;
+            }
+            await _db.Entry(User).ReloadAsync();
+
+            //var zozOzn = _db.UserRoles.Where(x => x.UserId == User.Id).ToList();
+            //var zozRole = _db.Roles.ToList();
+            //foreach (var item in zozOzn)        //najskor vymazeme vsetky zaznamy
+            //{
+            //    var role = zozRole.FirstOrDefault(x => x.Id == item.RoleId).Name;
+            //    await _userService.RemoveRoleFromUser(User.Id, (RolesOwn)Enum.Parse(typeof(RolesOwn), role));
+            //}
+
+            var zozUsRol = await _userService.GetRolesOwnFromUser(User);
+            foreach (var item in zozUsRol)        //najskor vymazeme vsetky zaznamy
+            {
+                await _userService.RemoveRoleFromUser(User.Id, item);
             }
             foreach (var item in RoleUsera)        //potom pridame role
             {
@@ -186,6 +197,8 @@ namespace AdminModul.ViewModels.Pouzivatelia
 
                 await _userService.ChangePassword(User.Id, heslo, meno);
 
+                await _db.Entry(User).ReloadAsync();
+
                 return true;
             }
             modal.UpdateText(errString);
@@ -208,6 +221,6 @@ namespace AdminModul.ViewModels.Pouzivatelia
         {
             return _db;
         }
-        
+
     }
 }

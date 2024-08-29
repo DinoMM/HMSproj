@@ -27,7 +27,7 @@ namespace HMS.ViewModels
             //_db = database;
             _userService = userService;
 
-            
+
             if (userService.LoggedUser == null)
             {       //kontrola prihlasenia
                 //vyhodit prihlasovacie okno
@@ -37,6 +37,9 @@ namespace HMS.ViewModels
             modulesList.Add(("Objednávky", "/Objednavka", DBLayer.Models.Objednavka.POVOLENEROLE));
             modulesList.Add(("Sklad", "/Sklad", DBLayer.Models.Sklad.POVOLENEROLE));
             modulesList.Add(("Používatelia", "/Pouzivatelia", new() { RolesOwn.Admin }));
+            modulesList.Add(("Správa profesií", "/SpravaRoli", IdentityUserOwn.ROLE_CRUD_ROLI));
+            modulesList.Add(("Zamestnanci", "/Zam", IdentityUserOwn.ROLE_R_ZAMESTNANCI));
+            
 
         }
 

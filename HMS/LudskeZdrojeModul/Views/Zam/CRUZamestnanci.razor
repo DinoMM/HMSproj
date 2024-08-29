@@ -1,0 +1,168 @@
+﻿@namespace LudskeZdrojeModul
+@page "/Zam/Cruzam"
+@inject CRUZamestnanciViewModel ViewModel
+
+<InfoModal @ref="InfoModSaved" ID="infosaved"
+           Text="Zmeny boli uložené" />
+
+<EditForm Model="ViewModel" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+    <div class="container" style="height: 20rem;">
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#udata">Osobné údaje</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#role">Rola</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+
+            <div class="tab-pane fade show active" id="udata">
+                <div class="row g-3 p-3">
+
+                    <div class="col">
+                        <div class="row">
+                            <div class="col col-6">
+                                <label>Meno*</label>
+                                <InputText @bind-Value="@ViewModel.Name" class="form-control" placeholder="Meno" />
+                                <ValidationMessage For="@(() => ViewModel.Name)" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <label>Priezvisko*</label>
+                                <InputText @bind-Value="@ViewModel.Surname" class="form-control" placeholder="Priezvisko" />
+                                <ValidationMessage For="@(() => ViewModel.Surname)" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6">
+                                <label>Email</label>
+                                <InputText @bind-Value="@ViewModel.Email" class="form-control" placeholder="Email" />
+                                <ValidationMessage For="@(() => ViewModel.Email)" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col">
+                        <div class="row">
+                            <div class="col col-6">
+                                <label>Telefón</label>
+                                <InputText @bind-Value="@ViewModel.PhoneNumber" class="form-control" placeholder="Telefón" />
+                                <ValidationMessage For="@(() => ViewModel.PhoneNumber)" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col col-6">
+                                <label>IBAN</label>
+                                <InputText @bind-Value="@ViewModel.IBAN" class="form-control" placeholder="IBAN" />
+                                <ValidationMessage For="@(() => ViewModel.IBAN)" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col col-10">
+                                <label>Adresa</label>
+                                <InputTextArea @bind-Value="@ViewModel.Adresa" class="form-control" placeholder="Adresa bývania" />
+                                <ValidationMessage For="@(() => ViewModel.Adresa)" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="role">
+                <div class="row g-3 p-3">
+
+                    <div class="col-4">
+                        <label>Profesia</label>
+                        <div class="list-group" style="height: 13rem; overflow-y: auto">
+                            @foreach (var item in ViewModel.RoleVsetky)
+                            {
+                                <a @onclick="@(() => ViewModel.VyberRolu(item))" class="list-group-item list-group-item-action @((ViewModel.RoleUsera.Exists(x => x.Id == item.Id) ? "list-group-item-success " : ""))" style="cursor:pointer"> <SimpleCheckMark Checked="@(ViewModel.IsDefaultRole(item))" Size="5"></SimpleCheckMark>@item.Name.ToString() </a>
+                            }
+
+                        </div>
+                    </div>
+
+                    <div class="col-1"></div>
+                    <div class="col-1">
+                        <div class="d-flex h-100">
+                            <div class="vr"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-5">
+
+                        @****
+
+                            ****@
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <hr>
+
+
+    <div class="row align-items-center justify-content-center">
+        <div class="col-auto mb-2">
+            <button type="button" class="btn btn-secondary me-2" @onclick="Close">Späť</button>
+            <button type="submit" class="btn btn-primary ">Uložiť</button>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+
+    private InfoModal InfoModSaved = new();
+
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        var founded = objectHolder.Remove<IdentityUserOwn>();   //pokusi sa ziskat objekt z uloziska
+        if (founded == null)
+        {
+            //nastavenie na vytvorenie pouzivatela
+            return;
+        }
+
+        ViewModel.SetProp(founded);     //nasiel sa zamestnanec, nastavime model na upravu
+
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        await ViewModel.NacitajZoznamy();
+        await ViewModel.SetUserRole();
+    }
+
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public async Task Save()
+    {
+        if (await ViewModel.Uloz())
+        {
+            await InfoModSaved.OpenModal(true);
+        }
+    }
+
+
+}
+

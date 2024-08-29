@@ -58,8 +58,16 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="Properties\ViewModelMVVM1.cs" />
+      <AndroidResource Remove="Templates\**" />
+      <Compile Remove="Templates\**" />
+      <Content Remove="Templates\**" />
+      <EmbeddedResource Remove="Templates\**" />
+      <MauiXaml Remove="Templates\**" />
+      <None Remove="Templates\**" />
     </ItemGroup>
+
+    
+
 
     <ItemGroup>
         <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
@@ -75,13 +83,12 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Include="Properties\ViewModelMVVM1.cs" />
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\AdminModul\AdminModul.csproj" />
       <ProjectReference Include="..\DBLayer\DBLayer.csproj" />
+      <ProjectReference Include="..\LudskeZdrojeModul\LudskeZdrojeModul.csproj" />
+      <ProjectReference Include="..\NakupnyModul\NakupnyModul.csproj" />
       <ProjectReference Include="..\SkladModul\SkladModul.csproj" />
+      <ProjectReference Include="..\UctovnyModul\UctovnyModul.csproj" />
       <ProjectReference Include="..\UniComponents\UniComponents.csproj" />
     </ItemGroup>
 

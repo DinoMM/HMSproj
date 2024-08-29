@@ -1,19 +1,20 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using DBLayer;
+using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 
-namespace $rootnamespace$
+namespace SkladModul.ViewModels.Dodavatelia
 {
-    public partial class $projectname$ : ObservableObject
+    public partial class DodavateliaViewModel : ObservableObject
     {
         [ObservableProperty]
-        ObservableCollection<TYPE> zoznamViewModel = new();
+        ObservableCollection<Dodavatel> zoznamDodavatelov = new();
 
         private readonly DBContext _db;
         private readonly UserService _userService;
 
-        public $projectname$(DBContext db, UserService userService)
+        public DodavateliaViewModel(DBContext db, UserService userService)
         {
             _db = db;
             _userService = userService;
@@ -21,7 +22,7 @@ namespace $rootnamespace$
 
         public bool ValidateUser()
         {
-            return list.Contains(_userService.LoggedUserRole);
+            return _userService.IsLoggedUserInRoles(DBLayer.Models.Dodavatel.POVOLENEROLE);
         }
     }
 }

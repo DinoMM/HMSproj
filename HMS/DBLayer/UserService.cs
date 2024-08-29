@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -13,6 +15,8 @@ namespace DBLayer
 
         public IdentityUserOwn? LoggedUser { get; set; } = default!;
         public RolesOwn LoggedUserRole { get; set; } = RolesOwn.None;
+
+        public List<RolesOwn> LoggedUserRoles { get; set; } = new();
 
 
         public UserService(UserManager<IdentityUserOwn> userManager)
@@ -34,19 +38,19 @@ namespace DBLayer
             {
                 return false;
             }
+
             var res = _userManager.AddToRoleAsync(user, assignedRole.ToString());
             return result.Succeeded;
         }
 
-        public async Task<bool> CreateNewUserNoPSWDAsync(IdentityUserOwn user, RolesOwn assignedRole = RolesOwn.None)
+        public async Task<bool> CreateNewUserNoPSWDAsync(IdentityUserOwn user)
         {
             var result = await _userManager.CreateAsync(user);
             if (!result.Succeeded)
             {
                 return false;
             }
-            var res = _userManager.AddToRoleAsync(user, assignedRole.ToString());
-            return result.Succeeded;
+            return true;
         }
 
         public async Task<bool> LogInUserAsync(string name, string password)
@@ -66,7 +70,18 @@ namespace DBLayer
             {
                 return false;
             }
-            //TODO pridat fukctionalitu pre viacero rolii
+
+            var rolesUser = await _userManager.GetRolesAsync(user); // ziskanie vsetkych roli usera
+            foreach (var item in rolesUser)
+            {
+                RolesOwn rrole;
+                if (!Enum.TryParse(item, out rrole)) //ziskanie roly usera
+                {
+                    return false;
+                }
+                LoggedUserRoles.Add(rrole);
+            }
+
             LoggedUser = user;
             LoggedUserRole = role;
             return true;
@@ -76,23 +91,27 @@ namespace DBLayer
         {
             LoggedUser = default;
             LoggedUserRole = RolesOwn.None;
+            LoggedUserRoles.Clear();
         }
 
-        public async Task<List<RolesOwn>> GetRolesFromUser(IdentityUserOwn user)
+        public async Task<List<RolesOwn>> GetRolesOwnFromUser(IdentityUserOwn user)
         {
-            var list = await _userManager.GetRolesAsync(user);
+            var list = await GetRolesFromUser(user);
             RolesOwn rola = RolesOwn.None;
             List<RolesOwn> roles = new();
             foreach (var item in list)
             {
                 if (!Enum.TryParse(item, out rola))
                 {
-                    Debug.WriteLine("Chyba pri ziskavani roly");
-                    break;
+                    continue;   //pre ine role sa nic nedeje
                 }
                 roles.Add(rola);
             }
             return roles;
+        }
+        public async Task<List<string>> GetRolesFromUser(IdentityUserOwn user)
+        {
+            return new List<string>(await _userManager.GetRolesAsync(user));
         }
 
         public async Task<bool> ChangePassword(string userId, string password, string username)
@@ -110,40 +129,86 @@ namespace DBLayer
 
         public async Task<bool> AddRoleToUser(string userId, RolesOwn roleName)
         {
-            var user = await _userManager.FindByIdAsync(userId);
-            if (user == null)
-            {
-                return false;
-            }
-            return (await _userManager.AddToRoleAsync(user, roleName.ToString())).Succeeded;
+            return await AddRoleToUser(userId, roleName.ToString());
         }
-
-        public async Task<bool> RemoveRoleFromUser(string userId, RolesOwn role)
+        public async Task<bool> AddRoleToUser(string userId, string roleName)
         {
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
                 return false;
             }
-            return (await _userManager.RemoveFromRoleAsync(user, role.ToString())).Succeeded;
+
+            var roles = await _userManager.GetRolesAsync(user); //kontrola existencie
+            if (roles.Contains(roleName))
+            {
+                return false;
+            }
+
+            return (await _userManager.AddToRoleAsync(user, roleName)).Succeeded;   //rola musi existovat
+        }
+
+        public async Task<bool> RemoveRoleFromUser(string userId, RolesOwn role)
+        {
+            return await RemoveRoleFromUser(userId, role.ToString());
+        }
+        public async Task<bool> RemoveRoleFromUser(string userId, string role)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return false;
+            }
+
+            return (await _userManager.RemoveFromRoleAsync(user, role)).Succeeded;
+        }
+
+        public bool IsLoggedUserInRole(RolesOwn role)
+        {
+            return LoggedUserRoles.Contains(role);
+        }
+
+        public bool IsLoggedUserInRoles(IList<RolesOwn> roles)
+        {
+            foreach (var item in roles)
+            {
+                if (!LoggedUserRoles.Contains(item))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public async Task<bool> UpdateUser(IdentityUserOwn user)
+        {
+            var found = await _userManager.FindByIdAsync(user.Id);
+            if (found is null)
+            {
+                return false;
+            }
+            found.UserName = user.UserName;
+            found.Name = user.Name;
+            found.Surname = user.Surname;
+            found.Email = user.Email;
+            found.PhoneNumber = user.PhoneNumber;
+            found.IBAN = user.IBAN;
+            found.Adresa = user.Adresa;
+
+            return (await _userManager.UpdateAsync(found)).Succeeded;
+        }
+
+        public async Task<bool> DeleteUser(IdentityUserOwn user)
+        {
+            var found = await _userManager.FindByIdAsync(user.Id);
+            if (found is null)
+            {
+                return false;
+            }
+            return (await _userManager.DeleteAsync(found)).Succeeded;
         }
 
 
     }
-    public enum RolesOwn
-    {
-        None,
-        Admin,
-        Skladnik,
-        Recepcny,
-        Bezpecnostnik,
-        FBVeduci,
-        HKVeduci,
-        Nakupca,
-        Personalista,
-        Riaditel,
-        Uctovnik,
-        UdalostnyPlanovac,
-        Udrzbar
-    };
+
 }

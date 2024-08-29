@@ -1,6 +1,6 @@
-﻿@namespace AdminModul
-@page "/Pouzivatelia"
-@inject PouzivateliaViewModel ViewModel
+﻿@namespace LudskeZdrojeModul
+@page "/SpravaRoli"
+@inject SpravaRoliViewModel ViewModel
 
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
@@ -9,7 +9,7 @@
               FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
 <InfoModal @ref="InfoModHasConneciton" ID="infomodalhascon"
-           Text="Nemožno vymazať osobu lebo je to aktualne prihlásená osoba alebo má role.">
+           Text="Nemožno vymazať profesiu lebo ju má niekto priradenú alebo patrí k základnym profesiam.">
 </InfoModal>
 
 <div class="container">
@@ -19,13 +19,13 @@
         <div class="col-1"></div>
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="9" TableID="tableid"></SearchInput>
+            <SearchInput NumCols="1" TableID="tableid"></SearchInput>
         </div>
 
         <div class="col-8">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-                <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/AddPouzivatel")))" type="button" class="btn btn-primary">➕Vytvoriť uživateľa</button>
+                <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/AddRole")))" type="button" class="btn btn-primary">➕Vytvoriť profesiu</button>
                 <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary">Otvoriť</button>
             </div>
         </div>
@@ -39,15 +39,8 @@
             <SimpleTable ID="tableid">
                 <THEAD>
 
-                <th class="col-resize" scope="col">Meno</th>
-                <th class="col-resize" scope="col">Priezvisko</th>
-                <th class="col-resize" scope="col">Username</th>
-                <th class="col-resize" scope="col">Použivateľ</th>
-                <th class="col-resize" scope="col">Email</th>
-                <th class="col-resize" scope="col">Telefón</th>
-                <th class="col-resize" scope="col">IBAN</th>
-                <th class="col-resize" scope="col">Adresa</th>
-                <th class="col-resize" scope="col">Role</th>
+                <th class="col-resize" scope="col">Profesia</th>
+                <th class="col-resize" scope="col">Základná profesia</th>
                 <th class="col-resize" scope="col"></th>
 
                 </THEAD>
@@ -60,23 +53,16 @@
                     }
                     else
                     {
-                        @foreach (var item in ViewModel.ZoznamPouzivatelov)
+                        @foreach (var item in ViewModel.ZoznamRoli)
                         {
 
                             <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
+
                                 <td class="col-resize">@item.Name</td>
-                                <td class="col-resize">@item.Surname</td>
-                                <td class="col-resize">@item.UserName</td>
                                 <td class="col-resize">
-                                    <SimpleCheckMark Checked="@(!string.IsNullOrEmpty(item.UserName))" Size="5"></SimpleCheckMark>
+                                    <SimpleCheckMark Checked="@(ViewModel.IsDefaultRole(item))" Size="5"></SimpleCheckMark>
                                 </td>
-                                <td class="col-resize">@item.Email</td>
-                                <td class="col-resize">@item.PhoneNumber</td>
-                                <td class="col-resize">@item.IBAN</td>
-                                <td class="col-resize">@item.Adresa</td>
-                                <td class="col-resize">@ViewModel.GetRoleString(item)</td>
                                 <td>
-                                    @*<a @onclick="@(() => Delete(item))" style="@(!ViewModel.MoznoVymazat(item) ? "pointer-events: none;" : "") "><i href="#" class="bi bi-x-circle btn btn-danger @(!ViewModel.MoznoVymazat(item) ? "disabled" : "")"></i></a>*@
                                     <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
                                 </td>
 
@@ -102,7 +88,7 @@
 
 
 @code {
-    private IdentityUserOwn? marked;
+    private Microsoft.AspNetCore.Identity.IdentityRole? marked;
     private ApproveModal AprovMod = new();
     private InfoModal InfoModHasConneciton = new();
 
@@ -129,18 +115,21 @@
     {
         if (marked != null)
         {
-            objectHolder.Add(marked);
-            Navigator.NavigateTo(Navigator.AddNextUrl("/UpdatePouzivatela"));
+            if (!ViewModel.IsDefaultRole(marked))
+            {
+                objectHolder.Add(marked);
+                Navigator.NavigateTo(Navigator.AddNextUrl("/ZmenaRole"));
+            }
         }
     }
 
-    public async Task Delete(IdentityUserOwn user)
+    public async Task Delete(Microsoft.AspNetCore.Identity.IdentityRole role)
     {
-        if (ViewModel.MoznoVymazat(user))
+        if (ViewModel.MoznoVymazat(role))
         {
             if (await AprovMod.OpenModal(true))
             {
-                await ViewModel.Vymazat(user);
+                ViewModel.Vymazat(role);
             }
         }
         else
@@ -148,6 +137,5 @@
             await InfoModHasConneciton.OpenModal();
         }
     }
-
 
 }

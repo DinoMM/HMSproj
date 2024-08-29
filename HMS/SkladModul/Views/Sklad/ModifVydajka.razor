@@ -83,7 +83,7 @@
                 <div class="row">
                     <div class="col-6">
                         <label>Prevodka na sklad</label>
-                        <select id="skldsel" @bind-value="@ViewModel.Polozka.SkladDo" @bind-value:event="oninput" disabled="@(ViewModel.Polozka.Spracovana || ViewModel.Readonly)" @onchange="() => ViewModel.Saved = false" class="form-select">
+                        <select id="skldsel" @bind-value="@ViewModel.Polozka.SkladDo" @bind-value:event="oninput" disabled="@(ViewModel.Polozka.Spracovana || ViewModel.Readonly || !ViewModel.Saved)" @onchange="() => ViewModel.Saved = false" class="form-select">
                             <option value="">-</option>
                             @foreach (var item in ViewModel.Sklady.Select(x => x.ID))
                             {

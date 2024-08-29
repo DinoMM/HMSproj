@@ -1,30 +1,31 @@
-﻿
-@inject LayoutService layoutService
+﻿@inject LayoutService layoutService
 
 <Router AppAssembly="@typeof(MauiProgram).Assembly"
-        AdditionalAssemblies="new[] { 
+        AdditionalAssemblies="new[] {
 typeof(SkladModul.Objednavka).Assembly,
 typeof(SkladModul.SkladV).Assembly,
-typeof(AdminModul.Pouzivatelia).Assembly
+typeof(AdminModul.Pouzivatelia).Assembly,
+typeof(LudskeZdrojeModul.SpravaRoli).Assembly,
+typeof(LudskeZdrojeModul.Zam).Assembly,
 }">
-    
+
     <Found Context="routeData">
         <CascadingValue Value="this">
-           
+
             <RouteView RouteData="routeData" DefaultLayout="layoutService.LayoutType" />
-            
+
         </CascadingValue>
 
     </Found>
     <NotFound>
         <span>Routing is not available</span>
     </NotFound>
-    
+
 </Router>
 
 
 @code {
-    public class LayoutService 
+    public class LayoutService
     {
         public Type LayoutType { get; private set; } = typeof(Layout.MainLayout);
 

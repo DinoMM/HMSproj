@@ -1,0 +1,37 @@
+﻿@namespace  ###Modul
+@page "/$itemname$"
+@inject  $itemname$ViewModel
+
+builder.Services.AddTransient<$itemname$ViewModel>();
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        var founded = objectHolder.Remove <###>();   //pokusi sa ziskat objekt z uloziska
+    if (founded == null)
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+###
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.NacitajZoznamy();
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+}

@@ -16,7 +16,7 @@ namespace AdminModul.ViewModels.Pouzivatelia
         ObservableCollection<IdentityUserOwn> zoznamPouzivatelov = new();
 
         [ObservableProperty]
-        ObservableCollection<(IdentityUserOwn, List<RolesOwn>)> zoznamPouzivatelovRoli = new();
+        ObservableCollection<(IdentityUserOwn, List<string>)> zoznamPouzivatelovRoli = new();
 
         public bool NacitavaniePoloziek = true;
 
@@ -31,7 +31,7 @@ namespace AdminModul.ViewModels.Pouzivatelia
 
         public async Task NacitajZoznamy()
         {
-            ZoznamPouzivatelov = new(_db.Users.ToList());
+            ZoznamPouzivatelov = new(_db.Users.OrderBy(x => x.Surname).ToList());
             foreach (var item in ZoznamPouzivatelov)    //pridanie zoznamov roli
             {
                 ZoznamPouzivatelovRoli.Add((item, await _userService.GetRolesFromUser(item)));
@@ -56,11 +56,11 @@ namespace AdminModul.ViewModels.Pouzivatelia
             {
                 if (i == found.Item2.Count - 1)
                 {
-                    rolesStr += found.Item2[i].ToString();
+                    rolesStr += found.Item2[i];
                 }
                 else
                 {
-                    rolesStr += found.Item2[i].ToString() + ", ";
+                    rolesStr += found.Item2[i] + ", ";
                 }
             }
             return rolesStr;
@@ -73,7 +73,7 @@ namespace AdminModul.ViewModels.Pouzivatelia
                 return false;
             }
             var roleUser = ZoznamPouzivatelovRoli.FirstOrDefault(x => x.Item1 == user).Item2;
-            if (roleUser.Count > 1 || !roleUser.Contains(RolesOwn.None)) //nemoze mat ziadne role - ked ma rolu NONE tak by nemal mat ani prepojenia k inym tabulkam
+            if (roleUser.Count > 0) //nemoze mat ziadne role - ked ma rolu NONE tak by nemal mat ani prepojenia k inym tabulkam
             {
                 return false;
             }
@@ -81,17 +81,11 @@ namespace AdminModul.ViewModels.Pouzivatelia
             return true;
         }
 
-        public void Vymazat(IdentityUserOwn user)
+        public async Task Vymazat(IdentityUserOwn user)
         {
-            var found = _db.Users.FirstOrDefault(x => x.UserName == user.UserName);
-            if (found != null)
-            {
-                ZoznamPouzivatelov.Remove(user);
-                ZoznamPouzivatelovRoli.Remove(ZoznamPouzivatelovRoli.FirstOrDefault(x => x.Item1 == user));
-                _db.Users.Remove(found);
-                _db.SaveChanges();
-            }
-            return;
+            ZoznamPouzivatelov.Remove(user);
+            ZoznamPouzivatelovRoli.Remove(ZoznamPouzivatelovRoli.FirstOrDefault(x => x.Item1 == user));
+            await _userService.DeleteUser(user);
         }
 
 

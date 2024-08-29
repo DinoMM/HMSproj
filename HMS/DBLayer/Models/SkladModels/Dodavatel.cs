@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DBLayer.Models
 {
-    public class Dodavatel
+    public partial class Dodavatel
     {
         [Key]
         public string ICO { get; set; } = default!;

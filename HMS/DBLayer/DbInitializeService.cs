@@ -153,6 +153,9 @@ namespace DBLayer
                 //}
                 #endregion*/
 
+                #region vymazanie default user validatora
+                _userManager.UserValidators.RemoveAt(0);    //mam vytvoreny vlastny a default som nevedel dat inak prec. Predpokladam, ze default validator sa vytvara vzdy ako prvy. Robim to pre to lebo default validator ma automaticky nastavene ze UserName nesmie byt null aj ked to DB umoznuje tak som si vytvoril vlastny
+                #endregion
                 await _db.SaveChangesAsync();
                 _done = true;
             }

@@ -6,10 +6,6 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 
-	<ItemGroup>
-	  <Content Remove="Views\Pouzivatelia\ComponentRoleInfo.razor" />
-	</ItemGroup>
-
 
 	<ItemGroup>
 		<SupportedPlatform Include="browser" />
@@ -29,15 +25,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <UpToDateCheckInput Remove="Views\Pouzivatelia\ComponentRoleInfo.razor" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <_ContentIncludedByDefault Remove="Views\Pouzivatelia\ComponentRoleInfo.razor" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="Views\Pouzivatelia\ComponentRoleInfo.razor" />
+	  <Folder Include="ViewModels\RozsireneNastavenia\" />
+	  <Folder Include="Views\RozsireneNastavenia\" />
 	</ItemGroup>
 
 </Project>

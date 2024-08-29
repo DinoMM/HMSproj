@@ -1,6 +1,6 @@
-﻿@namespace AdminModul
-@page "/Pouzivatelia"
-@inject PouzivateliaViewModel ViewModel
+﻿@namespace LudskeZdrojeModul
+@page "/Zam"
+@inject ZamViewModel ViewModel
 
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
@@ -19,14 +19,14 @@
         <div class="col-1"></div>
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="9" TableID="tableid"></SearchInput>
+            <SearchInput NumCols="@(ViewModel.ValidateUserCRUD() ? 7 : 5)" PlaceHolder="Vyhľadaj zamestnanca..." TableID="tableid"></SearchInput>
         </div>
 
         <div class="col-8">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-                <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/AddPouzivatel")))" type="button" class="btn btn-primary">➕Vytvoriť uživateľa</button>
-                <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary">Otvoriť</button>
+                <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/Cruzam")))" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">➕Vytvoriť zamestnanca</button>
+                <button type="button" @onclick="Open" disabled="@(marked == null && !UserService.IsLoggedUserInRoles(IdentityUserOwn.ROLE_CRUD_ZAMESTNANCI))" class="btn btn-primary">Otvoriť</button>
             </div>
         </div>
 
@@ -41,12 +41,13 @@
 
                 <th class="col-resize" scope="col">Meno</th>
                 <th class="col-resize" scope="col">Priezvisko</th>
-                <th class="col-resize" scope="col">Username</th>
-                <th class="col-resize" scope="col">Použivateľ</th>
                 <th class="col-resize" scope="col">Email</th>
                 <th class="col-resize" scope="col">Telefón</th>
-                <th class="col-resize" scope="col">IBAN</th>
-                <th class="col-resize" scope="col">Adresa</th>
+                @if (ViewModel.ValidateUserCRUD())
+                {
+                    <th class="col-resize" scope="col">IBAN</th>
+                    <th class="col-resize" scope="col">Adresa</th>
+                }
                 <th class="col-resize" scope="col">Role</th>
                 <th class="col-resize" scope="col"></th>
 
@@ -60,27 +61,28 @@
                     }
                     else
                     {
-                        @foreach (var item in ViewModel.ZoznamPouzivatelov)
+                        @foreach (var item in ViewModel.ZoznamZamestnancov)
                         {
 
                             <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
                                 <td class="col-resize">@item.Name</td>
                                 <td class="col-resize">@item.Surname</td>
-                                <td class="col-resize">@item.UserName</td>
-                                <td class="col-resize">
-                                    <SimpleCheckMark Checked="@(!string.IsNullOrEmpty(item.UserName))" Size="5"></SimpleCheckMark>
-                                </td>
                                 <td class="col-resize">@item.Email</td>
                                 <td class="col-resize">@item.PhoneNumber</td>
-                                <td class="col-resize">@item.IBAN</td>
-                                <td class="col-resize">@item.Adresa</td>
-                                <td class="col-resize">@ViewModel.GetRoleString(item)</td>
-                                <td>
-                                    @*<a @onclick="@(() => Delete(item))" style="@(!ViewModel.MoznoVymazat(item) ? "pointer-events: none;" : "") "><i href="#" class="bi bi-x-circle btn btn-danger @(!ViewModel.MoznoVymazat(item) ? "disabled" : "")"></i></a>*@
-                                    <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
-                                </td>
+                                @if (ViewModel.ValidateUserCRUD())
+                                {
+                                    <td class="col-resize">@item.IBAN</td>
+                                    <td class="col-resize">@item.Adresa</td>
+                                }
+                                    <td class="col-resize">@ViewModel.GetRoleString(item)</td>
+                                    <td>
+                                        @if (ViewModel.ValidateUserCRUD())
+                                        {
+                                            <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
+                                        }
+                                    </td>
 
-                            </tr>
+                                </tr>
                         }
                     }
                     <span id="observerTarget"></span>
@@ -97,14 +99,11 @@
 
 </div>
 
-
-
-
-
 @code {
     private IdentityUserOwn? marked;
     private ApproveModal AprovMod = new();
     private InfoModal InfoModHasConneciton = new();
+
 
     protected override void OnInitialized()
     {
@@ -129,8 +128,11 @@
     {
         if (marked != null)
         {
-            objectHolder.Add(marked);
-            Navigator.NavigateTo(Navigator.AddNextUrl("/UpdatePouzivatela"));
+            if (UserService.IsLoggedUserInRoles(IdentityUserOwn.ROLE_CRUD_ZAMESTNANCI))
+            {
+                objectHolder.Add(marked);
+                Navigator.NavigateTo(Navigator.AddNextUrl("/Cruzam"));
+            }
         }
     }
 
@@ -149,5 +151,12 @@
         }
     }
 
-
+    public void Create()
+    {
+        if (UserService.IsLoggedUserInRoles(IdentityUserOwn.ROLE_CRUD_ZAMESTNANCI))
+        {
+            Navigator.NavigateTo(Navigator.AddNextUrl("/Cruzamestnanci"));
+            return;
+        }
+    }
 }
