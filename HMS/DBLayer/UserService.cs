@@ -58,11 +58,13 @@ namespace DBLayer
             var user = await _userManager.FindByNameAsync(name);//ziskanie usera
             if (user is null)
             {
+                LoggedUser = null;
                 return false;
             }
             var succed = await _userManager.CheckPasswordAsync(user, password); //kontrola hesla
             if (!succed)
             {
+                LoggedUser = null;
                 return false;
             }
             RolesOwn role;
@@ -172,7 +174,7 @@ namespace DBLayer
         {
             foreach (var item in roles)
             {
-                if (!LoggedUserRoles.Contains(item))
+                if (LoggedUserRoles.Contains(item))
                 {
                     return true;
                 }

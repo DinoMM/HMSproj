@@ -81,6 +81,7 @@ namespace HMS
 
             #region ViewModels
             builder.Services.AddScoped<IndexViewModel>();
+            builder.Services.AddTransient<LoginViewModel>();
 
             #region SkladModul
             builder.Services.AddTransient<AddObjednavViewModel>();
@@ -118,9 +119,7 @@ namespace HMS
             #region UctovnyModul
 
             #endregion
-            #region NakupnyModul
-
-            #endregion
+            
 
 
             #endregion

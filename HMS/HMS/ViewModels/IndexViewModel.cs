@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DBLayer;
 using DBLayer.Models;
+using Microsoft.AspNetCore.Components;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using UniComponents;
@@ -11,29 +12,18 @@ namespace HMS.ViewModels
 {
     public partial class IndexViewModel : ObservableObject
     {
-        //[ObservableProperty]
-        //private int myProperty;
-
         [ObservableProperty]
         private ObservableCollection<(string, string, List<RolesOwn>)> modulesList;     //(nazov modulu, hyperlink, list povolenych roli)
 
+        public InfoModal CloseAppModal = new();
+        
 
-        //private readonly DBContext _db;
-        private readonly UserService _userService;
-
-        public InfoModal InfoModal { get; set; }
-
-        public IndexViewModel(UserService userService)
+        public IndexViewModel(Navigator navigator, NavigationManager NavManager, HMS.Components.Services.IAppLifeCycleService AppLifecycleService)
         {
-            //_db = database;
-            _userService = userService;
+            navigator.InitializeNavManazer(NavManager); //inicializacia navigatora
 
+            AppLifecycleService.Destroying += OnAppDestroying;
 
-            if (userService.LoggedUser == null)
-            {       //kontrola prihlasenia
-                //vyhodit prihlasovacie okno
-                Debug.WriteLine("Uzivatel nie je prihlaseny");
-            }
             modulesList = new ObservableCollection<(string, string, List<RolesOwn>)>();
             modulesList.Add(("Objednávky", "/Objednavka", DBLayer.Models.Objednavka.POVOLENEROLE));
             modulesList.Add(("Skladové hospodárstvo", "/Sklad", DBLayer.Models.Sklad.ROLE_R_SKLAD));
@@ -43,21 +33,11 @@ namespace HMS.ViewModels
             modulesList.Add(("Organizácie", "/Dodavatelia", IdentityUserOwn.ROLE_R_ZAMESTNANCI));
             modulesList.Add(("Sklady", "/Sklady", Sklad.ROLE_R_SKLAD));
 
-
         }
 
-        [RelayCommand]
-        private void Navigate(string link)
+        private void OnAppDestroying()
         {
-
-
-        }
-
-        //[RelayCommand(CanExecute = nameof(IsSomeMethodExcutable))]
-        [RelayCommand]
-        private async Task OpenInfoModal()
-        {
-            await InfoModal.OpenModal();
+            Debug.WriteLine("******************Applikacia sa zatvára.*******************"); //pridanie app eventu
         }
     }
 }

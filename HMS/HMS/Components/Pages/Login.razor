@@ -1,0 +1,85 @@
+﻿@namespace HMS
+@page "/Login"
+@inject LoginViewModel ViewModel
+@inject Navigator Navigator
+
+@using Microsoft.AspNetCore.Components.Forms
+
+<InfoModal @ref="InfoModLogginFail" ID="infosaved"
+           Text="Zlé použivateľské meno alebo heslo." />
+
+<EditForm Model="ViewModel" OnValidSubmit="LoginUser">
+    <DataAnnotationsValidator />
+    <div class="container px-5">
+        <div class="row">
+            <div class="col">
+                <h1 class="text-center">Prihlásenie</h1>
+            </div>
+        </div>
+
+        <div class="row">
+
+            <div class="col-4"></div>
+
+            <div class="col">
+
+                <div class="row">
+                    <div class="col-6">
+                        <label>Použivateľské meno</label>
+                        <InputText @bind-Value="@ViewModel.UserName" class="form-control" placeholder="" />
+                        <ValidationMessage For="@(() => ViewModel.UserName)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label>Heslo</label>
+                        <InputText @bind-Value="@ViewModel.Password" type="password" class="form-control" placeholder="" />
+                        <ValidationMessage For="@(() => ViewModel.Password)" />
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+        <div class="row pt-2">
+            <div class="col text-center">
+                <SimpleButton Type="submit" ZmenaTextu="@(("Prihlásiť", "Prihlásiť"))"></SimpleButton>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+
+    private InfoModal InfoModLogginFail = new();
+
+    protected override void OnInitialized()
+    {
+        if (ViewModel.IsLoggedIn())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public async Task LoginUser()
+    {
+        if (await ViewModel.Login())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+        }
+        else
+        {
+            await InfoModLogginFail.OpenModal(true);
+        }
+    }
+
+
+}

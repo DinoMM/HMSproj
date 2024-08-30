@@ -39,14 +39,16 @@
         <div class="col-8">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-                @if (Sklad.ZMENAPOLOZIEKROLE.Contains(UserService.LoggedUserRole))
+                @if (UserService.IsLoggedUserInRoles(Sklad.ZMENAPOLOZIEKROLE))
                 {
                     <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad")))" type="button" class="btn btn-primary">➕Pridať položku</button>
                 }
-                @if (Sklad.SKLADOVEPOHYBYROLE.Contains(UserService.LoggedUserRole))
+                @if (UserService.IsLoggedUserInRoles(Sklad.SKLADOVEPOHYBYROLE))
                 {
                     <button type="button" @onclick="Prijem" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬇Spravovať Príjem</button>
                     <button type="button" @onclick="Vydaj" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬆Spravovať Výdaj</button>
+                }@if (UserService.IsLoggedUserInRoles(Sklad.SKLADOVEPOHYBYROLE.Concat(Sklad.ROLE_R_SKLADOVEPOHYBY).ToList()))
+                {
                     <button type="button" @onclick="Uzavriet" disabled="@(ViewModel.Sklad.ID == "ALL" || !ViewModel.AktualneObdobie)" class="btn btn-primary">➰Uzavrieť obdobie</button>
                 }
             </div>
@@ -152,9 +154,10 @@
     protected override void OnInitialized()
     {
         ViewModel.NacitaneMnozstvo = false;
-        if (!Sklad.ROLE_R_SKLAD.Contains(UserService.LoggedUserRole))
+        if (!UserService.IsLoggedUserInRoles(Sklad.ROLE_R_SKLAD))
         {
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
         }
         var founded1 = objectHolder.Remove<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska
         if (founded1 == null)
@@ -171,6 +174,10 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (!UserService.IsLoggedUserInRoles(Sklad.ROLE_R_SKLAD))
+        {
+            return;
+        }
         await ViewModel.LoadPolozky();
     }
 

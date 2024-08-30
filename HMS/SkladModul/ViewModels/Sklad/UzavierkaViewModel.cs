@@ -115,6 +115,9 @@ namespace SkladModul.ViewModels.Sklad
 
         public bool MoznoUzavrietObdobie()
         {
+            if (_uservice.IsLoggedUserInRoles(Ssklad.ROLE_R_SKLADOVEPOHYBY)) {
+                return false;
+            }
             return SkladObdobie.MoznoUzavrietObdobie(Sklad, Obdobie, in _db, in _uservice);
         }
 

@@ -24,12 +24,17 @@ namespace DBLayer.Models
         /// povolene role pre pridavanie a mazanie poloziek, zobrazovanie celeho skladu poloziek
         /// </summary>
         [NotMapped]
-        public static List<RolesOwn> ZMENAPOLOZIEKROLE { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Nakupca };
+        public static List<RolesOwn> ZMENAPOLOZIEKROLE { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Nakupca, RolesOwn.Riaditel };
         /// <summary>
         /// povolenie pre prijem,vydaj,uzavretie skladu, nakupca by sa nemal starat o tieto veci
         /// </summary>
         [NotMapped]
         public static List<RolesOwn> SKLADOVEPOHYBYROLE { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Skladnik };
+        /// <summary>
+        /// povolenie pre zobrazenie uzavretie skladu
+        /// </summary>
+        /// [NotMapped]
+        public static List<RolesOwn> ROLE_R_SKLADOVEPOHYBY { get; private set; } = new() { RolesOwn.Riaditel, RolesOwn.Nakupca };
         /// <summary>
         /// povolenie pre prijem,vydaj,uzavretie skladu, nakupca by sa nemal starat o tieto veci
         /// </summary>

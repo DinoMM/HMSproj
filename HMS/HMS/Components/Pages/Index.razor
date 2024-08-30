@@ -8,18 +8,15 @@
 
 
 @inherits LayoutComponentBase
-@inject Navigator Navigator
-@inject NavigationManager NavigationManager
-@inject Routes.LayoutService layoutService
 @inject IndexViewModel ViewModel
+
+@inject Navigator Navigator
+@inject Routes.LayoutService layoutService
 @inject DbInitializeService initDB
 @inject UserService UserService
 @inject HMS.Components.Services.IAppLifeCycleService AppLifecycleService
 
-@inject DBContext db
-
 @implements IDisposable
-
 @*bez scrolovania style*@
 <style>
     body {
@@ -28,76 +25,63 @@
     }
 </style>
 
-<div class="">
-    <label>Prihlaseny: @UserService.LoggedUser?.UserName </label>
-    <div class="d-flex justify-content-center align-items-center vh-100">
-        <div class="p-3 w-50 ">
-            <div class="list-group text-center border border-2 border-black ">
+@*<InfoModal @ref="ViewModel.CloseAppModal" Text="Chcete ukončiť aplikáciu?"></InfoModal>*@
 
-                @foreach (var item in ViewModel.ModulesList)
-                {
-                    if (item.Item3.Contains(UserService.LoggedUserRole))
+@if (UserService.LoggedUser != null)
+{
+    <div class="">
+        <label>Prihlásený: @UserService.LoggedUser?.UserName </label>
+        <div class="d-flex justify-content-center align-items-center vh-100">
+            <div class="p-3 w-50 ">
+                <div class="list-group text-center border border-2 border-black ">
+
+                    @foreach (var item in ViewModel.ModulesList)
                     {
-                        <a @onclick="@(() => Navigator.NavigateTo(item.Item2, saveThisUrl: true))" class="list-group-item list-group-item-action">@item.Item1</a>
+                        if (item.Item3.Contains(UserService.LoggedUserRole))
+                        {
+                            <a @onclick="@(() => Navigator.NavigateTo(item.Item2, saveThisUrl: true))" class="list-group-item list-group-item-action">@item.Item1</a>
+                        }
                     }
-                }
+                </div>
             </div>
+            @*<button @onclick="ViewModel.OpenInfoModalCommand.Execute">Pridaj</button>*@
         </div>
-        @*<button @onclick="ViewModel.OpenInfoModalCommand.Execute">Pridaj</button>*@
     </div>
-</div>
-
-@* <Main></Main>  *@
-@* <AddObjednav></AddObjednav> *@
-@* <PridPolozky></PridPolozky> *@
-@* <ZobrazenieObjednavky></ZobrazenieObjednavky> *@
-
-@* <Main></Main> *@
-@* <PridatPrijemku></PridatPrijemku> *@
-@* <VypisFakturCisla></VypisFakturCisla> *@
-
-@* <Main></Main> *@
-@* <Odpis></Odpis> *@
-@* <PridatPolozku></PridatPolozku> *@
-@* <Uzavierka></Uzavierka> *@
-
-@* <VytvorenieUzivatela></VytvorenieUzivatela> *@
+}
+else
+{
+    <div class="d-flex justify-content-center align-items-center vh-100">
+        <SpinnerLoading Size="3" />
+    </div>
+}
 
 
-@* <InfoModal Text="Toto je infomodal yeah"></InfoModal> *@
-@*<InfoModal @ref="ViewModel.InfoModal" Text="Ahoj"></InfoModal>*@
+
 
 @code {
 
     protected override async Task OnInitializedAsync()
     {
         await initDB.TryMustHaveValues();
-        Navigator.InitializeNavManazer(NavigationManager);
-        await UserService.LogInUserAsync("admin", "Heslo123");
-        StateHasChanged();
 
-        AppLifecycleService.Destroying += OnAppDestroying;      //pridanie app eventu
+#if DEBUG
 
-        //await ViewModel.InfoModal.OpenModal(true);
-        //await Application.Current.MainPage.DisplayAlert("title", "toto je vnutro", "zrusit");
+        //if (UserService.LoggedUser == null)
+        //{
+        //    await UserService.LogInUserAsync("admin", "Heslo123");
+        //}
 
-    }
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
+#endif
+        if (UserService.LoggedUser == null)
         {
+            Navigator.NavigateTo("/Login");
+            return;
         }
-
-    }
-
-    private void OnAppDestroying()
-    {
-        Debug.WriteLine("Applikacia sa zatvára.");
     }
 
     public void Dispose()
     {
-        AppLifecycleService.Destroying -= OnAppDestroying;
+        
     }
 
 
