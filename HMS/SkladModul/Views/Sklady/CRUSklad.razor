@@ -82,7 +82,7 @@
 
     public async Task OnIvalid(EditContext editContext)
     {
-        if (ViewModel.Existuje())    //ak model ma ico tak ignorujeme error ze ico uz existuje
+        if (ViewModel.Existuje())   
         {
             if (editContext.GetValidationMessages().Count() == 1 &&
                 editContext.GetValidationMessages().Any(x => x == "Sklad už existuje."))

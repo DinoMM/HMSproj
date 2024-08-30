@@ -1,15 +1,7 @@
 ﻿@inject LayoutService layoutService
 
 <Router AppAssembly="@typeof(MauiProgram).Assembly"
-        AdditionalAssemblies="new[] {
-typeof(SkladModul.Objednavka).Assembly,
-typeof(SkladModul.SkladV).Assembly,
-typeof(AdminModul.Pouzivatelia).Assembly,
-typeof(LudskeZdrojeModul.SpravaRoli).Assembly,
-typeof(LudskeZdrojeModul.Zam).Assembly,
-typeof(SkladModul.Dodavatelia).Assembly,
-typeof(SkladModul.Sklady).Assembly
-}">
+        AdditionalAssemblies="GetModulAssemblies().ToArray()">
 
     <Found Context="routeData">
         <CascadingValue Value="this">
@@ -27,6 +19,44 @@ typeof(SkladModul.Sklady).Assembly
 
 
 @code {
+
+    /// <summary>
+    /// Metóda vráti zoznam povolených modulov
+    /// </summary>
+    /// <returns></returns>
+    private List<string> GetAllowedModules()
+    {
+        return new() {
+        "SkladModul",
+        "AdminModul",
+        "LudskeZdrojeModul"
+        };
+    }
+
+    /// <summary>
+    /// Metóda vráti zoznam Assembly -> povolených častí z modulov
+    /// </summary>
+    /// <returns></returns>
+    private System.Reflection.Assembly[] GetModulAssemblies()
+    {
+        var ModulNamespaces = GetAllowedModules();      // zoznam povolených modulov
+        List<System.Reflection.Assembly> AssembliesFromModules = new(); //finalny zoznam
+
+        foreach (var item in ModulNamespaces)   //prejde všetky namespacy a postupne napridáva inštancie dynamicky
+        {
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(assembly => assembly.GetTypes())
+            .Where(type => type.Namespace == item)
+            .Select(type => type.Assembly)
+            .Distinct()
+            .ToArray();
+
+            AssembliesFromModules.AddRange(assemblies);
+        }
+        return AssembliesFromModules.ToArray();
+    }
+
+
     public class LayoutService
     {
         public Type LayoutType { get; private set; } = typeof(Layout.MainLayout);
