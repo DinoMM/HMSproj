@@ -20,6 +20,8 @@ using SkladModul;
 using SkladModul.ViewModels.Dodavatelia;
 using LudskeZdrojeModul.ViewModels.Zamestnanci;
 using SkladModul.ViewModels.Sklady;
+using UctovnyModul.ViewModels;
+using UctovnyModul.ViewModels.Faktury;
 
 
 namespace HMS
@@ -60,7 +62,7 @@ namespace HMS
                 .AddRoles<IdentityRole>()
                 .AddUserValidator<CustomUserValidator<IdentityUserOwn>>();      //(pomohol som si z internetu tutoriály/AI)
 
-            
+
             //builder.Services.AddBlazorWebView()
             // .AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUserOwn>>();
 
@@ -117,9 +119,9 @@ namespace HMS
             builder.Services.AddTransient<CRUSkladViewModel>();
             #endregion
             #region UctovnyModul
-
+            builder.Services.AddTransient<FakturyViewModel>();
             #endregion
-            
+
 
 
             #endregion

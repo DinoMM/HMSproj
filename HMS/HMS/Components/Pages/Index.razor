@@ -66,10 +66,10 @@ else
 
 #if DEBUG
 
-        //if (UserService.LoggedUser == null)
-        //{
-        //    await UserService.LogInUserAsync("admin", "Heslo123");
-        //}
+        if (UserService.LoggedUser == null)
+        {
+            await UserService.LogInUserAsync("admin", "Heslo123");
+        }
 
 #endif
         if (UserService.LoggedUser == null)
@@ -81,7 +81,7 @@ else
 
     public void Dispose()
     {
-        
+
     }
 
 

@@ -1,7 +1,12 @@
 ﻿@namespace UniComponents
 
 <div style="display: flex; justify-content: center; align-items: center;">
-    <div class="spinner-border" style="@("width: " + Size +"rem; height: " + Size + "rem;")" role="status" aria-hidden="true">
+    <div 
+         class="spinner-border
+         @(ExtraSmall ? " spinner-border-sm " : "") 
+         @(ColorDark ? " text-dark " : "") 
+         " 
+         style="@("width: " + Size +"rem; height: " + Size + "rem;")" role="status" aria-hidden="true">
         <span class="visually-hidden">Loading...</span>
     </div>
     <span style="@("font-size: " + Size + "rem;")">@Text</span>
@@ -9,9 +14,29 @@
 
 
 @code {
+    /// <summary>
+    /// Velkosť spinnera v jednetke rem, double čislo. Default 1.0
+    /// </summary>
     [Parameter]
     public double Size { get; set; } = 1.0;
 
+    /// <summary>
+    /// Text, ktory sa zobrazi vedla spinnera. Default ""
+    /// </summary>
     [Parameter]
     public string Text { get; set; } = "";
+
+    /// <summary>
+    /// Najnižšia vekosť spinnera, najlepšie nemeniť. Default false
+    /// </summary>
+    [Parameter]
+    public bool ExtraSmall { get; set; } = false;
+
+    /// <summary>
+    /// Farba spinnera na čierno. Default false
+    /// </summary> 
+    [Parameter]
+    public bool ColorDark { get; set; } = false;
+
+
 }

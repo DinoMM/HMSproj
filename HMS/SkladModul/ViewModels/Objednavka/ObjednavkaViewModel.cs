@@ -3,14 +3,19 @@ using CommunityToolkit.Mvvm.Input;
 using DBLayer;
 using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
+using PdfCreator.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using PdfCreator;
 
 using OBJ = DBLayer.Models.Objednavka;
+using System.Diagnostics;
+using Microsoft.AspNetCore.Components;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SkladModul.ViewModels.Objednavka
 {
@@ -19,6 +24,8 @@ namespace SkladModul.ViewModels.Objednavka
         [ObservableProperty]
         ObservableCollection<OBJ> zoznamObjednavok = new();
         private DateTime posledneNacitanyDatum = DateTime.Today;
+
+        public bool PdfLoading { get; set; } = false;
 
         private readonly DBContext _db;
         private readonly PridPolozkyViewModel _polozkyViewModel;
@@ -62,11 +69,21 @@ namespace SkladModul.ViewModels.Objednavka
             _db.SaveChanges();
         }
 
-        [RelayCommand]
-        private void OtvorOBJ(OBJ poloz) {
-            //_polozkyViewModel.Objednavka = poloz;
+        public async Task VytvorPDF(OBJ poloz) //vygeneruje a otvori objednavku v pdf v default nastavenom programe
+        {
+            PdfLoading = true;
+            ObjednavkaPDF creator = new ObjednavkaPDF();
 
-            
+            var polozkyZObjednavky = _db.PolozkySkladuObjednavky.Include(x => x.PolozkaSkladuX).Where(x => x.Objednavka == poloz.ID).ToList();   //polozky z objednavky
+            await Task.Run(() =>
+            {
+                creator.GenerujPdf(poloz, poloz.DodavatelX, poloz.OdberatelX, polozkyZObjednavky);
+                creator.OpenPDF();
+                
+            }); 
+            PdfLoading = false;
+
         }
+
     }
 }

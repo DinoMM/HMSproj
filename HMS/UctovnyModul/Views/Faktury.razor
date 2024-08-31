@@ -1,0 +1,35 @@
+﻿@namespace  UctovnyModul
+@page "/Faktury"
+@inject FakturyViewModel ViewModel
+
+
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+        await ViewModel.NacitajZoznamy();
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+}

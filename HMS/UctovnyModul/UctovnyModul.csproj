@@ -24,9 +24,4 @@
     <ProjectReference Include="..\UniComponents\UniComponents.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="ViewModels\" />
-    <Folder Include="Views\" />
-  </ItemGroup>
-
 </Project>

@@ -47,6 +47,7 @@ namespace DBLayer
         public DbSet<Prijemka> Prijemky { get; set; }
         public DbSet<Vydajka> Vydajky { get; set; }
         public DbSet<PrijemkaPolozka> VydajkyPolozky { get; set; }      //ten isty typ pre Prijem/Vydaj
+        public DbSet<Faktura> Faktury { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -111,10 +112,6 @@ namespace DBLayer
             // .HasKey(s => new { s.ID, s.Obdobie });
             modelBuilder.Entity<SkladObdobie>()
                 .HasKey(s => new { s.Obdobie, s.Sklad });
-
-
-
-
         }
 
         public class YourDbContextFactory : IDesignTimeDbContextFactory<DBContext>    //Pre manazovanie migraci je potrebna tato trieda (pomohol som si z internetu tutoriály/AI)

@@ -66,6 +66,11 @@
       <None Remove="Templates\**" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Resources\Fonts\MontserratBold.ttf" />
+      <None Remove="Resources\Fonts\MontserratRegular.ttf" />
+    </ItemGroup>
+
     
 
 
@@ -89,6 +94,15 @@
       <ProjectReference Include="..\SkladModul\SkladModul.csproj" />
       <ProjectReference Include="..\UctovnyModul\UctovnyModul.csproj" />
       <ProjectReference Include="..\UniComponents\UniComponents.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <MauiFont Update="Resources\Fonts\MontserratBold.ttf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </MauiFont>
+      <MauiFont Update="Resources\Fonts\MontserratRegular.ttf">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </MauiFont>
     </ItemGroup>
 
 </Project>
