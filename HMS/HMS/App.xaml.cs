@@ -1,4 +1,5 @@
 ﻿
+using DBLayer;
 using HMS.Components.Services;
 
 namespace HMS

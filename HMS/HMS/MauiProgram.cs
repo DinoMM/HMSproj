@@ -45,8 +45,19 @@ namespace HMS
 
 
             //pridanie service pre pripojenie na databazu
-            builder.Services.AddDbContext<DBContext>(opt => opt.UseSqlServer("Data Source=localhost,1433;Database=MyDatabase;User ID=sa;Password=TaJnEhEsLo!!!123456789;Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False")
-            .EnableSensitiveDataLogging()); //vymazat               //(pomohol som si z internetu tutoriály/AI)
+            {
+                string usr;
+                string tpswd;
+#if DEBUG
+                usr = "sa";
+                tpswd = "TaJnEhEsLo!!!123456789";
+#else
+                usr = "publicUser";
+                tpswd = "TaJnEhEsLo???123456789";
+#endif
+                builder.Services.AddDbContext<DBContext>(opt => opt.UseSqlServer($"Data Source=localhost,1433;Database=MyDatabase;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False")
+                .EnableSensitiveDataLogging()); //vymazat               //(pomohol som si z internetu tutoriály/AI)
+            }
             //pridanie service pre spravu usera a jeho role
             builder.Services.AddIdentity<IdentityUserOwn, IdentityRole>(opt =>
             {

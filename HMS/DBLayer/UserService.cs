@@ -91,7 +91,7 @@ namespace DBLayer
 
         public void LogOutUser()
         {
-            LoggedUser = default;
+            LoggedUser = null;
             LoggedUserRole = RolesOwn.None;
             LoggedUserRoles.Clear();
         }
