@@ -12,3 +12,14 @@ Ako vytvorit migraciu.
 	Add-Migration NazovMigracie
 	popripade ak mas data v tabulkach a nechce ti prejst: Drop-Database	
 	Update-Database
+
+
+
+Ako vratit uz updatnutu migraciu.
+
+	1. do Package Manager napis:
+	Update-Database NazovMigracieKtoraBolaPridanaCezAddMigrationPredPridanouMigraciou
+
+	2. Remove-Migration
+
+	3. A znova Add-Migration a Update-Database

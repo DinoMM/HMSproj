@@ -18,6 +18,7 @@ namespace DBLayer.Models
         public PohSkup SkupinaX { get; set; }
         public DateTime Vystavenie { get; set; } = DateTime.Today;
         public DateTime Splatnost { get; set; } = DateTime.Today.AddDays(15);
+        [ForeignKey("OdKohoX")]
         public string OdKoho { get; set; } = default!;
         public Dodavatel OdKohoX { get; set; }
         public bool Spracovana { get; set; } = false;
