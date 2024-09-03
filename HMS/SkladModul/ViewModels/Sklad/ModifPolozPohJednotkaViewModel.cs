@@ -29,6 +29,8 @@ namespace SkladModul.ViewModels.Sklad
         public Type TypeOfPohSkupina { get; set; } = typeof(PohSkup);
         public Type TypeOfPohJednotka { get; set; } = typeof(PohJednotka);
 
+        public List<PolozkaSkladu> ZoznamPoloziek = new();
+
 
         readonly DBContext _db;
         readonly UserService _userService;
@@ -71,6 +73,26 @@ namespace SkladModul.ViewModels.Sklad
                 }
                 zoznamPohSkupinySave.AddRange(ZoznamPohSkupiny);
             }
+        }
+
+        public async Task LoadZoznam()
+        {
+            ZoznamPoloziek.Clear();
+            if (TypeOfPohSkupina == typeof(Pprijemka))
+            {
+                ZoznamPoloziek.AddRange(_db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
+                .Where(x => x.Sklad == ((Pprijemka)PohSkupina).Sklad)
+                .Select(x => x.PolozkaSkladuX)
+                .ToList());
+            }
+            else
+            {
+                ZoznamPoloziek.AddRange(_db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
+                .Where(x => x.Sklad == ((Vvydajka)PohSkupina).Sklad)
+                .Select(x => x.PolozkaSkladuX)
+                .ToList());
+            }
+            ZoznamPoloziek = ZoznamPoloziek.DistinctBy(x => x.ID).OrderBy(x => x.ID).ToList();
         }
 
         [RelayCommand]
@@ -168,7 +190,8 @@ namespace SkladModul.ViewModels.Sklad
                     trebaCheck = true;
                 }
             }
-            if (TypeOfPohSkupina == typeof(Vvydajka)) {     //kontrola mnozstva
+            if (TypeOfPohSkupina == typeof(Vvydajka))
+            {     //kontrola mnozstva
                 var listnemozno = Ssklad.MoznoVydať(ZoznamPohSkupiny.Cast<PrijemkaPolozka>(), ((Vvydajka)PohSkupina).SkladX, ((Vvydajka)PohSkupina).Obdobie, _db);
                 if (listnemozno.Count != 0)     //ak su polozky, ktore nemozny vydat zo skladu
                 {

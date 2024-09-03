@@ -236,5 +236,9 @@ namespace SkladModul.ViewModels.Objednavka
             }
         }
 
+        public List<Dodavatel> GetDodavatelia()
+        {
+            return _db.Dodavatelia.ToList();
+        }
     }
 }

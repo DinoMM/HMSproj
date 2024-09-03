@@ -12,6 +12,13 @@
               FuncOnSucc="ViewModel.VymazCommand.Execute"
               FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
+<ItemFinderTable @ref="itmfindmodal"
+                 T="DBLayer.Models.Dodavatel"
+                 ColNames="@(new List<string>() { "IČO", "Názov", "Obec", "Adresa", "IBAN" })"
+                 ColValues="@ViewModel.GetDodavatelia()"
+                 MultiSelect="false"
+                 KeyAttributeToo="true"
+                 ID="itmfind"></ItemFinderTable>
 
 <div class="d-flex justify-content-center align-items-center vh-100">
     <div class="container ">
@@ -40,7 +47,7 @@
                             <label for="ICO1" class="col-form-label">*IČO dodavateľa:</label>
                         </div>
                         <div class="col col-2">
-                            <input type="text" @onchange="ViewModel.ZmenaDodCommand.Execute" id="ICO1" class="form-control" disabled=@ViewModel.Locked() value=@ViewModel.objednavka.Dodavatel>
+                            <input type="text" @onchange="ViewModel.ZmenaDodCommand.Execute" @onkeydown="@((e) => HandleKeyDown(e, "ICO1"))" id="ICO1" class="form-control" disabled=@ViewModel.Locked() value=@ViewModel.objednavka.Dodavatel>
                         </div>
                         <div class="col col-6">
                             <input type="text" readonly @bind="ViewModel.NazovDod" disabled="disabled" id="Nazov1" class="form-control">
@@ -63,7 +70,7 @@
                             <label for="ICO2" class="col-form-label">*IČO odoberateľa:</label>
                         </div>
                         <div class="col col-2">
-                            <input type="text" @onchange="ViewModel.ZmenaOdoCommand.Execute" disabled=@ViewModel.Locked() id="ICO2" class="form-control" value=@ViewModel.objednavka.Odberatel>
+                            <input type="text" @onchange="ViewModel.ZmenaOdoCommand.Execute" @onkeydown="@((e) => HandleKeyDown(e, "ICO2"))" disabled=@ViewModel.Locked() id="ICO2" class="form-control" value=@ViewModel.objednavka.Odberatel>
                         </div>
                         <div class="col col-6">
                             <input type="text" readonly @bind="ViewModel.NazovOdo" disabled="disabled" id="Nazov2" class="form-control">
@@ -132,6 +139,7 @@
 @code {
     ApproveModal AprovModSave = new();
     ApproveModal AprovModDel = new();
+    ItemFinderTable<DBLayer.Models.Dodavatel> itmfindmodal = new();
 
     protected override void OnInitialized()
     {
@@ -167,6 +175,37 @@
         if (await AprovModDel.OpenModal(true))
         {
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e, string inputId)
+    {
+        if (e.Key == "Tab")
+        {
+            if (ViewModel.CorrectDod && inputId == "ICO1")
+            {
+                return;
+            }
+            if (ViewModel.CorrectOdo && inputId == "ICO2")
+            {
+                return;
+            }
+            await itmfindmodal.PassSearchText(await itmfindmodal.GetInputValue(inputId));
+            await itmfindmodal.OpenModal(true);
+            if (itmfindmodal.OutSelection.Count != 0)
+            {
+                await itmfindmodal.SetInput(inputId, itmfindmodal.OutSelection.FirstOrDefault().ICO);
+                if (inputId == "ICO1")
+                {
+                    ViewModel.ZmenaDodCommand.Execute(new ChangeEventArgs() { Value = itmfindmodal.OutSelection.FirstOrDefault().ICO });
+                }
+                else
+                {
+                    ViewModel.ZmenaOdoCommand.Execute(new ChangeEventArgs() { Value = itmfindmodal.OutSelection.FirstOrDefault().ICO });
+                }
+            }
+
+
         }
     }
 }

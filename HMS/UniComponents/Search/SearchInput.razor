@@ -1,6 +1,7 @@
 ﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
 
-<input type="text" class="form-control" id="@ID" onkeyup="search('@("searchterm")', '@("tableid")', @NumCols)" placeholder="@PlaceHolder" />
+<input type="text" class="form-control" value="@SearchValue" id="@ID" onkeyup="search('@(ID)', '@(TableID)', @NumCols)" placeholder="@PlaceHolder" />
 
 <script>
          @*(pomohol som si z internetu tutoriály / AI)*@
@@ -36,4 +37,11 @@ function search(searchInput, tableIdentif, numCols) {
     public string TableID { get; set; } = "tableid";
     [Parameter]
     public int NumCols { get; set; } = 1;   //pocet stlpcov, ktore sa maju prehladavat od 0 po NumCols-1
+    [Parameter]
+    public string SearchValue { get; set; } = "";
+
+    public async Task Forcesearch()
+    {
+        await JSRuntime.InvokeVoidAsync("search", ID, TableID, NumCols);
+    }
 }

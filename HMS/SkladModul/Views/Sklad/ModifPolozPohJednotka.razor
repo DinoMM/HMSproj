@@ -28,6 +28,13 @@
 <InfoModal @ref="InfoModListBadValue" ID="infolistisbadvalue"
            Text="Nemožno vydať viacej ako je na sklade:<br>">
 </InfoModal>
+<ItemFinderTable @ref="itmfindmodal"
+                 T="DBLayer.Models.PolozkaSkladu"
+                 ColNames="@(new List<string>() { "ID", "Názov", "MJ", "Cena" })"
+                 ColValues="ViewModel.ZoznamPoloziek"
+                 MultiSelect="false"
+                 KeyAttributeToo="true"
+                 ID="itmfind"></ItemFinderTable>
 
 <div class="container">
     <div class="row p-1">Položky: @ViewModel.PohSkupina.ID</div>
@@ -93,7 +100,7 @@
                         @if (!ReadOnly)
                         {
                             <tr style="position:sticky; bottom: 0;">
-                                <td><input type="text" id="vyhlid" @onchange=ViewModel.VyhladajPolozkuCommand.Execute @onfocus=@(() => ViewModel.Uprava = true) @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" /></td>
+                                <td><input type="text" id="vyhlid" @onchange=ViewModel.VyhladajPolozkuCommand.Execute @onfocus=@(() => ViewModel.Uprava = true) @onkeydown="HandleKeyDown" @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" /></td>
                                 <td><input type="text" readonly disabled="disabled" @bind="ViewModel.NovaPoloz.Nazov" /> </td>
                                 <td>
                                     <div class="col col-2">
@@ -128,6 +135,7 @@
         InfoModal InfoMod = new();
         InfoModal InfoModListBadValue = new();
         PohJednotka marked;
+        ItemFinderTable<DBLayer.Models.PolozkaSkladu> itmfindmodal = new();
 
         [Parameter]
         public bool ReadOnly { get; set; } = false;
@@ -174,6 +182,12 @@
             ViewModel.LoadzoznamPohSkupiny();
         }
 
+        protected override async Task OnInitializedAsync()
+        {
+            await ViewModel.LoadZoznam();
+        }
+
+
         private async Task Delete(PohJednotka poloz)
         {
             marked = poloz;
@@ -183,6 +197,24 @@
         private void DeleteCommand()
         {
             ViewModel.VymazatCommand.Execute(marked);
+        }
+
+        private async Task HandleKeyDown(KeyboardEventArgs e)
+        {
+            if (e.Key == "Tab")
+            {
+                if (ViewModel.NovaPoloz.Nazov == null)
+                {
+                    await itmfindmodal.PassSearchText(await itmfindmodal.GetInputValue("vyhlid"));
+                    await itmfindmodal.OpenModal(true);
+                    if (itmfindmodal.OutSelection.Count != 0)
+                    {
+                        await itmfindmodal.SetInput("vyhlid", itmfindmodal.OutSelection.FirstOrDefault().ID);
+                        ViewModel.VyhladajPolozkuCommand.Execute(new ChangeEventArgs() { Value = itmfindmodal.OutSelection.FirstOrDefault().ID });
+                    }
+
+                }
+            }
         }
 
 

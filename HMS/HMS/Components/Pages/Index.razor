@@ -15,7 +15,6 @@
 @inject DbInitializeService initDB
 @inject UserService UserService
 @inject HMS.Components.Services.IAppLifeCycleService AppLifecycleService
-
 @implements IDisposable
 @*bez scrolovania style*@
 <style>
@@ -45,7 +44,7 @@
                     }
                 </div>
             </div>
-            @*<button @onclick="ViewModel.OpenInfoModalCommand.Execute">Pridaj</button>*@
+            @*<button @onclick="EXCT">Spusti</button>*@
         </div>
     </div>
 }
@@ -60,6 +59,8 @@ else
 
 
 @code {
+    
+
     private ApproveModal LogOffModal = new();
 
     protected override async Task OnInitializedAsync()

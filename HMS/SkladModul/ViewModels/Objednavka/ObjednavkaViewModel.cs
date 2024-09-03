@@ -44,8 +44,9 @@ namespace SkladModul.ViewModels.Objednavka
                 .Include(x => x.OdberatelX)
                 .Include(x => x.TvorcaX)
                 .Where(x => posledneNacitanyDatum >= x.DatumVznik)
-                .OrderBy(x => x.DatumVznik)
-                .Take(10);
+                .OrderByDescending(x => x.DatumVznik)
+                .Take(10)
+                .ToList();
 
             if (newDalsie.Any())
             {

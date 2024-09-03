@@ -24,7 +24,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UctovnyModul", "UctovnyModu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LudskeZdrojeModul", "LudskeZdrojeModul\LudskeZdrojeModul.csproj", "{B6664FEB-23FF-48A1-9F17-3AF4D6F6ADBB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PdfCreator", "PdfCreator\PdfCreator.csproj", "{7707715B-74BD-4626-B75D-11FC4EDD787C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PdfCreator", "PdfCreator\PdfCreator.csproj", "{7707715B-74BD-4626-B75D-11FC4EDD787C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -22,6 +22,14 @@
            Text="Nepodarilo sa uložiť zmeny, skontrolujte objednávku">
 </InfoModal>
 
+<ItemFinderTable @ref="itmfindmodal"
+                 T="DBLayer.Models.PolozkaSkladu"
+                 ColNames="@(new List<string>() { "ID", "Názov", "MJ", "Cena" })"
+                 ColValues="ViewModel.ZoznamPoloziek"
+                 MultiSelect="false"
+                 KeyAttributeToo="true"
+                 ID="itmfind"></ItemFinderTable>
+
 <div class="container">
     <div class="row p-1">Položky objednávky: @ViewModel.Objednavka.ID</div>
 
@@ -55,7 +63,7 @@
                     {
                         <tr>
                             <td class="col-resize"><input type="text" readonly disabled="disabled" value="@item.PolozkaSkladu" size="8" /></td>
-                            <td class="col-resize"><input type="text" disabled="@ViewModel.Locked()" value="@item.Nazov" @onchange=@((ChangeEventArgs arg) => {item.Nazov = arg.Value.ToString(); ViewModel.Zmena = true; } ) /></td>
+                            <td class="col-resize"><input type="text" disabled="@ViewModel.Locked()" value="@item.Nazov" @onchange=@((ChangeEventArgs arg) => { item.Nazov = arg.Value.ToString(); ViewModel.Zmena = true; } ) /></td>
                             <td class="col-resize"><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.Mnozstvo" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" class="w-75" /></td>
                             <td class="col-resize">@item.PolozkaSkladuX.MernaJednotka</td>
                             <td class="col-resize"><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" class="w-75" /></td>
@@ -71,11 +79,11 @@
                     @if (!ViewModel.Locked())
                     {
                         <tr style="position:sticky; bottom: 0;">
-                            <td class="col-resize"><input type="text" id="vyhlid" @onchange=ViewModel.VyhladajPolozkuCommand.Execute @onfocus=@(() => ViewModel.Uprava = true) @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" /></td>
+                            <td class="col-resize"><input type="text" id="vyhlid" @onchange="ViewModel.VyhladajPolozkuCommand.Execute" @onfocus=@(() => ViewModel.Uprava = true) @onkeydown="HandleKeyDown" @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" /></td>
                             <td class="col-resize"><input type="text" readonly disabled="disabled" @bind="ViewModel.NovaPoloz.Nazov" /> </td>
                             <td class="col-resize">
                                 <div class="col col-2">
-                                    <button type="button" disabled="@(ViewModel.Uprava || ViewModel.Locked())" @onclick=@(async () => {ViewModel.PridatPolozkuCommand.Execute(null);await ClearInput();}) class="btn btn-success">Pridať</button>
+                                    <button type="button" disabled="@(ViewModel.Uprava || ViewModel.Locked())" @onclick=@(async () => { ViewModel.PridatPolozkuCommand.Execute(null); await ClearInput(); }) class="btn btn-success">Pridať</button>
                                 </div>
                             </td>
                             <td class="col-resize">@ViewModel.NovaPoloz.PolozkaSkladuX?.MernaJednotka</td>
@@ -106,6 +114,8 @@
     InfoModal InfoMod = new();
     DBLayer.Models.PolozkaSkladuObjednavky marked;
 
+    ItemFinderTable<DBLayer.Models.PolozkaSkladu> itmfindmodal = new();
+
     protected override void OnInitialized()
     {
         var founded = objectHolder.Find<DBLayer.Models.Objednavka>();   //pokusi sa ziskat objekt z uloziska -> nevyhadzuje ho z neho
@@ -118,7 +128,6 @@
                 Debug.WriteLine("Objednavka nieje vlozena spravne v PridPolozkyViewModel");
                 Navigator.NavigateTo(Navigator.RemoveLastUrl());
                 return;
-
             }
         }
         else
@@ -132,6 +141,11 @@
         ViewModel.LoadZoznamObjednavky();
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.LoadZoznam();
+    }
+
     private async Task Delete(DBLayer.Models.PolozkaSkladuObjednavky poloz)
     {
         marked = poloz;
@@ -143,9 +157,27 @@
         ViewModel.VymazatCommand.Execute(marked);
     }
 
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Tab")
+        {
+            if (ViewModel.NovaPoloz.Nazov == null)
+            {
+                await itmfindmodal.PassSearchText(await itmfindmodal.GetInputValue("vyhlid"));
+                await itmfindmodal.OpenModal(true);
+                if (itmfindmodal.OutSelection.Count != 0)
+                {
+                    await itmfindmodal.SetInput("vyhlid", itmfindmodal.OutSelection.FirstOrDefault().ID);
+                    ViewModel.VyhladajPolozkuCommand.Execute(new ChangeEventArgs() { Value = itmfindmodal.OutSelection.FirstOrDefault().ID });
+                }
+
+            }
+        }
+    }
+
 
     private async Task<bool>
-    Save(bool askUser)  //vrati hodnotu na zaklade toho co uzivatel klikne(true - suhlasi, inak false)
+Save(bool askUser)  //vrati hodnotu na zaklade toho co uzivatel klikne(true - suhlasi, inak false)
     {
         if (askUser)
         {

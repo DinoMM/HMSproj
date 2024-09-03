@@ -27,6 +27,8 @@ namespace SkladModul.ViewModels.Objednavka
         [ObservableProperty]
         private bool uprava = true;
 
+        public List<PolozkaSkladu> ZoznamPoloziek { get; set; } = new();
+
         readonly DBContext _db;
         readonly UserService _userService;
         public bool Existujuca { get; set; } = false;
@@ -67,11 +69,33 @@ namespace SkladModul.ViewModels.Objednavka
                 }
                 ZoznamObjednavkySave.AddRange(ZoznamObjednavky);
             }
+
+
+        }
+
+        public async Task LoadZoznam()
+        {
+            ZoznamPoloziek.Clear();
+            if (_userService.IsLoggedUserInRoles(DBLayer.Models.Sklad.ZMENAPOLOZIEKROLE))
+            {
+                ZoznamPoloziek = new(await _db.PolozkySkladu.OrderBy(x => x.ID).ToListAsync());
+                return;
+            }
+            var skluz = _db.SkladUzivatelia.Where(x => x.Uzivatel == _userService.LoggedUser.Id).ToList();
+            foreach (var item in skluz)
+            {
+                ZoznamPoloziek.AddRange(_db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
+                    .Where(x => x.Sklad == item.Sklad)
+                    .Select(x => x.PolozkaSkladuX)
+                    .ToList());
+            }
+            ZoznamPoloziek = ZoznamPoloziek.DistinctBy(x => x.ID).OrderBy(x => x.ID).ToList();
         }
 
         [RelayCommand]
         private void VyhladajPolozku(ChangeEventArgs param)     //vyhlada polozku na zaklade inputu a ked najde, nastavuje novupolozku
         {
+
             var res = _db.PolozkySkladu.FirstOrDefault(x => x.ID == (string)param.Value);
             if (res == null)
             {
