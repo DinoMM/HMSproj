@@ -7,6 +7,7 @@
 @* @using System.Security.Claims; *@
 
 
+
 @inherits LayoutComponentBase
 @inject IndexViewModel ViewModel
 
@@ -59,7 +60,7 @@ else
 
 
 @code {
-    
+
 
     private ApproveModal LogOffModal = new();
 
@@ -80,6 +81,7 @@ else
             Navigator.NavigateTo("/Login");
             return;
         }
+
     }
 
     public void Dispose()
