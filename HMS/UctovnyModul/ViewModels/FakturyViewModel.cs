@@ -1,3 +1,4 @@
+using BuildingTemplates;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DBLayer;
 using DBLayer.Models;
@@ -6,7 +7,7 @@ using System.Collections.ObjectModel;
 
 namespace UctovnyModul.ViewModels.Faktury
 {
-    public partial class FakturyViewModel : ObservableObject
+    public partial class FakturyViewModel : ObservableObject, I_ValidationVM, I_RD_TableVM<Faktura>
     {
         [ObservableProperty]
         ObservableCollection<Faktura> zoznamFaktur = new();
@@ -15,6 +16,8 @@ namespace UctovnyModul.ViewModels.Faktury
 
         private readonly DBContext _db;
         private readonly UserService _userService;
+
+        
 
         public FakturyViewModel(DBContext db, UserService userService)
         {
@@ -27,9 +30,18 @@ namespace UctovnyModul.ViewModels.Faktury
             return _userService.IsLoggedUserInRoles(Faktura.ROLE_R_FAKTURY);
         }
 
+        public bool ValidateUserCRUD()
+        {
+            return _userService.IsLoggedUserInRoles(Faktura.ROLE_CRUD_FAKTURY);
+        }
+
         public async Task NacitajZoznamy()
         {
-            //ZoznamFaktur = new(_db.)
+            ZoznamFaktur = new(await _db.Faktury
+                .Include(x => x.SkupinaX)
+                .Include(x => x.OdKohoX)
+                .OrderBy(x => x.Vystavenie)
+                .ToListAsync());
             NacitavaniePoloziek = false;
         }
 
@@ -43,5 +55,7 @@ namespace UctovnyModul.ViewModels.Faktury
 
 
         }
+
+        
     }
 }

@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DBLayer.Models
 {
-    public class Rezervation
+    public partial class Rezervation
     {
         [Key]
         public long Id { get; set; }                    //id rezervacie

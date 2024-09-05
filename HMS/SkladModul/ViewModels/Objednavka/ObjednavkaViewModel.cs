@@ -83,7 +83,6 @@ namespace SkladModul.ViewModels.Objednavka
                 
             }); 
             PdfLoading = false;
-
         }
 
     }

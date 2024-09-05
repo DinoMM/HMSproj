@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DBLayer.Models
 {
-    public class HEvent
+    public partial class HEvent
     {
         [Key]
         public long ID { get; set; }
@@ -16,7 +16,7 @@ namespace DBLayer.Models
 
     }
 
-    public class UserHEvent     //prepojenie medzi userom a eventom - M:N
+    public partial class UserHEvent     //prepojenie medzi userom a eventom - M:N
     {
         [Key]
         public long ID { get; set; }

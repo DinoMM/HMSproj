@@ -12,6 +12,7 @@ using Ssklad = DBLayer.Models.Sklad;
 using Pprijemka = DBLayer.Models.Prijemka;
 using Vvydajka = DBLayer.Models.Vydajka;
 using Microsoft.EntityFrameworkCore;
+using PdfCreator.Models;
 
 namespace SkladModul.ViewModels.Sklad
 {
@@ -26,9 +27,10 @@ namespace SkladModul.ViewModels.Sklad
         private List<PolozkaSkladu> zoznamPrijatehoZPrijemok = new(); //zoznam prijatych mnozstiev len z prijemok
         private List<PolozkaSkladu> zoznamVydateho = new(); //zoznam vydatych mnozstiev
         private List<PolozkaSkladu> zoznamPrevodiekZoSkladu = new(); //zoznam vydatych mnozstiev z prevodiek z tohto skladu
-        
+
 
         public bool NacitavaniePoloziek = true;
+        public bool PdfLoading { get; set; } = false;
 
         public DateTime Obdobie { get; set; }
         public Ssklad Sklad { get; set; }
@@ -115,7 +117,8 @@ namespace SkladModul.ViewModels.Sklad
 
         public bool MoznoUzavrietObdobie()
         {
-            if (_uservice.IsLoggedUserInRoles(Ssklad.ROLE_R_SKLADOVEPOHYBY)) {
+            if (_uservice.IsLoggedUserInRoles(Ssklad.ROLE_R_SKLADOVEPOHYBY))
+            {
                 return false;
             }
             return SkladObdobie.MoznoUzavrietObdobie(Sklad, Obdobie, in _db, in _uservice);
@@ -124,6 +127,19 @@ namespace SkladModul.ViewModels.Sklad
         public void UzavrietObdobie()
         {
             SkladObdobie.UzavrietObdobie(Sklad, Obdobie, in _db, in _uservice);
+        }
+
+        public async Task VytvorPDF() //vygeneruje a otvori objednavku v pdf v default nastavenom programe
+        {
+            PdfLoading = true;
+            await Task.Run(() =>
+            {
+                UzavierkaPDF creator = new UzavierkaPDF(ZoznamPoloziek.ToList(), zoznamPoloziekSkladuMnozstva, zoznamAktualnehoMnozstva, zoznamPrijateho, zoznamPrijatehoZPrijemok, zoznamVydateho, zoznamPrevodiekZoSkladu, Obdobie, Sklad);
+                creator.GenerujPdf();
+                creator.OpenPDF();
+
+            });
+            PdfLoading = false;
         }
 
     }

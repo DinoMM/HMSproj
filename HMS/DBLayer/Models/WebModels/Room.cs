@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DBLayer.Models
 {
-    public class Room
+    public partial class Room
     {
         [Key]
         public string RoomNumber { get; set; }        //id miestnosti

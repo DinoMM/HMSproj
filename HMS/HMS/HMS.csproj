@@ -91,6 +91,7 @@
       <ProjectReference Include="..\AdminModul\AdminModul.csproj" />
       <ProjectReference Include="..\DBLayer\DBLayer.csproj" />
       <ProjectReference Include="..\LudskeZdrojeModul\LudskeZdrojeModul.csproj" />
+      <ProjectReference Include="..\RecepciaModul\RecepciaModul.csproj" />
       <ProjectReference Include="..\SkladModul\SkladModul.csproj" />
       <ProjectReference Include="..\UctovnyModul\UctovnyModul.csproj" />
       <ProjectReference Include="..\UniComponents\UniComponents.csproj" />

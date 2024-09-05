@@ -1,0 +1,89 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+@implements IModal
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="modal fade" id="@ID" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true" @onkeydown="HandleKeyDown">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">@Header</h5>
+            </div>
+            <div class="modal-body" id="modalATextLabel">
+                @BODY
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(true))>Áno</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Nie</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Header { get; set; } = "Info";
+
+    private TaskCompletionSource<bool> tcs;
+    private bool tstop = false;
+
+    [Parameter]
+    public RenderFragment BODY { get; set; }
+
+    /// <summary>
+    /// Unikatne ID podla ktoreho vieme rozoznat medzi viacerimi modalmi
+    /// </summary>
+    [Parameter]
+    public string ID { get; set; } = "staticBackdropEmptyModal";
+
+    /// <summary>
+    ///  Otvori modal pod ulozenym ID, vracia hodnotu podla toho, ci uzivatel klikol ano alebo nie
+    /// </summary>
+    /// <param name="stop"> Vrati true ak uzivatel prijal, inak false</param>
+    /// <returns></returns>
+    public async Task<bool> OpenModal(bool stop = false)
+    {
+        StateHasChanged();
+        tstop = stop;
+        if (stop)
+        {
+            tcs = new TaskCompletionSource<bool>();
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            await tcs.Task;             //fyzické statie programu
+            return tcs.Task.Result;
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            return true;
+        }
+
+    }
+
+    private void CloseModal(bool ans)
+    {
+        if (tstop)
+        {
+            tcs.SetResult(ans); //zastavi fyzické státie programu
+        }
+        JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('hide');"); //(pomohol som si z internetu tutoriály/AI)
+    }
+
+    public void UpdateText(string newText)
+    {
+        Header = newText;
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")       //po stlaceni enteru sa vykona akcia Ano
+        {
+            CloseModal(true);
+        }
+        if (e.Key == "Escape")       //po stlaceni escape sa vykona akcia Nie
+        {
+            CloseModal(false);
+        }
+    }
+
+}

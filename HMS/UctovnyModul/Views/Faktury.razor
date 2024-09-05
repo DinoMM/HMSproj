@@ -1,10 +1,105 @@
-﻿@namespace  UctovnyModul
+﻿@namespace UctovnyModul
 @page "/Faktury"
 @inject FakturyViewModel ViewModel
 
+<ApproveModal @ref=AprovMod ID="deletemodal"
+              Text="Naozaj chcete odstrániť tento riadok?<br>POZOR môžu sa vymazať prvky, ktoré sú spojené s touto položkou!"
+              FuncOnSucc="EventCallback.Empty"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+<InfoModal @ref="InfoModHasConneciton" ID="infomodalhascon"
+           Text="Nemožno vymazať Faktúru lebo je už spracovaná.">
+</InfoModal>
 
+<div class="container">
+
+    <div class="row pb-1">
+
+        <div class="col-1"></div>
+
+        <div class="col-3 d-flex justify-content-bottom mb-2">
+            <SearchInput NumCols="2" PlaceHolder="Vyhľadaj faktúru..." TableID="tableid"></SearchInput>
+        </div>
+
+        <div class="col-8">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
+                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">➕Vytvoriť Faktúru</button>
+                <button type="button" @onclick="Open" disabled="@(marked == null && !ViewModel.ValidateUserCRUD())" class="btn btn-primary">Otvoriť</button>
+            </div>
+        </div>
+
+        <div class="col-1"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-12" style="max-height: 30rem;overflow: auto;">
+            <SimpleTable ID="tableid">
+                <THEAD>
+
+                <th class="col-resize" scope="col">ID</th>
+                <th class="col-resize" scope="col">Spracovaná</th>
+                <th class="col-resize" scope="col">Vystavenie</th>
+                <th class="col-resize" scope="col">Splatnosť</th>
+                <th class="col-resize" scope="col">Organizácia</th>
+                <th class="col-resize" scope="col">Doklad</th>
+                <th class="col-resize" scope="col">Cena</th>
+                <th class="col-resize" scope="col">CenaDPH</th>
+                <th class="col-resize" scope="col"></th>
+
+                </THEAD>
+                <TBODY>
+                    @if (ViewModel.NacitavaniePoloziek)
+                    {
+                        <div class="ms-1">
+                            <SpinnerLoading Size="2.0"></SpinnerLoading>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var item in ViewModel.ZoznamFaktur)
+                        {
+
+                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
+                                <td class="col-resize">@item.ID</td>
+                                <td class="col-resize">
+                                    <SimpleCheckMark Checked="@item.Spracovana" Size="5"></SimpleCheckMark>
+                                </td>
+                                <td class="col-resize">@item.Vystavenie.ToString("dd-mm-YY")</td>
+                                <td class="col-resize">@item.Splatnost.ToString("dd-mm-YY")</td>
+                                <td class="col-resize">@item.OdKohoX.Nazov</td>
+                                <td class="col-resize">@item.Skupina</td>
+                                <td class="col-resize">@item.CenaBezDPH.ToString("F3")</td>
+                                <td class="col-resize">@item.CenaDPH.ToString("F3")</td>
+                                <td>
+                                    @if (ViewModel.ValidateUserCRUD())
+                                    {
+                                        <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
+                                    }
+                                </td>
+
+                            </tr>
+                        }
+                    }
+                    <span id="observerTarget"></span>
+                </TBODY>
+
+            </SimpleTable>
+        </div>
+        <div class="col-1"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-12"></div>
+    </div>
+
+</div>
 
 @code {
+    private DBLayer.Models.Faktura? marked = null;
+    private ApproveModal AprovMod = new();
+    private InfoModal InfoModHasConneciton = new();
 
     protected override void OnInitialized()
     {
@@ -13,23 +108,55 @@
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
-
-
-
     }
 
     protected override async Task OnInitializedAsync()
     {
         if (!ViewModel.ValidateUser())
         {
-            Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
+
         await ViewModel.NacitajZoznamy();
     }
 
     public void Close()
     {
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public void Create()
+    {
+        if (ViewModel.ValidateUserCRUD())
+        {
+            Navigator.NavigateTo(Navigator.AddNextUrl("/"));
+        }
+    }
+
+    public void Open()
+    {
+        if (marked != null)
+        {
+            if (ViewModel.ValidateUserCRUD())
+            {
+                objectHolder.Add(marked);
+                Navigator.NavigateTo(Navigator.AddNextUrl("/"));
+            }
+        }
+    }
+
+    public async Task Delete(DBLayer.Models.Faktura item)
+    {
+        if (ViewModel.MoznoVymazat(item))
+        {
+            if (await AprovMod.OpenModal(true))
+            {
+                ViewModel.Vymazat(item);
+            }
+        }
+        else
+        {
+            await InfoModHasConneciton.OpenModal();
+        }
     }
 }

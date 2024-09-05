@@ -12,8 +12,6 @@ using UglyToad.PdfPig.Writer;
 
 namespace PdfCreator.Models
 {
-
-
     public class ObjednavkaPDF : PdfCreator
     {
         public ObjednavkaPDF() : base()
@@ -33,12 +31,14 @@ namespace PdfCreator.Models
             PdfDocumentBuilder builder = new PdfDocumentBuilder();              //vytvorenie buildera, ktory to na konci vsetko prevedie to reality
             PdfPageBuilder page = builder.AddPage(PageSize.A4);                 //takto sa prida stránka do buildera
 
+            #region basic
             string fontPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MontserratRegular.ttf");    //vlastny font potrebujeme lebo klasicke nepodporuju naše znaky(ľščťžýáí..)
             byte[] fontBites = System.IO.File.ReadAllBytes(fontPath);                       //font sa precita zo subora do byte []
             PdfDocumentBuilder.AddedFont fontR = builder.AddTrueTypeFont(fontBites);            //nasledne mozeme vyuzit tento font
             fontPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MontserratBold.ttf");      //Bold
             fontBites = System.IO.File.ReadAllBytes(fontPath);
             PdfDocumentBuilder.AddedFont fontB = builder.AddTrueTypeFont(fontBites);
+            #endregion
 
             int Sx = 30;                //pomocne Pointy -> pre Ohranicenie, riadkovanie, text
             int Ex = 565;

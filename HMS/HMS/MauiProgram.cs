@@ -15,6 +15,7 @@ using SkladModul.ViewModels.Sklad;
 using AdminModul.ViewModels.Pouzivatelia;
 using HMS.Components.Services;
 using Blazored.SessionStorage;
+
 using LudskeZdrojeModul.ViewModels.SpravaRoli;
 using SkladModul;
 using SkladModul.ViewModels.Dodavatelia;
@@ -22,6 +23,7 @@ using LudskeZdrojeModul.ViewModels.Zamestnanci;
 using SkladModul.ViewModels.Sklady;
 using UctovnyModul.ViewModels;
 using UctovnyModul.ViewModels.Faktury;
+using RecepciaModul.ViewModels;
 
 
 namespace HMS
@@ -133,13 +135,16 @@ namespace HMS
             #region UctovnyModul
             builder.Services.AddTransient<FakturyViewModel>();
             #endregion
-
+            #region RecepciaModul
+            builder.Services.AddTransient<RezervaciaViewModel>();
+            #endregion
 
 
             #endregion
 
 
 #if DEBUG
+
             builder.Services.AddBlazorWebViewDeveloperTools();
             builder.Logging.AddDebug();
 #endif

@@ -32,6 +32,8 @@ namespace HMS.ViewModels
             modulesList.Add(("Zamestnanci", "/Zam", IdentityUserOwn.ROLE_R_ZAMESTNANCI));
             modulesList.Add(("Organizácie", "/Dodavatelia", IdentityUserOwn.ROLE_R_ZAMESTNANCI));
             modulesList.Add(("Sklady", "/Sklady", Sklad.ROLE_R_SKLAD));
+            modulesList.Add(("Faktúry", "/Faktury", Faktura.ROLE_R_FAKTURY));
+            modulesList.Add(("Rezervácie", "/Rezervacia", Rezervation.ROLE_R_REZERVACIA));
 
         }
 

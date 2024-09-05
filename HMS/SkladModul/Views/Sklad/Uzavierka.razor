@@ -15,13 +15,20 @@
         <div class="row">
             <div class="col-12 text-center">
                 <h5>Cena prijatých položiek: @ViewModel.GetTotalSumPrijemky() €</h5>
-                <h5>Cena vydatých položiek: @ViewModel.GetTotalSumVydajky() €</h5>
+                <h5>Cena vydaných položiek: @ViewModel.GetTotalSumVydajky() €</h5>
             </div>
         </div>
     </div>
     <div class="row">
         <div class="col-12 text-center">
             <button type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))" class="btn btn-secondary m-2">Späť</button>
+            <button class="btn btn-primary fixed-size-button" @onclick="GeneratePDF" disabled=@(ViewModel.PdfLoading) type="button">
+                📄Otvoriť ako PDF
+                @if (ViewModel.PdfLoading)
+                {
+                    <SpinnerLoading ExtraSmall="true" />
+                }
+            </button>
             <button type="button" disabled="@(!ViewModel.MoznoUzavrietObdobie())" class="btn btn-primary m-2" @onclick="CloseSeasson">Uzavrieť obdobie</button>
         </div>
     </div>
@@ -39,7 +46,7 @@
                 <th scope="col">Začiatočné Množstvo</th>
                 <th scope="col">Aktuálne Množstvo</th>
                 <th scope="col">Prijaté Množstvo</th>
-                <th scope="col">Vydaté Množstvo</th>
+                <th scope="col">Vydané Množstvo</th>
                 </THEAD>
                 <TBODY>
                     @if (ViewModel.NacitavaniePoloziek)
@@ -110,5 +117,10 @@
         {
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
         };
+    }
+
+    private async Task GeneratePDF()
+    {
+        await ViewModel.VytvorPDF();
     }
 }

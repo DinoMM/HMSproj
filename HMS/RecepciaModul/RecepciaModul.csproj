@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -11,17 +11,18 @@
     <SupportedPlatform Include="browser" />
   </ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
+  <ItemGroup>
+    <PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.2" />
 		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.2" />
 		<PackageReference Include="Sve.Blazor.InfiniteScroll" Version="1.0.0-alpha" />
-	</ItemGroup>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\BuildingTemplates\BuildingTemplates.csproj" />
     <ProjectReference Include="..\DBLayer\DBLayer.csproj" />
+    <ProjectReference Include="..\PdfCreator\PdfCreator.csproj" />
     <ProjectReference Include="..\UniComponents\UniComponents.csproj" />
   </ItemGroup>
 

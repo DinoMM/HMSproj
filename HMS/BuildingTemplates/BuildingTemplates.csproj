@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="PdfPig" Version="0.1.8" />
+    <ProjectReference Include="..\DBLayer\DBLayer.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DBLayer\DBLayer.csproj" />
+    <Folder Include="Views\" />
   </ItemGroup>
 
 </Project>

@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DBLayer.Models
 {
-    public class Coupon
+    public partial class Coupon
     {
         [Key]
         [MaxLength(10)]

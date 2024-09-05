@@ -1,0 +1,253 @@
+﻿@namespace RecepciaModul
+@page "/Rezervacia"
+@inject RezervaciaViewModel ViewModel
+@using UniComponents
+@using Microsoft.AspNetCore.Components.Forms
+
+
+<!-- časový diagram od https://codepen.io/ph1p/pen/JBBjNy?utm_source=bypeople -->
+
+
+<style>
+    .gantt__row-bars {
+        list-style: none;
+        display: grid;
+        padding: 9px 0;
+        margin: 0;
+        grid-template-columns: repeat(@((ViewModel.ZoznamDatumovNaZobrazenie.Count * 2).ToString()), 1fr);
+        grid-gap: 2px 0;
+        border-top: 1px solid rgba(221, 221, 221, 0.8);
+    }
+    .gantt__row--months span {
+        text-align: center;
+        font-size: 13px;
+        align-self: center;
+        font-weight: bold;
+        padding: 20px 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+        .gantt__row--months span.highlight {
+            color: @ViewModel.HEX_YELLOW;
+            padding: unset;
+            overflow: unset;
+            text-overflow: unset;
+        }
+</style>
+
+<script>
+    function highlightHover(Id) {
+        document.getElementById('header'+Id).classList.add('highlight');
+        document.getElementById('lineheader'+Id).classList.add('hovermarker');
+    }
+
+    function removeHover(Id) {
+        document.getElementById('header'+Id).classList.remove('highlight');
+        document.getElementById('lineheader'+Id).classList.remove('hovermarker');
+    }
+
+    function highlightHoverR(Id) {
+        document.getElementById('rowh'+Id).classList.add('hovermarker');
+    }
+
+    function removeHoverR(Id) {
+        document.getElementById('rowh'+Id).classList.remove('hovermarker');
+    }
+
+    function hideRow(Id) {
+            document.getElementById('rowh'+Id).classList.add('hiderow');
+
+    }
+    function showRow(Id) {
+            document.getElementById('rowh'+Id).classList.remove('hiderow');
+
+    }
+</script>
+
+@*<object @ref="daatePcker" ID="dtpickermodal" Header="Zmeniť rozsah obdobia">
+        <BODY>
+            <label for="date1">Od</label>
+            <InputDate id="date1" @bind-Value="ViewModel.DatumOd" />
+            <label for="date2">Do</label>
+            <InputDate id="date2" @bind-Value="ViewModel.DatumDo" />
+        </BODY>
+    </object>*@
+
+<CustomModal @ref="daatePcker" ID="dtpickermodal" Header="Zmeniť rozsah obdobia">
+    <BODY>
+        <label for="date1">Od</label>
+        <InputDate id="date1" class="form-input" @bind-Value="ViewModel.DatumOd" />
+        <label for="date2">Do</label>
+        <InputDate id="date2" class="form-input" @bind-Value="ViewModel.DatumDo" />
+    </BODY>
+
+</CustomModal>
+
+
+@if (ViewModel.NacitavaniePoloziek)
+{
+    <div class="d-flex justify-content-center align-items-center vh-100">
+        <SpinnerLoading Size="3" />
+    </div>
+    return;
+}
+
+
+<div class="gantt">
+    <div class="sticky1 ms-1">
+        <div class="sticky1 btn-group" role="group">
+            <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
+            <button type="button" class="btn btn-primary" disabled="">➕Vytvoriť</button>
+            <button type="button" class="btn btn-primary" disabled="">Otvoriť</button>
+            <button type="button" class="btn btn-primary" @onclick="OpenChangeDate">@ViewModel.ZoznamDatumovNaZobrazenie[0].ToString("dd.MM.-")@ViewModel.ZoznamDatumovNaZobrazenie.Last().ToString("dd.MM.")</button>
+
+        </div>
+    </div>
+
+    <div class="sticky2 gantt__row gantt__row--months" style="grid-template-columns: 150px repeat(@((ViewModel.ZoznamDatumovNaZobrazenie.Count).ToString()), 1fr);">
+        <div class="gantt__row-first"></div>
+        @for (int i = 0; i < ViewModel.ZoznamDatumovNaZobrazenie.Count; ++i)
+        {
+            <span id="@("header" + i)">@ViewModel.ZoznamDatumovNaZobrazenie[i].ToString("dd.MM.")</span>
+        }
+    </div>
+    <div style="position: relative; top:45px;"></div>
+    <div class="gantt__row gantt__row--lines" style="grid-template-columns: 150px repeat(@((ViewModel.ZoznamDatumovNaZobrazenie.Count).ToString()), 1fr);">
+        <span></span>
+        @for (int i = 0; i < ViewModel.ZoznamDatumovNaZobrazenie.Count; ++i)
+        {
+            @if (ViewModel.ZoznamDatumovNaZobrazenie[i] == DateTime.Today)
+            {
+                <span id="@("lineheader" + i)" class="marker" onmouseover="highlightHover('@i')" onmouseout="removeHover('@i')"></span>
+            }
+            else
+            {
+                <span id="@("lineheader" + i)" onmouseover="highlightHover('@i')" onmouseout="removeHover('@i')"></span>
+            }
+        }
+    </div>
+
+    @for (var i = 0; i < ViewModel.ZoznamIzieb.Count; ++i)
+    {
+        var item = ViewModel.ZoznamIzieb[i];
+        <div id="@("rowh" + i)" class="gantt__row">
+            <div class="gantt__row-first">
+                @if (RoomsToShow.Contains(item))
+                {
+                    <label>@(item.RoomNumber + ", " + item.RoomCategory)</label>
+                    <a @onclick="@(async () => await HideRow(item))" style="cursor: pointer;">
+                        <i class="bi bi-arrow-down"></i>
+                    </a>
+                }
+                else
+                {
+                    <a @onclick="@(async () => await HideRow(item))" style="cursor: pointer;">
+                        <i class="bi bi-arrow-up"></i>
+                    </a>
+                }
+            </div>
+            <ul class="gantt__row-bars" onmouseover="highlightHoverR('@i')" onmouseout="removeHoverR('@i')">
+                @if (RoomsToShow.Contains(item))
+                {
+                    @foreach (var ytem in ViewModel.ZoznamRezervacii.Where(x => x.RoomNumber == item.RoomNumber))
+                    {
+                        var res = ViewModel.GetPoziciaRes(ytem);
+                        if (res.Item2 != 0)
+                        {
+                            <li style="grid-column: @res.Item1; background-color: @(ViewModel.GetHexFarbuRes(ytem));" class="@(res.Item2 != 3 ? "stripes" : "") @(res.Item2 == 4 ? " stripesstraight" : "")">@(ViewModel.ResName(ytem))</li>
+                        }
+                    }
+                }
+
+            </ul>
+        </div>
+    }
+
+
+    @*<div class="gantt__row gantt__row--empty">
+            <div class="gantt__row-first">
+                Ryley Huggons
+            </div>
+            <ul class="gantt__row-bars"></ul>
+        </div>*@
+
+    @*<div class="gantt__row">
+            <div class="gantt__row-first">
+                Lanie Erwin
+            </div>
+            <ul class="gantt__row-bars">
+                <li style="grid-column: 2/5; background-color: #2ecaac;">Start Februar 🙌</li>
+                <li style="grid-column: 4/6; background-color: #ff6252;" class="stripes"></li>
+                <li style="grid-column: 9/11; background-color: #54c6f9;">Same line</li>
+            </ul>
+        </div>*@
+
+
+</div>
+
+
+
+@code {
+
+    CustomModal daatePcker = new();
+    List<DBLayer.Models.Room> RoomsToShow = new();
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            return;
+        }
+        await ViewModel.NacitajZoznamy();
+        RoomsToShow = new(ViewModel.ZoznamIzieb.ToList());
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+
+    }
+
+    public async Task OpenChangeDate()
+    {
+        ViewModel.DatumOd = ViewModel.ZoznamDatumovNaZobrazenie[0];
+        ViewModel.DatumDo = ViewModel.ZoznamDatumovNaZobrazenie.Last();
+        if (await daatePcker.OpenModal(true))
+        {
+            await ViewModel.ChangeDate();
+        }
+    }
+
+    private async Task HideRow(DBLayer.Models.Room room)
+    {
+        var index = ViewModel.ZoznamIzieb.IndexOf(room);
+        if (RoomsToShow.Contains(room))
+        {
+            RoomsToShow.Remove(room);
+            await JSRuntime.InvokeVoidAsync("hideRow", "" + index);
+        }
+        else
+        {
+            RoomsToShow.Add(room);
+            await JSRuntime.InvokeVoidAsync("showRow", "" + index);
+        }
+
+    }
+
+
+
+
+}
