@@ -13,6 +13,7 @@ using Pprijemka = DBLayer.Models.Prijemka;
 using Vvydajka = DBLayer.Models.Vydajka;
 using Microsoft.EntityFrameworkCore;
 using PdfCreator.Models;
+using System.Drawing;
 
 namespace SkladModul.ViewModels.Sklad
 {
@@ -27,7 +28,7 @@ namespace SkladModul.ViewModels.Sklad
         private List<PolozkaSkladu> zoznamPrijatehoZPrijemok = new(); //zoznam prijatych mnozstiev len z prijemok
         private List<PolozkaSkladu> zoznamVydateho = new(); //zoznam vydatych mnozstiev
         private List<PolozkaSkladu> zoznamPrevodiekZoSkladu = new(); //zoznam vydatych mnozstiev z prevodiek z tohto skladu
-
+        private double DiffMedziVydatymAPrijatym = 0.0;
 
         public bool NacitavaniePoloziek = true;
         public bool PdfLoading { get; set; } = false;
@@ -52,6 +53,14 @@ namespace SkladModul.ViewModels.Sklad
         {
             return zoznamAktualnehoMnozstva.FirstOrDefault(x => x.ID == poloz.ID)?.Mnozstvo.ToString("F3") ?? 0.ToString("F3");
         }
+        public string GetAktualnaCena(PolozkaSkladu poloz)
+        {
+            return zoznamAktualnehoMnozstva.FirstOrDefault(x => x.ID == poloz.ID)?.Cena.ToString("F3") ?? 0.ToString("F3");
+        }
+        public string GetAktualnaCenaDPH(PolozkaSkladu poloz)
+        {
+            return zoznamAktualnehoMnozstva.FirstOrDefault(x => x.ID == poloz.ID)?.CenaDPH.ToString("F3") ?? 0.ToString("F3");
+        }
         public string GetPrijateMnozstvo(PolozkaSkladu poloz)
         {
             return zoznamPrijateho.FirstOrDefault(x => x.ID == poloz.ID)?.Mnozstvo.ToString("F3") ?? 0.ToString("F3");
@@ -70,9 +79,17 @@ namespace SkladModul.ViewModels.Sklad
         }
         public string GetTotalSumVydajky()
         {
-            var sum1 = zoznamVydateho.Sum(x => x.CelkovaCena);
-            var sum2 = zoznamPrevodiekZoSkladu.Sum(x => x.CelkovaCena);
             return (zoznamVydateho.Sum(x => x.CelkovaCena) - zoznamPrevodiekZoSkladu.Sum(x => x.CelkovaCena)).ToString("F3");
+        }
+
+        public string GetTotalSumAktual()
+        {
+            return zoznamAktualnehoMnozstva.Sum(x => x.CelkovaCena).ToString("F4");
+        }
+
+        public string GetTotalDiff()
+        {
+            return DiffMedziVydatymAPrijatym.ToString("F3");
         }
 
         public void SetProp(Ssklad sk, string ob)
@@ -106,6 +123,49 @@ namespace SkladModul.ViewModels.Sklad
 
             zoznamPrevodiekZoSkladu = Ssklad.GetPoctyZPrevodiekZoSkladu(Sklad, Obdobie, in _db);    //pripocitanie prevodiek zo skladu do prijateho mnozstva
 
+            #region vypocitavanie ceny aktualneho skladu
+            DiffMedziVydatymAPrijatym = 0.0;
+            var ZozPrijat = new List<PolozkaSkladu>();
+            //var ZozVydat = new List<PolozkaSkladu>();
+            //var ZozPrevod = new List<PolozkaSkladu>();
+            foreach (var item in ZoznamPoloziek)
+            {
+                var pridItem = item.Clon();
+                pridItem.Cena = 0.0;
+                pridItem.Mnozstvo = 0.0;
+                ZozPrijat.Add(pridItem);
+                //var pridItem2 = pridItem.Clon();
+                //ZozPrijat.Add(pridItem2);
+                //var pridItem3 = pridItem2.Clon();
+                //ZozPrijat.Add(pridItem);
+            }
+            var vsetkyObdobia = _db.SkladObdobi.Include(x => x.SkladX).Where(x => x.Sklad == Sklad.ID).OrderBy(x => x.Obdobie).ToList();
+
+            foreach (var item in vsetkyObdobia)
+            {
+                if (item.Obdobie <= Obdobie)
+                {
+                    var prijate = Ssklad.GetPoctyZPrijemok(Sklad, item.Obdobie, in _db);
+                    var vydateAll = Ssklad.GetPoctyZVydajok(Sklad, item.Obdobie, in _db);
+                    var vydatePrevodky = Ssklad.GetPoctyZPrevodiekZoSkladu(Sklad, item.Obdobie, in _db);
+                    double sumaVydate = vydateAll.Sum(x => x.CelkovaCena) - vydatePrevodky.Sum(x => x.CelkovaCena);
+                    DiffMedziVydatymAPrijatym += sumaVydate - prijate.Sum(x => x.CelkovaCena);
+
+                    ZozPrijat.AddRange(prijate);
+                    ZozPrijat = PolozkaSkladu.ZosumarizujListPoloziek(in ZozPrijat, true);
+                    //ZozVydat.AddRange(vydateAll);
+                    //ZozVydat = PolozkaSkladu.ZosumarizujListPoloziek(in ZozVydat);
+                    //ZozPrevod.AddRange(vydatePrevodky);
+                    //ZozPrevod = PolozkaSkladu.ZosumarizujListPoloziek(in ZozPrevod);
+                }
+            }
+            foreach (var item in zoznamAktualnehoMnozstva)
+            {
+                double num = ZozPrijat.FirstOrDefault(x => x.ID == item.ID)?.Cena ?? 0.0;
+                item.Cena = double.IsNaN(num) ? 0.0 : num;
+            }
+
+            #endregion 
             NacitavaniePoloziek = false;
 
         }
@@ -134,7 +194,7 @@ namespace SkladModul.ViewModels.Sklad
             PdfLoading = true;
             await Task.Run(() =>
             {
-                UzavierkaPDF creator = new UzavierkaPDF(ZoznamPoloziek.ToList(), zoznamPoloziekSkladuMnozstva, zoznamAktualnehoMnozstva, zoznamPrijateho, zoznamPrijatehoZPrijemok, zoznamVydateho, zoznamPrevodiekZoSkladu, Obdobie, Sklad);
+                UzavierkaPDF creator = new UzavierkaPDF(ZoznamPoloziek.ToList(), zoznamPoloziekSkladuMnozstva, zoznamAktualnehoMnozstva, zoznamPrijateho, zoznamPrijatehoZPrijemok, zoznamVydateho, zoznamPrevodiekZoSkladu, Obdobie, Sklad, DiffMedziVydatymAPrijatym, GetTotalSumAktual());
                 creator.GenerujPdf();
                 creator.OpenPDF();
 

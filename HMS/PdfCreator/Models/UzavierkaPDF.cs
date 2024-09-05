@@ -24,7 +24,9 @@ namespace PdfCreator.Models
         private List<PolozkaSkladu> zoznamPrevodiekZoSkladu = new(); //zoznam vydatych mnozstiev z prevodiek z tohto skladu
         private DateTime Obdobie;
         private Sklad SkladOb;
-        public UzavierkaPDF(List<PolozkaSkladu> zoznamPoloziek, List<PolozkaSkladuMnozstvo> zoznamPoloziekSkladuMnozstva, List<PolozkaSkladu> zoznamAktualnehoMnozstva, List<PolozkaSkladu> zoznamPrijateho, List<PolozkaSkladu> zoznamPrijatehoZPrijemok, List<PolozkaSkladu> zoznamVydateho, List<PolozkaSkladu> zoznamPrevodiekZoSkladu, DateTime obdobie, Sklad sklad) : base()
+        private double CenaAktSkladu = 0.0;
+        private string TotSAktualSklad = "";
+        public UzavierkaPDF(List<PolozkaSkladu> zoznamPoloziek, List<PolozkaSkladuMnozstvo> zoznamPoloziekSkladuMnozstva, List<PolozkaSkladu> zoznamAktualnehoMnozstva, List<PolozkaSkladu> zoznamPrijateho, List<PolozkaSkladu> zoznamPrijatehoZPrijemok, List<PolozkaSkladu> zoznamVydateho, List<PolozkaSkladu> zoznamPrevodiekZoSkladu, DateTime obdobie, Sklad sklad, double cenaAktSkladu, string totalSumAktualSklad) : base()
         {
             FileName = "UzavierkaSkladu.pdf";
             FullPathPDF = System.IO.Path.Combine(FolderPath, FileName);    //vysledna cesta
@@ -37,6 +39,8 @@ namespace PdfCreator.Models
             this.zoznamPrevodiekZoSkladu = zoznamPrevodiekZoSkladu;
             Obdobie = obdobie;
             SkladOb = sklad;
+            CenaAktSkladu = cenaAktSkladu;
+            TotSAktualSklad = totalSumAktualSklad;
         }
 
         public void GenerujPdf()
@@ -72,10 +76,14 @@ namespace PdfCreator.Models
             {
                 double imx = ((Sx + Ex) * 0.5) - 150;
                 double imy = ((Sy + Ey) * 0.75) + Riad * 4 - 5;
-                page.AddText($"Inventúrny súpis obdobia: {Sklad.ShortFromObdobie(Obdobie)}", fontSize + 4, new PdfPoint(imx, imy), fontB);
-                var endp = page.AddText($"Sklad: ", fontSize + 2, new PdfPoint(imx + 100, imy - Riad), fontR);
+                var endp = page.AddText($"Inventúrny súpis obdobia: {Sklad.ShortFromObdobie(Obdobie)}", fontSize + 4, new PdfPoint(imx, imy), fontB);
+                actual = endp[^1].EndBaseLine;
+                endp = page.AddText($"Sklad: ", fontSize + 2, actual.Translate(100, 0), fontR);
                 actual = endp[^1].EndBaseLine;
                 page.AddText($"{SkladOb.ID}", fontSize + 2, actual, fontB);
+                endp = page.AddText($"Cena aktuálneho skladu: ", fontSize + 2, new PdfPoint(imx + 25, imy - Riad), fontR);
+                actual = endp[^1].EndBaseLine;
+                page.AddText($"{TotSAktualSklad} €", fontSize + 2, actual, fontB);
                 endp = page.AddText($"Cena prijatých položiek: ", fontSize + 2, new PdfPoint(imx + 25, imy - Riad * 2), fontR);
                 actual = endp[^1].EndBaseLine;
                 page.AddText($"{GetTotalSumPrijemky()} €", fontSize + 2, actual, fontB);

@@ -14,8 +14,10 @@
         </div>
         <div class="row">
             <div class="col-12 text-center">
+                <h5>Cena aktuálneho skladu: @ViewModel.GetTotalSumAktual() € </h5>
                 <h5>Cena prijatých položiek: @ViewModel.GetTotalSumPrijemky() €</h5>
                 <h5>Cena vydaných položiek: @ViewModel.GetTotalSumVydajky() €</h5>
+                <h5>Celkový podiel (vydané - prijaté): @ViewModel.GetTotalDiff() €</h5>
             </div>
         </div>
     </div>
@@ -64,8 +66,8 @@
                                 <td class="col-resize">@item.ID </td>
                                 <td class="col-resize">@item.Nazov </td>
                                 <td class="col-resize">@item.MernaJednotka </td>
-                                <td class="col-resize">@item.Cena.ToString("F3") </td>
-                                <td class="col-resize">@item.CenaDPH.ToString("F3") </td>
+                                <td class="col-resize">@ViewModel.GetAktualnaCena(item) </td>
+                                <td class="col-resize">@ViewModel.GetAktualnaCenaDPH(item) </td>
                                 <td class="col-resize">@ViewModel.GetPolozkaPrijemky(item).Cena.ToString("F4") </td>
                                 <td class="col-resize">@ViewModel.GetPolozkaPrijemky(item).CenaDPH.ToString("F4") </td>
                                 <td class="col-resize">@ViewModel.GetMnozstvoZaciatok(item)</td>

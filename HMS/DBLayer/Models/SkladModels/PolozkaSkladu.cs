@@ -62,9 +62,9 @@ namespace DBLayer.Models
             .ToList();
         }
 
-        public static List<PolozkaSkladu> ZosumarizujListPoloziek(in List<PolozkaSkladu> polozky)
+        public static List<PolozkaSkladu> ZosumarizujListPoloziek(in List<PolozkaSkladu> polozky, bool checkNan = false)
         {
-            return polozky.GroupBy(x => x.ID) //spoji duplikaty do unikatneho listu
+            var list = polozky.GroupBy(x => x.ID) //spoji duplikaty do unikatneho listu
             .Select(group => new PolozkaSkladu()
             {
                 ID = group.Key,
@@ -74,6 +74,12 @@ namespace DBLayer.Models
                 Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo)
             })
             .ToList();
+            if (checkNan) {
+                foreach (var item in list) {
+                    item.Cena = double.IsNaN(item.Cena) ? 0.0 : item.Cena;
+                }
+            }
+            return list;
         }
 
         public static List<PolozkaSkladu> ZosumarizujListPoloziek(in List<PrijemkaPolozka> polozky)
