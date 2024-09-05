@@ -22,22 +22,12 @@ namespace DBLayer.Models
         public string? CouponId { get; set; }
 
         public IdentityUserWebOwn Guest { get; set; }
-
+        
         public Room Room { get; set; }
 
         public Coupon? Coupon { get; set; }
 
-
-        //public void setToDef()
-        //{
-        //    Id = 0;
-        //    RoomNumber = 0;
-        //    ArrivalDate = DateTime.Now;
-        //    DepartureDate = DateTime.Now;
-        //    NumberGuest = 0;
-        //    GuestId = "";
-        //    Guest = new IdentityUserWebOwn();
-        //}
+        public string Status { get; set; } = ReservationStatus.VytvorenaRucne.ToString();
 
         public void setFromReservation(Rezervation res)
         {
@@ -51,6 +41,17 @@ namespace DBLayer.Models
             GuestId = res.GuestId;
             Guest = res.Guest;
         }
+
+
+    }
+    public enum ReservationStatus
+    {
+        VytvorenaRucne,
+        VytvorenaWeb,
+        SchvalenaNezaplatena,
+        SchvalenaZaplatena,
+        Stornovana
+
     }
 
 
