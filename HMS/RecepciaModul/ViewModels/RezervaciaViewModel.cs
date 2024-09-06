@@ -41,7 +41,7 @@ namespace RecepciaModul.ViewModels
             _userService = userService;
             _dbw = dbw;
 
-            ZoznamDatumovNaZobrazenie = GetRozmedzieDatumov(-5, DateTime.Today, 8);     //zakladne rozmedzie datumov na zobrazenie
+            ZoznamDatumovNaZobrazenie = GetRozmedzieDatumov(-3, DateTime.Today, 10);     //zakladne rozmedzie datumov na zobrazenie
         }
 
         public bool ValidateUser()

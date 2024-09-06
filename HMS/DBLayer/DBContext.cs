@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using DBLayer.Models;
+using DBLayer.Models.RecepciaModels;
 
 
 
@@ -47,7 +48,15 @@ namespace DBLayer
         public DbSet<Prijemka> Prijemky { get; set; }
         public DbSet<Vydajka> Vydajky { get; set; }
         public DbSet<PrijemkaPolozka> VydajkyPolozky { get; set; }      //ten isty typ pre Prijem/Vydaj
+        
         public DbSet<Faktura> Faktury { get; set; }
+
+        public DbSet<Host> Hostia { get; set; }
+        public DbSet<HostFlag> HostFlags { get; set; }
+        public DbSet<HostConFlag> HostConFlags { get; set; }
+        public DbSet<HostConReservation> HostConReservations { get; set; }
+        public DbSet<RoomFlag> RoomFlags { get; set; }
+        public DbSet<RoomConFlag> RoomConFlags { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -110,8 +119,17 @@ namespace DBLayer
             //.IsUnique();
             //modelBuilder.Entity<Sklad>()
             // .HasKey(s => new { s.ID, s.Obdobie });
-            modelBuilder.Entity<SkladObdobie>()
+            modelBuilder.Entity<SkladObdobie>()                     //bez primarneho kluca
                 .HasKey(s => new { s.Obdobie, s.Sklad });
+
+            modelBuilder.Entity<HostConFlag>()                      //bez primarneho kluca
+                .HasKey(s => new { s.Host, s.HostFlag });
+            modelBuilder.Entity<HostConReservation>()                      //bez primarneho kluca
+                .HasKey(s => new { s.Host, s.Reservation });
+            modelBuilder.Entity<RoomConFlag>()                      //bez primarneho kluca
+                .HasKey(s => new { s.Room, s.RoomFlag });
+
+
         }
 
         public class YourDbContextFactory : IDesignTimeDbContextFactory<DBContext>    //Pre manazovanie migraci je potrebna tato trieda (pomohol som si z internetu tutoriály/AI)
