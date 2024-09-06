@@ -1,6 +1,6 @@
-﻿@namespace SkladModul
-@page "/Dodavatelia"
-@inject DodavateliaViewModel ViewModel
+﻿@namespace RecepciaModul
+@page "/Hostia"
+@inject HostiaViewModel ViewModel
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
               Text="Naozaj chcete odstrániť tento riadok?<br>POZOR môžu sa vymazať prvky, ktoré sú spojené s touto položkou!"
@@ -8,7 +8,7 @@
               FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
 <InfoModal @ref="InfoModHasConneciton" ID="infomodalhascon"
-           Text="Nemožno vymazať organizáciu lebo je pridelená k objednávkam.">
+           Text="Nemožno vymazať hosťa lebo má aktívnu rezerváciu.">
 </InfoModal>
 
 <div class="container">
@@ -18,14 +18,14 @@
         <div class="col-1"></div>
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="5" PlaceHolder="Vyhľadaj organizáciu..." TableID="tableid"></SearchInput>
+            <SearchInput NumCols="3" PlaceHolder="Vyhľadaj hosťa..." TableID="tableid"></SearchInput>
         </div>
 
         <div class="col-8">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">➕Pridať organizáciu</button>
-                <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary">Otvoriť</button>
+                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">➕Vytvoriť kartu hosťa</button>
+                <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUser())" class="btn btn-primary">Otvoriť</button>
             </div>
         </div>
 
@@ -38,13 +38,13 @@
             <SimpleTable ID="tableid">
                 <THEAD>
 
-                <th class="col-resize" scope="col">IČO</th>
-                <th class="col-resize" scope="col">Názov</th>
-                <th class="col-resize" scope="col">Obec</th>
-                <th class="col-resize" scope="col">Adresa</th>
-                <th class="col-resize" scope="col">IBAN</th>
+                <th class="col-resize" scope="col">Meno</th>
+                <th class="col-resize" scope="col">Priezvisko</th>
+                <th class="col-resize" scope="col">Rod.č.</th>
+                <th class="col-resize" scope="col">Občan.č.</th>
+                <th class="col-resize" scope="col">Pas</th>
+                <th class="col-resize" scope="col">Účet</th>
                 <th class="col-resize" scope="col"></th>
-
                 </THEAD>
                 <TBODY>
                     @if (ViewModel.NacitavaniePoloziek)
@@ -55,15 +55,16 @@
                     }
                     else
                     {
-                        @foreach (var item in ViewModel.ZoznamDodavatelov)
+                        @foreach (var item in ViewModel.ZoznamHosti)
                         {
 
                             <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
-                                <td class="col-resize">@item.ICO</td>
-                                <td class="col-resize">@item.Nazov</td>
-                                <td class="col-resize">@item.Obec</td>
-                                <td class="col-resize">@item.Adresa</td>
-                                <td class="col-resize">@item.Iban</td>
+                                <td class="col-resize">@item.Name</td>
+                                <td class="col-resize">@item.Surname</td>
+                                <td class="col-resize">@item.BirthNumber</td>
+                                <td class="col-resize">@item.CitizenID</td>
+                                <td class="col-resize">@item.Passport</td>
+                                <td class="col-resize">@(item.GuestZ?.Email ?? "-")</td>
                                 <td>
                                     @if (ViewModel.ValidateUserCRUD())
                                     {
@@ -89,7 +90,8 @@
 </div>
 
 @code {
-    private DBLayer.Models.Dodavatel? marked = null;
+
+    private DBLayer.Models.Host? marked = null;
     private ApproveModal AprovMod = new();
     private InfoModal InfoModHasConneciton = new();
 
@@ -104,6 +106,10 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (!ViewModel.ValidateUser())
+        {
+            return;
+        }
         await ViewModel.NacitajZoznamy();
     }
 
@@ -116,21 +122,21 @@
     {
         if (marked != null)
         {
-            if (ViewModel.ValidateUserCRUD())
+            if (ViewModel.ValidateUser())
             {
                 objectHolder.Add(marked);
-                Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDodavatel"));
+                Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDHost"));
             }
         }
     }
 
-    public async Task Delete(DBLayer.Models.Dodavatel user)
+    public async Task Delete(DBLayer.Models.Host item)
     {
-        if (ViewModel.MoznoVymazat(user))
+        if (ViewModel.MoznoVymazat(item))
         {
             if (await AprovMod.OpenModal(true))
             {
-                await ViewModel.Vymazat(user);
+                ViewModel.Vymazat(item);
             }
         }
         else
@@ -143,7 +149,7 @@
     {
         if (ViewModel.ValidateUserCRUD())
         {
-            Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDodavatel"));
+            Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDHost"));
         }
     }
 }

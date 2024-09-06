@@ -25,9 +25,9 @@
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
                 <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">➕Vytvoriť sklad</button>
-                <button type="button" @onclick="Open" disabled="@(marked == null && !ViewModel.ValidateUserCRUD())" class="btn btn-primary">Otvoriť</button>
+                <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary">Otvoriť</button>
             </div>
-        </div>ow any 
+        </div> 
 
         <div class="col-1"></div>
     </div>
@@ -98,6 +98,10 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (!ViewModel.ValidateUser())
+        {
+            return;
+        }
         await ViewModel.NacitajZoznamy();
     }
 

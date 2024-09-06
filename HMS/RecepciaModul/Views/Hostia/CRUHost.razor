@@ -1,0 +1,183 @@
+﻿@namespace RecepciaModul
+@page "/Hostia/CRUDHost"
+@inject CRUHostViewModel ViewModel
+
+@using Microsoft.AspNetCore.Components.Forms
+
+<InfoModal @ref="InfoModSaved" ID="infosaved"
+           Text="Zmeny boli uložené" />
+
+<ItemFinderTable T="IdentityUserWebOwn" @ref="itemFindUser" ID="fndwebusr"
+                 ColNames="@(new() {"Meno", "Priezvisko", "Username", "Email", "Telefón" })"
+                 SearchedValue="@(ViewModel.HostInput.GuestZ?.Email ?? "")"
+                 OnlyProtectedPersonalDataAttribute="true"
+                 SelectEmptyInstance="true">
+
+</ItemFinderTable>
+
+<EditForm Model="ViewModel.HostInput" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+
+    <div class="container px-5">
+
+        <div class="row g-3 p-3">
+
+            <div class="">
+                <h2 class="text-center">Informácie&nbsp;o&nbsp;hosťovi</h2>
+            </div>
+            <div class="col">
+
+                <div class="row">
+                    <div class="col col-8">
+                        <label>Meno*</label>
+                        <InputText @bind-Value="@ViewModel.HostInput.Name" class="form-control" placeholder="Meno" />
+                        <ValidationMessage For="@(() => ViewModel.HostInput.Name)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-8">
+                        <label>Priezvisko*</label>
+                        <InputText @bind-Value="@ViewModel.HostInput.Surname" class="form-control" placeholder="Priezvisko" />
+                        <ValidationMessage For="@(() => ViewModel.HostInput.Surname)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-8">
+                        <label>Adresa</label>
+                        <InputText @bind-Value="@ViewModel.HostInput.Address" class="form-control" placeholder="Adresa" />
+                        <ValidationMessage For="@(() => ViewModel.HostInput.Address)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-8">
+                        <label>Dátum&nbsp;narodenia</label>
+                        <InputDate @bind-Value="@ViewModel.HostInput.BirthDate" />
+                        <ValidationMessage For="@(() => ViewModel.HostInput.BirthDate)" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="row">
+                    <div class="col col-8">
+                        <label>Rodné&nbsp;číslo</label>
+                        <InputText @bind-Value="@ViewModel.HostInput.BirthNumber" class="form-control" placeholder="Rodné číslo" />
+                        <ValidationMessage For="@(() => ViewModel.HostInput.BirthNumber)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-8">
+                        <label>Číslo&nbsp;občianského</label>
+                        <InputText @bind-Value="@ViewModel.HostInput.CitizenID" class="form-control" placeholder="Číslo občianského" />
+                        <ValidationMessage For="@(() => ViewModel.HostInput.CitizenID)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-8">
+                        <label>Číslo&nbsp;pasu</label>
+                        <InputText @bind-Value="@ViewModel.HostInput.Passport" class="form-control" placeholder="Číslo pasu" />
+                        <ValidationMessage For="@(() => ViewModel.HostInput.Passport)" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="vr p-0"></div>
+            <div class="col">
+                <h2 class="text-center">Informácie&nbsp;o&nbsp;web&nbsp;užívateľovi</h2>
+                <div class="row">
+                    <div class="col col-8">
+                        <label>Iniciály</label>
+                        <input type="text" disabled class="form-control" value="@((ViewModel.HostInput.GuestZ?.Name?.First() ?? '-') + "." + (ViewModel.HostInput.GuestZ?.Surname ?? "-"))" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-8">
+                        <label>Email</label>
+                        <input type="text" disabled class="form-control" value="@(ViewModel.HostInput.GuestZ?.Email ?? "-")" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-8">
+                        <label>Telefón</label>
+                        <input type="text" disabled class="form-control" value="@(ViewModel.HostInput.GuestZ?.PhoneNumber ?? "-")" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col mt-1">
+                        <label>Nájsť uživateľa</label>
+                        <button type="button" @onclick="FindWebUser" class="btn btn-secondary">
+                            <i class="bi bi-box-arrow-in-down "></i>
+                            @if (ViewModel.NacitavanieZoznamu)
+                            {
+                                <SpinnerLoading ExtraSmall="true"></SpinnerLoading>
+                            }
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        <div class="row pt-2">
+            <div class="col text-center">
+                <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
+                <SimpleButton Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+
+    private InfoModal InfoModSaved = new();
+    private ItemFinderTable<IdentityUserWebOwn> itemFindUser = new();
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        var founded = objectHolder.Remove<DBLayer.Models.Host>();   //pokusi sa ziskat objekt z uloziska
+        if (founded != null)
+        {
+            ViewModel.SetProp(founded);
+            return;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            return;
+        }
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public async Task Save()
+    {
+        if (await ViewModel.Uloz())
+        {
+            await InfoModSaved.OpenModal(true);
+        }
+    }
+
+    public async Task FindWebUser()
+    {
+        itemFindUser.ColValues = await ViewModel.GetListWebUsers();
+        if (await itemFindUser.OpenModal(true))
+        {
+            ViewModel.SetNewWebUser(itemFindUser.OutSelection.FirstOrDefault());
+        }
+    }
+}

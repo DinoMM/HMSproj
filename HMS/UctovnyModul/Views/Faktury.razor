@@ -25,7 +25,7 @@
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
                 <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">➕Vytvoriť Faktúru</button>
-                <button type="button" @onclick="Open" disabled="@(marked == null && !ViewModel.ValidateUserCRUD())" class="btn btn-primary">Otvoriť</button>
+                <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary">Otvoriť</button>
             </div>
         </div>
 

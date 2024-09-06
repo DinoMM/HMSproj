@@ -32,7 +32,7 @@
                                 @foreach (var item in ColValues)
                                 {
 
-                                    <tr @onclick=@(() => SelectRow(item)) class="@(ContainsRow(item) ?   "selected-row" : "")" style="cursor: pointer;">
+                                    <tr @onclick=@(() => SelectRow(item)) @ondblclick="@(() => SelectDbClick(item))" class="@(ContainsRow(item) ?   "selected-row" : "")" style="cursor: pointer;">
                                         @foreach (var ytem in GetProperties(item))
                                         {
                                             <td class="col-resize">@ytem.GetValue(item)</td>
@@ -49,6 +49,10 @@
                 </div>
 
                 <div class="modal-footer">
+                    @if (SelectEmptyInstance)
+                    {
+                        <button type="button" class="btn btn-warning" data-bs-dismiss="modal" @onclick="EmptyInstance">Vyčistiť</button>
+                    }
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal" disabled="@(OutSelection.Count == 0)" @onclick=@(() =>  CloseModal(true))>Vyber</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zruš</button>
                 </div>
@@ -104,6 +108,7 @@
         [Parameter]
         public List<T> OutSelection { get; set; } = new();
 
+        #region Attribute settings
         /// <summary>
         ///Pridať aj parametre s primárnými klúčmi, default false
         /// </summary>
@@ -121,6 +126,18 @@
         /// </summary>
         [Parameter]
         public bool NotMappedAttributesToo { get; set; } = false;
+
+        /// <summary>
+        ///Pridať len parametre, ktoré sú označené ProtectedPersonalData, default false
+        /// </summary>
+        [Parameter]
+        public bool OnlyProtectedPersonalDataAttribute { get; set; } = false;
+        #endregion
+        /// <summary>
+        ///Pridať možnosť vypratia prázneho výberu, default false
+        /// </summary>
+        [Parameter]
+        public bool SelectEmptyInstance { get; set; } = false;
 
         private string IDTable { get => "tableid" + ID; }
         private int NumCols { get => ColNames.Count; }
@@ -219,6 +236,14 @@
                         continue;
                     }
                 }
+                if (OnlyProtectedPersonalDataAttribute)
+                {
+                    if (item.GetCustomAttributes(typeof(Microsoft.AspNetCore.Identity.ProtectedPersonalDataAttribute), false).FirstOrDefault() != null)
+                    {
+                        propRet.Add(item);
+                    }
+                    continue;
+                }
 
                 var propType = item.PropertyType;
                 if (propType == typeof(string) || propType == typeof(int) || propType == typeof(bool) || propType == typeof(double) || propType == typeof(DateTime) || propType.IsEnum)
@@ -250,6 +275,16 @@
             }
         }
 
+        private void SelectDbClick(object item)
+        {
+            if (!MultiSelect)
+            {
+                OutSelection.Clear();
+                OutSelection.Add((T)item);
+                CloseModal(true);
+            }
+        }
+
         private bool ContainsRow(object item)
         {
             return OutSelection.Contains((T)item);
@@ -273,6 +308,13 @@
         public async Task SetInput(string id, string text)
         {
             await JSRuntime.InvokeVoidAsync("setInput", id, text);
+        }
+
+        public void EmptyInstance()
+        {
+            OutSelection.Clear();
+            OutSelection.Add(Activator.CreateInstance<T>());
+            CloseModal(true);
         }
 
     }

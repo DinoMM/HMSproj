@@ -34,6 +34,7 @@ namespace HMS.ViewModels
             modulesList.Add(("Sklady", "/Sklady", Sklad.ROLE_R_SKLAD));
             modulesList.Add(("Faktúry", "/Faktury", Faktura.ROLE_R_FAKTURY));
             modulesList.Add(("Rezervácie", "/Rezervacia", Rezervation.ROLE_R_REZERVACIA));
+            modulesList.Add(("Hostia", "/Hostia", Host.ROLE_R_HOSTIA));
 
         }
 

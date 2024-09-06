@@ -5,11 +5,11 @@ namespace DBLayer
 {
     public class IdentityUserWebOwn : IdentityUser
     {
-        [PersonalData]
+        [ProtectedPersonalData]
         [Column(TypeName = "nvarchar(64)")]
         public string Name { get; set; }
 
-        [PersonalData]
+        [ProtectedPersonalData]
         [Column(TypeName = "nvarchar(64)")]
         public string Surname { get; set; }
 

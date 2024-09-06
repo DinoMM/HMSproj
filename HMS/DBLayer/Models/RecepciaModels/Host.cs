@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DBLayer.Models
 {
-    public partial class Host
+    public partial class Host : ICloneable
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -40,8 +40,29 @@ namespace DBLayer.Models
         [IsForeignKeyUserWebNull]
         public string? Guest { get; set; }
         [NotMapped]
-        public IdentityUserWebOwn? GuestX { get; set; }
+        public IdentityUserWebOwn? GuestZ { get; set; }
 
+        public object Clone()
+        {
+            var newHost = new Host()
+            {
+                ID = this.ID,
+                Name = this.Name,
+                Surname = this.Surname,
+                Address = this.Address,
+                BirthNumber = this.BirthNumber,
+                Passport = this.Passport,
+                CitizenID = this.CitizenID,
+                BirthDate = this.BirthDate,
+                Guest = this.Guest
+                //GuestZ = this.GuestZ.
+            };
+            return newHost;
+        }
+        public Host Clon()
+        {
+            return (Host)Clone();
+        }
     }
     public class IsForeignKeyUserWebNullAttribute : ValidationAttribute      //vlastny atribut pre kontrolu existujucej rezervacie. Pomoc od AI
     {
