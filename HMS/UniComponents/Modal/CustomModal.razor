@@ -4,7 +4,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 
 <div class="modal fade" id="@ID" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true" @onkeydown="HandleKeyDown">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="@(SizeInRem == 0 ? " max-width:auto " : $"max-width:{SizeInRem}rem") ">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="staticBackdropLabel">@Header</h5>
@@ -13,8 +13,16 @@
                 @BODY
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(true))>Áno</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Nie</button>
+                @if (!OneButtonOnly)
+                {
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(true))>Áno</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Nie</button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zrušiť</button>
+                }
+
             </div>
         </div>
     </div>
@@ -35,6 +43,18 @@
     /// </summary>
     [Parameter]
     public string ID { get; set; } = "staticBackdropEmptyModal";
+
+    /// <summary>
+    /// Nastaví počet tlačidiel na 1 s názvom zruš, default false
+    /// </summary>
+    [Parameter]
+    public bool OneButtonOnly { get; set; } = false;
+
+    /// <summary>
+    /// Nastaví maximálnu veľkosť okna, default 0 -> auto
+    /// </summary>
+    [Parameter]
+    public int SizeInRem { get; set; } = 0;
 
     /// <summary>
     ///  Otvori modal pod ulozenym ID, vracia hodnotu podla toho, ci uzivatel klikol ano alebo nie

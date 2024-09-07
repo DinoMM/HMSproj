@@ -73,6 +73,7 @@ body, html {
             background-color: rgba(10, 52, 68, 0.13);
             z-index: 2;
         }
+
         .gantt__row--lines span.hovermarker {
             background-color: rgb(2, 10, 14, 0.13);
             z-index: 2;
@@ -113,11 +114,8 @@ body, html {
     padding: 15px 0;
     font-size: 13px;
     font-weight: bold;
-    z-index:11;
+    z-index: 11;
     text-align: center;
-}
-.gantt__row-bars {
-    z-index: 12;
 }
 
 .gantt__row-bars li {
@@ -134,29 +132,30 @@ body, html {
     border-radius: 20px;
 }
 
-        .gantt__row-bars li.stripes {
-            background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255, 255, 255, .1) 5px, rgba(255, 255, 255, .1) 12px);
-        }
-        .gantt__row-bars li.stripesstraight {
+    .gantt__row-bars li.stripes {
+        background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255, 255, 255, .1) 5px, rgba(255, 255, 255, .1) 12px);
+    }
+
+    .gantt__row-bars li.stripesstraight {
         background-image: repeating-linear-gradient(90deg, transparent, transparent 5px, rgba(255, 255, 255, .1) 5px, rgba(255, 255, 255, .1) 12px);
-        }
+    }
 
-        .gantt__row-bars li:before, .gantt__row-bars li:after {
-            content: "";
-            height: 100%;
-            top: 0;
-            z-index: 4;
-            position: absolute;
-            background-color: rgba(0, 0, 0, 0.3);
-        }
+    .gantt__row-bars li:before, .gantt__row-bars li:after {
+        content: "";
+        height: 100%;
+        top: 0;
+        z-index: 4;
+        position: absolute;
+        background-color: rgba(0, 0, 0, 0.3);
+    }
 
-        .gantt__row-bars li:before {
-            left: 0;
-        }
+    .gantt__row-bars li:before {
+        left: 0;
+    }
 
-        .gantt__row-bars li:after {
-            right: 0;
-        }
+    .gantt__row-bars li:after {
+        right: 0;
+    }
 
 .sticky1 {
     position: sticky;
@@ -185,5 +184,20 @@ body, html {
     .hiderow * {
         padding-top: 0;
         font-size: 0.7rem;
-        
     }
+
+.clickable {
+    cursor: pointer;
+    z-index: 20
+}
+
+.blackBorderli {
+    border: 3px solid rgb(30, 29, 29);
+}
+
+.unselectableText {
+    -webkit-user-select: none; /* Safari */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Standard syntax */
+}

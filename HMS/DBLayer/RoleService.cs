@@ -62,6 +62,7 @@ namespace DBLayer
         Riaditel,
         Uctovnik,
         UdalostnyPlanovac,
-        Udrzbar
+        Udrzbar,
+        RCVeduci
     };
 }

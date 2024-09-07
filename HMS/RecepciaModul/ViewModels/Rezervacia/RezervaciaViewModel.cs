@@ -21,6 +21,7 @@ namespace RecepciaModul.ViewModels
         #endregion
 
         public bool NacitavaniePoloziek { get; private set; } = true;
+        public bool NacitavanieZoznamuKuponov { get; private set; } = false;
 
         #region farby
         public readonly string HEX_GRAY = "#6c757d";
@@ -31,17 +32,21 @@ namespace RecepciaModul.ViewModels
         public readonly string HEX_BLACK = "#000000";
         #endregion
 
+
+
         private readonly DBContext _db;
         private readonly DataContext _dbw;
         private readonly UserService _userService;
+        private readonly Blazored.SessionStorage.ISessionStorageService _sessionStorage;
 
-        public RezervaciaViewModel(DBContext db, UserService userService, DataContext dbw)
+        public RezervaciaViewModel(DBContext db, UserService userService, DataContext dbw, Blazored.SessionStorage.ISessionStorageService sessionStorage)
         {
             _db = db;
             _userService = userService;
             _dbw = dbw;
 
             ZoznamDatumovNaZobrazenie = GetRozmedzieDatumov(-3, DateTime.Today, 10);     //zakladne rozmedzie datumov na zobrazenie
+            _sessionStorage = sessionStorage;
         }
 
         public bool ValidateUser()
@@ -56,20 +61,28 @@ namespace RecepciaModul.ViewModels
         public async Task NacitajZoznamy()
         {
             NacitavaniePoloziek = true;
-            ZoznamRezervacii = new(await _dbw.Rezervations
-                .Include(x => x.Guest)
-                .Include(x => x.Room)
-                .Where(x => x.DepartureDate >= ZoznamDatumovNaZobrazenie[0]
-                && x.ArrivalDate <= ZoznamDatumovNaZobrazenie.Last())
-                .OrderBy(x => x.ArrivalDate)
-                .ToListAsync()
-                );  //naèítané rezervacie v rozmedzi datumov
-            ZoznamIzieb = new(await _dbw.HRooms.ToListAsync());  //naèítanie všetkých izieb
+            await NacitajZoznamRezervacie();    //naèítanie rezervácií
+            await NacitajIzbyRezervacie();
 
             NacitavaniePoloziek = false;
         }
 
-        public bool MoznoVymazat(Rezervacia item)
+        private async Task NacitajZoznamRezervacie() {
+            ZoznamRezervacii = new(await _dbw.Rezervations
+                    .Include(x => x.Guest)
+                    .Include(x => x.Room)
+                    .Where(x => x.DepartureDate >= ZoznamDatumovNaZobrazenie[0]
+                    && x.ArrivalDate <= ZoznamDatumovNaZobrazenie.Last())
+                    .OrderBy(x => x.ArrivalDate)
+                    .ToListAsync()
+                    );  //naèítané rezervacie v rozmedzi datumov
+        }
+        private async Task NacitajIzbyRezervacie()
+        {
+            ZoznamIzieb = new(await _dbw.HRooms.ToListAsync());  //naèítanie všetkých izieb
+        }
+
+            public bool MoznoVymazat(Rezervacia item)
         {
             return false;
         }
@@ -180,5 +193,13 @@ namespace RecepciaModul.ViewModels
             await NacitajZoznamy();
         }
 
+        public async Task SpracujZmeny()
+        {
+            if (await _sessionStorage.GetItemAsync<bool>("RezervationChanged"))
+            {
+                await NacitajZoznamRezervacie(); 
+                await _sessionStorage.SetItemAsync("RezervationChanged", false);
+            }
+        }
     }
 }

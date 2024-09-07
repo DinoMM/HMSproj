@@ -9,6 +9,12 @@ namespace DBLayer.Models
         [Key]
         public string RoomNumber { get; set; }        //id miestnosti
         public string RoomCategory { get; set; }        //kategoria
+
+        [Range(0.0, int.MaxValue, ErrorMessage = "Len kladné hodnoty.")]
+        public int MaxNumberOfGuest { get; set; }
+
+        [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty.")]
+        public double Cost { get; set; }
         [NotMapped]
         public string[] RoomIds { get; set; }
         [NotMapped]
@@ -22,8 +28,7 @@ namespace DBLayer.Models
         [NotMapped]
         public string[] Photos { get; set; }
 
-        public int MaxNumberOfGuest { get; set; }
-        public double Cost { get; set; }       //cena za den
+             //cena za den
 
         public void setFromOtherRoom(Room room) {
             RoomNumber = room.RoomNumber;

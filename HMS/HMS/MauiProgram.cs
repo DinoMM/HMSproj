@@ -136,7 +136,7 @@ namespace HMS
             builder.Services.AddTransient<FakturyViewModel>();
             #endregion
             #region RecepciaModul
-            builder.Services.AddTransient<RezervaciaViewModel>(); 
+            builder.Services.AddTransient<RezervaciaViewModel>();
 
             builder.Services.AddTransient<HostiaViewModel>();
             builder.Services.AddTransient<CRUHostViewModel>();

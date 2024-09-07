@@ -39,21 +39,17 @@
 
 <script>
     function highlightHover(Id) {
+    if (document.getElementById('header'+Id) != null) {
         document.getElementById('header'+Id).classList.add('highlight');
         document.getElementById('lineheader'+Id).classList.add('hovermarker');
+        }
     }
 
     function removeHover(Id) {
+    if (document.getElementById('header'+Id) != null) {
         document.getElementById('header'+Id).classList.remove('highlight');
         document.getElementById('lineheader'+Id).classList.remove('hovermarker');
     }
-
-    function highlightHoverR(Id) {
-        document.getElementById('rowh'+Id).classList.add('hovermarker');
-    }
-
-    function removeHoverR(Id) {
-        document.getElementById('rowh'+Id).classList.remove('hovermarker');
     }
 
     function hideRow(Id) {
@@ -66,14 +62,6 @@
     }
 </script>
 
-@*<object @ref="daatePcker" ID="dtpickermodal" Header="Zmeniť rozsah obdobia">
-        <BODY>
-            <label for="date1">Od</label>
-            <InputDate id="date1" @bind-Value="ViewModel.DatumOd" />
-            <label for="date2">Do</label>
-            <InputDate id="date2" @bind-Value="ViewModel.DatumDo" />
-        </BODY>
-    </object>*@
 
 <CustomModal @ref="daatePcker" ID="dtpickermodal" Header="Zmeniť rozsah obdobia">
     <BODY>
@@ -84,7 +72,17 @@
     </BODY>
 
 </CustomModal>
+<CustomModal @ref="resViewer" ID="resviewermodal" Header="Informácie o rezervácií" OneButtonOnly="true" SizeInRem="80">
+    <BODY>
+        @if (marked != null)
+        {
+            <CRUCompRezervacia @ref="rezcom" Marked="marked" ListCoupons="new()" ListHostia="new()" ListIzby="new()"></CRUCompRezervacia>
+        }
+    </BODY>
 
+</CustomModal>
+
+<InfoModal @ref="modsaved" Text="Zmeny boli uložené"></InfoModal>
 
 @if (ViewModel.NacitavaniePoloziek)
 {
@@ -99,15 +97,14 @@
     <div class="sticky1 ms-1">
         <div class="sticky1 btn-group" role="group">
             <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-            <button type="button" class="btn btn-primary" disabled="">➕Vytvoriť</button>
-            <button type="button" class="btn btn-primary" disabled="">Otvoriť</button>
-            <button type="button" class="btn btn-primary" @onclick="OpenChangeDate">@ViewModel.ZoznamDatumovNaZobrazenie[0].ToString("dd.MM.-")@ViewModel.ZoznamDatumovNaZobrazenie.Last().ToString("dd.MM.")</button>
+            <button type="button" class="btn btn-primary" @onclick="Create">➕Vytvoriť rezerváciu</button>
+            <button type="button" class="btn btn-info" @onclick="OpenChangeDate">@ViewModel.ZoznamDatumovNaZobrazenie[0].ToString("dd.MM.-")@ViewModel.ZoznamDatumovNaZobrazenie.Last().ToString("dd.MM.")</button>
 
         </div>
     </div>
 
-    <div class="sticky2 gantt__row gantt__row--months" style="grid-template-columns: 150px repeat(@((ViewModel.ZoznamDatumovNaZobrazenie.Count).ToString()), 1fr);">
-        <div class="gantt__row-first"></div>
+    <div class="sticky2 gantt__row gantt__row--months unselectableText" style="grid-template-columns: 150px repeat(@((ViewModel.ZoznamDatumovNaZobrazenie.Count).ToString()), 1fr);">
+        <div @onclick="Update" style="cursor:pointer" class="gantt__row-first fs-4"><i class="bi bi-arrow-clockwise"></i></div>
         @for (int i = 0; i < ViewModel.ZoznamDatumovNaZobrazenie.Count; ++i)
         {
             <span id="@("header" + i)">@ViewModel.ZoznamDatumovNaZobrazenie[i].ToString("dd.MM.")</span>
@@ -118,21 +115,23 @@
         <span></span>
         @for (int i = 0; i < ViewModel.ZoznamDatumovNaZobrazenie.Count; ++i)
         {
+            int indx = i;
             @if (ViewModel.ZoznamDatumovNaZobrazenie[i] == DateTime.Today)
             {
-                <span id="@("lineheader" + i)" class="marker" onmouseover="highlightHover('@i')" onmouseout="removeHover('@i')"></span>
+                <span id="@("lineheader" + i)" class="marker" @onmouseover="@(async () => { await JSRuntime.InvokeVoidAsync("highlightHover", indx); })" @onmouseout="@(async () => { await JSRuntime.InvokeVoidAsync("removeHover", indx); })" ></span>  @*onmouseover = "highlightHover('@i')" onmouseout = "removeHover('@i')"*@
             }
             else
             {
-                <span id="@("lineheader" + i)" onmouseover="highlightHover('@i')" onmouseout="removeHover('@i')"></span>
+                <span id="@("lineheader" + i)" @onmouseover="@(async () => { await JSRuntime.InvokeVoidAsync("highlightHover", indx); })" @onmouseout="@(async () => { await JSRuntime.InvokeVoidAsync("removeHover", indx); })" style="z-index:21"></span> @*onmouseover = "highlightHover('@i')" onmouseout = "removeHover('@i')"*@
             }
         }
     </div>
 
     @for (var i = 0; i < ViewModel.ZoznamIzieb.Count; ++i)
     {
+        int indxr = i;
         var item = ViewModel.ZoznamIzieb[i];
-        <div id="@("rowh" + i)" class="gantt__row">
+        <div id="@("rowh" + i)" class="gantt__row" >
             <div class="gantt__row-first">
                 @if (RoomsToShow.Contains(item))
                 {
@@ -148,7 +147,8 @@
                     </a>
                 }
             </div>
-            <ul class="gantt__row-bars" onmouseover="highlightHoverR('@i')" onmouseout="removeHoverR('@i')">
+            <ul class="gantt__row-bars unselectableText">
+                @*onmouseover="highlightHoverR('@i')" onmouseout="removeHoverR('@i')"*@
                 @if (RoomsToShow.Contains(item))
                 {
                     @foreach (var ytem in ViewModel.ZoznamRezervacii.Where(x => x.RoomNumber == item.RoomNumber))
@@ -156,7 +156,7 @@
                         var res = ViewModel.GetPoziciaRes(ytem);
                         if (res.Item2 != 0)
                         {
-                            <li style="grid-column: @res.Item1; background-color: @(ViewModel.GetHexFarbuRes(ytem));" class="@(res.Item2 != 3 ? "stripes" : "") @(res.Item2 == 4 ? " stripesstraight" : "")">@(ViewModel.ResName(ytem))</li>
+                            <li @onclick="@(() => selected = ytem)" @ondblclick="@(async () => {await OpenRes(ytem);})" style="grid-column: @res.Item1; background-color: @(ViewModel.GetHexFarbuRes(ytem))" class="@(res.Item2 != 3 ? "stripes" : "") @(res.Item2 == 4 ? " stripesstraight" : "") clickable @(selected == ytem ? "blackBorderli" : "")">@(ViewModel.ResName(ytem))</li>
                         }
                     }
                 }
@@ -192,7 +192,13 @@
 @code {
 
     CustomModal daatePcker = new();
+    CustomModal resViewer = new();
     List<DBLayer.Models.Room> RoomsToShow = new();
+    DBLayer.Models.Rezervation? marked = null;
+    DBLayer.Models.Rezervation? selected = null;
+
+    InfoModal modsaved = new();
+    CRUCompRezervacia rezcom = new();
 
     protected override void OnInitialized()
     {
@@ -201,7 +207,6 @@
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
-
 
     }
 
@@ -247,7 +252,24 @@
 
     }
 
+    private async Task OpenRes(DBLayer.Models.Rezervation res)
+    {
+        marked = res.Clon();
+        if (rezcom.Initialized)     //prvy krat komponent nie je načítaný
+        {
+            rezcom.Reset();
+        }
+        await resViewer.OpenModal(true);
+        await ViewModel.SpracujZmeny();
+    }
 
+    private async Task Update()
+    {
+        await ViewModel.NacitajZoznamy();
+        RoomsToShow = new(ViewModel.ZoznamIzieb.ToList());
+    }
 
-
+    private async Task Create() {
+        await OpenRes(new DBLayer.Models.Rezervation());
+    }
 }
