@@ -36,6 +36,28 @@ namespace DBLayer
             }
         }
 
+        public void ClearPendingChanges()
+        {
+            var changedEntries = this.ChangeTracker.Entries()
+                .Where(e => e.State != EntityState.Unchanged)
+                .ToList();
+
+            foreach (var entry in changedEntries)
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Modified:
+                        entry.State = EntityState.Unchanged;
+                        break;
+                    case EntityState.Added:
+                        entry.State = EntityState.Detached;
+                        break;
+                    case EntityState.Deleted:
+                        entry.Reload();
+                        break;
+                }
+            }
+        }
         public DbSet<Dodavatel> Dodavatelia { get; set; }
         public DbSet<Objednavka> Objednavky { get; set; }
         public DbSet<PolozkaSkladu> PolozkySkladu { get; set; }

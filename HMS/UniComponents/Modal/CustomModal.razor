@@ -3,16 +3,17 @@
 @implements IModal
 @using Microsoft.AspNetCore.Components.Forms
 
+
 <div class="modal fade" id="@ID" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true" @onkeydown="HandleKeyDown">
     <div class="modal-dialog" style="@(SizeInRem == 0 ? " max-width:auto " : $"max-width:{SizeInRem}rem") ">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
                 <h5 class="modal-title" id="staticBackdropLabel">@Header</h5>
             </div>
-            <div class="modal-body" id="modalATextLabel">
+            <div class="modal-body @(ChangeColor ? "custom-modal-body" : "")" id="modalATextLabel">
                 @BODY
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer @(ChangeColor ? "custom-modal-footer" : "")">
                 @if (!OneButtonOnly)
                 {
                     <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(true))>Áno</button>
@@ -55,6 +56,12 @@
     /// </summary>
     [Parameter]
     public int SizeInRem { get; set; } = 0;
+
+    /// <summary>
+    /// Nastaví zmenu farby okna na predvolenú, default false
+    /// </summary>
+    [Parameter]
+    public bool ChangeColor { get; set; } = false;
 
     /// <summary>
     ///  Otvori modal pod ulozenym ID, vracia hodnotu podla toho, ci uzivatel klikol ano alebo nie

@@ -1,6 +1,6 @@
 ﻿@namespace UniComponents
 
-<button type="@Type" class="@Class" disabled="@Disabled" @onclick="OnClick">
+<button id="@ID" type="@Type" class="@Class" disabled="@Disabled" @onclick="OnClick">
     @(ZmenaStavuTextu ? ZmenaTextu.Item1 : ZmenaTextu.Item2)
 </button>
 
@@ -40,4 +40,10 @@
     /// </summary>
     [Parameter]
     public EventCallback OnClick { get; set; } = EventCallback.Empty;
+
+    /// <summary>
+    /// ID tlačidla, Default "simplebutton"
+    /// </summary>
+    [Parameter]
+    public string ID { get; set; } = "simplebutton";
 }

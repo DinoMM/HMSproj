@@ -84,3 +84,18 @@ h1:focus {
         padding-left: env(safe-area-inset-left);
     }
 }
+
+.custom-modal-header {
+    background-color: #adadad;
+    color: white;
+}
+
+.custom-modal-body {
+    background-color: #e2e2e2; 
+}
+
+.custom-modal-footer {
+    background-color: #adadad; 
+    color: white;
+}
+

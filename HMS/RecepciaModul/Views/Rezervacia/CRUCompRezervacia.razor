@@ -1,8 +1,140 @@
 ﻿@namespace RecepciaModul
+@using Microsoft.EntityFrameworkCore
 @inject Blazored.SessionStorage.ISessionStorageService sessionStorage
 @inject DataContext dbw
+@inject DBContext db
 
-<InfoModal @ref="modsaved" Text="Zmeny boli uložené"></InfoModal>
+
+<ApproveModal @ref="infomod" Text=""
+              FuncOnDiss="EventCallback.Empty"
+              FuncOnSucc="EventCallback.Empty"
+              ChangeColor="true">
+</ApproveModal>
+
+<script>
+   function switchStyleClass(Id, classname) {
+    var element = document.getElementById(Id);
+        if (element != null) {
+            if (element.classList.contains(classname)) {
+                element.classList.remove(classname);
+            } else {
+                element.classList.add(classname);
+            }
+        }
+    }
+
+    function showPopover(id, content, direction) {
+    var element = document.getElementById(id);
+    if (element) {
+        $(element).popover({
+            content: content,
+            trigger: 'manual',
+            placement: direction // Position the popover on the left
+        });
+        $(element).popover('show');
+
+                    // Attach a click event listener to the document
+        $(document).on('click.popover', function (e) {
+                // Check if the click occurred outside the popover
+            if (!$(e.target).closest('.popover').length && !$(e.target).is(element)) {
+            $(element).popover('hide');
+                // Remove the event listener after hiding the popover
+            $(document).off('click.popover');
+    }
+    });
+    }
+}
+
+
+
+</script>
+
+<ItemFinderTable T="DBLayer.Models.Room" @ref="iftroom" ID="itemfindroom"
+                 ColNames="@(new() {"Číslo izby", "Kategória", "Kapacita", "Cena za noc" })"
+                 SearchedValue="@("")"
+                 KeyAttributeToo="true"
+                 ColValues="ListIzby"
+                 ChangeColor="true">
+
+</ItemFinderTable>
+<ItemFinderTable T="IdentityUserWebOwn" @ref="iftwebguest" ID="fndwebusr"
+                 ColNames="@(new() {"Meno", "Priezvisko", "Username", "Email", "Telefón" })"
+                 SearchedValue="@(Marked.Guest?.Email ?? "")"
+                 OnlyProtectedPersonalDataAttribute="true"
+                 SelectEmptyInstance="true"
+                 ColValues="ListWebGuest"
+                 ChangeColor="true">
+</ItemFinderTable>
+
+<FastFormModal @ref="couponmodal"
+               ID="coupmodalid"
+               FuncOnSucc="EventCallback.Empty"
+               Header="Vložte kód poukážky"
+               Inputs="@(new() { ("Kód", "string") } )"
+               ChangeColor="true">
+</FastFormModal>
+<CustomModal @ref="cuscreatehost" ID="cuscreatehostmod" Header="Vytvorenie hosťa" OneButtonOnly="true" ChangeColor="true" SizeInRem="90">
+    <BODY>
+        <CRUHost></CRUHost>
+    </BODY>
+
+</CustomModal>
+
+
+<div style="z-index:50">
+    <CustomModal @ref="cusmodHostcon" ID="cusmodshowhost" Header="Hostia rezervácie" OneButtonOnly="true" ChangeColor="true" SizeInRem="60">
+        <BODY>
+
+            <ItemFinderTable T="DBLayer.Models.Host" @ref="ifthost" ID="dnfhost"
+                             ColNames="@(new() {"Meno", "Priezvisko", "Adresa", "Rod. č.", "Č. pasu", "Č. občan." })"
+                             SearchedValue=""
+                             ColValues="ListHostia"
+                             CutOffTail="true">
+            </ItemFinderTable>
+
+            <div class="col-12" style="max-height: 30rem;overflow: auto;">
+                <SimpleTable ID="tablehostid">
+                    <THEAD>
+
+                    <th class="col-resize" scope="col"><ButtonAdd Disabled="@(ValidateChangeability())" OnClick="@AddHostCon"></ButtonAdd> </th>
+                    <th class="col-resize" scope="col">Meno</th>
+                    <th class="col-resize" scope="col">Priezvisko</th>
+                    <th class="col-resize" scope="col">Adresa</th>
+                    <th class="col-resize" scope="col">Č. občianského</th>
+                    <th class="col-resize" scope="col">Č. pasu</th>
+                    <th class="col-resize" scope="col"></th>
+
+                    </THEAD>
+                    <TBODY>
+
+                        @foreach (var item in VyberHosti)
+                        {
+                            <tr>
+                                <td class="col-resize"></td>
+                                <td class="col-resize">@item.HostX.Name</td>
+                                <td class="col-resize">@item.HostX.Surname</td>
+                                <td class="col-resize">@item.HostX.Address</td>
+                                <td class="col-resize">@item.HostX.CitizenID</td>
+                                <td class="col-resize">@item.HostX.Passport</td>
+                                <td>
+                                    <ButtonRemove Disabled="@(ValidateChangeability())" OnClick="@(() => DeleteHostCon(item))"></ButtonRemove>
+                                </td>
+
+                            </tr>
+                        }
+
+                        <span id="observerTarget"></span>
+                    </TBODY>
+
+                </SimpleTable>
+            </div>
+        </BODY>
+
+    </CustomModal>
+</div>
+<div style="z-index:51">
+    <InfoModal @ref="modsaved" Text="Zmeny boli uložené" ChangeColor="true"></InfoModal>
+</div>
 
 <EditForm Model="Marked" OnValidSubmit="Save">
     <DataAnnotationsValidator />
@@ -11,25 +143,48 @@
 
         <div class="row g-3 p-3">
             <div class="col">
-
+                <div class="row">
+                    <div class="col-4">
+                        <label>Príchod</label>
+                        <InputDate disabled="@ValidateChangeability()" @bind-Value="@Marked.ArrivalDate" />
+                        <ValidationMessage For="@(() => Marked.ArrivalDate)" />
+                    </div>
+                    <div class="col-4">
+                        <label>Odchod</label>
+                        <InputDate disabled="@ValidateChangeability()" @bind-Value="@Marked.DepartureDate" />
+                        <ValidationMessage For="@(() => Marked.DepartureDate)" />
+                    </div>
+                </div>
                 <div class="row">
                     <div class="col col-3">
                         <label>Izba*</label>
-                        <InputText @bind-Value="@Marked.RoomNumber" disabled="@ValidateChangeability()" class="form-control" />
+                        <InputText id="inputroom" @bind-Value="@Marked.RoomNumber" @onkeydown="@((e) => HandleKeyDown(e, "inputroom"))" disabled="@ValidateChangeability()" class="form-control" />
                         <ValidationMessage For="@(() => @Marked.RoomNumber)" />
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-3">
                         <label>Počet hostí</label>
-                        <InputNumber @bind-Value="@Marked.NumberGuest" disabled="@ValidateChangeability()" class="form-control" />
+                        <InputNumber id="numguestinput" @bind-Value="@Marked.NumberGuest" disabled="@(ValidateChangeability() || Marked.Room == null)" class="form-control" />
                         <ValidationMessage For="@(() => Marked.NumberGuest)" />
+                    </div>
+                    <div class="col-1 me-2">
+                        <div style="height: 24px;"></div>
+                        <button id="numguestshow" disabled="@(ValidateChangeability() || Marked.Room == null)" type="button" @onclick="OpenHostTab" class="btn btn-secondary">
+                            <i class="bi bi-people-fill"></i>
+                        </button>
+                    </div>
+                    <div class="col-1">
+                        <div style="height: 24px;"></div>
+                        <button disabled="@(ValidateChangeability() || Marked.Room == null)" type="button" @onclick="CreateHostTab" class="btn btn-secondary">
+                            <i class="bi bi-person-fill-add"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-5">
                         <label>Status</label>
-                        <select @bind="Marked.Status" disabled="@ValidateChangeability()" class="form-select">
+                        <select @bind="Marked.Status" disabled="@(ValidateChangeability() || Marked.Room == null)" class="form-select">
                             @foreach (var status in SelectValues)
                             {
                                 <option value="@status">@status</option>
@@ -38,46 +193,47 @@
                         <ValidationMessage For="@(() => Marked.Status)" />
                     </div>
                 </div>
-                <div class="row mt-2">
-                    <div class="col-5">
-                        <label>Príchod</label>
-                        <InputDate disabled="@ValidateChangeability()" @bind-Value="@Marked.ArrivalDate" />
-                        <ValidationMessage For="@(() => Marked.ArrivalDate)" />
-                    </div>
-                    <div class="col-5">
-                        <label>Odchod</label>
-                        <InputDate disabled="@ValidateChangeability()" @bind-Value="@Marked.DepartureDate" />
-                        <ValidationMessage For="@(() => Marked.DepartureDate)" />
-                    </div>
-                </div>
+
             </div>
 
             <div class="col">
                 <div class="row">
                     <div class="col-4">
                         <label>Celková&nbsp;suma</label>
-                        <InputNumber disabled="@ValidateChangeability()" @bind-Value="@Marked.CelkovaSuma" class="form-control" />
+                        <InputNumber disabled="@(ValidateChangeability() || Marked.Room == null)" @bind-Value="@Marked.CelkovaSuma" class="form-control" />
                         <ValidationMessage For="@(() => Marked.CelkovaSuma)" />
                     </div>
                     <div class="col-4">
                         <label>Celková&nbsp;suma&nbsp;DPH</label>
                         <input type="number" disabled readonly value="@((double)Marked.CelkovaSuma * 1.2)" class="form-control" />
                     </div>
+                    <div class="col">
+                        <div style="height: 24px;"></div>
+                        <button disabled="@(ValidateChangeability() || Marked.Room == null)" type="button" @onclick="CalculateSum" class="btn btn-secondary">
+                            <i class="bi bi-box-arrow-in-down "></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col-6">
                         <label>Poukážka</label>
-                        <input type="text" disabled readonly value="@(Marked.Coupon?.NameService ?? "-")" class="form-control" />
+                        <input id="coupinputid" type="text" disabled readonly value="@(Marked.Coupon?.NameService ?? "-")" class="form-control" />
 
                     </div>
                     <div class="col-2">
                         <label>Zľava</label>
                         <input type="number" disabled readonly value="@(Marked.Coupon?.Discount ?? 0)" class="form-control" />
                     </div>
-                    <div class="col-2">
+                    <div class="col-1 me-2">
                         <div style="height: 24px;"></div>
-                        <button disabled="@ValidateChangeability()" type="button" @onclick="FindCoupon" class="btn btn-secondary">
+                        <button disabled="@(ValidateChangeability() || Marked.Room == null)" @onclick="FindCouponF" type="button" class="btn btn-secondary">
                             <i class="bi bi-box-arrow-in-down "></i>
+                        </button>
+                    </div>
+                    <div class="col-1">
+                        <div style="height: 24px;"></div>
+                        <button disabled="@(ValidateChangeability() || Marked.Coupon == null)" @onclick="OpenInfoCoupon" type="button" class="btn btn-secondary">
+                            <i class="bi bi-info"></i>
                         </button>
                     </div>
                 </div>
@@ -88,7 +244,7 @@
                     </div>
                     <div class="col">
                         <div style="height: 24px;"></div>
-                        <button disabled="@ValidateChangeability()" type="button" @onclick="FindCoupon" class="btn btn-secondary">
+                        <button disabled="@(ValidateChangeability() || Marked.Room == null)" type="button" @onclick="FindGuest" class="btn btn-secondary">
                             <i class="bi bi-box-arrow-in-down "></i>
                         </button>
                     </div>
@@ -107,7 +263,7 @@
 
         <div class="row pt-2">
             <div class="col text-center">
-                <SimpleButton Disabled="ValidateChangeability()" ZmenaStavuTextu="Exist()" Type="submit" ZmenaTextu="@(("Uložiť", "Vytvoriť"))"> </SimpleButton>
+                <SimpleButton ID="submitbttn" Disabled="ValidateChangeability()" ZmenaStavuTextu="Exist()" Type="submit" ZmenaTextu="@(("Uložiť", "Vytvoriť"))"> </SimpleButton>
             </div>
         </div>
     </div>
@@ -119,19 +275,29 @@
     public DBLayer.Models.Rezervation Marked { get; set; }
     [EditorRequired]
     [Parameter]
-    public List<DBLayer.Models.Coupon> ListCoupons { get; set; }
-    [EditorRequired]
-    [Parameter]
     public List<DBLayer.Models.Host> ListHostia { get; set; }
     [EditorRequired]
     [Parameter]
     public List<DBLayer.Models.Room> ListIzby { get; set; }
+    [EditorRequired]
+    [Parameter]
+    public List<IdentityUserWebOwn> ListWebGuest { get; set; }
 
-    InfoModal modsaved { get; set; }
+    InfoModal modsaved = new();
+    ApproveModal infomod = new();
+    ItemFinderTable<DBLayer.Models.Room> iftroom = new();
+    FastFormModal couponmodal = new();
+    private ItemFinderTable<IdentityUserWebOwn> iftwebguest = new();
+    CustomModal cusmodHostcon = new();
+    ItemFinderTable<DBLayer.Models.Host> ifthost = new();
+    CustomModal cuscreatehost = new();
 
     public bool Initialized { get; private set; } = false;
 
+
+    private bool Warned = false;
     private Array SelectValues = Enum.GetValues(typeof(DBLayer.Models.ReservationStatus));
+    private List<DBLayer.Models.HostConReservation> VyberHosti = new();
 
 
     protected override void OnInitialized()
@@ -140,11 +306,17 @@
         Initialized = true;
     }
 
-    protected override async Task OnInitializedAsync()
-    {
-    }
     private async Task Save()
     {
+        if (await OtherValidations())
+        {
+            if (!Warned)
+            {
+                Warned = true;
+                return;
+            }
+        }
+
         if (!Exist())
         {
             dbw.Add(Marked);
@@ -162,18 +334,152 @@
 
         }
         await dbw.SaveChangesAsync();
+        await db.SaveChangesAsync();
         await sessionStorage.SetItemAsync("RezervationChanged", true);
         await modsaved.OpenModal(true);
+        Warned = false;
     }
 
-    public void daco()
+    private async Task<bool> OtherValidations()
     {
+        var warnfound = false;
+        var found = dbw.HRooms.FirstOrDefault(x => x.RoomNumber == Marked.RoomNumber);
+        if (Marked.NumberGuest > found.MaxNumberOfGuest)
+        {
+            await JSRuntime.InvokeVoidAsync("showPopover", "numguestinput", $"Počet hostí je väčší ako kapacita izby: {found.MaxNumberOfGuest}", "bottom");
+            await JSRuntime.InvokeVoidAsync("switchStyleClass", "numguestinput", "border-warning");
+            await JSRuntime.InvokeVoidAsync("switchStyleClass", "submitbttn", "btn-warning");
+            warnfound = true;
+        }
 
+        if (Marked.NumberGuest != VyberHosti.Count)
+        {
+            await JSRuntime.InvokeVoidAsync("showPopover", "numguestshow", $"Počet hostí sa nezhoduje s počtom navolených osôb: {VyberHosti.Count}", "right");
+            await JSRuntime.InvokeVoidAsync("switchStyleClass", "numguestshow", "border-warning");
+            if (!warnfound)
+            {
+                await JSRuntime.InvokeVoidAsync("switchStyleClass", "submitbttn", "btn-warning");
+            }
+            warnfound = true;
+        }
+
+
+        return warnfound;
     }
 
-    private async Task FindCoupon()
+
+    public async Task FindCouponF()
     {
+        if (await couponmodal.OpenModal(true))
+        {
+            string kupon = (string)(couponmodal.Outputs[0]);
+            if (string.IsNullOrEmpty(kupon))
+            {
+                return;
+            }
+
+            if (kupon == Marked.CouponId)
+            {
+                await JSRuntime.InvokeVoidAsync("showPopover", "coupinputid", $"Vložená poukážka je rovnaká ako aktuálna", "left");
+                await JSRuntime.InvokeVoidAsync("switchStyleClass", "coupinputid", "border-primary");
+                return;
+            }
+
+            var founded = dbw.Coupons.FirstOrDefault(x => x.ID == kupon && !x.IsUsed);
+            if (founded != null)
+            {
+                await JSRuntime.InvokeVoidAsync("showPopover", "coupinputid", $"Poukážka sa našla, uložte zmeny", "left");
+                await JSRuntime.InvokeVoidAsync("switchStyleClass", "coupinputid", "border-success");
+                if (string.IsNullOrEmpty(Marked.CouponId))  //ak nemame kupon, priradime a oznacime ako pouzity, inak aktualny odznacime a priradime novy
+                {
+                    Marked.CouponId = founded.ID;
+                    Marked.Coupon = founded;
+                    Marked.Coupon.IsUsed = true;
+                }
+                else
+                {
+                    Marked.Coupon.IsUsed = false;
+                    dbw.Update(Marked.Coupon);
+                    Marked.CouponId = founded.ID;
+                    Marked.Coupon = founded;
+                    Marked.Coupon.IsUsed = true;
+                }
+
+                dbw.Update(Marked.Coupon);
+
+                return;
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("showPopover", "coupinputid", $"Vložená poukážka neexistuje", "left");
+                await JSRuntime.InvokeVoidAsync("switchStyleClass", "coupinputid", "border-warning");
+            }
+
+        }
     }
+
+    private async Task OpenHostTab()
+    {
+        await cusmodHostcon.OpenModal(true);
+    }
+
+    private void CalculateSum()
+    {
+        if (Marked.Room != null)
+        {
+            Marked.CelkovaSuma = (decimal)Marked.Room.Cost * (Marked.DepartureDate - Marked.ArrivalDate).Days;
+        }
+    }
+    private async Task FindGuest()
+    {
+        if (await iftwebguest.OpenModal(true))
+        {
+            var selectedWebGuest = iftwebguest.OutSelection.FirstOrDefault();
+
+            if (!string.IsNullOrEmpty(selectedWebGuest?.UserName))
+            {
+                Marked.GuestId = selectedWebGuest.Id;
+                Marked.Guest = selectedWebGuest;
+            }
+            else
+            {
+                Marked.GuestId = null;
+                Marked.Guest = null;
+            }
+        }
+    }
+    private async Task FindRoom()
+    {
+        var inputValue = await iftroom.GetInputValue("inputroom");
+        List<DBLayer.Models.Room> listIziebsave = new(ListIzby);
+        foreach (var item in listIziebsave)
+        {
+            var found = dbw.Rezervations.FirstOrDefault(x => x.ArrivalDate < Marked.DepartureDate && x.DepartureDate > Marked.ArrivalDate && item.RoomNumber == x.RoomNumber && x.Id != Marked.Id);
+            if (found != null)
+            {
+                var find = ListIzby.FirstOrDefault(x => x.RoomNumber == found.RoomNumber);
+                if (find != null)
+                {
+                    ListIzby.Remove(find);
+                }
+            }
+        }
+
+        if (await iftroom.OpenModal(true))
+        {
+            Marked.RoomNumber = iftroom.OutSelection.FirstOrDefault().RoomNumber;
+            Marked.Room = iftroom.OutSelection.FirstOrDefault();
+        }
+        foreach (var item in listIziebsave)
+        {
+            if (!ListIzby.Contains(item))
+            {
+                ListIzby.Add(item);
+            }
+        }
+        ListIzby.Sort((x, y) => x.RoomNumber.CompareTo(y.RoomNumber));
+    }
+
 
     /// <summary>
     /// false - mozne menit hodnoty, true - nemozne menit hodnoty
@@ -200,7 +506,6 @@
     private bool ValidateSpecial()
     {
         return UserService.IsLoggedUserInRoles(DBLayer.Models.Rezervation.ROLE_SPECIAL_REZERVACIA);
-
     }
 
     public void Reset()
@@ -213,8 +518,16 @@
             newarr[2] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(2);
             SelectValues = newarr;
         }
+
+        if (Marked != null)
+        {
+            VyberHosti.Clear();
+            VyberHosti.AddRange(db.HostConReservations.Include(x => x.HostX).Where(x => x.Reservation == Marked.Id));       //bez instancie rezervacie
+        }
         StateHasChanged();
     }
+
+
 
     private bool IsCompleted()
     {
@@ -231,5 +544,77 @@
         return Marked.Id != 0;
     }
 
+    private async Task HandleKeyDown(KeyboardEventArgs e, string inputId)
+    {
+        if (e.Key == "Tab")
+        {
+            switch (inputId)
+            {
+                case "inputroom":
+                    await FindRoom();
+                    break;
+                default: break;
+            }
+        }
+    }
 
+    private async Task OpenInfoCoupon()
+    {
+        if (Marked.Coupon != null)
+        {
+            infomod.UpdateText("Názov: " + Marked.Coupon.NameService + "<br>Popis: " + Marked.Coupon.Description + "<br>Zľava: " + Marked.Coupon.Discount);
+            await infomod.OpenModal(true);
+        }
+    }
+
+    private async Task DeleteHostCon(DBLayer.Models.HostConReservation item)
+    {
+        infomod.UpdateText("Chcete odobrať tohto hosťa?");
+        if (await infomod.OpenModal(true))
+        {
+            db.HostConReservations.Remove(item);
+            VyberHosti.Remove(item);
+        }
+    }
+    private async Task AddHostCon()
+    {
+        bool added = false;
+        foreach (var item in VyberHosti)        //vyhodime uz pridanych hosti
+        {
+            var found = ListHostia.FirstOrDefault(x => x.ID == item.Host);
+            if (found != null)
+            {
+                ListHostia.Remove(found);
+            }
+        }
+
+        if (await ifthost.OpenModal(true))
+        {
+            var vybranyHost = ifthost.OutSelection.FirstOrDefault();
+            DBLayer.Models.HostConReservation newCon = new()
+            {
+                Host = vybranyHost.ID,
+                HostX = vybranyHost,
+                Reservation = Marked.Id,
+            };
+            db.HostConReservations.Add(newCon);
+            VyberHosti.Add(newCon);
+            added = true;
+        }
+
+        for (var i = 0; i < VyberHosti.Count; ++i)        //pridame naspat do zoznamu
+        {
+            if (added && i == VyberHosti.Count - 1) //ak sme pridali tak ho ignorujeme lebo tento musel byt v zozname hosti
+            {
+                continue;
+            }
+            ListHostia.Add(VyberHosti[i].HostX);
+        }
+        ListHostia.Sort((x, y) => x.Surname.CompareTo(y.Surname));
+    }
+
+    private async Task CreateHostTab()
+    {
+        await cuscreatehost.OpenModal(true);
+    }
 }

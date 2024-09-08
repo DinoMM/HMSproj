@@ -7,16 +7,16 @@
 <div class="modal fade" id="@ID" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true" @onkeydown="HandleKeyDown">
     <div class="modal-dialog modal-lg" style="max-width:100rem">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
                 <h5 class="modal-title" id="staticBackdropLabel">
 
                     <div class="col-12 d-flex justify-content-bottom mb-1">
-                        <SearchInput @ref="srchinp" NumCols="@NumCols" PlaceHolder="Vyhľadaj..." TableID="@IDTable" SearchValue="@SearchedValue"></SearchInput>
+                        <SearchInput @ref="srchinp" ID="@IDSearch" NumCols="@NumCols" PlaceHolder="Vyhľadaj..." TableID="@IDTable" SearchValue="@SearchedValue"></SearchInput>
                     </div>
 
                 </h5>
             </div>
-            <div class="modal-body" id="modalATextxLabel">
+            <div class="modal-body @(ChangeColor ? "custom-modal-body" : "")" id="modalATextxLabel">
 
                 <div class="col-12" style="max-height: 30rem;overflow: auto;">
                     <SimpleTable ID="@IDTable">
@@ -31,11 +31,17 @@
 
                                 @foreach (var item in ColValues)
                                 {
-
+                                    int i = 0;
+                                    var zoznam = GetProperties(item);
                                     <tr @onclick=@(() => SelectRow(item)) @ondblclick="@(() => SelectDbClick(item))" class="@(ContainsRow(item) ?   "selected-row" : "")" style="cursor: pointer;">
-                                        @foreach (var ytem in GetProperties(item))
+                                        @foreach (var ytem in zoznam)
                                         {
+                                            if (CutOffTail && i == NumCols)
+                                            {
+                                                break;
+                                            }
                                             <td class="col-resize">@ytem.GetValue(item)</td>
+                                            ++i;
                                         }
                                     </tr>
                                 }
@@ -48,12 +54,12 @@
 
                 </div>
 
-                <div class="modal-footer">
+                <div class="modal-footer @(ChangeColor ? "custom-modal-footer" : "")">
                     @if (SelectEmptyInstance)
                     {
                         <button type="button" class="btn btn-warning" data-bs-dismiss="modal" @onclick="EmptyInstance">Vyčistiť</button>
                     }
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" disabled="@(OutSelection.Count == 0)" @onclick=@(() =>  CloseModal(true))>Vyber</button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" disabled="@(OutSelection.Count == 0)" @onclick="CloseSucc">Vyber</button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zruš</button>
                 </div>
             </div>
@@ -108,6 +114,18 @@
         [Parameter]
         public List<T> OutSelection { get; set; } = new();
 
+        /// <summary>
+        /// Nastaví zmenu farby okna na predvolenú, default false
+        /// </summary>
+        [Parameter]
+        public bool ChangeColor { get; set; } = false;
+
+        /// <summary>
+        /// Dlžka tabulky bude podľa počtu prvkov v hlavičke, default false
+        /// </summary>
+        [Parameter]
+        public bool CutOffTail { get; set; } = false;
+
         #region Attribute settings
         /// <summary>
         ///Pridať aj parametre s primárnými klúčmi, default false
@@ -140,6 +158,7 @@
         public bool SelectEmptyInstance { get; set; } = false;
 
         private string IDTable { get => "tableid" + ID; }
+        private string IDSearch { get => "searchinp" + ID; }
         private int NumCols { get => ColNames.Count; }
 
         private TaskCompletionSource<bool> tcs;
@@ -314,6 +333,21 @@
         {
             OutSelection.Clear();
             OutSelection.Add(Activator.CreateInstance<T>());
+            CloseModal(true);
+        }
+
+        public void SetListValues(List<T> values)
+        {
+            ColValues = new(values);
+            StateHasChanged();
+        }
+
+        public void CloseSucc()
+        {
+            if (OutSelection.Count == 0)
+            {
+                CloseModal(false);
+            }
             CloseModal(true);
         }
 

@@ -72,11 +72,11 @@
     </BODY>
 
 </CustomModal>
-<CustomModal @ref="resViewer" ID="resviewermodal" Header="Informácie o rezervácií" OneButtonOnly="true" SizeInRem="80">
+<CustomModal @ref="resViewer" ID="resviewermodal" Header="Informácie o rezervácii" OneButtonOnly="true" SizeInRem="80">
     <BODY>
         @if (marked != null)
         {
-            <CRUCompRezervacia @ref="rezcom" Marked="marked" ListCoupons="new()" ListHostia="new()" ListIzby="new()"></CRUCompRezervacia>
+            <CRUCompRezervacia @ref="rezcom" Marked="marked" ListWebGuest="ViewModel.ZoznamWebGuest" ListHostia="ViewModel.ZoznamHosti" ListIzby="ViewModel.ZoznamIziebList"></CRUCompRezervacia>
         }
     </BODY>
 
@@ -259,7 +259,9 @@
         {
             rezcom.Reset();
         }
+        await ViewModel.NacitajPotrebneZoznamy();
         await resViewer.OpenModal(true);
+        ViewModel.ClearChangesDB();
         await ViewModel.SpracujZmeny();
     }
 
@@ -267,6 +269,8 @@
     {
         await ViewModel.NacitajZoznamy();
         RoomsToShow = new(ViewModel.ZoznamIzieb.ToList());
+        ViewModel.ZoznamHosti.Clear();
+        ViewModel.ZoznamWebGuest.Clear();
     }
 
     private async Task Create() {

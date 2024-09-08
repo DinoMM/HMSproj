@@ -1,7 +1,7 @@
 ﻿@namespace UniComponents
 
 <a @onclick="OnClick" style="@(Disabled ? " pointer-events: none;" : "" ) ">
-    <i href="#" class="bi bi-x-circle btn btn-danger @(Disabled ? " disabled" : "" )"></i>
+    <i href="#" class="bi bi-plus-circle btn btn-success @(Disabled ? " disabled" : "" )"></i>
 </a>
 
 
@@ -19,3 +19,4 @@
     [Parameter]
     public EventCallback OnClick { get; set; } = EventCallback.Empty;
 }
+

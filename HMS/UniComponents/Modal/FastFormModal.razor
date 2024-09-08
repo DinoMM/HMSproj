@@ -4,11 +4,11 @@
 <div class="modal fade" id="@ID" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog">
         <div class="modal-content">
-            <div class="modal-header">
+            <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
                 <h5 class="modal-title" id="exampleHModalLabel">@Header</h5>
                 @* <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button> *@
             </div>
-            <div class="modal-body">
+            <div class="modal-body @(ChangeColor ? "custom-modal-body" : "")">
                 <form>
                     @foreach (var item in Inputs)
                     {
@@ -17,13 +17,13 @@
                             case "number":
                                 <div class="mb-3">
                                     <label class="col-form-label" id=@("labelnumber" + Inputs.IndexOf(item))>@item.Item1</label>
-                                    <input type="number" class="form-control" id=@("inputnumber" + Inputs.IndexOf(item)) @onchange="(e) => func(e,item)">
+                                    <input type="number" autocomplete="@(AutoCompleteOnInputs ? "on" : "off")" class="form-control" id=@("inputnumber" + Inputs.IndexOf(item)) @onchange="(e) => func(e,item)">
                                 </div>
                                 break;
                             case "string":
                                 <div class="mb-3">
                                     <label class="col-form-label" id=@("labelstring" + Inputs.IndexOf(item))>@item.Item1</label>
-                                    <input type="text" class="form-control" id=@("inputstring" + Inputs.IndexOf(item)) @onchange="(e) => func(e,item)">
+                                    <input type="text" autocomplete="@(AutoCompleteOnInputs ? "on" : "off")" class="form-control" id=@("inputstring" + Inputs.IndexOf(item)) @onchange="(e) => func(e,item)">
                                 </div>
                                 break;
                             case "textArea":
@@ -35,7 +35,7 @@
                             case "email":
                                 <div class="mb-3">
                                     <label class="col-form-label" id=@("labelemail" + Inputs.IndexOf(item))>@item.Item1</label>
-                                    <input type="email" class="form-control" id=@("inputemail" + Inputs.IndexOf(item)) @onchange="(e) => func(e,item)">
+                                    <input type="email" autocomplete="@(AutoCompleteOnInputs ? "on" : "off")" class="form-control" id=@("inputemail" + Inputs.IndexOf(item)) @onchange="(e) => func(e,item)">
                                 </div>
                                 break;
                             case "bool":
@@ -56,9 +56,9 @@
                     }
                 </form>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer @(ChangeColor ? "custom-modal-footer" : "")">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(async () => { await FuncOnSucc.InvokeAsync(); CloseModal(true); })>Poslať</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(async () => { CloseModal(false); }) >Zavrieť</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(async () => { CloseModal(false); })>Zavrieť</button>
             </div>
         </div>
     </div>
@@ -71,10 +71,23 @@
     [Parameter]
     public string Header { get; set; } = "Formular";
 
+    /// <summary>
+    /// Nastaví zmenu farby okna na predvolenú, default false
+    /// </summary>
+    [Parameter]
+    public bool ChangeColor { get; set; } = false;
+
+    /// <summary>
+    /// Ukazuje návrhy od prehliadača, defalt false
+    /// </summary>
+    [Parameter]
+    public bool AutoCompleteOnInputs { get; set; } = false;
+
     private TaskCompletionSource<bool> tcs;
     private bool tstop = false;
 
     private List<(string, string)> _inputs;
+
     /// <summary>
     /// @(new List<(string, string)>() { ("Nazov1", "string"), ("Nazov2", "string")}) ||
     /// Item1 - Nazov, ktory sa zobrazi ||
@@ -117,7 +130,7 @@
     /// <summary>
     /// Vysledok z formularov, ktory treba skontrolovat, nevkladat nic do neho lebo sa automaticky generuje
     /// </summary>
-    public List<object> Outputs { get; private set; } = new List<object>();               // list, ktoreho pvky budu pozostavat z poradia vlozenych prvkov v Inputs ako vysledok vstupu od pouzivatela, nesmie byt meneny z vonku
+    public List<object> Outputs { get; private set; } = new List<object>();               // list, ktoreho prvky budu pozostavat z poradia vlozenych prvkov v Inputs ako vysledok vstupu od pouzivatela, nesmie byt meneny z vonku
     [Parameter]
     [EditorRequired]
     public EventCallback FuncOnSucc { get; set; }

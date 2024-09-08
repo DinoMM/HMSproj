@@ -21,7 +21,6 @@ namespace RecepciaModul.ViewModels
         #endregion
 
         public bool NacitavaniePoloziek { get; private set; } = true;
-        public bool NacitavanieZoznamuKuponov { get; private set; } = false;
 
         #region farby
         public readonly string HEX_GRAY = "#6c757d";
@@ -32,7 +31,9 @@ namespace RecepciaModul.ViewModels
         public readonly string HEX_BLACK = "#000000";
         #endregion
 
-
+        public List<IdentityUserWebOwn> ZoznamWebGuest { get; private set; } = new();
+        public List<Host> ZoznamHosti { get; private set; } = new();
+        public List<Room> ZoznamIziebList { get; private set; } = new();
 
         private readonly DBContext _db;
         private readonly DataContext _dbw;
@@ -67,10 +68,12 @@ namespace RecepciaModul.ViewModels
             NacitavaniePoloziek = false;
         }
 
-        private async Task NacitajZoznamRezervacie() {
+        private async Task NacitajZoznamRezervacie()
+        {
             ZoznamRezervacii = new(await _dbw.Rezervations
                     .Include(x => x.Guest)
                     .Include(x => x.Room)
+                    .Include(x => x.Coupon)
                     .Where(x => x.DepartureDate >= ZoznamDatumovNaZobrazenie[0]
                     && x.ArrivalDate <= ZoznamDatumovNaZobrazenie.Last())
                     .OrderBy(x => x.ArrivalDate)
@@ -80,9 +83,10 @@ namespace RecepciaModul.ViewModels
         private async Task NacitajIzbyRezervacie()
         {
             ZoznamIzieb = new(await _dbw.HRooms.ToListAsync());  //naèítanie všetkých izieb
+            ZoznamIziebList = new(ZoznamIzieb.ToList());
         }
 
-            public bool MoznoVymazat(Rezervacia item)
+        public bool MoznoVymazat(Rezervacia item)
         {
             return false;
         }
@@ -177,6 +181,10 @@ namespace RecepciaModul.ViewModels
 
         public string ResName(Rezervation res)
         {
+            if (res.Guest == null)
+            {
+                return "Rezervácia";
+            }
             string nospaceSurname = res.Guest.Surname.Replace(" ", string.Empty);
             nospaceSurname = char.ToUpper(nospaceSurname[0]) + nospaceSurname.Substring(1);
             return char.ToUpper(res.Guest.Name[0]) + "." + nospaceSurname;
@@ -197,9 +205,30 @@ namespace RecepciaModul.ViewModels
         {
             if (await _sessionStorage.GetItemAsync<bool>("RezervationChanged"))
             {
-                await NacitajZoznamRezervacie(); 
+                await NacitajZoznamRezervacie();
                 await _sessionStorage.SetItemAsync("RezervationChanged", false);
             }
+        }
+
+        public async Task NacitajPotrebneZoznamy()
+        {
+            NacitavaniePoloziek = true;
+            if (ZoznamWebGuest.Count == 0)
+            {
+                ZoznamWebGuest.AddRange(await _dbw.Users.OrderBy(x => x.Email).ToListAsync());
+            }
+            if (ZoznamHosti.Count == 0)
+            {
+                ZoznamHosti.AddRange(await _db.Hostia.OrderBy(x => x.Surname).ToListAsync());
+            }
+
+            NacitavaniePoloziek = false;
+        }
+
+        public void ClearChangesDB()
+        {
+            _db.ClearPendingChanges();
+            _dbw.ClearPendingChanges();
         }
     }
 }
