@@ -4,16 +4,20 @@
 
 @using Microsoft.AspNetCore.Components.Forms
 
-<InfoModal @ref="InfoModSaved" ID="infosaved"
-           Text="Zmeny boli uložené" />
 
-<ItemFinderTable T="IdentityUserWebOwn" @ref="itemFindUser" ID="fndwebusr"
-                 ColNames="@(new() {"Meno", "Priezvisko", "Username", "Email", "Telefón" })"
-                 SearchedValue="@(ViewModel.HostInput.GuestZ?.Email ?? "")"
-                 OnlyProtectedPersonalDataAttribute="true"
-                 SelectEmptyInstance="true">
 
-</ItemFinderTable>
+<div style="z-index:52">
+    <ItemFinderTable T="IdentityUserWebOwn" @ref="itemFindUser" ID="fndwebusrho"
+                     ColNames="@(new() {"Meno", "Priezvisko", "Username", "Email", "Telefón" })"
+                     SearchedValue="@(ViewModel.HostInput.GuestZ?.Email ?? "")"
+                     OnlyProtectedPersonalDataAttribute="true"
+                     SelectEmptyInstance="true">
+
+    </ItemFinderTable>
+
+    <InfoModal @ref="InfoModSaved" ID="infosaveda"
+               Text="Zmeny boli uložené" />
+</div>
 
 <EditForm Model="ViewModel.HostInput" OnValidSubmit="Save">
     <DataAnnotationsValidator />
@@ -123,7 +127,10 @@
 
         <div class="row pt-2">
             <div class="col text-center">
-                <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
+                @if (!NoDbChange)
+                {
+                    <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
+                }
                 <SimpleButton Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
             </div>
         </div>
@@ -131,6 +138,11 @@
 </EditForm>
 
 @code {
+    /// <summary>
+    /// Ak true, tak model vytvoreneu instanciu neuklada priamo cez SaveChanges, obsiahnuta bude v ObjectHolderi
+    /// </summary>
+    [Parameter]
+    public bool NoDbChange { get; set; } = false;
 
     private InfoModal InfoModSaved = new();
     private ItemFinderTable<IdentityUserWebOwn> itemFindUser = new();
@@ -142,6 +154,8 @@
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
+
+        ViewModel.NoDbChange = NoDbChange;  // ak true tak zmeny sa neprejavia v tomto pohlade
 
         var founded = objectHolder.Remove<DBLayer.Models.Host>();   //pokusi sa ziskat objekt z uloziska
         if (founded != null)
@@ -168,6 +182,12 @@
     {
         if (await ViewModel.Uloz())
         {
+            if (NoDbChange)
+            {
+                //InfoModSaved.UpdateText("Hodnoty sú nastavené, zmeny sa prejavia po uložení zmien.");
+                objectHolder.Remove<DBLayer.Models.Host>();
+                objectHolder.Add(ViewModel.HostInput);
+            }
             await InfoModSaved.OpenModal(true);
         }
     }
@@ -179,5 +199,20 @@
         {
             ViewModel.SetNewWebUser(itemFindUser.OutSelection.FirstOrDefault());
         }
+    }
+
+    public void Reset()
+    {
+        var founded = objectHolder.Remove<DBLayer.Models.Host>();   //pokusi sa ziskat objekt z uloziska
+        if (founded != null)
+        {
+            ViewModel.SetProp(founded);
+
+        }
+        else
+        {
+            ViewModel.ClearProp();
+        }
+        StateHasChanged();
     }
 }

@@ -5,11 +5,7 @@
 @inject DBContext db
 
 
-<ApproveModal @ref="infomod" Text=""
-              FuncOnDiss="EventCallback.Empty"
-              FuncOnSucc="EventCallback.Empty"
-              ChangeColor="true">
-</ApproveModal>
+
 
 <script>
    function switchStyleClass(Id, classname) {
@@ -57,7 +53,7 @@
                  ChangeColor="true">
 
 </ItemFinderTable>
-<ItemFinderTable T="IdentityUserWebOwn" @ref="iftwebguest" ID="fndwebusr"
+<ItemFinderTable T="IdentityUserWebOwn" @ref="iftwebguest" ID="fndwebusrrez"
                  ColNames="@(new() {"Meno", "Priezvisko", "Username", "Email", "Telefón" })"
                  SearchedValue="@(Marked.Guest?.Email ?? "")"
                  OnlyProtectedPersonalDataAttribute="true"
@@ -73,67 +69,74 @@
                Inputs="@(new() { ("Kód", "string") } )"
                ChangeColor="true">
 </FastFormModal>
-<CustomModal @ref="cuscreatehost" ID="cuscreatehostmod" Header="Vytvorenie hosťa" OneButtonOnly="true" ChangeColor="true" SizeInRem="90">
+
+<CustomModal @ref="cuscreatehost" ID="cuscreatehostmod" Header="Vytvorenie hosťa" OneButtonOnly="true" ChangeColor="true" SizeInRem="90" ZIndex="55">
     <BODY>
-        <CRUHost></CRUHost>
+
+        <CRUHost @ref="cruhost" NoDbChange="true"></CRUHost>
+
     </BODY>
 
 </CustomModal>
 
 
-<div style="z-index:50">
-    <CustomModal @ref="cusmodHostcon" ID="cusmodshowhost" Header="Hostia rezervácie" OneButtonOnly="true" ChangeColor="true" SizeInRem="60">
-        <BODY>
 
-            <ItemFinderTable T="DBLayer.Models.Host" @ref="ifthost" ID="dnfhost"
-                             ColNames="@(new() {"Meno", "Priezvisko", "Adresa", "Rod. č.", "Č. pasu", "Č. občan." })"
-                             SearchedValue=""
-                             ColValues="ListHostia"
-                             CutOffTail="true">
-            </ItemFinderTable>
+<CustomModal @ref="cusmodHostcon" ID="cusmodshowhost" Header="Hostia rezervácie" OneButtonOnly="true" ChangeColor="true" SizeInRem="60" ZIndex="50">
+    <BODY>
+        <ItemFinderTable T="DBLayer.Models.Host" @ref="ifthost" ID="dnfhost"
+                         ColNames="@(new() {"Meno", "Priezvisko", "Adresa", "Rod. č.", "Č. pasu", "Č. občan." })"
+                         SearchedValue=""
+                         ColValues="ListHostia"
+                         CutOffTail="true">
+        </ItemFinderTable>
 
-            <div class="col-12" style="max-height: 30rem;overflow: auto;">
-                <SimpleTable ID="tablehostid">
-                    <THEAD>
+        <div class="col-12" style="max-height: 30rem;overflow: auto;">
+            <SimpleTable ID="tablehostid">
+                <THEAD>
 
-                    <th class="col-resize" scope="col"><ButtonAdd Disabled="@(ValidateChangeability())" OnClick="@AddHostCon"></ButtonAdd> </th>
-                    <th class="col-resize" scope="col">Meno</th>
-                    <th class="col-resize" scope="col">Priezvisko</th>
-                    <th class="col-resize" scope="col">Adresa</th>
-                    <th class="col-resize" scope="col">Č. občianského</th>
-                    <th class="col-resize" scope="col">Č. pasu</th>
-                    <th class="col-resize" scope="col"></th>
+                <th class="col-resize" scope="col"><BtnFind Disabled="@(ValidateChangeability())" OnClick="@AddHostCon"/></th>
+                <th class="col-resize" scope="col">Meno</th>
+                <th class="col-resize" scope="col">Priezvisko</th>
+                <th class="col-resize" scope="col">Adresa</th>
+                <th class="col-resize" scope="col">Č. občianského</th>
+                <th class="col-resize" scope="col">Č. pasu</th>
+                <th class="col-resize" scope="col"></th>
 
-                    </THEAD>
-                    <TBODY>
+                </THEAD>
+                <TBODY>
 
-                        @foreach (var item in VyberHosti)
-                        {
-                            <tr>
-                                <td class="col-resize"></td>
-                                <td class="col-resize">@item.HostX.Name</td>
-                                <td class="col-resize">@item.HostX.Surname</td>
-                                <td class="col-resize">@item.HostX.Address</td>
-                                <td class="col-resize">@item.HostX.CitizenID</td>
-                                <td class="col-resize">@item.HostX.Passport</td>
-                                <td>
-                                    <ButtonRemove Disabled="@(ValidateChangeability())" OnClick="@(() => DeleteHostCon(item))"></ButtonRemove>
-                                </td>
+                    @foreach (var item in VyberHosti)
+                    {
+                        <tr @ondblclick="() => OpenHostFrom(item.HostX)">
+                            <td class="col-resize"></td>
+                            <td class="col-resize">@item.HostX.Name</td>
+                            <td class="col-resize">@item.HostX.Surname</td>
+                            <td class="col-resize">@item.HostX.Address</td>
+                            <td class="col-resize">@item.HostX.CitizenID</td>
+                            <td class="col-resize">@item.HostX.Passport</td>
+                            <td>
+                                <ButtonRemove Disabled="@(ValidateChangeability())" OnClick="@(() => DeleteHostCon(item))"></ButtonRemove>
+                            </td>
 
-                            </tr>
-                        }
+                        </tr>
+                    }
 
-                        <span id="observerTarget"></span>
-                    </TBODY>
+                    <span id="observerTarget"></span>
+                </TBODY>
 
-                </SimpleTable>
-            </div>
-        </BODY>
+            </SimpleTable>
+        </div>
+    </BODY>
 
-    </CustomModal>
-</div>
+</CustomModal>
 <div style="z-index:51">
     <InfoModal @ref="modsaved" Text="Zmeny boli uložené" ChangeColor="true"></InfoModal>
+
+    <ApproveModal @ref="infomod" Text=""
+                  FuncOnDiss="EventCallback.Empty"
+                  FuncOnSucc="EventCallback.Empty"
+                  ChangeColor="true">
+    </ApproveModal>
 </div>
 
 <EditForm Model="Marked" OnValidSubmit="Save">
@@ -218,7 +221,8 @@
                     <div class="col-6">
                         <label>Poukážka</label>
                         <input id="coupinputid" type="text" disabled readonly value="@(Marked.Coupon?.NameService ?? "-")" class="form-control" />
-
+                        <div id="coupinputid2"></div>
+                        <div id="coupinputid3"></div>
                     </div>
                     <div class="col-2">
                         <label>Zľava</label>
@@ -291,6 +295,7 @@
     CustomModal cusmodHostcon = new();
     ItemFinderTable<DBLayer.Models.Host> ifthost = new();
     CustomModal cuscreatehost = new();
+    CRUHost cruhost = new();
 
     public bool Initialized { get; private set; } = false;
 
@@ -316,23 +321,55 @@
                 return;
             }
         }
-
+        #region update kupona
+        if (Marked.Coupon != null)
+        {
+            Marked.Coupon.IsUsed = true;
+        }
+        #endregion
+        #region update rezervacie
         if (!Exist())
         {
             dbw.Add(Marked);
         }
         else
         {
-            var found = dbw.Rezervations.FirstOrDefault(x => x.Id == Marked.Id);
+            var found = dbw.Rezervations.Include(x => x.Coupon).Include(x => x.Guest).Include(x => x.Room).FirstOrDefault(x => x.Id == Marked.Id);
             if (found == null)
             {
                 return;
             }
 
-            found.setFromReservation(Marked);
+            if (!string.IsNullOrEmpty(found.CouponId) && found.CouponId != Marked.CouponId)
+            {
+                found.Coupon.IsUsed = false;
+            }
 
-
+            found.setFromReservation(Marked);       //update
         }
+        #endregion
+        #region update prepojeni
+        var cons = db.HostConReservations.Include(x => x.HostX).Where(x => x.Reservation == Marked.Id).ToList();
+        foreach (var item in cons)
+        {
+            //db.HostConReservations.Remove(item);
+            var found = VyberHosti.FirstOrDefault(x => x.Host == item.Host && x.Reservation == Marked.Id);
+            if (found == null)
+            {
+                db.HostConReservations.Remove(item);
+            }
+            else
+            {
+                VyberHosti.Remove(found);
+            }
+        }
+        //db.HostConReservations.Where(x => x.Reservation == Marked.Id).ExecuteDelete();
+        foreach (var item in VyberHosti)
+        {
+            db.HostConReservations.Add(item);
+        }
+        #endregion
+
         await dbw.SaveChangesAsync();
         await db.SaveChangesAsync();
         await sessionStorage.SetItemAsync("RezervationChanged", true);
@@ -361,6 +398,7 @@
                 await JSRuntime.InvokeVoidAsync("switchStyleClass", "submitbttn", "btn-warning");
             }
             warnfound = true;
+
         }
 
 
@@ -380,7 +418,7 @@
 
             if (kupon == Marked.CouponId)
             {
-                await JSRuntime.InvokeVoidAsync("showPopover", "coupinputid", $"Vložená poukážka je rovnaká ako aktuálna", "left");
+                await JSRuntime.InvokeVoidAsync("showPopover", "coupinputid2", $"Vložená poukážka je rovnaká ako aktuálna", "left");
                 await JSRuntime.InvokeVoidAsync("switchStyleClass", "coupinputid", "border-primary");
                 return;
             }
@@ -390,28 +428,28 @@
             {
                 await JSRuntime.InvokeVoidAsync("showPopover", "coupinputid", $"Poukážka sa našla, uložte zmeny", "left");
                 await JSRuntime.InvokeVoidAsync("switchStyleClass", "coupinputid", "border-success");
-                if (string.IsNullOrEmpty(Marked.CouponId))  //ak nemame kupon, priradime a oznacime ako pouzity, inak aktualny odznacime a priradime novy
-                {
-                    Marked.CouponId = founded.ID;
-                    Marked.Coupon = founded;
-                    Marked.Coupon.IsUsed = true;
-                }
-                else
-                {
-                    Marked.Coupon.IsUsed = false;
-                    dbw.Update(Marked.Coupon);
-                    Marked.CouponId = founded.ID;
-                    Marked.Coupon = founded;
-                    Marked.Coupon.IsUsed = true;
-                }
+                //if (string.IsNullOrEmpty(Marked.CouponId))  //ak nemame kupon, priradime a oznacime ako pouzity, inak aktualny odznacime a priradime novy
+                //{
+                Marked.CouponId = founded.ID;
+                Marked.Coupon = founded;
+                //    Marked.Coupon.IsUsed = true;
+                //}
+                //else
+                //{
+                //    Marked.Coupon.IsUsed = false;
+                //    dbw.Update(Marked.Coupon);
+                //    Marked.CouponId = founded.ID;
+                //    Marked.Coupon = founded;
+                //    Marked.Coupon.IsUsed = true;
+                //}
 
-                dbw.Update(Marked.Coupon);
+                //dbw.Update(Marked.Coupon);
 
                 return;
             }
             else
             {
-                await JSRuntime.InvokeVoidAsync("showPopover", "coupinputid", $"Vložená poukážka neexistuje", "left");
+                await JSRuntime.InvokeVoidAsync("showPopover", "coupinputid3", $"Vložená poukážka neexistuje", "left");
                 await JSRuntime.InvokeVoidAsync("switchStyleClass", "coupinputid", "border-warning");
             }
 
@@ -572,7 +610,7 @@
         infomod.UpdateText("Chcete odobrať tohto hosťa?");
         if (await infomod.OpenModal(true))
         {
-            db.HostConReservations.Remove(item);
+            //db.HostConReservations.Remove(item);
             VyberHosti.Remove(item);
         }
     }
@@ -597,7 +635,7 @@
                 HostX = vybranyHost,
                 Reservation = Marked.Id,
             };
-            db.HostConReservations.Add(newCon);
+            //db.HostConReservations.Add(newCon);
             VyberHosti.Add(newCon);
             added = true;
         }
@@ -615,6 +653,42 @@
 
     private async Task CreateHostTab()
     {
+        cruhost.Reset();
         await cuscreatehost.OpenModal(true);
+        var found = objectHolder.Remove<DBLayer.Models.Host>();
+        if (found != null)
+        {
+            ListHostia.Add(found);
+            ListHostia.Sort((x, y) => x.Surname.CompareTo(y.Surname));
+            VyberHosti.Add(new DBLayer.Models.HostConReservation()
+            {
+                Host = found.ID,
+                HostX = found,
+                Reservation = Marked.Id
+            });
+        }
+    }
+    private async Task OpenHostFrom(DBLayer.Models.Host host)
+    {
+        objectHolder.Add(host);
+        cruhost.Reset();
+        await cuscreatehost.OpenModal(true);
+        var found = objectHolder.Remove<DBLayer.Models.Host>();
+        if (found != null)
+        {
+            var remov = VyberHosti.FirstOrDefault(x => x.Host == found.ID);
+            if (remov != null)
+            {
+                VyberHosti.Remove(remov);
+                VyberHosti.Add(new DBLayer.Models.HostConReservation()
+                {
+                    Host = found.ID,
+                    HostX = found,
+                    Reservation = Marked.Id
+                });
+
+
+            }
+        }
     }
 }

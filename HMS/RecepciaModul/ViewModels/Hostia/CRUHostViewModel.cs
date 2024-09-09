@@ -15,6 +15,7 @@ namespace RecepciaModul.ViewModels
 
         public Host Host { get; set; } = new();
         private bool existuje = false;
+        public bool NoDbChange { get; set; } = false;
         public bool NacitavanieZoznamu { get; private set; } = false;
 
         private readonly DBContext _db;
@@ -43,6 +44,13 @@ namespace RecepciaModul.ViewModels
             HostInput = host.Clon();    //bez instancie GuestZ
             HostInput.GuestZ = host.GuestZ;
             existuje = true;
+
+        }
+
+        public void ClearProp() {
+            Host = new();
+            HostInput = new();
+            existuje = false;
         }
 
         public async Task<bool> Uloz()
@@ -64,7 +72,11 @@ namespace RecepciaModul.ViewModels
                 Host.Guest = HostInput.Guest;
                 Host.GuestZ = HostInput.GuestZ;
             }
+            //if (!NoDbChange)
+            //{
             await _db.SaveChangesAsync();
+
+            //}
             existuje = true;
             return true;
         }
