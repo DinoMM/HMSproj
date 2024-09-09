@@ -34,6 +34,17 @@ namespace DBLayer.Models
         [Column(TypeName = "nvarchar(32)")]
         public string CitizenID { get; set; } = "";
 
+        /// <summary>
+        /// false - male, true - female
+        /// </summary>
+        public bool Sex { get; set; } = false;
+
+        [Column(TypeName = "nvarchar(128)")]
+        public string Nationality { get; set; } = "";
+
+        [Column(TypeName = "nvarchar(256)")]
+        public string Note { get; set; } = "";
+
         public DateTime BirthDate { get; set; } = DateTime.Today;
 
 

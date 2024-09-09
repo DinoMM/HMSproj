@@ -76,7 +76,7 @@ namespace HMS
                 .AddRoles<IdentityRole>()
                 .AddUserValidator<CustomUserValidator<IdentityUserOwn>>();      //(pomohol som si z internetu tutoriály/AI)
 
-
+            
             //builder.Services.AddBlazorWebView()
             // .AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUserOwn>>();
 
