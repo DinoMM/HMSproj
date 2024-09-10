@@ -24,8 +24,8 @@
         <div class="col-8">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">➕Vytvoriť Faktúru</button>
-                <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary">Otvoriť</button>
+                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRU())" type="button" class="btn btn-primary">➕Vytvoriť Faktúru</button>
+                <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUserCRU())" class="btn btn-primary">Otvoriť</button>
             </div>
         </div>
 
@@ -73,7 +73,7 @@
                                 <td class="col-resize">@item.CenaBezDPH.ToString("F3")</td>
                                 <td class="col-resize">@item.CenaDPH.ToString("F3")</td>
                                 <td>
-                                    @if (ViewModel.ValidateUserCRUD())
+                                    @if (ViewModel.ValidateUserCRU())
                                     {
                                         <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
                                     }
@@ -127,7 +127,7 @@
 
     public void Create()
     {
-        if (ViewModel.ValidateUserCRUD())
+        if (ViewModel.ValidateUserCRU())
         {
             Navigator.NavigateTo(Navigator.AddNextUrl("/"));
         }
@@ -137,7 +137,7 @@
     {
         if (marked != null)
         {
-            if (ViewModel.ValidateUserCRUD())
+            if (ViewModel.ValidateUserCRU())
             {
                 objectHolder.Add(marked);
                 Navigator.NavigateTo(Navigator.AddNextUrl("/"));

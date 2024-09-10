@@ -10,7 +10,7 @@ namespace BuildingTemplates
     public interface I_ValidationVM
     {
         public abstract bool ValidateUser();
-        public abstract bool ValidateUserCRUD();
+        public abstract bool ValidateUserCRU();
         
     }
 }

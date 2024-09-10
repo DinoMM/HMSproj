@@ -17,6 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DBLayer\DBLayer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Update="Buttons\ButtonRemove.razor">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
     </Content>

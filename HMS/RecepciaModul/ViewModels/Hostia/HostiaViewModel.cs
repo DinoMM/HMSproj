@@ -29,9 +29,14 @@ namespace RecepciaModul.ViewModels
         {
             return _userService.IsLoggedUserInRoles(Host.ROLE_R_HOSTIA);
         }
-        public bool ValidateUserCRUD()
+        public bool ValidateUserCRU()
         {
-            return _userService.IsLoggedUserInRoles(Host.ROLE_CRUD_HOSTIA);
+            return _userService.IsLoggedUserInRoles(Host.ROLE_CRU_HOSTIA);
+            
+        }
+        public bool ValidateUserD()
+        {
+            return _userService.IsLoggedUserInRoles(Host.ROLE_D_HOSTIA);
         }
 
         public async Task NacitajZoznamy()

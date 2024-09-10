@@ -7,7 +7,7 @@ using System.Collections.ObjectModel;
 
 namespace RecepciaModul.ViewModels
 {
-    public partial class RezervaciaViewModel : ObservableObject, I_ValidationVM, I_RD_TableVM<Rezervacia>
+    public partial class RezervaciaViewModel : ObservableObject, I_ValidationVM, I_RD_TableVM<Rezervation>
     {
         [ObservableProperty]
         ObservableCollection<Rezervation> zoznamRezervacii = new();
@@ -26,9 +26,11 @@ namespace RecepciaModul.ViewModels
         public readonly string HEX_GRAY = "#6c757d";
         public readonly string HEX_GREEN = "#28a745";
         public readonly string HEX_YELLOW = "#ffc107";
+        public readonly string HEX_DARK_YELLOW = "#b38600";
         public readonly string HEX_RED = "#dc3545";
         public readonly string HEX_BLUE = "#007bff";
         public readonly string HEX_BLACK = "#000000";
+        public readonly string HEX_PURPLE = "#ac00e6";
         #endregion
 
         public List<IdentityUserWebOwn> ZoznamWebGuest { get; private set; } = new();
@@ -54,7 +56,7 @@ namespace RecepciaModul.ViewModels
         {
             return _userService.IsLoggedUserInRoles(Rezervation.ROLE_R_REZERVACIA);
         }
-        public bool ValidateUserCRUD()
+        public bool ValidateUserCRU()
         {
             throw new NotImplementedException();
         }
@@ -75,7 +77,8 @@ namespace RecepciaModul.ViewModels
                     .Include(x => x.Room)
                     .Include(x => x.Coupon)
                     .Where(x => x.DepartureDate >= ZoznamDatumovNaZobrazenie[0]
-                    && x.ArrivalDate <= ZoznamDatumovNaZobrazenie.Last())
+                    && x.ArrivalDate <= ZoznamDatumovNaZobrazenie.Last()
+                    && x.Status != ReservationStatus.Stornovana.ToString())
                     .OrderBy(x => x.ArrivalDate)
                     .ToListAsync()
                     );  //naèítané rezervacie v rozmedzi datumov
@@ -86,12 +89,12 @@ namespace RecepciaModul.ViewModels
             ZoznamIziebList = new(ZoznamIzieb.ToList());
         }
 
-        public bool MoznoVymazat(Rezervacia item)
+        public bool MoznoVymazat(Rezervation item)
         {
             return false;
         }
 
-        public void Vymazat(Rezervacia item)
+        public void Vymazat(Rezervation item)
         {
 
 
@@ -125,7 +128,7 @@ namespace RecepciaModul.ViewModels
         {
             int start = 1;
             int end = ZoznamDatumovNaZobrazenie.Count * 2 + 1;
-            int fin = 0;    // 0 - ziaden datum, 1 len odchod, 2 len prichod, 3 oba najdene
+            int fin = 0;    // 0 - ziaden datum, 1 len odchod, 2 len prichod, 3 oba najdene, 4 cez cely rozsah
             for (int i = 1; i <= ZoznamDatumovNaZobrazenie.Count; i++)
             {
                 if (res.ArrivalDate == ZoznamDatumovNaZobrazenie[i - 1])
@@ -140,16 +143,38 @@ namespace RecepciaModul.ViewModels
                 }
                 if (fin == 3)
                 {
-                    return (start + "/" + end, fin);
+                    if (res.Status != ReservationStatus.Blokovana.ToString())
+                    {
+                        return (start + "/" + end, fin);
+                    }
+                    else
+                    {
+                        return (GetPoziciaResBlokovana(start, end), fin);
+                    }
                 }
             }
+
             if (fin == 2)   //ak sa chytil den prichodu len tak den odchodu je dalej ako rozsah
             {
-                return ((start + "/" + (end + 1)), fin);
+                if (res.Status != ReservationStatus.Blokovana.ToString())
+                {
+                    return ((start + "/" + (end + 1)), fin);
+                }
+                else
+                {
+                    return (GetPoziciaResBlokovana(start, end), fin);
+                }
             }
             if (fin == 1)
             {
-                return (start + "/" + end, fin);
+                if (res.Status != ReservationStatus.Blokovana.ToString())
+                {
+                    return (start + "/" + end, fin);
+                }
+                else
+                {
+                    return (GetPoziciaResBlokovana(start + 1, end), fin);
+                }
             }
             if (res.ArrivalDate < ZoznamDatumovNaZobrazenie[0] && ZoznamDatumovNaZobrazenie.Last() < res.DepartureDate)
             {
@@ -158,21 +183,46 @@ namespace RecepciaModul.ViewModels
             return ("0/0", fin);
         }
 
+        private string GetPoziciaResBlokovana(int start, int end)
+        {
+            start = (start - 1) == 0 ? 1 : (start - 1);
+            end = (end + 1) == (ZoznamDatumovNaZobrazenie.Count * 2 + 2) ? ZoznamDatumovNaZobrazenie.Count * 2 + 1 : (end + 1);
+            return (start + "/" + end);
+        }
+
         public string GetHexFarbuRes(Rezervation res)
         {
-            if (res.DepartureDate <= DateTime.Today)
+            if (res.Status == ReservationStatus.Blokovana.ToString())
+            {
+                return HEX_GRAY;
+            }
+            if (res.Status == ReservationStatus.VytvorenaWeb.ToString() || res.Status == ReservationStatus.VytvorenaRucne.ToString())
+            {
+                return HEX_PURPLE;
+            }
+            if (res.Status == ReservationStatus.Checked_OUT.ToString())
             {
                 return HEX_RED;
             }
-            if (res.ArrivalDate <= DateTime.Today && DateTime.Today <= res.DepartureDate)
+            if (res.DepartureDate == DateTime.Today)
+            {
+                return HEX_DARK_YELLOW;
+            }
+            if (res.Status == ReservationStatus.Checked_IN.ToString())
             {
                 return HEX_GREEN;
             }
-            if (res.ArrivalDate == DateTime.Today.AddDays(1))
+            if (res.ArrivalDate == DateTime.Today)
             {
                 return HEX_YELLOW;
             }
+
+
             if (DateTime.Today > res.ArrivalDate)
+            {
+                return HEX_BLUE;
+            }
+            if (DateTime.Today < res.DepartureDate)
             {
                 return HEX_BLUE;
             }
@@ -181,6 +231,10 @@ namespace RecepciaModul.ViewModels
 
         public string ResName(Rezervation res)
         {
+            if (res.Status == ReservationStatus.Blokovana.ToString())
+            {
+                return "Blokácia";
+            }
             if (res.Guest == null)
             {
                 return "Rezervácia";

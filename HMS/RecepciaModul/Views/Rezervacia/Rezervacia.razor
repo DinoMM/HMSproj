@@ -66,9 +66,9 @@
 <CustomModal @ref="daatePcker" ID="dtpickermodal" Header="Zmeniť rozsah obdobia">
     <BODY>
         <label for="date1">Od</label>
-        <InputDate id="date1" class="form-input" @bind-Value="ViewModel.DatumOd" />
+        <InputDate id="date1" class="form-control" @bind-Value="ViewModel.DatumOd" />
         <label for="date2">Do</label>
-        <InputDate id="date2" class="form-input" @bind-Value="ViewModel.DatumDo" />
+        <InputDate id="date2" class="form-control" @bind-Value="ViewModel.DatumDo" />
     </BODY>
 
 </CustomModal>
@@ -254,6 +254,7 @@
 
     private async Task OpenRes(DBLayer.Models.Rezervation res)
     {
+        //marked.setFromReservation(res.Clon());
         marked = res.Clon();
         if (rezcom.Initialized)     //prvy krat komponent nie je načítaný
         {
@@ -263,6 +264,7 @@
         await resViewer.OpenModal(true);
         ViewModel.ClearChangesDB();
         await ViewModel.SpracujZmeny();
+        marked = null;
     }
 
     private async Task Update()

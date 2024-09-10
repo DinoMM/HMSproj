@@ -5,6 +5,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Reflection;
+using System.Globalization;
 
 namespace DBLayer.Models
 {
@@ -37,6 +39,7 @@ namespace DBLayer.Models
         /// <summary>
         /// false - male, true - female
         /// </summary>
+        [BooleanStringValues("Muž", "Žena")]
         public bool Sex { get; set; } = false;
 
         [Column(TypeName = "nvarchar(128)")]
@@ -65,7 +68,11 @@ namespace DBLayer.Models
                 Passport = this.Passport,
                 CitizenID = this.CitizenID,
                 BirthDate = this.BirthDate,
-                Guest = this.Guest
+                Guest = this.Guest,
+                Sex = this.Sex,
+                Nationality = this.Nationality,
+                Note = this.Note
+                
                 //GuestZ = this.GuestZ.
             };
             return newHost;

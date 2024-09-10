@@ -39,6 +39,12 @@ namespace DBLayer.Models
 
         public string Status { get; set; } = ReservationStatus.VytvorenaRucne.ToString();
 
+        [NotMapped]
+        [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty.")]
+        public double UbytovaciPoplatok { get; set; } = 0.0;
+        [NotMapped]
+        public double CelkovaSumaDPH { get => (double)CelkovaSuma * 1.2; }
+
         public void setFromReservation(Rezervation res)
         {
             Id = res.Id;
@@ -83,7 +89,10 @@ namespace DBLayer.Models
         VytvorenaWeb,
         SchvalenaNezaplatena,
         SchvalenaZaplatena,
-        Stornovana
+        Stornovana,
+        Blokovana,
+        Checked_IN,
+        Checked_OUT
     }
 
     public class DateNotSoonerThanAttribute : ValidationAttribute
@@ -208,13 +217,34 @@ namespace DBLayer.Models
             {
                 return new ValidationResult(ErrorMessage ?? $"Null.", ContextMemberNames);
             }
+            //if (dbContext.Rezervations.Any(x =>
+            // x.RoomNumber == roomID
+            // && x.Id != keyID
+            // && (x.ArrivalDate < dateValueEnd && dateValueStart < x.DepartureDate)
+            // && x.Status != ReservationStatus.Stornovana.ToString()
             if (dbContext.Rezervations.Any(x =>
              x.RoomNumber == roomID
              && x.Id != keyID
-             && (x.ArrivalDate < dateValueEnd && dateValueStart < x.DepartureDate)))
+             && (x.ArrivalDate < dateValueEnd && dateValueStart < x.DepartureDate)
+             && x.Status != ReservationStatus.Stornovana.ToString()
+             || (
+                x.RoomNumber == roomID
+                && x.Id != keyID
+                && x.Status == ReservationStatus.Blokovana.ToString()
+                && (x.ArrivalDate == dateValueEnd || dateValueStart == x.DepartureDate))
+             ))
             {
                 return new ValidationResult(ErrorMessage ?? $"V danom čase je táto izba obsadená.", ContextMemberNames);
             }
+            //if (dbContext.Rezervations.Any(x =>
+            // x.RoomNumber == roomID
+            // && x.Id != keyID
+            // && x.Status == ReservationStatus.Blokovana.ToString()
+            // && (x.ArrivalDate == dateValueEnd || dateValueStart == x.DepartureDate)
+            // ))
+            //{
+            //    return new ValidationResult( $"V danom čase je táto izba blokovana.", ContextMemberNames);
+            //}
             #endregion
 
             return ValidationResult.Success;

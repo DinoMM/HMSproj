@@ -5,7 +5,7 @@
 @typeparam T where T : class
 
 <div class="modal fade" id="@ID" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true" @onkeydown="HandleKeyDown">
-    <div class="modal-dialog modal-lg" style="max-width:100rem">
+    <div class="modal-dialog modal-lg" style="@($"max-width:{SizeInRem}rem") ">
         <div class="modal-content">
             <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
                 <h5 class="modal-title" id="staticBackdropLabel">
@@ -126,6 +126,12 @@
         [Parameter]
         public bool CutOffTail { get; set; } = false;
 
+        /// <summary>
+        /// Šírka tabulky v rem, default 100
+        /// </summary>
+        [Parameter]
+        public int SizeInRem { get; set; } = 100;
+
         #region Attribute settings
         /// <summary>
         ///Pridať aj parametre s primárnými klúčmi, default false
@@ -230,6 +236,13 @@
         {
             var prop = obj.GetType().GetProperties();
             var propRet = new List<System.Reflection.PropertyInfo>();
+
+            if (obj is string str)      //ak je T="string"
+            {
+                propRet.Add(new StringPropertyInfo("Value", str));      //vlastna trieda
+                return propRet.ToArray();
+            }
+
             foreach (var item in prop)
             {
                 if (!ForeignAttributesToo)
@@ -267,6 +280,20 @@
                 var propType = item.PropertyType;
                 if (propType == typeof(string) || propType == typeof(int) || propType == typeof(bool) || propType == typeof(double) || propType == typeof(DateTime) || propType.IsEnum)
                 {
+
+                    if (propType == typeof(bool))   // pre booleany s atributom
+                    {
+                        var attribute = item.GetCustomAttributes(typeof(DBLayer. BooleanStringValuesAttribute), false).FirstOrDefault() as DBLayer.BooleanStringValuesAttribute;
+                        if (attribute != null)
+                        {
+                            bool boolValue = (bool)item.GetValue(obj);
+                            string stringValue = boolValue ? attribute.TrueValue : attribute.FalseValue;
+                            propRet.Add(new StringPropertyInfo(item.Name, stringValue));
+                            continue;
+                        }
+                    }
+
+
                     propRet.Add(item);
                     continue;
                 }
@@ -350,5 +377,4 @@
             }
             CloseModal(true);
         }
-
     }

@@ -3,47 +3,41 @@
 @inject Blazored.SessionStorage.ISessionStorageService sessionStorage
 @inject DataContext dbw
 @inject DBContext db
-
-
-
-
-<script>
-   function switchStyleClass(Id, classname) {
-    var element = document.getElementById(Id);
-        if (element != null) {
-            if (element.classList.contains(classname)) {
-                element.classList.remove(classname);
-            } else {
-                element.classList.add(classname);
+@*<script>
+       function switchStyleClass(Id, classname) {
+        var element = document.getElementById(Id);
+            if (element != null) {
+                if (element.classList.contains(classname)) {
+                    element.classList.remove(classname);
+                } else {
+                    element.classList.add(classname);
+                }
             }
+        }
+
+        function showPopover(id, content, direction) {
+        var element = document.getElementById(id);
+        if (element) {
+            $(element).popover({
+                content: content,
+                trigger: 'manual',
+                placement: direction // Position the popover on the left
+            });
+            $(element).popover('show');
+
+                        // Attach a click event listener to the document
+            $(document).on('click.popover', function (e) {
+                    // Check if the click occurred outside the popover
+                if (!$(e.target).closest('.popover').length && !$(e.target).is(element)) {
+                $(element).popover('hide');
+                    // Remove the event listener after hiding the popover
+                $(document).off('click.popover');
+        }
+        });
         }
     }
 
-    function showPopover(id, content, direction) {
-    var element = document.getElementById(id);
-    if (element) {
-        $(element).popover({
-            content: content,
-            trigger: 'manual',
-            placement: direction // Position the popover on the left
-        });
-        $(element).popover('show');
-
-                    // Attach a click event listener to the document
-        $(document).on('click.popover', function (e) {
-                // Check if the click occurred outside the popover
-            if (!$(e.target).closest('.popover').length && !$(e.target).is(element)) {
-            $(element).popover('hide');
-                // Remove the event listener after hiding the popover
-            $(document).off('click.popover');
-    }
-    });
-    }
-}
-
-
-
-</script>
+    </script>*@
 
 <ItemFinderTable T="DBLayer.Models.Room" @ref="iftroom" ID="itemfindroom"
                  ColNames="@(new() {"Číslo izby", "Kategória", "Kapacita", "Cena za noc" })"
@@ -55,7 +49,6 @@
 </ItemFinderTable>
 <ItemFinderTable T="IdentityUserWebOwn" @ref="iftwebguest" ID="fndwebusrrez"
                  ColNames="@(new() {"Meno", "Priezvisko", "Username", "Email", "Telefón" })"
-                 SearchedValue="@(Marked.Guest?.Email ?? "")"
                  OnlyProtectedPersonalDataAttribute="true"
                  SelectEmptyInstance="true"
                  ColValues="ListWebGuest"
@@ -72,8 +65,10 @@
 
 <CustomModal @ref="cuscreatehost" ID="cuscreatehostmod" Header="Vytvorenie hosťa" OneButtonOnly="true" ChangeColor="true" SizeInRem="90" ZIndex="55">
     <BODY>
-
-        <CRUHost @ref="cruhost" NoDbChange="true"></CRUHost>
+        @if (LoadHostComp)
+        {
+            <CRUHost AsComponent="true"></CRUHost>
+        }
 
     </BODY>
 
@@ -84,7 +79,7 @@
 <CustomModal @ref="cusmodHostcon" ID="cusmodshowhost" Header="Hostia rezervácie" OneButtonOnly="true" ChangeColor="true" SizeInRem="60" ZIndex="50">
     <BODY>
         <ItemFinderTable T="DBLayer.Models.Host" @ref="ifthost" ID="dnfhost"
-                         ColNames="@(new() {"Meno", "Priezvisko", "Adresa", "Rod. č.", "Č. pasu", "Č. občan." })"
+                         ColNames="@(new() {"Meno", "Priezvisko", "Adresa", "Rod. č.", "Č. pasu", "Č. občan.", "Pohlavie", "Národnosť" })"
                          SearchedValue=""
                          ColValues="ListHostia"
                          CutOffTail="true">
@@ -94,12 +89,14 @@
             <SimpleTable ID="tablehostid">
                 <THEAD>
 
-                <th class="col-resize" scope="col"><BtnFind Disabled="@(ValidateChangeability())" OnClick="@AddHostCon"/></th>
+                <th class="col-resize" scope="col"><BtnFind Disabled="@(ValidateChangeability())" OnClick="@AddHostCon" /></th>
                 <th class="col-resize" scope="col">Meno</th>
                 <th class="col-resize" scope="col">Priezvisko</th>
                 <th class="col-resize" scope="col">Adresa</th>
                 <th class="col-resize" scope="col">Č. občianského</th>
                 <th class="col-resize" scope="col">Č. pasu</th>
+                <th class="col-resize" scope="col">Pohlavie</th>
+                <th class="col-resize" scope="col">Národnosť</th>
                 <th class="col-resize" scope="col"></th>
 
                 </THEAD>
@@ -113,6 +110,7 @@
                             <td class="col-resize">@item.HostX.Surname</td>
                             <td class="col-resize">@item.HostX.Address</td>
                             <td class="col-resize">@item.HostX.CitizenID</td>
+                            <td class="col-resize">@(item.HostX.Sex ? "Žena" : "Muž")</td>
                             <td class="col-resize">@item.HostX.Passport</td>
                             <td>
                                 <ButtonRemove Disabled="@(ValidateChangeability())" OnClick="@(() => DeleteHostCon(item))"></ButtonRemove>
@@ -139,22 +137,22 @@
     </ApproveModal>
 </div>
 
-<EditForm Model="Marked" OnValidSubmit="Save">
+<EditForm Model="Marked" OnValidSubmit="() => Save()">
     <DataAnnotationsValidator />
 
     <div class="container px-2">
 
         <div class="row g-3 p-3">
             <div class="col">
-                <div class="row">
+                <div  class="row">
                     <div class="col-4">
                         <label>Príchod</label>
-                        <InputDate disabled="@ValidateChangeability()" @bind-Value="@Marked.ArrivalDate" />
+                        <InputDate id="dateinputres1"  disabled="@ValidateChangeability()" class="form-control" @bind-Value="@Marked.ArrivalDate" />
                         <ValidationMessage For="@(() => Marked.ArrivalDate)" />
                     </div>
                     <div class="col-4">
                         <label>Odchod</label>
-                        <InputDate disabled="@ValidateChangeability()" @bind-Value="@Marked.DepartureDate" />
+                        <InputDate id="dateinputres2" disabled="@ValidateChangeability()" class="form-control" @bind-Value="@Marked.DepartureDate" />
                         <ValidationMessage For="@(() => Marked.DepartureDate)" />
                     </div>
                 </div>
@@ -164,22 +162,26 @@
                         <InputText id="inputroom" @bind-Value="@Marked.RoomNumber" @onkeydown="@((e) => HandleKeyDown(e, "inputroom"))" disabled="@ValidateChangeability()" class="form-control" />
                         <ValidationMessage For="@(() => @Marked.RoomNumber)" />
                     </div>
+                    <div class="col-1">
+                        <div style="height: 24px;"></div>
+                        <BtnFind Disabled="@(ValidateChangeability())" OnClick="@FindRoom" />
+                    </div>
                 </div>
                 <div class="row">
                     <div class="col-3">
-                        <label>Počet hostí</label>
+                        <label>Plánovaný&nbsp;hostia</label>
                         <InputNumber id="numguestinput" @bind-Value="@Marked.NumberGuest" disabled="@(ValidateChangeability() || Marked.Room == null)" class="form-control" />
                         <ValidationMessage For="@(() => Marked.NumberGuest)" />
                     </div>
                     <div class="col-1 me-2">
                         <div style="height: 24px;"></div>
-                        <button id="numguestshow" disabled="@(ValidateChangeability() || Marked.Room == null)" type="button" @onclick="OpenHostTab" class="btn btn-secondary">
+                        <button id="numguestshow" disabled="@(ValidateChangeability() || Marked.Room == null || Marked.Id == 0)" type="button" @onclick="OpenHostTab" class="btn btn-secondary">
                             <i class="bi bi-people-fill"></i>
                         </button>
                     </div>
                     <div class="col-1">
                         <div style="height: 24px;"></div>
-                        <button disabled="@(ValidateChangeability() || Marked.Room == null)" type="button" @onclick="CreateHostTab" class="btn btn-secondary">
+                        <button disabled="@(ValidateChangeability() || Marked.Room == null || Marked.Id == 0)" type="button" @onclick="CreateHostTab" class="btn btn-secondary">
                             <i class="bi bi-person-fill-add"></i>
                         </button>
                     </div>
@@ -187,7 +189,7 @@
                 <div class="row">
                     <div class="col-5">
                         <label>Status</label>
-                        <select @bind="Marked.Status" disabled="@(ValidateChangeability() || Marked.Room == null)" class="form-select">
+                        <select id="selectstav" @bind="Marked.Status" disabled="@(ValidateChangeability() || Marked.Room == null)" class="form-select @(IsCompleted() || IsStorno() ? " border border-warning " : "")">
                             @foreach (var status in SelectValues)
                             {
                                 <option value="@status">@status</option>
@@ -208,14 +210,20 @@
                     </div>
                     <div class="col-4">
                         <label>Celková&nbsp;suma&nbsp;DPH</label>
-                        <input type="number" disabled readonly value="@((double)Marked.CelkovaSuma * 1.2)" class="form-control" />
+                        <input type="text" disabled value="@Marked.CelkovaSumaDPH.ToString("F2")" class="form-control" />
                     </div>
-                    <div class="col">
+                    <div class="col-2">
+                        <label>Ubyt.&nbsp;poplatok</label>
+                        <InputNumber id="ubytpopinp" disabled="@(ValidateChangeability() || Marked.Room == null)" @bind-Value="@Marked.UbytovaciPoplatok" class="form-control" />
+                        <ValidationMessage For="@(() => Marked.UbytovaciPoplatok)" />
+                    </div>
+                    <div class="col-1">
                         <div style="height: 24px;"></div>
-                        <button disabled="@(ValidateChangeability() || Marked.Room == null)" type="button" @onclick="CalculateSum" class="btn btn-secondary">
-                            <i class="bi bi-box-arrow-in-down "></i>
+                        <button id="ubytpopinp2" disabled="@(ValidateChangeability() || Marked.Room == null)" type="button" @onclick="CalculateSum" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Vypočíta: cena za izbu + (ubytovací poplatok * počet navolených osôb)">
+                            <i class="bi bi-calculator"></i>
                         </button>
                     </div>
+
                 </div>
                 <div class="row">
                     <div class="col-6">
@@ -267,7 +275,15 @@
 
         <div class="row pt-2">
             <div class="col text-center">
-                <SimpleButton ID="submitbttn" Disabled="ValidateChangeability()" ZmenaStavuTextu="Exist()" Type="submit" ZmenaTextu="@(("Uložiť", "Vytvoriť"))"> </SimpleButton>
+                <SimpleButton ID="submitbttn" Disabled="ValidateChangeability()" ZmenaStavuTextu="Exist()" Type="submit" ZmenaTextu="@(("Uložiť", "Vytvoriť"))" Class="btn btn-primary me-2"> </SimpleButton>
+                @if (Marked.ArrivalDate == DateTime.Today)
+                {
+                    <SimpleButton ID="checkinbttn" ZmenaStavuTextu="Exist()" OnClick="ProcessCheckIN" Disabled="ValidateChangeability() || Marked.Id == 0" Type="button" Class="btn btn-success" ZmenaTextu="@(("CHECK-IN", "CHECK-IN"))"> </SimpleButton>
+                }
+                else if (Marked.DepartureDate == DateTime.Today)
+                {
+                    <SimpleButton ID="checkinbttn" ZmenaStavuTextu="Exist()" OnClick="ProcessCheckOUT" Disabled="ValidateChangeability()  || Marked.Id == 0" Type="button" Class="btn btn-danger" ZmenaTextu="@(("CHECK-OUT", "CHECK-OUT"))"> </SimpleButton>
+                }
             </div>
         </div>
     </div>
@@ -295,10 +311,11 @@
     CustomModal cusmodHostcon = new();
     ItemFinderTable<DBLayer.Models.Host> ifthost = new();
     CustomModal cuscreatehost = new();
-    CRUHost cruhost = new();
+    //CRUHost cruhost = new();
 
     public bool Initialized { get; private set; } = false;
 
+    public bool LoadHostComp { get; set; } = false;
 
     private bool Warned = false;
     private Array SelectValues = Enum.GetValues(typeof(DBLayer.Models.ReservationStatus));
@@ -311,9 +328,65 @@
         Initialized = true;
     }
 
-    private async Task Save()
+    private async Task Save(bool silent = false)
     {
-        if (await OtherValidations())
+        #region kontrola zvolenia storno
+        if (Marked.Status == DBLayer.Models.ReservationStatus.Stornovana.ToString())
+        {
+            infomod.UpdateText("Chcete túto rezerváciu stornovať?. " + (UserService.IsLoggedUserInRoles(DBLayer.Models.Rezervation.ROLE_CRUD_REZERVACIA) ? "" : "Ďalšia úprava nie je možná pre Vás."));
+            if (!await infomod.OpenModal(true))
+            {
+                return;
+            }
+            Warned = false;
+        }
+        #endregion
+        #region kontrola zvolenia blokovana
+        if (Marked.Status == DBLayer.Models.ReservationStatus.Blokovana.ToString())
+        {
+            var found = dbw.Rezervations.Include(x => x.Coupon).Include(x => x.Guest).Include(x => x.Room).FirstOrDefault(x => x.Id == Marked.Id);
+            if (found == null)
+            {
+                infomod.UpdateText("Najskor uložte rezervaciu bez blokácie a potom ju nastavte na blokovanú.");
+                await infomod.OpenModal(true);
+                return;
+            }
+            if (dbw.Rezervations.Any(x =>
+                x.ArrivalDate <= Marked.DepartureDate && x.DepartureDate >= Marked.ArrivalDate
+                && Marked.RoomNumber == x.RoomNumber
+                && x.Id != Marked.Id
+                && x.Status != DBLayer.Models.ReservationStatus.Stornovana.ToString()
+                ))
+            {
+                await JSRuntime.InvokeVoidAsync("addWarningPopOverUntilClick", "dateinputres1", "Nová blokácia prekrýva časť druhej rezervácie. Blokovanie zoberie vždy celý deň.", "bottom");
+                await JSRuntime.InvokeVoidAsync("addStyleClassUntilClick", "dateinputres2", "border-warning");
+                infomod.UpdateText("NEULOŽENÉ: Nová blokácia prekrýva časť druhej rezervácie. Blokovanie zoberie vždy celý deň.");
+                await infomod.OpenModal(true);
+                return;
+            }
+
+            var conss = db.HostConReservations.Include(x => x.HostX).Where(x => x.Reservation == Marked.Id).ToList();
+            foreach (var item in conss)
+            {
+                db.Remove(item);
+            }
+            VyberHosti.Clear();
+            if (Marked.Coupon != null)
+            {
+                Marked.Coupon.IsUsed = false;
+                Marked.CouponId = null;
+                Marked.Coupon = null;
+            }
+            found.setFromReservation(Marked);
+            dbw.SaveChanges();
+            db.SaveChanges();
+            infomod.UpdateText("Aktualizacia izby na blokovanu. ");
+            await infomod.OpenModal(true);
+            return;
+        }
+        #endregion
+        #region kontrola upozonení
+        if (await OtherValidations() && !silent)
         {
             if (!Warned)
             {
@@ -321,6 +394,7 @@
                 return;
             }
         }
+        #endregion
         #region update kupona
         if (Marked.Coupon != null)
         {
@@ -345,26 +419,40 @@
                 found.Coupon.IsUsed = false;
             }
 
+            if (found.Status == DBLayer.Models.ReservationStatus.Stornovana.ToString() && Marked.Status != DBLayer.Models.ReservationStatus.Stornovana.ToString())  //pre stornovane rezervacie spravime kontrolu, ci su validne, ak nie tak nic sa neulozi
+            {
+                var context = new System.ComponentModel.DataAnnotations.ValidationContext(Marked, serviceProvider: null, items: null);
+                var results = new List<System.ComponentModel.DataAnnotations.ValidationResult>();
+                if (!System.ComponentModel.DataAnnotations.Validator.TryValidateObject(Marked, context, results, validateAllProperties: true))
+                {
+                    infomod.UpdateText("Nemožno zmeniť stav stornovanej rezervácie na iný stav lebo kontrola ukazuje konflikty. Vytvorte novú rezerváciu");
+                    await infomod.OpenModal(true);
+                    db.ClearPendingChanges();
+                    dbw.ClearPendingChanges();
+                    return;
+                }
+            }
+
+
             found.setFromReservation(Marked);       //update
         }
         #endregion
         #region update prepojeni
+        var vyberlistCopy = new List<DBLayer.Models.HostConReservation>(VyberHosti);
         var cons = db.HostConReservations.Include(x => x.HostX).Where(x => x.Reservation == Marked.Id).ToList();
         foreach (var item in cons)
         {
-            //db.HostConReservations.Remove(item);
-            var found = VyberHosti.FirstOrDefault(x => x.Host == item.Host && x.Reservation == Marked.Id);
+            var found = vyberlistCopy.FirstOrDefault(x => x.Host == item.Host && x.Reservation == Marked.Id);
             if (found == null)
             {
                 db.HostConReservations.Remove(item);
             }
             else
             {
-                VyberHosti.Remove(found);
+                vyberlistCopy.Remove(found);
             }
         }
-        //db.HostConReservations.Where(x => x.Reservation == Marked.Id).ExecuteDelete();
-        foreach (var item in VyberHosti)
+        foreach (var item in vyberlistCopy)
         {
             db.HostConReservations.Add(item);
         }
@@ -372,13 +460,22 @@
 
         await dbw.SaveChangesAsync();
         await db.SaveChangesAsync();
+
         await sessionStorage.SetItemAsync("RezervationChanged", true);
-        await modsaved.OpenModal(true);
+        if (!silent)
+        {
+            await modsaved.OpenModal(true);
+        }
         Warned = false;
     }
 
     private async Task<bool> OtherValidations()
     {
+        if (Marked.Id == 0)
+        {
+            return false;
+        }
+
         var warnfound = false;
         var found = dbw.HRooms.FirstOrDefault(x => x.RoomNumber == Marked.RoomNumber);
         if (Marked.NumberGuest > found.MaxNumberOfGuest)
@@ -398,7 +495,12 @@
                 await JSRuntime.InvokeVoidAsync("switchStyleClass", "submitbttn", "btn-warning");
             }
             warnfound = true;
+        }
 
+        if (IsCompleted() || IsStorno())
+        {
+            await JSRuntime.InvokeVoidAsync("showPopover", "selectstav", "Ručné zadávanie sa nedoporučuje. Skontrolujte pravdivosť hodnôt", "right");
+            warnfound = true;
         }
 
 
@@ -428,23 +530,9 @@
             {
                 await JSRuntime.InvokeVoidAsync("showPopover", "coupinputid", $"Poukážka sa našla, uložte zmeny", "left");
                 await JSRuntime.InvokeVoidAsync("switchStyleClass", "coupinputid", "border-success");
-                //if (string.IsNullOrEmpty(Marked.CouponId))  //ak nemame kupon, priradime a oznacime ako pouzity, inak aktualny odznacime a priradime novy
-                //{
+
                 Marked.CouponId = founded.ID;
                 Marked.Coupon = founded;
-                //    Marked.Coupon.IsUsed = true;
-                //}
-                //else
-                //{
-                //    Marked.Coupon.IsUsed = false;
-                //    dbw.Update(Marked.Coupon);
-                //    Marked.CouponId = founded.ID;
-                //    Marked.Coupon = founded;
-                //    Marked.Coupon.IsUsed = true;
-                //}
-
-                //dbw.Update(Marked.Coupon);
-
                 return;
             }
             else
@@ -461,11 +549,20 @@
         await cusmodHostcon.OpenModal(true);
     }
 
-    private void CalculateSum()
+    private async Task CalculateSum()
     {
         if (Marked.Room != null)
         {
+            if (Marked.UbytovaciPoplatok == 0)
+            {
+                await JSRuntime.InvokeVoidAsync("showPopover", "ubytpopinp", "Celková cena vypočítaná bez ubytovacieho poplatku!", "bottom");
+            }
+            if (VyberHosti.Count == 0)
+            {
+                await JSRuntime.InvokeVoidAsync("showPopover", "ubytpopinp2", "Celková cena vypočítaná bez hostí!", "top");
+            }
             Marked.CelkovaSuma = (decimal)Marked.Room.Cost * (Marked.DepartureDate - Marked.ArrivalDate).Days;
+            Marked.CelkovaSuma = Marked.CelkovaSuma + (decimal)Marked.UbytovaciPoplatok * VyberHosti.Count;
         }
     }
     private async Task FindGuest()
@@ -492,7 +589,16 @@
         List<DBLayer.Models.Room> listIziebsave = new(ListIzby);
         foreach (var item in listIziebsave)
         {
-            var found = dbw.Rezervations.FirstOrDefault(x => x.ArrivalDate < Marked.DepartureDate && x.DepartureDate > Marked.ArrivalDate && item.RoomNumber == x.RoomNumber && x.Id != Marked.Id);
+            var found = dbw.Rezervations.FirstOrDefault(x => x.ArrivalDate < Marked.DepartureDate && x.DepartureDate > Marked.ArrivalDate
+            && item.RoomNumber == x.RoomNumber
+            && x.Id != Marked.Id
+            && x.Status != DBLayer.Models.ReservationStatus.Stornovana.ToString()
+            || (
+                x.RoomNumber == item.RoomNumber
+                && x.Id != Marked.Id
+                && x.Status == DBLayer.Models.ReservationStatus.Blokovana.ToString()
+                && (x.ArrivalDate == Marked.DepartureDate || Marked.ArrivalDate == x.DepartureDate))
+            );
             if (found != null)
             {
                 var find = ListIzby.FirstOrDefault(x => x.RoomNumber == found.RoomNumber);
@@ -533,7 +639,12 @@
         {
             return true;
         }
-        if (Marked.Status == DBLayer.Models.ReservationStatus.VytvorenaRucne.ToString() || Marked.Status == DBLayer.Models.ReservationStatus.VytvorenaWeb.ToString() || Marked.Status == DBLayer.Models.ReservationStatus.SchvalenaNezaplatena.ToString())
+        if (Marked.Status == DBLayer.Models.ReservationStatus.VytvorenaRucne.ToString()
+            || Marked.Status == DBLayer.Models.ReservationStatus.VytvorenaWeb.ToString()
+            || Marked.Status == DBLayer.Models.ReservationStatus.SchvalenaNezaplatena.ToString()
+            || Marked.Status == DBLayer.Models.ReservationStatus.SchvalenaZaplatena.ToString()
+            || Marked.Status == DBLayer.Models.ReservationStatus.Blokovana.ToString())
+
         {
             return false;
         }
@@ -548,12 +659,15 @@
 
     public void Reset()
     {
-        if (!ValidateSpecial() && ValidateChangeability())
+        if (!ValidateSpecial() && !ValidateChangeability())
         {
-            DBLayer.Models.ReservationStatus[] newarr = new DBLayer.Models.ReservationStatus[3];
+            DBLayer.Models.ReservationStatus[] newarr = new DBLayer.Models.ReservationStatus[6];
             newarr[0] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(0);
             newarr[1] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(1);
             newarr[2] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(2);
+            newarr[3] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(3);
+            newarr[4] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(4);
+            newarr[5] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(5);
             SelectValues = newarr;
         }
 
@@ -569,7 +683,8 @@
 
     private bool IsCompleted()
     {
-        return Marked.Status == DBLayer.Models.ReservationStatus.SchvalenaZaplatena.ToString();
+        return Marked.Status == DBLayer.Models.ReservationStatus.Checked_IN.ToString() ||
+               Marked.Status == DBLayer.Models.ReservationStatus.Checked_OUT.ToString();
     }
 
     private bool IsStorno()
@@ -610,7 +725,6 @@
         infomod.UpdateText("Chcete odobrať tohto hosťa?");
         if (await infomod.OpenModal(true))
         {
-            //db.HostConReservations.Remove(item);
             VyberHosti.Remove(item);
         }
     }
@@ -635,7 +749,6 @@
                 HostX = vybranyHost,
                 Reservation = Marked.Id,
             };
-            //db.HostConReservations.Add(newCon);
             VyberHosti.Add(newCon);
             added = true;
         }
@@ -646,14 +759,17 @@
             {
                 continue;
             }
-            ListHostia.Add(VyberHosti[i].HostX);
+            ListHostia.Add(VyberHosti[i].HostX);        //?
         }
         ListHostia.Sort((x, y) => x.Surname.CompareTo(y.Surname));
     }
 
     private async Task CreateHostTab()
     {
-        cruhost.Reset();
+        LoadHostComp = true;
+        if (Marked.Guest != null) {
+            objectHolder.Add(Marked.Guest);
+        }
         await cuscreatehost.OpenModal(true);
         var found = objectHolder.Remove<DBLayer.Models.Host>();
         if (found != null)
@@ -667,11 +783,12 @@
                 Reservation = Marked.Id
             });
         }
+        LoadHostComp = false;
     }
     private async Task OpenHostFrom(DBLayer.Models.Host host)
     {
+        LoadHostComp = true;
         objectHolder.Add(host);
-        cruhost.Reset();
         await cuscreatehost.OpenModal(true);
         var found = objectHolder.Remove<DBLayer.Models.Host>();
         if (found != null)
@@ -679,16 +796,41 @@
             var remov = VyberHosti.FirstOrDefault(x => x.Host == found.ID);
             if (remov != null)
             {
-                VyberHosti.Remove(remov);
-                VyberHosti.Add(new DBLayer.Models.HostConReservation()
-                {
-                    Host = found.ID,
-                    HostX = found,
-                    Reservation = Marked.Id
-                });
-
-
+                remov.HostX.Address = found.Address;
+                remov.HostX.CitizenID = found.CitizenID;
+                remov.HostX.Name = found.Name;
+                remov.HostX.Passport = found.Passport;
+                remov.HostX.BirthNumber = found.BirthNumber;
+                remov.HostX.Surname = found.Surname;
+                remov.HostX.BirthDate = found.BirthDate;
+                remov.HostX.Note = found.Note;
+                remov.HostX.Nationality = found.Nationality;
+                remov.HostX.Sex = found.Sex;
+                remov.HostX.Guest = found.Guest;
             }
+        }
+        LoadHostComp = false;
+    }
+
+    private async Task ProcessCheckIN()
+    {
+        await Save(silent: true);
+        infomod.UpdateText("Chcete spracovať <strong>CHECK-IN</strong>?<br>Uistite sa, že ste uložili všetky potrebné zmeny.");
+        if (await infomod.OpenModal(true))
+        {
+            Marked.Status = DBLayer.Models.ReservationStatus.Checked_IN.ToString();
+            SelectValues = Enum.GetValues(typeof(DBLayer.Models.ReservationStatus));
+        }
+    }
+
+    private async Task ProcessCheckOUT()
+    {
+        await Save(silent: true);
+        infomod.UpdateText("Chcete spracovať <strong>CHECK-OUT</strong>?");
+        if (await infomod.OpenModal(true))
+        {
+            Marked.Status = DBLayer.Models.ReservationStatus.Checked_OUT.ToString();
+            SelectValues = Enum.GetValues(typeof(DBLayer.Models.ReservationStatus));
         }
     }
 }

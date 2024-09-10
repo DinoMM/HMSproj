@@ -1,9 +1,9 @@
 ﻿@namespace RecepciaModul
 @page "/Hostia/CRUDHost"
 @inject CRUHostViewModel ViewModel
-
+@implements IDisposable
 @using Microsoft.AspNetCore.Components.Forms
-
+@using RESTCountries.NET.Services
 
 
 <div style="z-index:52">
@@ -17,6 +17,13 @@
 
     <InfoModal @ref="InfoModSaved" ID="infosaveda"
                Text="Zmeny boli uložené" />
+
+    <ItemFinderTable T="string" @ref="iftcountry" ID="iftcountryhost"
+                     ColNames="@(new() { "Národ"})"
+                     ColValues="RestCountriesService.GetAllCountriesNames(useCommonName: true).ToList()"
+                     SizeInRem="20">
+
+    </ItemFinderTable>
 </div>
 
 <EditForm Model="ViewModel.HostInput" OnValidSubmit="Save">
@@ -34,28 +41,38 @@
                 <div class="row">
                     <div class="col col-8">
                         <label>Meno*</label>
-                        <InputText @bind-Value="@ViewModel.HostInput.Name" class="form-control" placeholder="Meno" />
+                        <InputText @bind-Value="@ViewModel.HostInput.Name" disabled="@ReadOnly" class="form-control" placeholder="Meno" />
                         <ValidationMessage For="@(() => ViewModel.HostInput.Name)" />
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-8">
                         <label>Priezvisko*</label>
-                        <InputText @bind-Value="@ViewModel.HostInput.Surname" class="form-control" placeholder="Priezvisko" />
+                        <InputText @bind-Value="@ViewModel.HostInput.Surname" disabled="@ReadOnly" class="form-control" placeholder="Priezvisko" />
                         <ValidationMessage For="@(() => ViewModel.HostInput.Surname)" />
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-8">
                         <label>Adresa</label>
-                        <InputText @bind-Value="@ViewModel.HostInput.Address" class="form-control" placeholder="Adresa" />
+                        <InputText @bind-Value="@ViewModel.HostInput.Address" disabled="@ReadOnly" class="form-control" placeholder="Adresa" />
                         <ValidationMessage For="@(() => ViewModel.HostInput.Address)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-5">
+                        <label>Pohlavie</label>
+                        <InputSelect class="form-select" disabled="@ReadOnly" @bind-Value="@ViewModel.HostInput.Sex">
+                            <option value="false">Muž</option>
+                            <option value="true">Žena</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => ViewModel.HostInput.Sex)" />
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-8">
                         <label>Dátum&nbsp;narodenia</label>
-                        <InputDate @bind-Value="@ViewModel.HostInput.BirthDate" />
+                        <InputDate id="brthdateid" class="form-control" disabled="@ReadOnly" @bind-Value="@ViewModel.HostInput.BirthDate" />
                         <ValidationMessage For="@(() => ViewModel.HostInput.BirthDate)" />
                     </div>
                 </div>
@@ -65,22 +82,39 @@
                 <div class="row">
                     <div class="col col-8">
                         <label>Rodné&nbsp;číslo</label>
-                        <InputText @bind-Value="@ViewModel.HostInput.BirthNumber" class="form-control" placeholder="Rodné číslo" />
+                        <InputText @bind-Value="@ViewModel.HostInput.BirthNumber" disabled="@ReadOnly" class="form-control" placeholder="Rodné číslo" />
                         <ValidationMessage For="@(() => ViewModel.HostInput.BirthNumber)" />
                     </div>
                 </div>
                 <div class="row">
                     <div class="col col-8">
                         <label>Číslo&nbsp;občianského</label>
-                        <InputText @bind-Value="@ViewModel.HostInput.CitizenID" class="form-control" placeholder="Číslo občianského" />
+                        <InputText id="citizenid" @bind-Value="@ViewModel.HostInput.CitizenID" disabled="@ReadOnly" class="form-control" placeholder="Číslo občianského" />
                         <ValidationMessage For="@(() => ViewModel.HostInput.CitizenID)" />
                     </div>
                 </div>
                 <div class="row">
                     <div class="col col-8">
                         <label>Číslo&nbsp;pasu</label>
-                        <InputText @bind-Value="@ViewModel.HostInput.Passport" class="form-control" placeholder="Číslo pasu" />
+                        <InputText id="passportid" @bind-Value="@ViewModel.HostInput.Passport" disabled="@ReadOnly" class="form-control" placeholder="Číslo pasu" />
                         <ValidationMessage For="@(() => ViewModel.HostInput.Passport)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-8">
+                        <label>Národnosť</label>
+                        <input type="text" disabled readonly value="@ViewModel.HostInput.Nationality" class="form-control" />
+                    </div>
+                    <div class="col-1">
+                        <div style="height: 24px"></div>
+                        <BtnFind Disabled="@ReadOnly" OnClick="FindNationality"></BtnFind>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-8">
+                        <label>Poznámka</label>
+                        <InputTextArea @bind-Value="@ViewModel.HostInput.Note" disabled="@ReadOnly" class="form-control" placeholder="Poznámka k osobe.." />
+                        <ValidationMessage For="@(() => ViewModel.HostInput.Note)" />
                     </div>
                 </div>
             </div>
@@ -109,7 +143,7 @@
                 <div class="row">
                     <div class="col mt-1">
                         <label>Nájsť uživateľa</label>
-                        <button type="button" @onclick="FindWebUser" class="btn btn-secondary">
+                        <button type="button" disabled="@ReadOnly" @onclick="FindWebUser" class="btn btn-secondary">
                             <i class="bi bi-box-arrow-in-down "></i>
                             @if (ViewModel.NacitavanieZoznamu)
                             {
@@ -127,11 +161,11 @@
 
         <div class="row pt-2">
             <div class="col text-center">
-                @if (!NoDbChange)
+                @if (!AsComponent)
                 {
-                    <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
+                    <button type="button" @onclick="Close" class="btn btn-secondary me-2">Späť</button>
                 }
-                <SimpleButton Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
+                <SimpleButton ID="ulozbuttonid" Type="submit" disabled="@ReadOnly" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
             </div>
         </div>
     </div>
@@ -139,13 +173,16 @@
 
 @code {
     /// <summary>
-    /// Ak true, tak model vytvoreneu instanciu neuklada priamo cez SaveChanges, obsiahnuta bude v ObjectHolderi
+    /// Ak true, tak model vytvorenu/upravenú instanciu ulozí ObjectHolderi, ukladá všetky zmeny
     /// </summary>
     [Parameter]
-    public bool NoDbChange { get; set; } = false;
+    public bool AsComponent { get; set; } = false;
 
     private InfoModal InfoModSaved = new();
     private ItemFinderTable<IdentityUserWebOwn> itemFindUser = new();
+    private ItemFinderTable<string> iftcountry = new();
+
+    private bool ReadOnly = false;
 
     protected override void OnInitialized()
     {
@@ -154,8 +191,8 @@
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
+        ReadOnly = !ViewModel.ValidateUserCRU();
 
-        ViewModel.NoDbChange = NoDbChange;  // ak true tak zmeny sa neprejavia v tomto pohlade
 
         var founded = objectHolder.Remove<DBLayer.Models.Host>();   //pokusi sa ziskat objekt z uloziska
         if (founded != null)
@@ -163,6 +200,13 @@
             ViewModel.SetProp(founded);
             return;
         }
+        var foundedGuest = objectHolder.Remove<IdentityUserWebOwn>();   //pokusi sa ziskat objekt z uloziska
+        if (foundedGuest != null)
+        {
+            ViewModel.SetNewWebUser(foundedGuest);
+            return;
+        }
+
     }
 
     protected override async Task OnInitializedAsync()
@@ -180,11 +224,15 @@
 
     public async Task Save()
     {
+        if (await ViewModel.PozriVarovania("ulozbuttonid", new() { "brthdateid", "citizenid", "passportid" }))
+        {
+            return;
+        }
+
         if (await ViewModel.Uloz())
         {
-            if (NoDbChange)
+            if (AsComponent)
             {
-                //InfoModSaved.UpdateText("Hodnoty sú nastavené, zmeny sa prejavia po uložení zmien.");
                 objectHolder.Remove<DBLayer.Models.Host>();
                 objectHolder.Add(ViewModel.HostInput);
             }
@@ -201,18 +249,17 @@
         }
     }
 
-    public void Reset()
+    public async Task FindNationality()
     {
-        var founded = objectHolder.Remove<DBLayer.Models.Host>();   //pokusi sa ziskat objekt z uloziska
-        if (founded != null)
+        if (await iftcountry.OpenModal(true))
         {
-            ViewModel.SetProp(founded);
+            ViewModel.HostInput.Nationality = iftcountry.OutSelection.FirstOrDefault();
+        }
+    }
 
-        }
-        else
-        {
-            ViewModel.ClearProp();
-        }
-        StateHasChanged();
+    public void Dispose()
+    {
+        ViewModel.Host = new();
+        ViewModel.HostInput = new();
     }
 }

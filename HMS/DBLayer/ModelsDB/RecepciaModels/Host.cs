@@ -14,12 +14,17 @@ namespace DBLayer.Models
         /// povolenie pre čítanie zoznamu hostí
         /// </summary>
         [NotMapped]
-        public static List<RolesOwn> ROLE_R_HOSTIA { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel ,RolesOwn.Recepcny };
+        public static List<RolesOwn> ROLE_R_HOSTIA { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel , RolesOwn.RCVeduci ,RolesOwn.Recepcny };
         /// <summary>
         /// povolenie pre upravu hostí
         /// </summary>
         [NotMapped]
-        public static List<RolesOwn> ROLE_CRUD_HOSTIA { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.Recepcny };
+        public static List<RolesOwn> ROLE_CRU_HOSTIA { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.Recepcny, RolesOwn.RCVeduci };
+        /// <summary>
+        /// povolenie pre upravu hostí
+        /// </summary>
+        [NotMapped]
+        public static List<RolesOwn> ROLE_D_HOSTIA { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.RCVeduci };
         public static List<ValidationResult> ValidateHost(in Host host) {
 
             var validationResults = new List<ValidationResult>();

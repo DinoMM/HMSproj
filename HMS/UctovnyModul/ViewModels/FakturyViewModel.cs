@@ -30,7 +30,7 @@ namespace UctovnyModul.ViewModels.Faktury
             return _userService.IsLoggedUserInRoles(Faktura.ROLE_R_FAKTURY);
         }
 
-        public bool ValidateUserCRUD()
+        public bool ValidateUserCRU()
         {
             return _userService.IsLoggedUserInRoles(Faktura.ROLE_CRUD_FAKTURY);
         }

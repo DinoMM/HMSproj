@@ -31,4 +31,19 @@ namespace DBLayer
             return ValidationResult.Success;
         }
     }
+
+    [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
+    public class BooleanStringValuesAttribute : Attribute  //pomoc od AI
+    {
+        public string TrueValue { get; }
+        public string FalseValue { get; }
+
+        public BooleanStringValuesAttribute(string falseValue, string trueValue)
+        {
+            FalseValue = falseValue;
+            TrueValue = trueValue;
+        }
+    }
+
+
 }

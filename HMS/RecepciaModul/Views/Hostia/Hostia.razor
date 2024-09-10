@@ -18,13 +18,13 @@
         <div class="col-1"></div>
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="3" PlaceHolder="Vyhľadaj hosťa..." TableID="tableid"></SearchInput>
+            <SearchInput NumCols="7" PlaceHolder="Vyhľadaj hosťa..." TableID="tableid"></SearchInput>
         </div>
 
         <div class="col-8">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">➕Vytvoriť kartu hosťa</button>
+                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRU())" type="button" class="btn btn-primary">➕Vytvoriť kartu hosťa</button>
                 <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUser())" class="btn btn-primary">Otvoriť</button>
             </div>
         </div>
@@ -40,7 +40,8 @@
 
                 <th class="col-resize" scope="col">Meno</th>
                 <th class="col-resize" scope="col">Priezvisko</th>
-                <th class="col-resize" scope="col">Rod.č.</th>
+                <th class="col-resize" scope="col">Národnosť</th>
+                <th class="col-resize" scope="col">Pohlavie</th>
                 <th class="col-resize" scope="col">Občan.č.</th>
                 <th class="col-resize" scope="col">Pas</th>
                 <th class="col-resize" scope="col">Účet</th>
@@ -61,12 +62,13 @@
                             <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
                                 <td class="col-resize">@item.Name</td>
                                 <td class="col-resize">@item.Surname</td>
-                                <td class="col-resize">@item.BirthNumber</td>
+                                <td class="col-resize">@item.Nationality</td>
+                                <td class="col-resize">@(item.Sex ? "Žena" : "Muž")</td>
                                 <td class="col-resize">@item.CitizenID</td>
                                 <td class="col-resize">@item.Passport</td>
                                 <td class="col-resize">@(item.GuestZ?.Email ?? "-")</td>
                                 <td>
-                                    @if (ViewModel.ValidateUserCRUD())
+                                    @if (ViewModel.ValidateUserD())
                                     {
                                         <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
                                     }
@@ -147,7 +149,7 @@
 
     public void Create()
     {
-        if (ViewModel.ValidateUserCRUD())
+        if (ViewModel.ValidateUserCRU())
         {
             Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDHost"));
         }
