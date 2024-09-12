@@ -160,14 +160,14 @@ body, html {
 .sticky1 {
     position: sticky;
     top: 0px;
-    z-index: 12;
+    z-index: 21;
     background-color: white;
 }
 
 .sticky2 {
     position: sticky;
     top: 38px;
-    z-index: 12;
+    z-index: 21;
 }
 
 .hiderow {

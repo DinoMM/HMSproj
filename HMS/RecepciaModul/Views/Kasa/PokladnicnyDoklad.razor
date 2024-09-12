@@ -1,0 +1,176 @@
+﻿@namespace RecepciaModul
+@page "/Kasa/PokladnicnyDoklad"
+@inject PokladnicnyDokladViewModel ViewModel
+
+<EditForm Model="ViewModel.PoklDokladInput" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+
+    <div class="container px-5">
+
+        <div class="row g-3 p-3">
+
+            <div class="">
+                <h2 class="text-center">Informácie&nbsp;o&nbsp;hosťovi</h2>
+            </div>
+            <div class="col">
+
+                <div class="row">
+                    <div class="col col-8">
+                        <label>ID</label>
+                        <input type="text" value="@ViewModel.PoklDokladInput.ID" disabled class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-8">
+                        <label>Kasa</label>
+                        <input type="text" value="@ViewModel.PoklDokladInput.Kasa" disabled class="form-control" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-8">
+                        <label>Typ Platby</label>
+                        <InputSelect @bind-Value="@ViewModel.PoklDokladInput.TypPlatby" disabled="@ReadOnly" class="form-select">
+                            <option value="false">Platobná karta</option>
+                            <option value="true">Hotovosť</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => ViewModel.PoklDokladInput.TypPlatby)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-8">
+                        <label>Vznik</label>
+                        <input type="datetime" value="@ViewModel.PoklDokladInput.Vznik" disabled class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-5">
+                        <label>Spracovaná:</label>
+                        <SimpleCheckMark Checked="ViewModel.PoklDokladInput.Spracovana"></SimpleCheckMark>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col col-8">
+                    <label>Poznámka</label>
+                    <InputTextArea @bind-Value="@ViewModel.PoklDokladInput.Poznamka" disabled="@ReadOnly" class="form-control" placeholder="Poznámka dokladu" />
+                    <ValidationMessage For="@(() => ViewModel.PoklDokladInput.Poznamka)" />
+                </div>
+            </div>
+
+
+
+            <div class="vr p-0"></div>
+            <div class="col">
+                <h2 class="text-center">Informácie&nbsp;o&nbsp;web&nbsp;užívateľovi</h2>
+                @*<div class="row">
+                        <div class="col col-8">
+                            <label>Iniciály</label>
+                            <input type="text" disabled class="form-control" value="@((ViewModel.HostInput.GuestZ?.Name?.First() ?? '-') + "." + (ViewModel.HostInput.GuestZ?.Surname ?? "-"))" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-8">
+                            <label>Email</label>
+                            <input type="text" disabled class="form-control" value="@(ViewModel.HostInput.GuestZ?.Email ?? "-")" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-8">
+                            <label>Telefón</label>
+                            <input type="text" disabled class="form-control" value="@(ViewModel.HostInput.GuestZ?.PhoneNumber ?? "-")" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col mt-1">
+                            <label>Nájsť uživateľa</label>
+                            <button type="button" disabled="@ReadOnly" @onclick="FindWebUser" class="btn btn-secondary">
+                                <i class="bi bi-box-arrow-in-down "></i>
+                                @if (ViewModel.NacitavanieZoznamu)
+                                {
+                                    <SpinnerLoading ExtraSmall="true"></SpinnerLoading>
+                                }
+                            </button>
+                        </div>
+                    </div>*@
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        <div class="row pt-2">
+            <div class="col text-center">
+                @if (!AsComponent)
+                {
+                    <button type="button" @onclick="Close" class="btn btn-secondary me-2">Späť</button>
+                }
+                <SimpleButton ID="ulozbuttonid" Type="submit" disabled="@ReadOnly" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+
+@code {
+
+    [Parameter]
+    public bool AsComponent { get; set; } = false;
+
+    public bool ReadOnly { get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        var founded = objectHolder.Find<DBLayer.Models.Kasa>();   //pokusi sa ziskat objekt z uloziska
+        if (founded == null)
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        var foundedPokl = objectHolder.Remove<DBLayer.Models.PokladnicnyDoklad>();   //pokusi sa ziskat objekt z uloziska
+        if (foundedPokl != null)
+        {
+
+            ViewModel.SetPoklDokl(foundedPokl);
+        }
+
+        if (AsComponent)
+        {
+            var foundedUni = objectHolder.Remove<DBLayer.Models.UniConItemPoklDokladu>();   //pokusi sa ziskat objekt z uloziska
+            if (foundedUni != null)
+            {
+                ViewModel.PocessUniConItem(foundedUni);
+            }
+        }
+
+        ViewModel.AktKasa = founded;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            return;
+        }
+        await ViewModel.NacitajZoznamy();
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public async Task Save()
+    {
+
+    }
+}

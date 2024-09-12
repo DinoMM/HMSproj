@@ -1,0 +1,49 @@
+﻿@namespace RecepciaModul
+@page "/Kasa"
+@inject KasaViewModel ViewModel
+
+
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        var foundedKasa = objectHolder.Remove<DBLayer.Models.Kasa>();   //pokusi sa ziskat objekt z uloziska
+        if (foundedKasa == null)
+        {
+            //otvorit pick kasy
+            return;
+        }
+
+        //ulozit kasu
+
+        //var founded = objectHolder.Remove<DBLayer.Models.Rezervation>();   //pokusi sa ziskat objekt z uloziska
+        //if (founded != null)
+        //{
+
+        //}
+
+
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            return;
+        }
+        await ViewModel.NacitajZoznamy();
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+}

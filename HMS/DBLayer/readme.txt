@@ -30,7 +30,7 @@ Pre buildovania Blazor-servera na dockeri
 	1.Zbuildy app
 	2.Choj do priecinka kde sa nachadza docker-compose.yml alebo vo vs View->Terminal
 	3.Ked tak vymaz container v dockri lebo sa môžu názvy biť
-	4.docker-compose up -d       -- spustenie kontainera v detach mode
+	4.docker-compose up -d       -- spustenie kontainera v detach mode (zbuildi ho pred tym)
 
 	5.docker-compose down		-- zahodenie dockra
 

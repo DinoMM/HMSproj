@@ -81,6 +81,106 @@
     </BODY>
 
 </CustomModal>
+<CustomModal @ref="legndmodal" ID="legmodid" Header="Legenda" OneButtonOnly="true">
+
+    <BODY>
+        @if (legndmodal.Render)
+        {
+
+            <ul class="gantt__row-bars unselectableText">
+                <li style="background-color: @ViewModel.HEX_PURPLE ; grid-column: 1/16;">Nepotvrdená&nbsp;rezervácia</li>
+                <li style="background-color: @ViewModel.HEX_BLUE ; grid-column: 1/16;">Potvrdená&nbsp;rezervácia</li>
+                <li style="background-color: @ViewModel.HEX_YELLOW ; grid-column: 1/16;">Dnešný&nbsp;príchod</li>
+                <li style="background-color: @ViewModel.HEX_DARK_YELLOW ; grid-column: 1/16;">Dnešný&nbsp;odchod</li>
+                <li style="background-color: @ViewModel.HEX_GREEN ; grid-column: 1/16;">Prebiehajúca&nbsp;rezervácia</li>
+                <li style="background-color: @ViewModel.HEX_RED ; grid-column: 1/16;">Ukončená&nbsp;rezervácia</li>
+                <li style="background-color: @ViewModel.HEX_GRAY ; grid-column: 1/16;">Blokovaná&nbsp;izba</li>
+                <li style="background-color: @ViewModel.HEX_BLUE ; grid-column: 1/16;" class="stripes">Nezobrazuje &nbsp;sa&nbsp;celá&nbsp;rezervácia</li>
+                <li style="background-color: @ViewModel.HEX_BLUE ; grid-column: 1/16;" class="stripesstraight">Nezobrazuje &nbsp;sa&nbsp;celá&nbsp;rezervácia</li>
+                <li style="background-color: @ViewModel.HEX_BLUE ; grid-column: 1/16;" class="blackBorderli">Označená&nbsp;rezervácia</li>
+            </ul>
+        }
+    </BODY>
+
+</CustomModal>
+
+<CustomModal @ref="resaslistmod" ID="resaslist" Header="Zoznam rezervácií" OneButtonOnly="true" ButtonPosition="true" SizeInRem="80">
+    <BODY>
+        @if (resaslistmod.Render)
+        {
+            <div class="row">
+                <div class="col-3 mb-2">
+                    <SearchInput ID="searchvirtual" NumCols="7" TableID="resaslisttableres" PlaceHolder="Vyhľadaj rezerváciu.."></SearchInput>
+                </div>
+                <div class="col-3 mb-2">
+                    <button type="button" class="btn btn-primary" data-toggle="tooltip" data-placement="right" title="Zmeniť smer načítavania rezervácií (minulosť/budúcnosť)" @onclick="() => ViewModel.ZmenSmerNacitavania()">
+                        @if (ViewModel.SmerNacitavaniaAll)
+                        {<i class="bi bi-arrow-right"></i>}
+                        else
+                        {
+                            <i class="bi bi-arrow-left"></i>
+                        }
+                    </button>
+            </div>
+        </div>
+
+        <div class="col-12" style="max-height: 30rem;overflow: auto;">
+            <SimpleTable ID="resaslisttableres">
+                <THEAD>
+
+                <th class="col-resize" scope="col">Príchod</th>
+                <th class="col-resize" scope="col">Odchod</th>
+                <th class="col-resize" scope="col">Plánovaný počet</th>
+                <th class="col-resize" scope="col">Cena</th>
+                <th class="col-resize" scope="col">Izba</th>
+                <th class="col-resize" scope="col">Web&nbsp;používateľ</th>
+                <th class="col-resize" scope="col">Status</th>
+                @*<th class="col-resize" scope="col"></th>*@
+
+                </THEAD>
+                <TBODY>
+
+                    <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Context="item" Items="ViewModel.ZoznamVsetkychRezervacii" SpacerElement="tr">
+                        <ItemContent>
+                            <tr style="height: 30px;">
+                                <td class="col-resize">@item.ArrivalDate.ToString("dd.MM.yyyy")</td>
+                                <td class="col-resize">@item.DepartureDate.ToString("dd.MM.yyyy")</td>
+                                <td class="col-resize">@item.NumberGuest</td>
+                                <td class="col-resize">@item.CelkovaSuma</td>
+                                <td class="col-resize">@item.RoomNumber</td>
+                                <td class="col-resize">@(item.Guest?.Email ?? "")</td>
+                                <td class="col-resize">@item.Status</td>
+                            </tr>
+                        </ItemContent>
+                        <Placeholder>
+                            <SpinnerLoading Size="2"></SpinnerLoading>
+                        </Placeholder>
+                        <EmptyContent>
+                            <div class="d-flex align-items-center">Zoznam je prázdny</div>
+                        </EmptyContent>
+                    </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
+
+                    @*@foreach (var item in VyberHosti)
+                        {
+                            <tr @ondblclick="() => OpenHostFrom(item.HostX)">
+
+                                    <ButtonRemove Disabled="@(ValidateChangeability())" OnClick="@(() => DeleteHostCon(item))"></ButtonRemove>
+                                </td>
+
+                            </tr>
+                        }
+
+                        <span id="observerTarget"></span>*@
+                </TBODY>
+
+            </SimpleTable>
+        </div>
+
+    }
+    </BODY>
+</CustomModal>
+
+<ItemFinderTable T="DBLayer.Models.Rezervation" @ref="nespracRes" ID="RawResPick" ColNames="@(new() { "Príchod", "Odchod", "Plánovaný počet", "Cena", "Status"  })" ColValues="ViewModel.ZoznamNespracRezervacii"></ItemFinderTable>
 
 <InfoModal @ref="modsaved" Text="Zmeny boli uložené"></InfoModal>
 
@@ -95,10 +195,13 @@
 
 <div class="gantt">
     <div class="sticky1 ms-1">
-        <div class="sticky1 btn-group" role="group">
+        <div class="sticky1 d-flex" role="group">
             <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
             <button type="button" class="btn btn-primary" @onclick="Create">➕Vytvoriť rezerváciu</button>
             <button type="button" class="btn btn-info" @onclick="OpenChangeDate">@ViewModel.ZoznamDatumovNaZobrazenie[0].ToString("dd.MM.-")@ViewModel.ZoznamDatumovNaZobrazenie.Last().ToString("dd.MM.")</button>
+            <button type="button" class="btn btn-primary" @onclick="ListRawRes">⏳Zoznam nespracovaných</button>
+            <button type="button" class="btn btn-primary" @onclick="ListAll">📆Zoznam rezervácií</button>
+            <button type="button" class="btn btn-info ms-auto" @onclick="LegendModal">Legenda</button>
 
         </div>
     </div>
@@ -118,7 +221,7 @@
             int indx = i;
             @if (ViewModel.ZoznamDatumovNaZobrazenie[i] == DateTime.Today)
             {
-                <span id="@("lineheader" + i)" class="marker" @onmouseover="@(async () => { await JSRuntime.InvokeVoidAsync("highlightHover", indx); })" @onmouseout="@(async () => { await JSRuntime.InvokeVoidAsync("removeHover", indx); })" ></span>  @*onmouseover = "highlightHover('@i')" onmouseout = "removeHover('@i')"*@
+                <span id="@("lineheader" + i)" class="marker" @onmouseover="@(async () => { await JSRuntime.InvokeVoidAsync("highlightHover", indx); })" @onmouseout="@(async () => { await JSRuntime.InvokeVoidAsync("removeHover", indx); })"></span> @*onmouseover = "highlightHover('@i')" onmouseout = "removeHover('@i')"*@
             }
             else
             {
@@ -131,7 +234,7 @@
     {
         int indxr = i;
         var item = ViewModel.ZoznamIzieb[i];
-        <div id="@("rowh" + i)" class="gantt__row" >
+        <div id="@("rowh" + i)" class="gantt__row">
             <div class="gantt__row-first">
                 @if (RoomsToShow.Contains(item))
                 {
@@ -199,6 +302,11 @@
 
     InfoModal modsaved = new();
     CRUCompRezervacia rezcom = new();
+    CustomModal legndmodal = new();
+    ItemFinderTable<DBLayer.Models.Rezervation> nespracRes = new();
+    CustomModal resaslistmod = new();
+
+
 
     protected override void OnInitialized()
     {
@@ -273,9 +381,45 @@
         RoomsToShow = new(ViewModel.ZoznamIzieb.ToList());
         ViewModel.ZoznamHosti.Clear();
         ViewModel.ZoznamWebGuest.Clear();
+        ViewModel.ZoznamNespracRezervacii.Clear();
+        ViewModel.ZoznamVsetkychRezervacii.Clear();
     }
 
-    private async Task Create() {
+    private async Task Create()
+    {
         await OpenRes(new DBLayer.Models.Rezervation());
+    }
+
+    private async Task LegendModal()
+    {
+        legndmodal.Render = true;
+        await legndmodal.OpenModal(true);
+        legndmodal.Render = false;
+    }
+
+    private async Task ListRawRes()
+    {
+        await ViewModel.NacitajNespracovaneRezervacie(refresh: false);
+        while (true)
+        {
+            if (await nespracRes.OpenModal(true))
+            {
+                await OpenRes(nespracRes.OutSelection.FirstOrDefault());
+
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    private async Task ListAll()
+    {
+        resaslistmod.Render = true;
+        await ViewModel.NacitajZoznamRezervacieAll();
+        await resaslistmod.OpenModal(true);
+        resaslistmod.Render = false;
+
     }
 }

@@ -7,23 +7,39 @@
 <div class="modal fade" id="@ID" data-bs-backdrop="static" style="@(ZIndex >= 0 ? $"z-index: {ZIndex};" : "")" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true" @onkeydown="HandleKeyDown">
     <div class="modal-dialog" style="@(SizeInRem == 0 ? " max-width:auto; " : $"max-width:{SizeInRem}rem; ") ">
         <div class="modal-content">
-            <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
+            <div class="modal-header d-flex @(ChangeColor ? "custom-modal-header" : "")">
                 <h5 class="modal-title" id="staticBackdropLabel">@Header</h5>
+                <div class="ms-auto">
+                    @if (ButtonPosition)
+                    {
+                        @if (!OneButtonOnly)
+                        {
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(true))>Áno</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Nie</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zrušiť</button>
+                        }
+                    }
+                </div>
             </div>
             <div class="modal-body @(ChangeColor ? "custom-modal-body" : "")" id="modalATextLabel">
                 @BODY
             </div>
             <div class="modal-footer @(ChangeColor ? "custom-modal-footer" : "")">
-                @if (!OneButtonOnly)
+                @if (!ButtonPosition)
                 {
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(true))>Áno</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Nie</button>
+                    @if (!OneButtonOnly)
+                    {
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(true))>Áno</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Nie</button>
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zrušiť</button>
+                    }
                 }
-                else
-                {
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zrušiť</button>
-                }
-
             </div>
         </div>
     </div>
@@ -68,6 +84,18 @@
     /// </summary>
     [Parameter]
     public bool ChangeColor { get; set; } = false;
+
+    /// <summary>
+    /// Nastavi priznak na true ak sa ma zacat renderovat, default false
+    /// </summary>
+    [Parameter]
+    public bool Render { get; set; } = false;
+
+    /// <summary>
+    /// Pozicia tlacidla false - dole, true hore, default false
+    /// </summary>
+    [Parameter]
+    public bool ButtonPosition { get; set; } = false;
 
     /// <summary>
     ///  Otvori modal pod ulozenym ID, vracia hodnotu podla toho, ci uzivatel klikol ano alebo nie

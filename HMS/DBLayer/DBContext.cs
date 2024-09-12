@@ -151,7 +151,9 @@ namespace DBLayer
             modelBuilder.Entity<RoomConFlag>()                      //bez primarneho kluca
                 .HasKey(s => new { s.Room, s.RoomFlag });
 
-
+            modelBuilder.Entity<ReservationConItemPoklDokladu>()
+            .HasIndex(e => e.Reservation)
+            .IsUnique();
         }
 
         public class YourDbContextFactory : IDesignTimeDbContextFactory<DBContext>    //Pre manazovanie migraci je potrebna tato trieda (pomohol som si z internetu tutoriály/AI)

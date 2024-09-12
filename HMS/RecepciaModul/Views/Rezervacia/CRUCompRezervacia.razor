@@ -1,43 +1,9 @@
 ﻿@namespace RecepciaModul
 @using Microsoft.EntityFrameworkCore
+@using PdfCreator.Models
 @inject Blazored.SessionStorage.ISessionStorageService sessionStorage
 @inject DataContext dbw
 @inject DBContext db
-@*<script>
-       function switchStyleClass(Id, classname) {
-        var element = document.getElementById(Id);
-            if (element != null) {
-                if (element.classList.contains(classname)) {
-                    element.classList.remove(classname);
-                } else {
-                    element.classList.add(classname);
-                }
-            }
-        }
-
-        function showPopover(id, content, direction) {
-        var element = document.getElementById(id);
-        if (element) {
-            $(element).popover({
-                content: content,
-                trigger: 'manual',
-                placement: direction // Position the popover on the left
-            });
-            $(element).popover('show');
-
-                        // Attach a click event listener to the document
-            $(document).on('click.popover', function (e) {
-                    // Check if the click occurred outside the popover
-                if (!$(e.target).closest('.popover').length && !$(e.target).is(element)) {
-                $(element).popover('hide');
-                    // Remove the event listener after hiding the popover
-                $(document).off('click.popover');
-        }
-        });
-        }
-    }
-
-    </script>*@
 
 <ItemFinderTable T="DBLayer.Models.Room" @ref="iftroom" ID="itemfindroom"
                  ColNames="@(new() {"Číslo izby", "Kategória", "Kapacita", "Cena za noc" })"
@@ -74,7 +40,15 @@
 
 </CustomModal>
 
+<CustomModal @ref="cusopendoklad" ID="cusopenkasamod" Header="Kasa" OneButtonOnly="true" ChangeColor="true" SizeInRem="90" ZIndex="55">
+    <BODY>
+        @if (cusopendoklad.Render)
+        {
+            <PokladnicnyDoklad AsComponent="true"></PokladnicnyDoklad>
+        }
+    </BODY>
 
+</CustomModal>
 
 <CustomModal @ref="cusmodHostcon" ID="cusmodshowhost" Header="Hostia rezervácie" OneButtonOnly="true" ChangeColor="true" SizeInRem="60" ZIndex="50">
     <BODY>
@@ -98,6 +72,7 @@
                 <th class="col-resize" scope="col">Pohlavie</th>
                 <th class="col-resize" scope="col">Národnosť</th>
                 <th class="col-resize" scope="col"></th>
+                <th class="col-resize" scope="col"></th>
 
                 </THEAD>
                 <TBODY>
@@ -110,10 +85,20 @@
                             <td class="col-resize">@item.HostX.Surname</td>
                             <td class="col-resize">@item.HostX.Address</td>
                             <td class="col-resize">@item.HostX.CitizenID</td>
-                            <td class="col-resize">@(item.HostX.Sex ? "Žena" : "Muž")</td>
                             <td class="col-resize">@item.HostX.Passport</td>
+                            <td class="col-resize">@(item.HostX.Sex ? "Žena" : "Muž")</td>
+                            <td class="col-resize">@item.HostX.Nationality</td>
                             <td>
                                 <ButtonRemove Disabled="@(ValidateChangeability())" OnClick="@(() => DeleteHostCon(item))"></ButtonRemove>
+                            </td>
+                            <td>
+                                <button type="button" disabled="@PDFLoading" class="btn btn-info" @onclick="() => CreatePdf(item)">
+                                    <i class="bi bi-filetype-pdf"></i>
+                                    @if (PDFLoading)
+                                    {
+                                        <SpinnerLoading ExtraSmall="true"></SpinnerLoading>
+                                    }
+                                </button>
                             </td>
 
                         </tr>
@@ -137,6 +122,7 @@
     </ApproveModal>
 </div>
 
+
 <EditForm Model="Marked" OnValidSubmit="() => Save()">
     <DataAnnotationsValidator />
 
@@ -144,10 +130,10 @@
 
         <div class="row g-3 p-3">
             <div class="col">
-                <div  class="row">
+                <div class="row">
                     <div class="col-4">
                         <label>Príchod</label>
-                        <InputDate id="dateinputres1"  disabled="@ValidateChangeability()" class="form-control" @bind-Value="@Marked.ArrivalDate" />
+                        <InputDate id="dateinputres1" disabled="@ValidateChangeability()" class="form-control" @bind-Value="@Marked.ArrivalDate" />
                         <ValidationMessage For="@(() => Marked.ArrivalDate)" />
                     </div>
                     <div class="col-4">
@@ -219,7 +205,7 @@
                     </div>
                     <div class="col-1">
                         <div style="height: 24px;"></div>
-                        <button id="ubytpopinp2" disabled="@(ValidateChangeability() || Marked.Room == null)" type="button" @onclick="CalculateSum" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Vypočíta: cena za izbu + (ubytovací poplatok * počet navolených osôb)">
+                        <button id="ubytpopinp2" disabled="@(ValidateChangeability() || Marked.Room == null)" type="button" @onclick="CalculateSum" class="btn btn-secondary" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Vypočíta: ((cena za izbu * (100 - zľava)) / 100) + (ubytovací poplatok * počet navolených hostí)">
                             <i class="bi bi-calculator"></i>
                         </button>
                     </div>
@@ -278,11 +264,15 @@
                 <SimpleButton ID="submitbttn" Disabled="ValidateChangeability()" ZmenaStavuTextu="Exist()" Type="submit" ZmenaTextu="@(("Uložiť", "Vytvoriť"))" Class="btn btn-primary me-2"> </SimpleButton>
                 @if (Marked.ArrivalDate == DateTime.Today)
                 {
-                    <SimpleButton ID="checkinbttn" ZmenaStavuTextu="Exist()" OnClick="ProcessCheckIN" Disabled="ValidateChangeability() || Marked.Id == 0" Type="button" Class="btn btn-success" ZmenaTextu="@(("CHECK-IN", "CHECK-IN"))"> </SimpleButton>
+                    <SimpleButton ID="checkinbttn" OnClick="ProcessCheckIN" Disabled="ValidateChangeability() || Marked.Id == 0" Type="button" Class="btn btn-success" ZmenaTextu="@(("CHECK-IN", "CHECK-IN"))"> </SimpleButton>
                 }
                 else if (Marked.DepartureDate == DateTime.Today)
                 {
-                    <SimpleButton ID="checkinbttn" ZmenaStavuTextu="Exist()" OnClick="ProcessCheckOUT" Disabled="ValidateChangeability()  || Marked.Id == 0" Type="button" Class="btn btn-danger" ZmenaTextu="@(("CHECK-OUT", "CHECK-OUT"))"> </SimpleButton>
+                    <SimpleButton ID="checkoutbttn" OnClick="ProcessCheckOUT" Disabled="ValidateChangeability()  || Marked.Id == 0" Type="button" Class="btn btn-danger" ZmenaTextu="@(("CHECK-OUT", "CHECK-OUT"))"> </SimpleButton>
+                }
+                @if (IsSpracovana())
+                {
+                    <SimpleButton ID="kasabttn" OnClick="OpenDoklad" Type="button" ZmenaTextu="@(("KASA", "KASA"))" Class="btn btn-primary ms-2"> </SimpleButton>
                 }
             </div>
         </div>
@@ -311,11 +301,14 @@
     CustomModal cusmodHostcon = new();
     ItemFinderTable<DBLayer.Models.Host> ifthost = new();
     CustomModal cuscreatehost = new();
+    CustomModal cusopendoklad = new();
     //CRUHost cruhost = new();
 
     public bool Initialized { get; private set; } = false;
 
     public bool LoadHostComp { get; set; } = false;
+
+    public bool PDFLoading = false;
 
     private bool Warned = false;
     private Array SelectValues = Enum.GetValues(typeof(DBLayer.Models.ReservationStatus));
@@ -386,7 +379,7 @@
         }
         #endregion
         #region kontrola upozonení
-        if (await OtherValidations() && !silent)
+        if (!silent && await OtherValidations())
         {
             if (!Warned)
             {
@@ -562,6 +555,10 @@
                 await JSRuntime.InvokeVoidAsync("showPopover", "ubytpopinp2", "Celková cena vypočítaná bez hostí!", "top");
             }
             Marked.CelkovaSuma = (decimal)Marked.Room.Cost * (Marked.DepartureDate - Marked.ArrivalDate).Days;
+            if (Marked.Coupon != null)
+            {
+                Marked.CelkovaSuma = (Marked.CelkovaSuma * (100 - Marked.Coupon.Discount)) / 100;
+            }
             Marked.CelkovaSuma = Marked.CelkovaSuma + (decimal)Marked.UbytovaciPoplatok * VyberHosti.Count;
         }
     }
@@ -679,7 +676,11 @@
         StateHasChanged();
     }
 
-
+    private bool IsSpracovana()
+    {
+        return Marked.Status == DBLayer.Models.ReservationStatus.SchvalenaNezaplatena.ToString() ||
+               Marked.Status == DBLayer.Models.ReservationStatus.SchvalenaZaplatena.ToString();
+    }
 
     private bool IsCompleted()
     {
@@ -767,7 +768,8 @@
     private async Task CreateHostTab()
     {
         LoadHostComp = true;
-        if (Marked.Guest != null) {
+        if (Marked.Guest != null)
+        {
             objectHolder.Add(Marked.Guest);
         }
         await cuscreatehost.OpenModal(true);
@@ -820,6 +822,7 @@
         {
             Marked.Status = DBLayer.Models.ReservationStatus.Checked_IN.ToString();
             SelectValues = Enum.GetValues(typeof(DBLayer.Models.ReservationStatus));
+            await Save(silent: true);
         }
     }
 
@@ -831,6 +834,30 @@
         {
             Marked.Status = DBLayer.Models.ReservationStatus.Checked_OUT.ToString();
             SelectValues = Enum.GetValues(typeof(DBLayer.Models.ReservationStatus));
+            await Save(silent: true);
         }
+    }
+
+    private async Task CreatePdf(DBLayer.Models.HostConReservation con)
+    {
+        PDFLoading = true;
+        PotvrdenieOUbytovaniPDF creator = new PotvrdenieOUbytovaniPDF();
+
+        await Task.Run(() =>
+        {
+            creator.GenerujPdf(con);
+            creator.OpenPDF();
+
+        });
+
+        PDFLoading = true;
+    }
+
+    private async Task OpenDoklad()
+    {
+        cusopendoklad.Render = true;
+        objectHolder.Add(Marked);
+        await cusopendoklad.OpenModal(true);
+        cusopendoklad.Render = false;
     }
 }

@@ -140,6 +140,9 @@ namespace HMS
 
             builder.Services.AddTransient<HostiaViewModel>();
             builder.Services.AddTransient<CRUHostViewModel>();
+
+            builder.Services.AddTransient<KasaViewModel>();
+            builder.Services.AddTransient<PokladnicnyDokladViewModel>();
             #endregion
 
 

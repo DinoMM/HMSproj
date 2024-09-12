@@ -2,6 +2,7 @@ using BuildingTemplates;
 using CommunityToolkit.Mvvm.ComponentModel;
 using DBLayer;
 using DBLayer.Models;
+using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
 
@@ -13,6 +14,8 @@ namespace RecepciaModul.ViewModels
         ObservableCollection<Rezervation> zoznamRezervacii = new();
         [ObservableProperty]
         ObservableCollection<Room> zoznamIzieb = new();
+        public List<Rezervation> ZoznamNespracRezervacii { get; set; } = new();
+        public List<Rezervation> ZoznamVsetkychRezervacii { get; set; } = new();
         public List<DateTime> ZoznamDatumovNaZobrazenie { get; private set; } = new();
 
         #region polia na vyplnenie
@@ -21,6 +24,7 @@ namespace RecepciaModul.ViewModels
         #endregion
 
         public bool NacitavaniePoloziek { get; private set; } = true;
+        public bool SmerNacitavaniaAll { get; set; } = true;
 
         #region farby
         public readonly string HEX_GRAY = "#6c757d";
@@ -82,6 +86,39 @@ namespace RecepciaModul.ViewModels
                     .OrderBy(x => x.ArrivalDate)
                     .ToListAsync()
                     );  //naèítané rezervacie v rozmedzi datumov
+        }
+        public async Task NacitajZoznamRezervacieAll(bool refresh = false)
+        {
+            if (refresh)
+            {
+                ZoznamVsetkychRezervacii.Clear();
+            }
+            if (ZoznamVsetkychRezervacii.Count == 0)
+            {
+                if (SmerNacitavaniaAll)
+                {
+                    var yesterday = DateTime.Today.AddDays(-1);
+                    ZoznamVsetkychRezervacii = new(await _dbw.Rezervations
+                            .Include(x => x.Guest)
+                            .Include(x => x.Room)
+                            .Include(x => x.Coupon)
+                            .Where(x => x.ArrivalDate >= yesterday)
+                            .OrderBy(x => x.ArrivalDate)
+                            .ToListAsync()
+                            );  //naèítané rezervacie v rozmedzi datumov
+                }
+                else
+                {
+                    ZoznamVsetkychRezervacii = new(await _dbw.Rezervations
+                            .Include(x => x.Guest)
+                            .Include(x => x.Room)
+                            .Include(x => x.Coupon)
+                            .Where(x => x.ArrivalDate <= DateTime.Today)
+                            .OrderByDescending(x => x.DepartureDate)
+                            .ToListAsync()
+                            );  //naèítané rezervacie v rozmedzi datumov
+                }
+            }
         }
         private async Task NacitajIzbyRezervacie()
         {
@@ -260,6 +297,7 @@ namespace RecepciaModul.ViewModels
             if (await _sessionStorage.GetItemAsync<bool>("RezervationChanged"))
             {
                 await NacitajZoznamRezervacie();
+                await NacitajNespracovaneRezervacie(true);
                 await _sessionStorage.SetItemAsync("RezervationChanged", false);
             }
         }
@@ -284,5 +322,50 @@ namespace RecepciaModul.ViewModels
             _db.ClearPendingChanges();
             _dbw.ClearPendingChanges();
         }
+
+        public async Task NacitajNespracovaneRezervacie(bool refresh)
+        {
+            if (refresh)
+            {
+                ZoznamNespracRezervacii.Clear();
+            }
+            if (ZoznamNespracRezervacii.Count == 0)
+            {
+                ZoznamNespracRezervacii.AddRange(await _dbw.Rezervations
+                    .Include(x => x.Guest)
+                    .Include(x => x.Room)
+                    .Include(x => x.Coupon)
+                    .Where(x => x.Status == ReservationStatus.VytvorenaWeb.ToString() || x.Status == ReservationStatus.VytvorenaRucne.ToString())
+                    .OrderBy(x => x.ArrivalDate)
+                    .ToListAsync());
+            }
+        }
+
+        public async Task ZmenSmerNacitavania() {
+            SmerNacitavaniaAll = !SmerNacitavaniaAll;
+            ZoznamVsetkychRezervacii.Clear();
+            await NacitajZoznamRezervacieAll();
+        }
+
+        //    public async ValueTask<ItemsProviderResult<Rezervation>> LoadReservations(
+        //ItemsProviderRequest request)
+        //    {
+        //        var cntTotal = _dbw.Rezervations.Count();
+        //        // Calculate the number of reservations to fetch
+        //        var numRezervations = Math.Min(request.Count, cntTotal - request.StartIndex);
+
+        //        // Fetch the reservations from the database
+        //        var yesterday = DateTime.Today.AddDays(-1);
+        //        var rezervations = await _dbw.Rezervations
+        //            .Where(x => x.ArrivalDate >= yesterday)
+        //            .OrderBy(r => r.ArrivalDate) // Adjust the ordering as needed
+        //            .Skip(request.StartIndex)
+        //            .Take(numRezervations)
+        //            .ToListAsync(request.CancellationToken);
+
+
+        //        // Return the result
+        //        return new ItemsProviderResult<Rezervation>(rezervations, cntTotal);
+        //    }
     }
 }

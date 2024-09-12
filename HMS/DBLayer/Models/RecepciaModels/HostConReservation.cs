@@ -19,32 +19,5 @@ namespace DBLayer.Models
         public Rezervation? ReservationZ { get; set; }
     }
 
-    public class IsForeignKeyRezervationAttribute : ValidationAttribute      //vlastny atribut pre kontrolu existujucej rezervacie. Pomoc od AI
-    {
-        protected override ValidationResult IsValid(object value, ValidationContext validationContext)
-        {
-            if (value == null)
-            {
-                return new ValidationResult("Rezervačné ID je potrebné.");
-            }
-
-            if (!(value is long resId))
-            {
-                return new ValidationResult("Zlý formát pri kontrolovaní rezervačného ID.");
-            }
-
-            var dbContext = (DataContext)validationContext.GetService(typeof(DataContext));
-            if (dbContext == null)
-            {
-                throw new InvalidOperationException("DataContext context neni dostopný.");
-            }
-
-            if (dbContext.Rezervations.Any(u => u.Id == resId)) //kontrola existencie
-            {
-                return ValidationResult.Success;
-                
-            }
-            return new ValidationResult("Priradená rezervácia neexistuje.");
-        }
-    }
+   
 }
