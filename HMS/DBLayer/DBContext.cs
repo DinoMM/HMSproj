@@ -80,6 +80,13 @@ namespace DBLayer
         public DbSet<RoomFlag> RoomFlags { get; set; }
         public DbSet<RoomConFlag> RoomConFlags { get; set; }
 
+        public DbSet<Kasa> Kasy { get; set; }
+        public DbSet<PokladnicnyDoklad> PokladnicneDoklady { get; set; }
+        public DbSet<ItemPokladDokladu> ItemyPokladDokladu { get; set; }
+
+        public DbSet<UniConItemPoklDokladu> UniConItemyPoklDokladu { get; set; }
+        public DbSet<ReservationConItemPoklDokladu> ReservationConItemyPoklDokladu { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

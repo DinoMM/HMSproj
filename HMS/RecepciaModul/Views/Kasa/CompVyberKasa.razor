@@ -1,0 +1,103 @@
+﻿@namespace RecepciaModul
+@inherits DynamicLoaderComponent
+@inject DBContext db
+
+
+<ItemFinderTable @ref="iftvyberkasy"
+                 T="DBLayer.Models.Kasa"
+                 ID="@ID"
+                 ChangeColor="true"
+                 CutOffTail="true"
+                 KeyAttributeToo="true"
+                 ForeignAttributesToo="true"
+                 ColNames="@(new() { "Názov", "Organizácia" })"
+                 ColValues="db.Kasy.ToList()"
+                 SizeInRem="@ZIndex"
+                 Header="Výber aktuálnej kasy">
+</ItemFinderTable>
+
+
+@code {
+
+    /// <summary>
+    /// default vyberkasyid
+    /// </summary>
+    [Parameter]
+    public string ID { get; set; } = "vyberkasyid";
+
+    /// <summary>
+    /// default 1
+    /// </summary>
+    [Parameter]
+    public int ZIndex { get; set; } = 1;
+
+    private static bool Asked = false;
+
+    ItemFinderTable<DBLayer.Models.Kasa> iftvyberkasy = new();
+
+    public bool JeVybranaKasa()
+    {
+        return objectHolder.Find<DBLayer.Models.Kasa>() != null;
+    }
+
+    public async Task<bool> VyberKasu(bool forceAsk = false)
+    {
+
+
+        if (UserService.IsLoggedUserInRoles(DBLayer.Models.Kasa.ROLE_R_KASA))
+        {
+            if (objectHolder.Find<DBLayer.Models.Kasa>() == null)
+            {
+                if (Asked && !forceAsk)
+                {
+                    return false;
+                }
+
+                if (await iftvyberkasy.OpenModal(true, forcesearch: false))
+                {
+                    objectHolder.Add(iftvyberkasy.OutSelection.FirstOrDefault());
+                    return true;
+                }
+            }
+            else
+            {
+                return true;
+            }
+        }
+        if (!Asked)
+        {
+            Asked = true;
+        }
+        return false;
+    }
+
+    public DBLayer.Models.Kasa? GetKasa()
+    {
+        var kasa = objectHolder.Find<DBLayer.Models.Kasa>();
+        if (kasa != null)
+        {
+            return kasa;
+        }
+        return null;
+    }
+
+    public async Task<DBLayer.Models.Kasa?> GetKasaWithRetry()
+    {
+        var kasa = objectHolder.Find<DBLayer.Models.Kasa>();
+        if (kasa != null)
+        {
+            return kasa;
+        }
+        if (await VyberKasu())
+        {
+            return objectHolder.Find<DBLayer.Models.Kasa>();
+        }
+        return null;
+    }
+
+    public void ClearKasa()
+    {
+        objectHolder.Remove<DBLayer.Models.Kasa>();
+    }
+
+}

@@ -2,7 +2,16 @@
 @page "/Kasa/PokladnicnyDoklad"
 @inject PokladnicnyDokladViewModel ViewModel
 
-<EditForm Model="ViewModel.PoklDokladInput" OnValidSubmit="Save">
+
+<ApproveModal @ref="approvmod" ID="@(ID + "approvmod")" FuncOnDiss="EventCallback.Empty" FuncOnSucc="EventCallback.Empty" Text="Chcete zaplatiť tento blok?">
+
+</ApproveModal>
+
+<InfoModal @ref="infomodal" ID="@(ID + "infomodal")" Text="Zmeny boli uložené">
+
+</InfoModal>
+
+<EditForm Model="ViewModel.PoklDokladInput" OnValidSubmit="() => Save()">
     <DataAnnotationsValidator />
 
     <div class="container px-5">
@@ -10,7 +19,7 @@
         <div class="row g-3 p-3">
 
             <div class="">
-                <h2 class="text-center">Informácie&nbsp;o&nbsp;hosťovi</h2>
+                <h2 class="text-center">Informácie&nbsp;o&nbsp;doklade</h2>
             </div>
             <div class="col">
 
@@ -44,55 +53,70 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col col-5">
-                        <label>Spracovaná:</label>
-                        <SimpleCheckMark Checked="ViewModel.PoklDokladInput.Spracovana"></SimpleCheckMark>
+                    <div class="col col-5 ">
+                        <label class="me-2">Zaplatený:</label>
+                        <SimpleCheckMark Size="3" Checked="ViewModel.PoklDokladInput.Spracovana"></SimpleCheckMark>
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col col-8">
-                    <label>Poznámka</label>
-                    <InputTextArea @bind-Value="@ViewModel.PoklDokladInput.Poznamka" disabled="@ReadOnly" class="form-control" placeholder="Poznámka dokladu" />
-                    <ValidationMessage For="@(() => ViewModel.PoklDokladInput.Poznamka)" />
+                <div class="row">
+                    <div class="col col-8">
+                        <label>Poznámka</label>
+                        <InputTextArea @bind-Value="@ViewModel.PoklDokladInput.Poznamka" disabled="@ReadOnly" class="form-control" placeholder="Poznámka dokladu" />
+                        <ValidationMessage For="@(() => ViewModel.PoklDokladInput.Poznamka)" />
+                    </div>
                 </div>
+
+
             </div>
+
 
 
 
             <div class="vr p-0"></div>
             <div class="col">
-                <h2 class="text-center">Informácie&nbsp;o&nbsp;web&nbsp;užívateľovi</h2>
-                @*<div class="row">
-                        <div class="col col-8">
-                            <label>Iniciály</label>
-                            <input type="text" disabled class="form-control" value="@((ViewModel.HostInput.GuestZ?.Name?.First() ?? '-') + "." + (ViewModel.HostInput.GuestZ?.Surname ?? "-"))" />
-                        </div>
+                <h2 class="text-center">Položky</h2>
+                <div class="w-25 d-flex">
+                    <SearchInput ID="@(ID + "searchitems")" PlaceHolder="Vyhľadaj položku.." TableID="@(ID + "tableitems")" NumCols="4"></SearchInput>
+                    <div class="ms-2">
+                        <ButtonAdd Disabled="@(ReadOnly || OnlyOneItem || !ViewModel.ValidateUserCRU())"></ButtonAdd>
                     </div>
-                    <div class="row">
-                        <div class="col-8">
-                            <label>Email</label>
-                            <input type="text" disabled class="form-control" value="@(ViewModel.HostInput.GuestZ?.Email ?? "-")" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-8">
-                            <label>Telefón</label>
-                            <input type="text" disabled class="form-control" value="@(ViewModel.HostInput.GuestZ?.PhoneNumber ?? "-")" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col mt-1">
-                            <label>Nájsť uživateľa</label>
-                            <button type="button" disabled="@ReadOnly" @onclick="FindWebUser" class="btn btn-secondary">
-                                <i class="bi bi-box-arrow-in-down "></i>
-                                @if (ViewModel.NacitavanieZoznamu)
-                                {
-                                    <SpinnerLoading ExtraSmall="true"></SpinnerLoading>
-                                }
-                            </button>
-                        </div>
-                    </div>*@
+                </div>
+                <div class="col-12 mt-2" style="max-height: 30rem;overflow: auto;">
+                    <SimpleTable ID="@(ID + "tableitems")">
+                        <THEAD>
+
+
+                        <th class="col-resize" scope="col">Názov</th>
+                        <th class="col-resize" scope="col">Množstvo</th>
+                        <th class="col-resize" scope="col">Cena</th>
+                        <th class="col-resize" scope="col">DPH</th>
+                        <th class="col-resize" scope="col">Cena&nbsp;DPH</th>
+                        <th class="col-resize" scope="col">Celková&nbsp;suma</th>
+                        <th class="col-resize" scope="col">Celková&nbsp;suma&nbsp;DPH</th>
+                        <th class="col-resize" scope="col"></th>
+
+                        </THEAD>
+                        <TBODY>
+
+                            @foreach (var item in ViewModel.ZoznamPoloziek)
+                            {
+                                <tr @ondblclick="() => OpenItem(item)">
+                                    <td class="col-resize">@item.Nazov</td>
+                                    <td class="col-resize">@item.Mnozstvo</td>
+                                    <td class="col-resize">@item.Cena.ToString("F3")</td>
+                                    <td class="col-resize">@item.DPH</td>
+                                    <td class="col-resize">@item.CenaDPH</td>
+                                    <td class="col-resize">@item.CelkovaCena</td>
+                                    <td class="col-resize">@item.CelkovaCenaDPH</td>
+                                    <td>
+                                        <ButtonRemove Disabled="@(!ViewModel.ValidateUserD() || ReadOnly || OnlyOneItem)" OnClick="@(() => DeleteItem(item))">
+                                        </ButtonRemove>
+                                    </td>
+                                </tr>
+                            }
+                        </TBODY>
+                    </SimpleTable>
+                </div>
 
             </div>
 
@@ -107,6 +131,7 @@
                     <button type="button" @onclick="Close" class="btn btn-secondary me-2">Späť</button>
                 }
                 <SimpleButton ID="ulozbuttonid" Type="submit" disabled="@ReadOnly" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
+                <SimpleButton ID="zaplatbuttnid" Type="button" disabled="@(ReadOnly || (!ViewModel.Existuje() && ViewModel.AktKasa == null))" OnClick="Buy" ZmenaTextu="@(("Zaplatiť", "Zaplatiť"))"></SimpleButton>
             </div>
         </div>
     </div>
@@ -116,10 +141,19 @@
 
 @code {
 
-    [Parameter]
-    public bool AsComponent { get; set; } = false;
+        [Parameter]
+        public bool AsComponent { get; set; } = false;
+
+        [Parameter]
+        public string ID { get; set; } = "pokladdokladid";
+
+        [Parameter]
+        public bool OnlyOneItem { get; set; } = false;
 
     public bool ReadOnly { get; set; } = false;
+
+    private InfoModal infomodal = new();
+    private ApproveModal approvmod = new();
 
     protected override void OnInitialized()
     {
@@ -130,29 +164,30 @@
         }
 
         var founded = objectHolder.Find<DBLayer.Models.Kasa>();   //pokusi sa ziskat objekt z uloziska
-        if (founded == null)
+        if (founded != null)
         {
-            Navigator.NavigateTo(Navigator.RemoveLastUrl());
-            return;
+            ViewModel.AktKasa = founded;
         }
+
 
         var foundedPokl = objectHolder.Remove<DBLayer.Models.PokladnicnyDoklad>();   //pokusi sa ziskat objekt z uloziska
         if (foundedPokl != null)
         {
-
             ViewModel.SetPoklDokl(foundedPokl);
         }
 
         if (AsComponent)
         {
-            var foundedUni = objectHolder.Remove<DBLayer.Models.UniConItemPoklDokladu>();   //pokusi sa ziskat objekt z uloziska
-            if (foundedUni != null)
+            //len pre unicony, ktore maju existovat 1x pre 1 PD v celom systeme
+            var foundedUNIQUE = objectHolder.Remove<DBLayer.Models.UniConItemPoklDokladu>();   //pokusi sa ziskat objekt z uloziska
+            if (foundedUNIQUE != null)
             {
-                ViewModel.PocessUniConItem(foundedUni);
+                ViewModel.UniConItem = foundedUNIQUE;
             }
         }
+        ReadOnly = ViewModel.PoklDokladInput.Spracovana;
 
-        ViewModel.AktKasa = founded;
+
     }
 
     protected override async Task OnInitializedAsync()
@@ -161,16 +196,66 @@
         {
             return;
         }
+
+
+
         await ViewModel.NacitajZoznamy();
     }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (OnlyOneItem && ViewModel.UniConItem != null)
+            {
+                await Save(silent: true);
+                StateHasChanged();
+                return;
+            }
+        }
+    }
+
 
     public void Close()
     {
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
 
-    public async Task Save()
+    public async Task Save(bool silent = false)
     {
+        if (await ViewModel.Ulozit())
+        {
+            if (!silent)
+            {
+                await infomodal.OpenModal(true);
+            }
+        }
+    }
 
+    public void OpenItem(DBLayer.Models.ItemPokladDokladu item)
+    {
+        if (!OnlyOneItem)
+        {
+            //tu telo
+        }
+    }
+
+    public void DeleteItem(DBLayer.Models.ItemPokladDokladu item)
+    {
+        ViewModel.ZoznamPoloziek.Remove(item);
+    }
+
+    public async Task Buy()
+    {
+        if (await ViewModel.Predat())
+        {
+            infomodal.UpdateText("Doklad bol zaplatený");
+            await infomodal.OpenModal(true);
+        }
+        else
+        {
+            infomodal.UpdateText("V doklade je chyba, skontrolujte položky");
+            await infomodal.OpenModal(true);
+        }
     }
 }

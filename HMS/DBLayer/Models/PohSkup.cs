@@ -35,7 +35,7 @@ namespace DBLayer.Models
                 newID = cislo.ToString("D9");
                 ++cislo;
 
-            } while (db.Find(typeof(PohSkup), newID) != null);
+            } while (db.Find<PohSkup>(newID) != null);
             return newID;
         }
 

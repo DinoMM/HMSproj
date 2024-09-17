@@ -8,13 +8,14 @@
     <div class="modal-dialog modal-lg" style="@($"max-width:{SizeInRem}rem") ">
         <div class="modal-content">
             <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
-                <h5 class="modal-title" id="staticBackdropLabel">
+                <div class="col-4 d-flex justify-content-bottom mb-1">
+                    <SearchInput @ref="srchinp" ID="@IDSearch" NumCols="@NumCols" PlaceHolder="Vyhľadaj..." TableID="@IDTable" SearchValue="@SearchedValue"></SearchInput>
+                </div>
+                <div class="modal-title h3 text-dark ms-4" id="staticBackdropLabel">
+                        @Header
+                    
 
-                    <div class="col-12 d-flex justify-content-bottom mb-1">
-                        <SearchInput @ref="srchinp" ID="@IDSearch" NumCols="@NumCols" PlaceHolder="Vyhľadaj..." TableID="@IDTable" SearchValue="@SearchedValue"></SearchInput>
-                    </div>
-
-                </h5>
+                </div>
             </div>
             <div class="modal-body @(ChangeColor ? "custom-modal-body" : "")" id="modalATextxLabel">
 
@@ -83,6 +84,12 @@
         /// </summary>
         [Parameter]
         public string ID { get; set; } = "staticItemFinderTable";
+
+        /// <summary>
+        /// Nastaví popisok okna, default ""
+        /// </summary>
+        [Parameter]
+        public string Header { get; set; } = "";
 
         /// <summary>
         /// Názvy stĺpcov tabuľky v poradí, v akom sa majú zobrazovať
@@ -178,7 +185,9 @@
         public async Task<bool> OpenModal(bool stop = false)
         {
             StateHasChanged();
+
             await srchinp.Forcesearch();
+
 
             tstop = stop;
             if (stop)
@@ -194,6 +203,29 @@
                 return true;
             }
 
+        }
+
+        public async Task<bool> OpenModal(bool stop = false, bool forcesearch = true)
+        {
+            StateHasChanged();
+            if (forcesearch)
+            {
+                await srchinp.Forcesearch();
+            }
+
+            tstop = stop;
+            if (stop)
+            {
+                tcs = new TaskCompletionSource<bool>();
+                await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+                await tcs.Task;             //fyzické statie programu
+                return tcs.Task.Result;
+            }
+            else
+            {
+                await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+                return true;
+            }
         }
 
         private void CloseModal(bool ans)
@@ -283,7 +315,7 @@
 
                     if (propType == typeof(bool))   // pre booleany s atributom
                     {
-                        var attribute = item.GetCustomAttributes(typeof(DBLayer. BooleanStringValuesAttribute), false).FirstOrDefault() as DBLayer.BooleanStringValuesAttribute;
+                        var attribute = item.GetCustomAttributes(typeof(DBLayer.BooleanStringValuesAttribute), false).FirstOrDefault() as DBLayer.BooleanStringValuesAttribute;
                         if (attribute != null)
                         {
                             bool boolValue = (bool)item.GetValue(obj);

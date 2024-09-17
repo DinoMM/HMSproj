@@ -31,7 +31,7 @@
 
 <CustomModal @ref="cuscreatehost" ID="cuscreatehostmod" Header="Vytvorenie hosťa" OneButtonOnly="true" ChangeColor="true" SizeInRem="90" ZIndex="55">
     <BODY>
-        @if (LoadHostComp)
+        @if (cuscreatehost.Render)
         {
             <CRUHost AsComponent="true"></CRUHost>
         }
@@ -40,15 +40,21 @@
 
 </CustomModal>
 
-<CustomModal @ref="cusopendoklad" ID="cusopenkasamod" Header="Kasa" OneButtonOnly="true" ChangeColor="true" SizeInRem="90" ZIndex="55">
+<CustomModal @ref="cusopendoklad" ID="cusopenkasamod" Header="Pokladničný blok" OneButtonOnly="true" ChangeColor="true" SizeInRem="90" ZIndex="55">
     <BODY>
         @if (cusopendoklad.Render)
         {
-            <PokladnicnyDoklad AsComponent="true"></PokladnicnyDoklad>
+            <PokladnicnyDoklad AsComponent="true" OnlyOneItem="true"></PokladnicnyDoklad>
         }
     </BODY>
 
 </CustomModal>
+
+@if (compVybkasa.Rendered)
+{
+    <CompVyberKasa @ref="compVybkasa" ZIndex="50"></CompVyberKasa>
+}
+
 
 <CustomModal @ref="cusmodHostcon" ID="cusmodshowhost" Header="Hostia rezervácie" OneButtonOnly="true" ChangeColor="true" SizeInRem="60" ZIndex="50">
     <BODY>
@@ -262,11 +268,11 @@
         <div class="row pt-2">
             <div class="col text-center">
                 <SimpleButton ID="submitbttn" Disabled="ValidateChangeability()" ZmenaStavuTextu="Exist()" Type="submit" ZmenaTextu="@(("Uložiť", "Vytvoriť"))" Class="btn btn-primary me-2"> </SimpleButton>
-                @if (Marked.ArrivalDate == DateTime.Today)
+                @if (Marked.ArrivalDate == DateTime.Today && IsZaplatena())
                 {
-                    <SimpleButton ID="checkinbttn" OnClick="ProcessCheckIN" Disabled="ValidateChangeability() || Marked.Id == 0" Type="button" Class="btn btn-success" ZmenaTextu="@(("CHECK-IN", "CHECK-IN"))"> </SimpleButton>
+                    <SimpleButton ID="checkinbttn" OnClick="ProcessCheckIN" Disabled="ValidateChangeability() || Marked.Id == 0 " Type="button" Class="btn btn-success" ZmenaTextu="@(("CHECK-IN", "CHECK-IN"))"> </SimpleButton>
                 }
-                else if (Marked.DepartureDate == DateTime.Today)
+                else if (Marked.DepartureDate == DateTime.Today && IsCompleted())
                 {
                     <SimpleButton ID="checkoutbttn" OnClick="ProcessCheckOUT" Disabled="ValidateChangeability()  || Marked.Id == 0" Type="button" Class="btn btn-danger" ZmenaTextu="@(("CHECK-OUT", "CHECK-OUT"))"> </SimpleButton>
                 }
@@ -274,10 +280,13 @@
                 {
                     <SimpleButton ID="kasabttn" OnClick="OpenDoklad" Type="button" ZmenaTextu="@(("KASA", "KASA"))" Class="btn btn-primary ms-2"> </SimpleButton>
                 }
+                @*<button type="button" @onclick="OpenPickKasa">aaaa</button>*@
             </div>
         </div>
     </div>
 </EditForm>
+
+
 
 @code {
     [EditorRequired]
@@ -302,11 +311,12 @@
     ItemFinderTable<DBLayer.Models.Host> ifthost = new();
     CustomModal cuscreatehost = new();
     CustomModal cusopendoklad = new();
+    CompVyberKasa compVybkasa = new();
+
+
     //CRUHost cruhost = new();
 
     public bool Initialized { get; private set; } = false;
-
-    public bool LoadHostComp { get; set; } = false;
 
     public bool PDFLoading = false;
 
@@ -639,7 +649,6 @@
         if (Marked.Status == DBLayer.Models.ReservationStatus.VytvorenaRucne.ToString()
             || Marked.Status == DBLayer.Models.ReservationStatus.VytvorenaWeb.ToString()
             || Marked.Status == DBLayer.Models.ReservationStatus.SchvalenaNezaplatena.ToString()
-            || Marked.Status == DBLayer.Models.ReservationStatus.SchvalenaZaplatena.ToString()
             || Marked.Status == DBLayer.Models.ReservationStatus.Blokovana.ToString())
 
         {
@@ -658,13 +667,13 @@
     {
         if (!ValidateSpecial() && !ValidateChangeability())
         {
-            DBLayer.Models.ReservationStatus[] newarr = new DBLayer.Models.ReservationStatus[6];
+            DBLayer.Models.ReservationStatus[] newarr = new DBLayer.Models.ReservationStatus[5];
             newarr[0] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(0);
             newarr[1] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(1);
             newarr[2] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(2);
-            newarr[3] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(3);
-            newarr[4] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(4);
-            newarr[5] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(5);
+            //newarr[3] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(3);
+            newarr[3] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(4);
+            newarr[4] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(5);
             SelectValues = newarr;
         }
 
@@ -678,8 +687,13 @@
 
     private bool IsSpracovana()
     {
-        return Marked.Status == DBLayer.Models.ReservationStatus.SchvalenaNezaplatena.ToString() ||
-               Marked.Status == DBLayer.Models.ReservationStatus.SchvalenaZaplatena.ToString();
+        return Marked.Status == DBLayer.Models.ReservationStatus.SchvalenaNezaplatena.ToString();
+    }
+
+
+    public bool IsZaplatena()
+    {
+        return Marked.Status == DBLayer.Models.ReservationStatus.SchvalenaZaplatena.ToString();
     }
 
     private bool IsCompleted()
@@ -767,7 +781,7 @@
 
     private async Task CreateHostTab()
     {
-        LoadHostComp = true;
+        cuscreatehost.Render = true;
         if (Marked.Guest != null)
         {
             objectHolder.Add(Marked.Guest);
@@ -785,11 +799,11 @@
                 Reservation = Marked.Id
             });
         }
-        LoadHostComp = false;
+        cuscreatehost.Render = false;
     }
     private async Task OpenHostFrom(DBLayer.Models.Host host)
     {
-        LoadHostComp = true;
+        cuscreatehost.Render = true;
         objectHolder.Add(host);
         await cuscreatehost.OpenModal(true);
         var found = objectHolder.Remove<DBLayer.Models.Host>();
@@ -811,7 +825,7 @@
                 remov.HostX.Guest = found.Guest;
             }
         }
-        LoadHostComp = false;
+        cuscreatehost.Render = false;
     }
 
     private async Task ProcessCheckIN()
@@ -853,11 +867,37 @@
         PDFLoading = true;
     }
 
+    private async Task OpenPickKasa()
+    {
+        await compVybkasa.WaitForLoad(objectHolder); //počkanie do vytvorenia
+        if (!compVybkasa.JeVybranaKasa())
+        {
+            await compVybkasa.VyberKasu();  //fyzicky statie programu
+        }
+        await compVybkasa.Dispose();
+    }
+
     private async Task OpenDoklad()
     {
+        await Save(silent: true);
+        await OpenPickKasa();
+
         cusopendoklad.Render = true;
-        objectHolder.Add(Marked);
+        var con = DBLayer.Models.UniConItemPoklDokladu.EnsureCreated(Marked, db, dbw);
+        if (con == null)
+        {
+            infomod.UpdateText("Nepodarilo sa vytvoriť spojenie do pokladničného bloku.");
+            await infomod.OpenModal(true);
+            return;
+        }
+        objectHolder.Add(con);
         await cusopendoklad.OpenModal(true);
+        if (await sessionStorage.GetItemAsync<bool>("UniconChanged"))
+        {
+            Marked.setFromReservation(dbw.Rezervations.FirstOrDefault(x => x.Id == Marked.Id));
+            await sessionStorage.SetItemAsync("UniconChanged", false);
+            await sessionStorage.SetItemAsync("RezervationChanged", true);
+        }
         cusopendoklad.Render = false;
     }
 }

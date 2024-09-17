@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace DBLayer.Models
 {
-    public class ItemPokladDokladu : PohJednotka
+    public partial class ItemPokladDokladu : PohJednotka
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -22,7 +22,7 @@ namespace DBLayer.Models
         [NotMapped]
         public double CelkovaCena { get => (double)Mnozstvo * Cena; }
         [NotMapped]
-        public double CenaDPH { get => (Cena * 120) / 100; }
+        public double CenaDPH { get => (Cena * (double)(100 + DPH)) / 100; }
         [NotMapped]
         public double CelkovaCenaDPH { get => (double)Mnozstvo * CenaDPH; }
 
@@ -55,6 +55,19 @@ namespace DBLayer.Models
         public ItemPokladDokladu Clon()
         {
             return (ItemPokladDokladu)this.Clone();
+        }
+
+        public void SetFrom(ItemPokladDokladu item)
+        {
+            this.ID = item.ID;
+            this.Skupina = item.Skupina;
+            this.SkupinaX = item.SkupinaX;
+            this.Nazov = item.Nazov;
+            this.Mnozstvo = item.Mnozstvo;
+            this.Cena = item.Cena;
+            this.UniConItemPoklDokladu = item.UniConItemPoklDokladu;
+            this.UniConItemPoklDokladuX = item.UniConItemPoklDokladuX;
+            this.DPH = item.DPH;
         }
     }
 }
