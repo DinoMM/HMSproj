@@ -1,8 +1,10 @@
 ﻿@namespace UniComponents
 
-<a @onclick="OnClick" style="@(Disabled ? " pointer-events: none;" : "" ) ">
-    <i href="#" class="bi bi-x-circle btn btn-danger @(Disabled ? " disabled" : "" )"></i>
-</a>
+<div data-toggle="tooltip" data-placement="left" title="@(Disabled ? TooltipMessage : "")">
+    <a @onclick="OnClick" style="@(Disabled ? " pointer-events: none;" : "" ) ">
+        <i href="#" class="bi bi-x-circle btn btn-danger @(Disabled ? " disabled" : "" )"></i>
+    </a>
+</div>
 
 
 @code
@@ -18,4 +20,12 @@
     /// </summary>
     [Parameter]
     public EventCallback OnClick { get; set; } = EventCallback.Empty;
+
+    /// <summary>
+    /// Nastaví text tooltipu, keď je Disabled => true, Default "Nemožno odstániť"
+    /// </summary>
+    [Parameter]
+    public string TooltipMessage { get; set; } = "Nemožno odstániť";
+
+
 }

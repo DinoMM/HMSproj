@@ -13,7 +13,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using UniComponents;
 //using SkladModul.ViewModels.Sklad;
 using AdminModul.ViewModels.Pouzivatelia;
-using HMS.Components.Services;
+using UniComponents.Services;
 using Blazored.SessionStorage;
 
 //using LudskeZdrojeModul.ViewModels.SpravaRoli;

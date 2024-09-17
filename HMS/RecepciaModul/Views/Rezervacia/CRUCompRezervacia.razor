@@ -52,7 +52,10 @@
 
 @if (compVybkasa.Rendered)
 {
-    <CompVyberKasa @ref="compVybkasa" ZIndex="50"></CompVyberKasa>
+    <CompVyberKasa @ref="compVybkasa"
+                   AfterRender="OpenPickKasa"
+                   AfterDispose="OpenDokladMod"
+                   Kasy="ZoznamKas"></CompVyberKasa>
 }
 
 
@@ -314,8 +317,6 @@
     CompVyberKasa compVybkasa = new();
 
 
-    //CRUHost cruhost = new();
-
     public bool Initialized { get; private set; } = false;
 
     public bool PDFLoading = false;
@@ -323,6 +324,7 @@
     private bool Warned = false;
     private Array SelectValues = Enum.GetValues(typeof(DBLayer.Models.ReservationStatus));
     private List<DBLayer.Models.HostConReservation> VyberHosti = new();
+    private List<DBLayer.Models.Kasa> ZoznamKas = new();
 
 
     protected override void OnInitialized()
@@ -682,6 +684,10 @@
             VyberHosti.Clear();
             VyberHosti.AddRange(db.HostConReservations.Include(x => x.HostX).Where(x => x.Reservation == Marked.Id));       //bez instancie rezervacie
         }
+        if (ZoznamKas.Count == 0)
+        {
+            ZoznamKas.AddRange(db.Kasy.Include(x => x.ActualUserX).ToList());
+        }
         StateHasChanged();
     }
 
@@ -869,7 +875,6 @@
 
     private async Task OpenPickKasa()
     {
-        await compVybkasa.WaitForLoad(objectHolder); //počkanie do vytvorenia
         if (!compVybkasa.JeVybranaKasa())
         {
             await compVybkasa.VyberKasu();  //fyzicky statie programu
@@ -877,11 +882,8 @@
         await compVybkasa.Dispose();
     }
 
-    private async Task OpenDoklad()
+    private async Task OpenDokladMod()
     {
-        await Save(silent: true);
-        await OpenPickKasa();
-
         cusopendoklad.Render = true;
         var con = DBLayer.Models.UniConItemPoklDokladu.EnsureCreated(Marked, db, dbw);
         if (con == null)
@@ -890,6 +892,7 @@
             await infomod.OpenModal(true);
             return;
         }
+        objectHolder.Remove<DBLayer.Models.ReservationConItemPoklDokladu>();        //pre istotu
         objectHolder.Add(con);
         await cusopendoklad.OpenModal(true);
         if (await sessionStorage.GetItemAsync<bool>("UniconChanged"))
@@ -899,5 +902,12 @@
             await sessionStorage.SetItemAsync("RezervationChanged", true);
         }
         cusopendoklad.Render = false;
+        StateHasChanged();
+    }
+
+    private async Task OpenDoklad()
+    {
+        await Save(silent: true);
+        compVybkasa.StartRender();
     }
 }

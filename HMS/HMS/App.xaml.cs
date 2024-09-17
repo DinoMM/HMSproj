@@ -1,6 +1,6 @@
 ﻿
 using DBLayer;
-using HMS.Components.Services;
+using UniComponents.Services;
 
 namespace HMS
 {

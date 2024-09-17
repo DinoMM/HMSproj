@@ -183,7 +183,7 @@ namespace RecepciaModul.ViewModels
 
         public async Task<bool> Predat()
         {
-            if (AktKasa == null)
+            if (!JeNastavenaKasa())
             {
                 return false;
             }
@@ -203,12 +203,26 @@ namespace RecepciaModul.ViewModels
                 PoklDokladInput.Spracovana = true;
                 PoklDokladInput.Vznik = DateTime.Now;
 
+                var foundedPd = _db.PokladnicneDoklady.FirstOrDefault(x => x.ID == PoklDokladInput.ID);
+                if (foundedPd == null)
+                {
+                    return false;
+                }
+                foundedPd.Kasa = AktKasa?.ID;
+                foundedPd.KasaX = AktKasa;
+                foundedPd.Spracovana = true;
+                foundedPd.Vznik = DateTime.Now;
                 _db.SaveChanges();
                 _dbw.SaveChanges();
                 await _sessionStorage.SetItemAsync("UniconChanged", true);
                 return true;
             }
             return false;
+        }
+
+        public bool JeNastavenaKasa()
+        {
+            return AktKasa != null;
         }
     }
 }

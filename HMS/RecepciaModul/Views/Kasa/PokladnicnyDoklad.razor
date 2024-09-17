@@ -131,7 +131,7 @@
                     <button type="button" @onclick="Close" class="btn btn-secondary me-2">Späť</button>
                 }
                 <SimpleButton ID="ulozbuttonid" Type="submit" disabled="@ReadOnly" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
-                <SimpleButton ID="zaplatbuttnid" Type="button" disabled="@(ReadOnly || (!ViewModel.Existuje() && ViewModel.AktKasa == null))" OnClick="Buy" ZmenaTextu="@(("Zaplatiť", "Zaplatiť"))"></SimpleButton>
+                <SimpleButton ID="zaplatbuttnid" Type="button" disabled="@(ReadOnly || !ViewModel.Existuje() || !ViewModel.JeNastavenaKasa())" OnClick="Buy" ZmenaStavuTextu="ViewModel.JeNastavenaKasa()" ZmenaTextu="@(("Zaplatiť", "Nastavte kasu"))"></SimpleButton>
             </div>
         </div>
     </div>
@@ -141,14 +141,14 @@
 
 @code {
 
-        [Parameter]
-        public bool AsComponent { get; set; } = false;
+    [Parameter]
+    public bool AsComponent { get; set; } = false;
 
-        [Parameter]
-        public string ID { get; set; } = "pokladdokladid";
+    [Parameter]
+    public string ID { get; set; } = "pokladdokladid";
 
-        [Parameter]
-        public bool OnlyOneItem { get; set; } = false;
+    [Parameter]
+    public bool OnlyOneItem { get; set; } = false;
 
     public bool ReadOnly { get; set; } = false;
 
@@ -196,7 +196,6 @@
         {
             return;
         }
-
 
 
         await ViewModel.NacitajZoznamy();
@@ -247,15 +246,18 @@
 
     public async Task Buy()
     {
-        if (await ViewModel.Predat())
+        if (await approvmod.OpenModal(true))
         {
-            infomodal.UpdateText("Doklad bol zaplatený");
-            await infomodal.OpenModal(true);
-        }
-        else
-        {
-            infomodal.UpdateText("V doklade je chyba, skontrolujte položky");
-            await infomodal.OpenModal(true);
+            if (await ViewModel.Predat())
+            {
+                infomodal.UpdateText("Doklad bol zaplatený");
+                await infomodal.OpenModal(true);
+            }
+            else
+            {
+                infomodal.UpdateText("V doklade je chyba, skontrolujte položky");
+                await infomodal.OpenModal(true);
+            }
         }
     }
 }

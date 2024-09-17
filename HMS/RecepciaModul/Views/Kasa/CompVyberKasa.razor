@@ -1,6 +1,7 @@
 ﻿@namespace RecepciaModul
-@inherits DynamicLoaderComponent
+@inherits DynamicLoadedComponent
 @inject DBContext db
+@inject UniComponents.Services.IAppLifeCycleService AppLifeCycleService
 
 
 <ItemFinderTable @ref="iftvyberkasy"
@@ -11,10 +12,12 @@
                  KeyAttributeToo="true"
                  ForeignAttributesToo="true"
                  ColNames="@(new() { "Názov", "Organizácia" })"
-                 ColValues="db.Kasy.ToList()"
-                 SizeInRem="@ZIndex"
-                 Header="Výber aktuálnej kasy">
+                 ColValues="Kasy"
+                 SizeInRem="40"
+                 SelectEmptyInstance="AllowEmptyInstance"
+                 Header="Výber aktuálnej pokladne">
 </ItemFinderTable>
+
 
 
 @code {
@@ -31,7 +34,21 @@
     [Parameter]
     public int ZIndex { get; set; } = 1;
 
+    /// <summary>
+    /// Povoli moznost vyčistiť kasu, default false
+    /// </summary>
+    [Parameter]
+    public bool AllowEmptyInstance { get; set; } = false;
+
+    /// <summary>
+    /// Zobrazene kasy
+    /// </summary>
+    [Parameter]
+    public List<DBLayer.Models.Kasa> Kasy { get; set; }
+
     private static bool Asked = false;
+    private static bool firstCheck = false;
+    public static bool checkWhenAppClose = false;
 
     ItemFinderTable<DBLayer.Models.Kasa> iftvyberkasy = new();
 
@@ -40,27 +57,44 @@
         return objectHolder.Find<DBLayer.Models.Kasa>() != null;
     }
 
+    /// <summary>
+    /// Vyberie kasu, nastaví uživateľa, spúšťa SaveChanges na databáze
+    /// </summary>
+    /// <param name="forceAsk"></param>
+    /// <returns></returns>
     public async Task<bool> VyberKasu(bool forceAsk = false)
     {
-
-
         if (UserService.IsLoggedUserInRoles(DBLayer.Models.Kasa.ROLE_R_KASA))
         {
-            if (objectHolder.Find<DBLayer.Models.Kasa>() == null)
+            if (CheckIfUserKasa())
             {
-                if (Asked && !forceAsk)
-                {
-                    return false;
-                }
-
-                if (await iftvyberkasy.OpenModal(true, forcesearch: false))
-                {
-                    objectHolder.Add(iftvyberkasy.OutSelection.FirstOrDefault());
-                    return true;
-                }
+                return true;
             }
-            else
+
+            if (Asked && !forceAsk)
             {
+                return false;
+            }
+
+            if (await iftvyberkasy.OpenModal(true, forcesearch: false))
+            {
+                ClearKasa();
+                if (!string.IsNullOrEmpty(iftvyberkasy.OutSelection.FirstOrDefault().ID))
+                {
+                    var pridKasa = iftvyberkasy.OutSelection.FirstOrDefault();
+                    if (pridKasa.ActualUser == null)
+                    {
+                        pridKasa.ActualUser = UserService.LoggedUser.Id;
+                        objectHolder.Add(pridKasa);
+                        db.SaveChanges();
+
+                    }
+                    else
+                    {
+                        //nejaky vypis?
+                        return false;
+                    }
+                }
                 return true;
             }
         }
@@ -95,9 +129,37 @@
         return null;
     }
 
+    /// <summary>
+    /// Odstráni aktuálnu kasu a uloží zmeny do databázy
+    /// </summary>
     public void ClearKasa()
     {
-        objectHolder.Remove<DBLayer.Models.Kasa>();
+        var found = objectHolder.Remove<DBLayer.Models.Kasa>();
+        if (found != null)
+        {
+            found.ActualUser = null;
+            db.SaveChanges();
+        }
     }
+
+    /// <summary>
+    /// Pozrie prvy krat ci nahodou neni priradena kasa v databaze
+    /// </summary>
+    /// <returns></returns>
+    private bool CheckIfUserKasa()
+    {
+        if (!firstCheck)
+        {
+            firstCheck = true;
+            var ckeckifexist = db.Kasy.FirstOrDefault(x => x.ActualUser == UserService.LoggedUser.Id);
+            if (ckeckifexist != null)
+            {
+                objectHolder.Add(ckeckifexist);
+                return true;
+            }
+        }
+        return false;
+    }
+
 
 }

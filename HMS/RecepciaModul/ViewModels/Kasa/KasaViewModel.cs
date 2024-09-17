@@ -11,10 +11,13 @@ namespace RecepciaModul.ViewModels
     {
         [ObservableProperty]
         private ObservableCollection<DBLayer.Models.PokladnicnyDoklad> zoznamBlockov = new();
+        public List<DBLayer.Models.Kasa> ZoznamKas = new();
 
         public bool NacitavaniePoloziek { get; private set; } = true;
 
-        public DBLayer.Models.Kasa? AktualKasa { get; set; } = null;
+        public DBLayer.Models.Kasa? AktlKasa { get; set; } = null;
+
+
 
 
 
@@ -33,22 +36,50 @@ namespace RecepciaModul.ViewModels
         {
             return _userService.IsLoggedUserInRoles(DBLayer.Models.PokladnicnyDoklad.ROLE_R_POKLDOKL) && _userService.IsLoggedUserInRoles(DBLayer.Models.Kasa.ROLE_R_KASA);
         }
+        public bool ValidateUserCRU()
+        {
+            return _userService.IsLoggedUserInRoles(DBLayer.Models.PokladnicnyDoklad.ROLE_CRU_POKLDOKL);
+        }
+
+        public bool ValidateUserD()
+        {
+            return _userService.IsLoggedUserInRoles(DBLayer.Models.PokladnicnyDoklad.ROLE_D_POKLDOKL);
+        }
+
+        public bool ValidateUserKasaR()
+        {
+            return _userService.IsLoggedUserInRoles(DBLayer.Models.Kasa.ROLE_R_KASA);
+        }
 
         public async Task NacitajZoznamy()
         {
-
+            ZoznamKas.Clear();
+            ZoznamKas.AddRange(await _db.Kasy
+                .Include(x => x.ActualUserX)
+                .Include(x => x.DodavatelX)
+                .ToListAsync());
+            ZoznamBlockov = new(await _db.PokladnicneDoklady
+                .Include(x => x.KasaX)
+                .OrderBy(x => x.Vznik)
+                .ToListAsync());
             NacitavaniePoloziek = false;
         }
 
         public bool MoznoVymazat(DBLayer.Models.PokladnicnyDoklad item)
         {
-            return false;
+            return !item.Spracovana;
         }
 
         public void Vymazat(DBLayer.Models.PokladnicnyDoklad item)
         {
-
-
+            var itemy = _db.ItemyPokladDokladu.Where(x => x.Skupina == item.ID).ToList();
+            foreach (var ytem in itemy)
+            {
+                _db.ItemyPokladDokladu.Remove(ytem);
+            }
+            ZoznamBlockov.Remove(item);
+            _db.PokladnicneDoklady.Remove(item);
+            _db.SaveChanges();
         }
     }
 }

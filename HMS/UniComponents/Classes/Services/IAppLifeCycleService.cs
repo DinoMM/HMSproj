@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace HMS.Components.Services
+namespace UniComponents.Services
 {
     public interface IAppLifeCycleService   //AI
     {

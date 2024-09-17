@@ -1,6 +1,7 @@
 ﻿@namespace UniComponents
-@inject IJSRuntime JSRuntime
 @implements IModal
+@inject IJSRuntime JSRuntime
+
 
 @typeparam T where T : class
 
@@ -8,13 +9,11 @@
     <div class="modal-dialog modal-lg" style="@($"max-width:{SizeInRem}rem") ">
         <div class="modal-content">
             <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
-                <div class="col-4 d-flex justify-content-bottom mb-1">
+                <div class="col-5 d-flex justify-content-bottom mb-1">
                     <SearchInput @ref="srchinp" ID="@IDSearch" NumCols="@NumCols" PlaceHolder="Vyhľadaj..." TableID="@IDTable" SearchValue="@SearchedValue"></SearchInput>
                 </div>
                 <div class="modal-title h3 text-dark ms-4" id="staticBackdropLabel">
-                        @Header
-                    
-
+                    @Header
                 </div>
             </div>
             <div class="modal-body @(ChangeColor ? "custom-modal-body" : "")" id="modalATextxLabel">
@@ -165,7 +164,7 @@
         public bool OnlyProtectedPersonalDataAttribute { get; set; } = false;
         #endregion
         /// <summary>
-        ///Pridať možnosť vypratia prázneho výberu, default false
+        ///Pridať možnosť vybranie prázneho výberu(vráti novu prazdnu inštancia (nie null)), default false
         /// </summary>
         [Parameter]
         public bool SelectEmptyInstance { get; set; } = false;

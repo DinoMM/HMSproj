@@ -3,8 +3,119 @@
 @inject KasaViewModel ViewModel
 
 
+<ApproveModal @ref=AprovMod ID="deletemodal"
+              Text="Naozaj chcete odstrániť tento riadok?<br>POZOR môžu sa vymazať prvky, ktoré sú spojené s touto položkou!"
+              FuncOnSucc="EventCallback.Empty"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+
+@if (vyberkasamod.Rendered && ViewModel.ZoznamKas.Count != 0)
+{
+    <CompVyberKasa @ref="vyberkasamod"
+                   ID="vyberkasa"
+                   AllowEmptyInstance="true"
+                   Kasy="ViewModel.ZoznamKas"
+                   AfterRender="OpenKasa">
+                
+    </CompVyberKasa>
+}
+
+<div class="container">
+
+    <div class="row pb-1">
+
+        <div class="col-1"></div>
+
+        <div class="col-3 d-flex justify-content-bottom mb-2">
+            <SearchInput NumCols="5" TableID="tableid" PlaceHolder="Vyhľadaj doklad..."></SearchInput>
+        </div>
+
+        <div class="col-8">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
+                <button @onclick="Create" type="button" disabled="@ViewModel.ValidateUserCRU()" class="btn btn-primary">➕Vytvoriť doklad</button>
+                <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary">Otvoriť</button>
+                <button type="button" @onclick="(() => { vyberkasamod.StartRender();  forceask = true; })" disabled="@(!ViewModel.ValidateUserKasaR())" class="btn btn-primary">Pokladňa: @(ViewModel.AktlKasa?.ID ?? "-")</button>
+            </div>
+        </div>
+
+        <div class="col-1"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-1"></div>
+        <div class="col-12" style="max-height: 30rem;overflow: auto;">
+            <SimpleTable ID="tableid">
+                <THEAD>
+
+                <th class="col-resize" scope="col">ID</th>
+                <th class="col-resize" scope="col">Vznik</th>
+                <th class="col-resize" scope="col">Zaplatený</th>
+                <th class="col-resize" scope="col">Pokladňa</th>
+                <th class="col-resize" scope="col">Typ&nbsp;platby</th>
+                <th class="col-resize" scope="col"></th>
+
+                </THEAD>
+                <TBODY>
+                    @if (ViewModel.NacitavaniePoloziek)
+                    {
+                        <div class="ms-1">
+                            <SpinnerLoading Size="2.0"></SpinnerLoading>
+                        </div>
+                    }
+                    else
+                    {
+                        <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items="ViewModel.ZoznamBlockov" Context="item" SpacerElement="tr" ItemSize="50">
+                            <ItemContent>
+
+
+
+                                <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
+
+                                    <td class="col-resize">@item.ID</td>
+                                    <td class="col-resize">@item.Vznik.ToString("dd.MM.yyyy HH:mm:ss")</td>
+                                    <td class="col-resize">
+                                        <SimpleCheckMark Checked="item.Spracovana" Size="5"></SimpleCheckMark>
+                                    </td>
+                                    <td class="col-resize">@(item?.Kasa ?? "-")</td>
+                                    <td>@(item.TypPlatby ? "Platobná&nbsp;karta" : "Hotovosť")</td>
+                                    <td>
+                                        @if (ViewModel.ValidateUserD())
+                                        {
+                                            <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))" TooltipMessage="Nemožno vymazať tento doklad lebo je zaplatený."></ButtonRemove>
+                                        }
+                                    </td>
+
+                                </tr>
+                            </ItemContent>
+                            <EmptyContent>
+                                <tr>
+                                    <div class="h3 text-dark">Zoznam je prázdny</div>
+                                </tr>
+                            </EmptyContent>
+                            <Placeholder>
+                                <div class="ms-1">
+                                    <SpinnerLoading Size="2.0"></SpinnerLoading>
+                                </div>
+                            </Placeholder>
+                        </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
+                    }
+                </TBODY>
+
+            </SimpleTable>
+        </div>
+
+    </div>
+</div>
+
 
 @code {
+
+    private DBLayer.Models.PokladnicnyDoklad? marked;
+    private ApproveModal AprovMod = new();
+    private CompVyberKasa vyberkasamod = new();
+
+    private bool forceask = false;
 
     protected override void OnInitialized()
     {
@@ -14,23 +125,25 @@
             return;
         }
 
-        var foundedKasa = objectHolder.Remove<DBLayer.Models.Kasa>();   //pokusi sa ziskat objekt z uloziska
+        var foundedKasa = objectHolder.Find<DBLayer.Models.Kasa>();   //pokusi sa ziskat objekt z uloziska
         if (foundedKasa == null)
         {
-            //otvorit pick kasy
+            //kasa nebola najdena
             return;
         }
+        ViewModel.AktlKasa = foundedKasa;
+    }
 
-        //ulozit kasu
-
-        //var founded = objectHolder.Remove<DBLayer.Models.Rezervation>();   //pokusi sa ziskat objekt z uloziska
-        //if (founded != null)
-        //{
-
-        //}
-
-
-        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (ViewModel.AktlKasa == null)
+            {
+                vyberkasamod.StartRender();
+                StateHasChanged();
+            }
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -45,5 +158,47 @@
     public void Close()
     {
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public void Open()
+    {
+        if (marked != null)
+        {
+            if (ViewModel.ValidateUserCRU())
+            {
+                objectHolder.Add(marked);
+                Navigator.NavigateTo(Navigator.AddNextUrl("/PokladnicnyDoklad"));
+            }
+        }
+    }
+
+    public void Create()
+    {
+        if (ViewModel.ValidateUserCRU())
+        {
+            Navigator.NavigateTo(Navigator.AddNextUrl("/PokladnicnyDoklad"));
+        }
+    }
+
+    public async Task Delete(DBLayer.Models.PokladnicnyDoklad item)
+    {
+        if (ViewModel.MoznoVymazat(item))
+        {
+            if (await AprovMod.OpenModal(true))
+            {
+                ViewModel.Vymazat(item);
+            }
+        }
+    }
+
+    public async Task OpenKasa()
+    {
+
+        if (await vyberkasamod.VyberKasu(forceask))  //fyzicky statie programu
+        {
+            ViewModel.AktlKasa = vyberkasamod.GetKasa();
+        }
+        await vyberkasamod.Dispose();
+        StateHasChanged();
     }
 }
