@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
 
 namespace DBLayer.Models
 {
@@ -57,6 +58,13 @@ namespace DBLayer.Models
             return con;
         }
 
+        /// <summary>
+        /// Spracuje item pokladničného dokladu, podľa osobitného spracovania
+        /// </summary>
+        /// <param name="itemPD"></param>
+        /// <param name="db"></param>
+        /// <param name="dbw"></param>
+        /// <returns></returns>
         public static bool SpracujItemPD(ItemPokladDokladu itemPD, in DBContext db, in DataContext dbw)
         {
             var founded = db.UniConItemyPoklDokladu.FirstOrDefault(x => x.ID == itemPD.UniConItemPoklDokladu);
@@ -77,13 +85,38 @@ namespace DBLayer.Models
                     {
                         foundedRes.Status = ReservationStatus.SchvalenaZaplatena.ToString();
                     }
-                    else {
+                    else
+                    {
                         return false;
                     }
                     break;
                 default: return true;
             }
             return true;
+        }
+
+        /// <summary>
+        /// Vráti true ak by v pokladničnom doklade mala byť len jedna položka (podľa typu Uniconu)
+        /// </summary>
+        /// <param name="doklad"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public static bool JeItemOnlyOnePD(PokladnicnyDoklad doklad, in DBContext db)
+        {
+            var itemsPD = db.ItemyPokladDokladu
+                .Include(x => x.UniConItemPoklDokladuX)
+                .Where(x => x.Skupina == doklad.ID)
+                .ToList();
+            if (itemsPD.Count == 1)
+            {
+                if (
+                    itemsPD.FirstOrDefault().UniConItemPoklDokladuX is ReservationConItemPoklDokladu
+                    )
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

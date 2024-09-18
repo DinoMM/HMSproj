@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using DBLayer.Models;
 using DBLayer.Models.RecepciaModels;
+using DBLayer.Models.UctovModels;
 
 
 
@@ -86,6 +87,9 @@ namespace DBLayer
 
         public DbSet<UniConItemPoklDokladu> UniConItemyPoklDokladu { get; set; }
         public DbSet<ReservationConItemPoklDokladu> ReservationConItemyPoklDokladu { get; set; }
+        public DbSet<PolozkaSkladuConItemPoklDokladu> PolozkySkladuConItemPoklDokladu { get; set; }
+        public DbSet<UniConItemPoklDokladuFlag> UniConItemPoklDokladuFlagy { get; set; }
+        public DbSet<UniConItemPoklDokladuConFlag> UniConItemPoklDokladuConFlagy { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -157,9 +161,15 @@ namespace DBLayer
                 .HasKey(s => new { s.Host, s.Reservation });
             modelBuilder.Entity<RoomConFlag>()                      //bez primarneho kluca
                 .HasKey(s => new { s.Room, s.RoomFlag });
+            modelBuilder.Entity<UniConItemPoklDokladuConFlag>()                      //bez primarneho kluca
+                .HasKey(s => new { s.UniConItemPoklDokladu, s.UniConItemPoklDokladuFlag });
 
             modelBuilder.Entity<ReservationConItemPoklDokladu>()
             .HasIndex(e => e.Reservation)
+            .IsUnique();
+
+            modelBuilder.Entity<PolozkaSkladuConItemPoklDokladu>()
+            .HasIndex(e => e.PolozkaSkladu)
             .IsUnique();
         }
 

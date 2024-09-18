@@ -53,16 +53,21 @@ namespace RecepciaModul.ViewModels
 
         public async Task NacitajZoznamy()
         {
-            ZoznamKas.Clear();
-            ZoznamKas.AddRange(await _db.Kasy
-                .Include(x => x.ActualUserX)
-                .Include(x => x.DodavatelX)
-                .ToListAsync());
+            await NacitajKasy();
             ZoznamBlockov = new(await _db.PokladnicneDoklady
                 .Include(x => x.KasaX)
                 .OrderBy(x => x.Vznik)
                 .ToListAsync());
             NacitavaniePoloziek = false;
+        }
+
+        public async Task NacitajKasy()
+        {
+            ZoznamKas.Clear();
+            ZoznamKas.AddRange(await _db.Kasy
+                .Include(x => x.ActualUserX)
+                .Include(x => x.DodavatelX)
+                .ToListAsync());
         }
 
         public bool MoznoVymazat(DBLayer.Models.PokladnicnyDoklad item)

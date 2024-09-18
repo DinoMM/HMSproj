@@ -684,10 +684,9 @@
             VyberHosti.Clear();
             VyberHosti.AddRange(db.HostConReservations.Include(x => x.HostX).Where(x => x.Reservation == Marked.Id));       //bez instancie rezervacie
         }
-        if (ZoznamKas.Count == 0)
-        {
-            ZoznamKas.AddRange(db.Kasy.Include(x => x.ActualUserX).ToList());
-        }
+        ZoznamKas.Clear();
+        ZoznamKas.AddRange(db.Kasy.Include(x => x.ActualUserX).ToList());
+
         StateHasChanged();
     }
 

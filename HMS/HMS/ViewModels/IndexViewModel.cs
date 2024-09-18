@@ -43,7 +43,7 @@ namespace HMS.ViewModels
             if (!CompVyberKasa.checkWhenAppClose)        //zaistenie, ze uzivatel je odpojeny od kasy
             {
                 CompVyberKasa.checkWhenAppClose = true;
-                AppLifecycleService.Destroying += () =>
+                var ensureKasaLogOff = () =>
                 {
                     var found = objectHolder.Remove<DBLayer.Models.Kasa>();
                     if (found != null)
@@ -53,6 +53,9 @@ namespace HMS.ViewModels
                     }
 
                 };
+
+                AppLifecycleService.Destroying += ensureKasaLogOff;
+                AppLifecycleService.LogOff += ensureKasaLogOff;
             }
 
         }

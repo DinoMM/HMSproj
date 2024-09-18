@@ -16,7 +16,7 @@
                    AllowEmptyInstance="true"
                    Kasy="ViewModel.ZoznamKas"
                    AfterRender="OpenKasa">
-                
+
     </CompVyberKasa>
 }
 
@@ -33,9 +33,9 @@
         <div class="col-8">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-                <button @onclick="Create" type="button" disabled="@ViewModel.ValidateUserCRU()" class="btn btn-primary">➕Vytvoriť doklad</button>
+                <button @onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRU())" class="btn btn-primary">➕Vytvoriť doklad</button>
                 <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary">Otvoriť</button>
-                <button type="button" @onclick="(() => { vyberkasamod.StartRender();  forceask = true; })" disabled="@(!ViewModel.ValidateUserKasaR())" class="btn btn-primary">Pokladňa: @(ViewModel.AktlKasa?.ID ?? "-")</button>
+                <button type="button" @onclick="ForceOpenKasa" disabled="@(!ViewModel.ValidateUserKasaR())" class="btn btn-primary">Pokladňa: @(ViewModel.AktlKasa?.ID ?? "-")</button>
             </div>
         </div>
 
@@ -200,5 +200,12 @@
         }
         await vyberkasamod.Dispose();
         StateHasChanged();
+    }
+
+    public async Task ForceOpenKasa()
+    {
+        forceask = true;
+        await ViewModel.NacitajKasy();
+        vyberkasamod.StartRender();
     }
 }

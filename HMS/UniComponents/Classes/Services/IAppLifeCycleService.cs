@@ -11,6 +11,10 @@ namespace UniComponents.Services
         event Action Destroying;
 
         public void NotifyDestroying();
+
+        event Action LogOff;
+
+        public void NotifyLogOff();
     }
 
     public class AppLifecycleService : IAppLifeCycleService     //AI
@@ -18,5 +22,9 @@ namespace UniComponents.Services
         public event Action Destroying;
 
         public void NotifyDestroying() => Destroying?.Invoke();
+
+        public event Action LogOff;
+
+        public void NotifyLogOff() => LogOff?.Invoke();
     }
 }

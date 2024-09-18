@@ -16,7 +16,7 @@ namespace RecepciaModul.ViewModels
 
         public bool NacitavaniePoloziek { get; private set; } = true;
 
-        public Kkasa? AktKasa { get; set; } = new();
+        public Kkasa? AktKasa { get; set; } = null;
 
         public PpokladnicnyDoklad PoklDokladInput { get; set; } = new();
 
@@ -77,10 +77,11 @@ namespace RecepciaModul.ViewModels
 
         }
 
-        public void SetPoklDokl(PpokladnicnyDoklad item)
+        public bool SetPoklDokl(PpokladnicnyDoklad item)
         {
             PoklDokladInput = item.Clon();
             existuje = true;
+            return UniConItemPoklDokladu.JeItemOnlyOnePD(item, in _db);
         }
 
         /// <summary>

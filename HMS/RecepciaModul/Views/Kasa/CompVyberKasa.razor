@@ -18,6 +18,10 @@
                  Header="Výber aktuálnej pokladne">
 </ItemFinderTable>
 
+<InfoModal @ref="infomodalkasa"
+           ID="@(ID + "infomodalvybkasa")"
+           Text="Táto pokladňa je obsadená iným používateľom.">
+</InfoModal>
 
 
 @code {
@@ -51,6 +55,7 @@
     public static bool checkWhenAppClose = false;
 
     ItemFinderTable<DBLayer.Models.Kasa> iftvyberkasy = new();
+    InfoModal infomodalkasa = new();
 
     public bool JeVybranaKasa()
     {
@@ -91,7 +96,8 @@
                     }
                     else
                     {
-                        //nejaky vypis?
+                        infomodalkasa.UpdateText($"Táto pokladňa je obsadená iným používateľom: {pridKasa.ActualUserX?.Surname}");
+                        await infomodalkasa.OpenModal(true);
                         return false;
                     }
                 }
