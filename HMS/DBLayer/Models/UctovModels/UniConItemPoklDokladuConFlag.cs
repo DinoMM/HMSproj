@@ -13,7 +13,7 @@ namespace DBLayer.Models.UctovModels
         public long UniConItemPoklDokladu { get; set; }
         public UniConItemPoklDokladu UniConItemPoklDokladuX { get; set; }
         [ForeignKey("UniConItemPoklDokladuFlagX")]
-        public long UniConItemPoklDokladuFlag { get; set; }
+        public string UniConItemPoklDokladuFlag { get; set; }
         public UniConItemPoklDokladuFlag UniConItemPoklDokladuFlagX { get; set; }
     }
 }

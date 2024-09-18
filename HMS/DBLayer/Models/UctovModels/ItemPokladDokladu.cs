@@ -32,6 +32,7 @@ namespace DBLayer.Models
         public long UniConItemPoklDokladu { get; set; }
         public UniConItemPoklDokladu UniConItemPoklDokladuX { get; set; }
 
+        [Column(TypeName = "decimal(9, 3)")]
         [DecimalNonNegative(ErrorMessage = "Len kladné hodnoty.")]
         public decimal DPH { get; set; } = 20;
 

@@ -13,7 +13,9 @@ namespace DBLayer.Models.UctovModels
         public string PolozkaSkladu { get; set; }
         public PolozkaSkladu PolozkaSkladuX { get; set; }
 
+        [Column(TypeName = "decimal(18, 3)")]
         public decimal PredajnaCena { get; set; } = 0.0M;
+        [Column(TypeName = "decimal(9, 3)")]
         public decimal PredajneDPH { get; set; } = 20;
     }
 }
