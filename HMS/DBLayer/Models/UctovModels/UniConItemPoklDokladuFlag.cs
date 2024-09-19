@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DBLayer.Models.UctovModels
+namespace DBLayer.Models
 {
     public class UniConItemPoklDokladuFlag : Flag
     {

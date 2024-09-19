@@ -10,7 +10,7 @@
             <div class="modal-header d-flex @(ChangeColor ? "custom-modal-header" : "")">
                 <h5 class="modal-title" id="staticBackdropLabel">@Header</h5>
                 <div class="ms-auto">
-                    @if (ButtonPosition)
+                    @if (ButtonPosition && !NoButtons)
                     {
                         @if (!OneButtonOnly)
                         {
@@ -28,7 +28,7 @@
                 @BODY
             </div>
             <div class="modal-footer @(ChangeColor ? "custom-modal-footer" : "")">
-                @if (!ButtonPosition)
+                @if (!ButtonPosition && !NoButtons)
                 {
                     @if (!OneButtonOnly)
                     {
@@ -66,6 +66,12 @@
     /// </summary>
     [Parameter]
     public bool OneButtonOnly { get; set; } = false;
+
+    /// <summary>
+    /// Bez tlačidiel, default false
+    /// </summary>
+    [Parameter]
+    public bool NoButtons { get; set; } = false;
 
     /// <summary>
     /// Nastaví maximálnu veľkosť okna, default 0 -> auto
@@ -125,9 +131,14 @@
     {
         if (tstop)
         {
-            tcs.SetResult(ans); //zastavi fyzické státie programu
+            tcs.TrySetResult(ans); //zastavi fyzické státie programu
         }
         JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('hide');"); //(pomohol som si z internetu tutoriály/AI)
+    }
+
+    public void CloseModalExtern()
+    {
+        CloseModal(true);
     }
 
     public void UpdateText(string newText)
@@ -137,14 +148,14 @@
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter")       //po stlaceni enteru sa vykona akcia Ano
-        {
-            CloseModal(true);
-        }
-        if (e.Key == "Escape")       //po stlaceni escape sa vykona akcia Nie
-        {
-            CloseModal(false);
-        }
+        //if (e.Key == "Enter")       //po stlaceni enteru sa vykona akcia Ano
+        //{
+        //    CloseModal(true);
+        //}
+        //if (e.Key == "Escape")       //po stlaceni escape sa vykona akcia Nie
+        //{
+        //    CloseModal(false);
+        //}
     }
 
 }

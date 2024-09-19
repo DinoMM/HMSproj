@@ -1,0 +1,200 @@
+﻿@namespace UctovnyModul
+@page "/UniConItemy/CRUUniItem"
+@inject CRUUniItemViewModel ViewModel
+@using Microsoft.AspNetCore.Components.Forms
+
+<InfoModal @ref="InfoMod" Text="Zmeny boli uložené." ID="uniinfomod"></InfoModal>
+
+<ItemFinderTable T="string"
+                 @ref="ifttype"
+                 ID="itftype"
+                 ColNames="@(new(){"Typ"})"
+                 ColValues="ViewModel.TypyList()"
+                 SizeInRem="30"></ItemFinderTable>
+
+
+@if (iftpoloz.Rendered && !ViewModel.LoadingZoznam)
+{
+    <ItemFinderTable T="object"
+                     @ref="iftpoloz"
+                     ID="itfpoloz"
+                     ColNames="@ViewModel.GetColNames()"
+                     ColValues="ViewModel.Polozky"
+                     KeyAttributeToo="true"
+                     Header="Výber položky"
+                     SizeInRem="80"
+                     AfterRender="async () => {
+                                      if (await iftpoloz.OpenModal(true))
+                                      {
+                                          ViewModel.SpracujNovuPolozku(iftpoloz.OutSelection.FirstOrDefault());
+                                      }
+                                      await iftpoloz.Dispose();
+                                      StateHasChanged();
+                                  }">
+    </ItemFinderTable>
+}
+
+@if (iftsklad.Rendered)
+{
+<ItemFinderTable T="DBLayer.Models.Sklad"
+                 @ref="iftsklad"
+                 ID="iftsklad"
+                 ColNames="@(new() { "Skratka", "Názov" })"
+                 ColValues="ViewModel.GetSklady()"
+                 SizeInRem="30"
+                 Header="Výber skladu"
+                 KeyAttributeToo="true"
+                 AfterRender="async () => {
+                                    if (await iftsklad.OpenModal(true))
+                                    {
+                                        ViewModel.SpracujSklad(iftsklad.OutSelection.FirstOrDefault());
+                                    }
+                                    await iftsklad.Dispose();
+                                    StateHasChanged();
+                                }"
+                 >
+</ItemFinderTable>
+}
+
+
+<EditForm Model="ViewModel.UniItemInput" OnValidSubmit="() => Save()">
+    <DataAnnotationsValidator />
+
+
+    <div class="container px-5">
+
+        <div class="row g-3 p-3">
+
+            <div class="d-flex justify-content-between">
+                <h2 class="text-center">Položka&nbsp;dokladu</h2>
+            </div>
+            <div class="col">
+
+                <div class="row">
+                    <div class="col col-5">
+                        <label>Typ&nbsp;položky</label>
+                        <input type="text" value="@ViewModel.UniItemInput.GetTypeUni()" disabled class="form-control" />
+                    </div>
+                    <div class="col col-1 d-flex flex-column">
+                        <label>Typ</label>
+                        <BtnFind OnClick="FindTyp" Disabled="ViewModel.Existuje() || ViewModel.LoadingZoznam"></BtnFind>
+                    </div>
+                    <div class="col col-1 d-flex flex-column">
+                        <label>Položka</label>
+                        <BtnFind OnClick="FindCon" Disabled="ViewModel.Existuje()" Loading="ViewModel.LoadingZoznam"></BtnFind>
+                    </div>
+                </div>
+
+                @foreach (var property in ViewModel.GetProperties())
+                {
+                    @switch (Type.GetTypeCode(property.PropertyType))
+                    {
+                        case TypeCode.Int32:
+                        case TypeCode.Int64:
+                        case TypeCode.Double:
+                        case TypeCode.Decimal:
+                            <div class="row">
+                                <div class="col-3">
+                                    <label>@property.Name</label>
+                                    <input type="number" value="@property.GetValue(ViewModel.UniItemInput)" @oninput="(e => OnInputProcess(e, property))" disabled="@ViewModel.IsKeyTypeAttribute(property)" class="form-control" />
+                                </div>
+                            </div>
+                            break;
+                        case TypeCode.String:
+                            <div class="row">
+                                <div class="col col-5">
+                                    <label>@property.Name</label>
+                                    <input type="text" value="@((string)property.GetValue(ViewModel.UniItemInput))" @oninput="(e => OnInputProcess(e, property))" disabled="@ViewModel.IsKeyTypeAttribute(property)" class="form-control" />
+                                </div>
+                            </div>
+                            break;
+
+                        default:
+                            <label>Nepodporovaný typ @property.Name</label>
+
+                            break;
+                    }
+                }
+
+            </div>
+
+        </div>
+
+        <hr>
+        <ValidationSummary />
+        <div class="row pt-2">
+            <div class="col text-center">
+
+                <button type="button" class="btn btn-secondary" @onclick="Close">Zavrieť</button>
+                <SimpleButton ID="ulozbuttonUniItem" Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Pridať", "Uložiť"))" Disabled="ViewModel.LoadingZoznam"></SimpleButton>
+
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+
+    private InfoModal InfoMod = new();
+
+    private ItemFinderTable<string> ifttype = new();
+    private ItemFinderTable<object> iftpoloz = new();
+    private ItemFinderTable<DBLayer.Models.Sklad> iftsklad = new();
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        var founded = objectHolder.Remove<DBLayer.Models.UniConItemPoklDokladu>();   //pokusi sa ziskat objekt z uloziska
+        if (founded != null)
+        {
+            ViewModel.SetItem(founded);
+            return;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            return;
+        }
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public async Task Save()
+    {
+        if (ViewModel.Ulozit())
+        {
+            await InfoMod.OpenModal(true);
+        }
+    }
+
+    public async Task FindTyp()
+    {
+        if (await ifttype.OpenModal(true))
+        {
+            ViewModel.SpravujZmenuTypu(ifttype.OutSelection.FirstOrDefault());
+        }
+    }
+
+    public async Task FindCon()
+    {
+        await ViewModel.LoadPolozky();
+        iftpoloz.StartRender();
+    }
+
+    public void OnInputProcess(ChangeEventArgs e, System.Reflection.PropertyInfo property)
+    {
+        var input = e.Value?.ToString() ?? "";
+        property.SetValue(ViewModel.UniItemInput, Convert.ChangeType(input, property.PropertyType));
+    }
+}

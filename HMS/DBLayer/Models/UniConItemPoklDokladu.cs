@@ -10,13 +10,35 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DBLayer.Models
 {
-    public abstract class UniConItemPoklDokladu
+    public abstract class UniConItemPoklDokladu : ICloneable
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long ID { get; set; }
 
 
+        public abstract string GetID();
+        public abstract string GetTypeUni();
+        public abstract string GetNameUni();
+        public abstract decimal GetCenaUni();
+
+        public abstract object Clone();
+        public abstract UniConItemPoklDokladu Clon();
+        public abstract void SetFrom(UniConItemPoklDokladu item);
+
+
+
+        /// <summary>
+        /// povolene role pre zobrazenie poloziek dokladov
+        /// </summary>
+        [NotMapped]
+        public static List<RolesOwn> ROLE_R_POLOZKY { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.Nakupca, RolesOwn.RCVeduci, RolesOwn.Uctovnik, RolesOwn.Recepcny };
+
+        /// <summary>
+        /// povolene role pre upravu dokladov
+        /// </summary>
+        [NotMapped]
+        public static List<RolesOwn> ROLE_CRUD_POLOZKY { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.Nakupca, RolesOwn.RCVeduci };
 
         /// <summary>
         /// Ak existuje v UniCone, tak vrati inštanciu, inak vytvorí novú a AJ uloží do DB

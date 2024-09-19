@@ -134,6 +134,9 @@ namespace HMS
             #endregion
             #region UctovnyModul
             builder.Services.AddTransient<FakturyViewModel>();
+
+            builder.Services.AddTransient<UniConItemyViewModel>();
+            builder.Services.AddTransient<CRUUniItemViewModel>();
             #endregion
             #region RecepciaModul
             builder.Services.AddTransient<RezervaciaViewModel>();
@@ -143,6 +146,7 @@ namespace HMS
 
             builder.Services.AddTransient<KasaViewModel>();
             builder.Services.AddTransient<PokladnicnyDokladViewModel>();
+            builder.Services.AddTransient<PridatItemDokladuViewModel>();
             #endregion
 
 

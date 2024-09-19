@@ -1,5 +1,6 @@
 ﻿@namespace UniComponents
 @implements IModal
+@inherits DynamicLoadedComponent
 @inject IJSRuntime JSRuntime
 
 
@@ -9,7 +10,7 @@
     <div class="modal-dialog modal-lg" style="@($"max-width:{SizeInRem}rem") ">
         <div class="modal-content">
             <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
-                <div class="col-5 d-flex justify-content-bottom mb-1">
+                <div class="col-3 d-flex justify-content-bottom mb-1">
                     <SearchInput @ref="srchinp" ID="@IDSearch" NumCols="@NumCols" PlaceHolder="Vyhľadaj..." TableID="@IDTable" SearchValue="@SearchedValue"></SearchInput>
                 </div>
                 <div class="modal-title h3 text-dark ms-4" id="staticBackdropLabel">
@@ -309,7 +310,7 @@
                 }
 
                 var propType = item.PropertyType;
-                if (propType == typeof(string) || propType == typeof(int) || propType == typeof(bool) || propType == typeof(double) || propType == typeof(DateTime) || propType == typeof(decimal) || propType.IsEnum)
+                if (propType == typeof(string) || propType == typeof(int) || propType == typeof(bool) || propType == typeof(double) || propType == typeof(DateTime) || propType == typeof(decimal) || propType == typeof(long) || propType.IsEnum)
                 {
 
                     if (propType == typeof(bool))   // pre booleany s atributom

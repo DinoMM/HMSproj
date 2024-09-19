@@ -16,9 +16,17 @@ namespace DBLayer.Models
         [ForeignKey("SkupinaX")]
         public string Skupina { get; set; }
         public PohSkup SkupinaX { get; set; }
+
+        [MinLength(3, ErrorMessage = "Minimálne 3 znaky")]
+        [MaxLength(196, ErrorMessage = "Maximálne 196 znakov")]
         public string? Nazov { get; set; }
+
+        [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty")]
         public double Mnozstvo { get; set; }
+
+        [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty")]
         public double Cena { get; set; }
+
         [NotMapped]
         public double CelkovaCena { get => (double)Mnozstvo * Cena; }
         [NotMapped]

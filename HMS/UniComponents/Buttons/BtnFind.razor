@@ -1,7 +1,13 @@
 ﻿@namespace UniComponents
 
-<a @onclick="OnClick" style="@(Disabled ? " pointer-events: none;" : "" ) ">
-    <i href="#" class="bi bi-box-arrow-in-down btn btn-secondary @(Disabled ? " disabled" : "" )"></i>
+<a @onclick="OnClick" style="@(Disabled || Loading ? " pointer-events: none;" : "" ) ">
+    <i href="#" class="bi bi-box-arrow-in-down btn btn-secondary @(Disabled || Loading ? " disabled" : "" )">
+        @if (Loading)
+        {
+            <SpinnerLoading ExtraSmall="true"></SpinnerLoading>
+        }
+    </i>
+    
 </a>
 
 
@@ -18,6 +24,12 @@
     /// </summary>
     [Parameter]
     public EventCallback OnClick { get; set; } = EventCallback.Empty;
+
+    /// <summary>
+    /// Zobraziť loading spinner a vypne tlačidlo pokiaľ true, Default false
+    /// </summary>
+    [Parameter]
+    public bool Loading { get; set; } = false;
 }
 
 

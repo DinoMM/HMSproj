@@ -1,0 +1,150 @@
+﻿@namespace RecepciaModul
+@inject PridatItemDokladuViewModel ViewModel
+@inherits DynamicLoadedComponent
+
+<EditForm Model="ViewModel.ItemPokladDokladuInput" OnValidSubmit="() => Save()">
+    <DataAnnotationsValidator />
+
+    <div class="container px-5">
+
+        <div class="row g-3 p-3">
+
+            <div class="d-flex justify-content-between">
+                <h2 class="text-center">Položka&nbsp;dokladu</h2>
+            </div>
+            <div class="col">
+
+                <div class="row">
+                    <div class="col col-5">
+                        <label>ID</label>
+                        <input type="text" value="@ViewModel.ItemPokladDokladuInput.UniConItemPoklDokladuX?.GetID()" disabled class="form-control" />
+                    </div>
+                    <div class="col col-1">
+                        <div style="height:24px"></div>
+                        <BtnFind OnClick="FindCon" Disabled="ReadOnly"></BtnFind>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-5">
+                        <label>Názov</label>
+                        <InputText @bind-Value="@ViewModel.ItemPokladDokladuInput.Nazov" disabled="@ReadOnly" placeholder="Názov položky" class="form-control" />
+                        <ValidationMessage For="@(() => ViewModel.ItemPokladDokladuInput.Nazov)" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-2">
+                        <label>Množstvo</label>
+                        <InputNumber @bind-Value="@ViewModel.ItemPokladDokladuInput.Mnozstvo" disabled="@ReadOnly" placeholder="Množstvo" class="form-control" />
+                        <ValidationMessage For="@(() => ViewModel.ItemPokladDokladuInput.Mnozstvo)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-2">
+                        <label>Cena</label>
+                        <InputNumber @bind-Value="@ViewModel.ItemPokladDokladuInput.Cena" disabled="@ReadOnly" placeholder="Cena bez DPH" class="form-control" />
+                        <ValidationMessage For="@(() => ViewModel.ItemPokladDokladuInput.Cena)" />
+                    </div>
+                    <div class="col col-2">
+                        <label>Cena&nbsp;DPH</label>
+                        <input value="@ViewModel.ItemPokladDokladuInput.CenaDPH.ToString("F2")" disabled class="form-control" />
+                    </div>
+                    <div class="col col-2">
+                        <label>Celková&nbsp;suma</label>
+                        <input value="@ViewModel.ItemPokladDokladuInput.CelkovaCena.ToString("F2")" disabled class="form-control" />
+                    </div>
+                    <div class="col col-2">
+                        <label>Celková&nbsp;suma&nbsp;DPH</label>
+                        <input value="@ViewModel.ItemPokladDokladuInput.CelkovaCenaDPH.ToString("F2")" disabled class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-2">
+                        <label>DPH</label>
+                        <InputNumber @bind-Value="@ViewModel.ItemPokladDokladuInput.DPH" disabled="@ReadOnly" placeholder="DPH" class="form-control" />
+                        <ValidationMessage For="@(() => ViewModel.ItemPokladDokladuInput.DPH)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-5">
+                        <label>Typ&nbsp;položky</label>
+                        <input type="text" value="@ViewModel.ItemPokladDokladuInput.UniConItemPoklDokladuX?.GetTypeUni()" disabled class="form-control" />
+                    </div>
+                </div>
+
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        <div class="row pt-2">
+            <div class="col text-center">
+                @if (!ReadOnly)
+                {
+                    <button type="button" class="btn btn-secondary" @onclick="Close">Zavrieť</button>
+                    <SimpleButton ID="ulozbuttonpolozid" Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Pridať", "Uložiť"))"></SimpleButton>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-secondary" @onclick="Close">Zavrieť</button>
+                }
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public string ID { get; set; } = "pridatitemdokladu";
+
+    [EditorRequired]
+    [Parameter]
+    public List<DBLayer.Models.UniConItemPoklDokladu> ZoznamUniConItems { get; set; }
+
+    [Parameter]
+    public bool ReadOnly { get; set; } = false;
+
+    InfoModal infomodal = new();
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        var founded = objectHolder.Remove<DBLayer.Models.ItemPokladDokladu>();
+        if (founded != null)
+        {
+            ViewModel.SetItem(founded);
+        }
+        ViewModel.ZoznamUniConItems = ZoznamUniConItems;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            return;
+        }
+    }
+
+    public async Task Save()
+    {
+        objectHolder.Add(ViewModel.ItemPokladDokladuInput);
+        await Dispose();
+    }
+
+    public async Task Close()  //pre readonly
+    {
+        await Dispose();    //bez zmien itemov
+    }
+
+    public async Task FindCon()
+    {
+
+    }
+}

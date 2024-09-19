@@ -14,6 +14,8 @@ namespace RecepciaModul.ViewModels
         [ObservableProperty]
         ObservableCollection<DBLayer.Models.ItemPokladDokladu> zoznamPoloziek = new();
 
+        public List<DBLayer.Models.UniConItemPoklDokladu> ZoznamUniConItems { get; set; } = new();
+
         public bool NacitavaniePoloziek { get; private set; } = true;
 
         public Kkasa? AktKasa { get; set; } = null;
@@ -63,7 +65,10 @@ namespace RecepciaModul.ViewModels
                     .Include(x => x.UniConItemPoklDokladuX)
                     .Where(x => x.Skupina == PoklDokladInput.ID)
                     .ToListAsync());
+
             }
+            ZoznamUniConItems.Clear();
+            ZoznamUniConItems.AddRange(await _db.UniConItemyPoklDokladu.ToListAsync());
             NacitavaniePoloziek = false;
         }
 
@@ -179,6 +184,7 @@ namespace RecepciaModul.ViewModels
 
 
             _db.SaveChanges();
+            existuje = true;
             return true;
         }
 
@@ -224,6 +230,16 @@ namespace RecepciaModul.ViewModels
         public bool JeNastavenaKasa()
         {
             return AktKasa != null;
+        }
+
+        public void PridatItemDokladu(ItemPokladDokladu item)
+        {
+
+        }
+
+        public void ZmenitItemDokladu(ItemPokladDokladu original, ItemPokladDokladu novy)
+        {
+
         }
     }
 }

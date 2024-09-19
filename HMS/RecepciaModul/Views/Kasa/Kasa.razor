@@ -35,7 +35,7 @@
                 <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
                 <button @onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRU())" class="btn btn-primary">➕Vytvoriť doklad</button>
                 <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary">Otvoriť</button>
-                <button type="button" @onclick="ForceOpenKasa" disabled="@(!ViewModel.ValidateUserKasaR())" class="btn btn-primary">Pokladňa: @(ViewModel.AktlKasa?.ID ?? "-")</button>
+                <button type="button" @onclick="ForceOpenKasa" disabled="@(!ViewModel.ValidateUserKasaR())" class="btn btn-info">Pokladňa: @(ViewModel.AktlKasa?.ID ?? "-")</button>
             </div>
         </div>
 

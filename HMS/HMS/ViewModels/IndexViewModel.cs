@@ -38,6 +38,7 @@ namespace HMS.ViewModels
             modulesList.Add(("Rezervácie", "/Rezervacia", Rezervation.ROLE_R_REZERVACIA));
             modulesList.Add(("Hostia", "/Hostia", Host.ROLE_R_HOSTIA));
             modulesList.Add(("Pokladňa", "/Kasa", DBLayer.Models.Kasa.ROLE_R_KASA.Concat(DBLayer.Models.PokladnicnyDoklad.ROLE_R_POKLDOKL).ToList()));
+            modulesList.Add(("Položky dokladu", "/UniConItemy", UniConItemPoklDokladu.ROLE_R_POLOZKY));
 
 
             if (!CompVyberKasa.checkWhenAppClose)        //zaistenie, ze uzivatel je odpojeny od kasy

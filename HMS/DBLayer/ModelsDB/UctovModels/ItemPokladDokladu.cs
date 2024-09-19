@@ -59,8 +59,8 @@ namespace DBLayer.Models
                     newItemPD.SkupinaX = Skupina;
                     newItemPD.UniConItemPoklDokladu = item.ID;
                     newItemPD.UniConItemPoklDokladuX = item;
-                    newItemPD.Nazov = $"Rezervacia {item.ReservationZ.Room.RoomCategory}" + (item.ReservationZ.Coupon != null ? $", Zľava {item.ReservationZ.Coupon.Discount}%" : "");
-                    newItemPD.DPH = 10;
+                    newItemPD.Nazov = item.GetNameUni();
+                    newItemPD.DPH = 20;
                     break;
 
                 default: return null;
