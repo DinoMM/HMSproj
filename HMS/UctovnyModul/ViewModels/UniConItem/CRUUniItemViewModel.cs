@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DBLayer;
 using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -322,6 +323,13 @@ namespace UctovnyModul.ViewModels
             {
                 return "ID Spojenia";
             }
+            #region pre DisplayAndValueAttribute property, ak existuje, treba doplnit switch keby sa pridavali dalsie
+            var attributeDisplay = property.GetCustomAttributes(typeof(DBLayer.DisplayAndValueAttribute<string, PolozkaSkladuConItemPoklDokladu>), false).FirstOrDefault() as DBLayer.DisplayAndValueAttribute<string, PolozkaSkladuConItemPoklDokladu>;
+            if (attributeDisplay != null)
+            {
+                return attributeDisplay.Display;
+            }
+            #endregion
             return property.Name;
         }
         public void SpracujSklad(Sklad sk)
