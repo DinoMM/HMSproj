@@ -131,7 +131,6 @@ namespace DBLayer.Models
         /// <param name="zoznamPoloziek">Zoznam prijímacích položiek.</param>
         /// <param name="skladdo">Sklad, do ktorého sa majú položky pridať.</param>
         /// <param name="db">Databázový kontext.</param>
-        /// <param name="procedure">Voliteľná procedúra, ktorá sa vykoná pre každú položku, ktorú je možné pridať.</param>
         /// <returns>Zoznam položiek, ktoré nie je možné pridať.</returns>
         public static List<string> MoznoDodat(IEnumerable<PrijemkaPolozka> zoznamPoloziek, Sklad skladdo, in DBContext db)
         {
@@ -304,7 +303,27 @@ namespace DBLayer.Models
             {
                 return true;
             }
+            if (db.PolozkaSkladuMnozstva.Any(x => x.PolozkaSkladu == polozka.ID))
+            {
+                return true;
+            }
             return false;
+        }
+
+        public static List<PolozkaSkladu> GetPoctyZPredaja(Sklad skladZ, DateTime obdobie, in DBContext db)
+        {
+            var predaneItemySpracovane = db.ItemyPokladDokladu
+                .Include(x => x.SkupinaX)
+                .Include(x => x.UniConItemPoklDokladuX)
+                .Where(x => x.SkupinaX.Spracovana)
+                .ToList();
+            var predaneItemyRelevant = predaneItemySpracovane
+                .Where(x => x.UniConItemPoklDokladuX is PolozkaSkladuConItemPoklDokladu 
+                && ((PolozkaSkladuConItemPoklDokladu)x.UniConItemPoklDokladuX).PolozkaSkladuMnozstvaX.Sklad == skladZ.ID 
+                && x.Obdobie == obdobie)
+                .ToList();
+
+            return PolozkaSkladu.ZosumarizujListPoloziek(in predaneItemyRelevant);
         }
 
 

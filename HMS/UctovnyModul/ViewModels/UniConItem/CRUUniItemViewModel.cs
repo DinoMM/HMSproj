@@ -61,6 +61,14 @@ namespace UctovnyModul.ViewModels
                     }
                 }
 
+                if (true)
+                {
+                    if (item.GetCustomAttributes(typeof(HideFromInputAttribute), false).FirstOrDefault() != null)
+                    {
+                        continue;
+                    }
+                }
+
                 var propType = item.PropertyType;
                 if (propType == typeof(string) || propType == typeof(int) || propType == typeof(bool) || propType == typeof(double) || propType == typeof(long) || propType == typeof(DateTime) || propType == typeof(decimal))
                 {

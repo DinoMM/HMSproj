@@ -107,16 +107,13 @@ namespace DBLayer
         }
     }
 
-    //public static class AttributeHelpers
-    //{
-    //    public static string GetID(PolozkaSkladuConItemPoklDokladu instance)
-    //    {
-    //        if (instance is PolozkaSkladuConItemPoklDokladu item)
-    //        {
-    //            return item.GetID();
-    //        }
-    //        throw new ArgumentException("Invalid type", nameof(instance));
-    //    }
-    //}
+    [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
+    public class HideFromInputAttribute : Attribute  
+    {
+        public HideFromInputAttribute()
+        {
+        }
+    }
+
 
 }

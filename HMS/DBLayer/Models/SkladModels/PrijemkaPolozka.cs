@@ -22,9 +22,11 @@ namespace DBLayer.Models
         [NotMapped]
         public double CelkovaCena { get => (double)Mnozstvo * Cena; }
         [NotMapped]
-        public double CenaDPH { get => (Cena * 120) / 100; }
+        public double CenaDPH { get => (double)(100 + DPH) / 100; }
         [NotMapped]
         public double CelkovaCenaDPH { get => (double)Mnozstvo * CenaDPH; }
+        [NotMapped]
+        public decimal DPH { get; set; } = 20;
 
 
         //Pridane
@@ -42,6 +44,7 @@ namespace DBLayer.Models
             Nazov = polozka.Nazov;
             Mnozstvo = polozka.Mnozstvo;
             Cena = polozka.Cena;
+            DPH = polozka.DPH;
         }
 
         public object Clone() {
@@ -52,6 +55,7 @@ namespace DBLayer.Models
             novy.Nazov = Nazov;
             novy.PolozkaSkladu = PolozkaSkladu;
             novy.Skupina = Skupina;
+            novy.DPH = DPH;
 
             novy.SkupinaX = SkupinaX;
             novy.PolozkaSkladuX = PolozkaSkladuX;

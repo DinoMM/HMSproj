@@ -204,6 +204,12 @@ namespace RecepciaModul.ViewModels
             }
             if (await Ulozit())
             {
+                var foundedPd = _db.PokladnicneDoklady.FirstOrDefault(x => x.ID == PoklDokladInput.ID);
+                if (foundedPd == null)
+                {
+                    return new ValidationResult("Pokladnièný doklad neexistuje");
+                }
+                #region spracovanie jednotlivych poloziek pred spracovanim, musi byt vsetko ok
                 foreach (var item in ZoznamPoloziek)
                 {
                     var result = UniConItemPoklDokladu.SpracujItemPD(item, in _db, in _dbw);
@@ -214,16 +220,22 @@ namespace RecepciaModul.ViewModels
                         return result;
                     }
                 }
+                #endregion
+                #region kontrola, èi môžeme vyda množstvo zo skladu
+                var resmnoz = PolozkaSkladuConItemPoklDokladu.ValidateMnozstvo(ZoznamPoloziek.ToList(), in _db);
+                if (resmnoz != ValidationResult.Success)
+                {
+                    _db.ClearPendingChanges();
+                    _dbw.ClearPendingChanges();
+                    return resmnoz;
+                }
+                #endregion
                 PoklDokladInput.Kasa = AktKasa?.ID;
                 PoklDokladInput.KasaX = AktKasa;
                 PoklDokladInput.Spracovana = true;
                 PoklDokladInput.Vznik = DateTime.Now;
 
-                var foundedPd = _db.PokladnicneDoklady.FirstOrDefault(x => x.ID == PoklDokladInput.ID);
-                if (foundedPd == null)
-                {
-                    return new ValidationResult("Pokladnièný doklad neexistuje");
-                }
+                
                 foundedPd.Kasa = AktKasa?.ID;
                 foundedPd.KasaX = AktKasa;
                 foundedPd.Spracovana = true;

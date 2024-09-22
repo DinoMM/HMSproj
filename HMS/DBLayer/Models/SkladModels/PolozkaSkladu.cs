@@ -28,9 +28,11 @@ namespace DBLayer.Models
         [NotMapped]
         public double CelkovaCena { get => (double)Mnozstvo * Cena; }
         [NotMapped]
-        public double CenaDPH { get => (Cena * 120) / 100; }
+        public double CenaDPH { get => (Cena * (double)(100 + DPH)) / 100; }
         [NotMapped]
         public double CelkovaCenaDPH { get => (double)Mnozstvo * CenaDPH; }
+        [NotMapped]
+        public decimal DPH { get; set; } = 20;
 
         public object Clone()       //deep copy
         {
@@ -40,6 +42,7 @@ namespace DBLayer.Models
             clone.MernaJednotka = MernaJednotka;
             clone.Mnozstvo = Mnozstvo;
             clone.Cena = Cena;
+            clone.DPH = DPH;
 
             return clone;
         }
@@ -57,7 +60,8 @@ namespace DBLayer.Models
                 //Nazov = group.First().Nazov,
                 //MernaJednotka = group.First().MernaJednotka,
                 Mnozstvo = group.Sum(x => x.Mnozstvo),
-                Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo)
+                Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo),
+                DPH = group.Sum(x => (decimal)x.DPH * (decimal)x.Mnozstvo) / (decimal)group.Sum(x => x.Mnozstvo)
             })
             .ToList();
         }
@@ -71,7 +75,8 @@ namespace DBLayer.Models
                 //Nazov = group.First().Nazov,
                 //MernaJednotka = group.First().MernaJednotka,
                 Mnozstvo = group.Sum(x => x.Mnozstvo),
-                Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo)
+                Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo),
+                DPH = group.Sum(x => (decimal)x.DPH * (decimal)x.Mnozstvo) / (decimal)group.Sum(x => x.Mnozstvo)
             })
             .ToList();
             if (checkNan) {
@@ -91,7 +96,21 @@ namespace DBLayer.Models
                 //Nazov = group.First().Nazov,
                 //MernaJednotka = group.First().MernaJednotka,
                 Mnozstvo = group.Sum(x => x.Mnozstvo),
-                Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo)
+                Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo),
+                DPH = group.Sum(x => (decimal)x.DPH * (decimal)x.Mnozstvo) / (decimal)group.Sum(x => x.Mnozstvo)
+            })
+            .ToList();
+        }
+
+        public static List<PolozkaSkladu> ZosumarizujListPoloziek(in List<ItemPokladDokladu> polozky)
+        {
+            return polozky.GroupBy(x => ((PolozkaSkladuConItemPoklDokladu)x.UniConItemPoklDokladuX).PolozkaSkladuMnozstvaX.PolozkaSkladu) //spoji duplikaty do unikatneho listu
+            .Select(group => new PolozkaSkladu()
+            {
+                ID = group.Key,
+                Mnozstvo = group.Sum(x => x.Mnozstvo),
+                Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo),
+                DPH = group.Sum(x => (decimal)x.DPH * (decimal)x.Mnozstvo) / (decimal)group.Sum(x => x.Mnozstvo)
             })
             .ToList();
         }

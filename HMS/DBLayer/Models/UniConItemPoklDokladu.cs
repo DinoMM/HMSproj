@@ -121,14 +121,15 @@ namespace DBLayer.Models
                     {
                         return new ValidationResult($"Položka skladu sa nenašla. ({itemPD.UniConItemPoklDokladu})");
                     }
-                    if (Sklad.MoznoVydať(new List<PrijemkaPolozka> {
-                        new PrijemkaPolozka { PolozkaSkladu = foundedItem.PolozkaSkladu, Mnozstvo = itemPD.Mnozstvo } },
-                        foundedItem.SkladX,
-                        SkladObdobie.GetActualObdobieFromSklad(foundedItem.SkladX, in db),
-                        in db).Count != 0)
-                    {
-                        return new ValidationResult($"Nemožno vydať viacej ako je na sklade. ({foundedItem.PolozkaSkladu})");
-                    }
+                    //if (Sklad.MoznoVydať(new List<PrijemkaPolozka> {
+                    //    new PrijemkaPolozka { PolozkaSkladu = foundedItem.PolozkaSkladu, Mnozstvo = itemPD.Mnozstvo } },
+                    //    foundedItem.SkladX,
+                    //    SkladObdobie.GetActualObdobieFromSklad(foundedItem.SkladX, in db),
+                    //    in db).Count != 0)
+                    //{
+                    //    return new ValidationResult($"Nemožno vydať viacej ako je na sklade. ({foundedItem.PolozkaSkladu})");
+                    //}
+                    itemPD.Obdobie = SkladObdobie.GetActualObdobieFromSklad(foundedItem.SkladX, in db);     //nastavenie aktualneho obdobia
                     break;
 
 

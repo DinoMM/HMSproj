@@ -44,6 +44,8 @@ namespace DBLayer.Models
         [DecimalNonNegative(ErrorMessage = "Len kladné hodnoty.")]
         public decimal DPH { get; set; } = 20;
 
+        [HideFromInput]
+        public DateTime? Obdobie { get; set; } = default!;
 
 
         public object Clone()
@@ -58,6 +60,7 @@ namespace DBLayer.Models
             clone.UniConItemPoklDokladu = this.UniConItemPoklDokladu;
             clone.UniConItemPoklDokladuX = this.UniConItemPoklDokladuX;
             clone.DPH = this.DPH;
+            clone.Obdobie = this.Obdobie;
             return clone;
         }
 
@@ -77,6 +80,7 @@ namespace DBLayer.Models
             this.UniConItemPoklDokladu = item.UniConItemPoklDokladu;
             this.UniConItemPoklDokladuX = item.UniConItemPoklDokladuX;
             this.DPH = item.DPH;
+            this.Obdobie = item.Obdobie;
         }
     }
 }

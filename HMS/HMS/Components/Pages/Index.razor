@@ -18,7 +18,7 @@
 @inject UniComponents.Services.IAppLifeCycleService AppLifecycleService
 @implements IDisposable
 
-@*@inject DBContext db*@
+@inject DBContext db
 @*bez scrolovania style*@
 <style>
     body {
@@ -84,7 +84,6 @@ else
             Navigator.NavigateTo("/Login");
             return;
         }
-
 
     }
 
