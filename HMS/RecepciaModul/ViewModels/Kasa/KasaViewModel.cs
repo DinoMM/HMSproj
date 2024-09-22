@@ -17,10 +17,6 @@ namespace RecepciaModul.ViewModels
 
         public DBLayer.Models.Kasa? AktlKasa { get; set; } = null;
 
-
-
-
-
         private readonly DBContext _db;
         private readonly UserService _userService;
         private readonly IJSRuntime _jsRuntime;
@@ -56,7 +52,7 @@ namespace RecepciaModul.ViewModels
             await NacitajKasy();
             ZoznamBlockov = new(await _db.PokladnicneDoklady
                 .Include(x => x.KasaX)
-                .OrderBy(x => x.Vznik)
+                .OrderByDescending(x => x.Vznik)
                 .ToListAsync());
             NacitavaniePoloziek = false;
         }

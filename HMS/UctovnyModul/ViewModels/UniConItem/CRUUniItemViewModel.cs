@@ -70,31 +70,30 @@ namespace UctovnyModul.ViewModels
             return propRet.ToArray();
         }
 
-        public Expression<Func<T, object>> GetPropertyExpression<T>(string propertyName)
-        {
-            var parameter = Expression.Parameter(typeof(T), "x");
-            var property = Expression.Property(parameter, propertyName);
-            var conversion = Expression.Convert(property, typeof(object));
-            return Expression.Lambda<Func<T, object>>(conversion, parameter);
-        }
-
         public bool IsKeyTypeAttribute(PropertyInfo prop)
         {
-            if (prop.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.Schema.ForeignKeyAttribute), false).FirstOrDefault() != null)
+            if (IsForeignKeyAttribute(prop))
             {
                 return true;
             }
 
-            if (prop.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.KeyAttribute), false).FirstOrDefault() != null)
+            if (IsKeyAttribute(prop))
             {
                 return true;
             }
 
-            if (prop.GetCustomAttributes(typeof(IsForeignKeyRezervationAttribute), false).FirstOrDefault() != null)
-            {
-                return true;
-            }
             return false;
+        }
+
+        public bool IsKeyAttribute(PropertyInfo prop)
+        {
+            return prop.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.KeyAttribute), false).FirstOrDefault() != null;
+        }
+
+        public bool IsForeignKeyAttribute(PropertyInfo prop)
+        {
+            return prop.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.Schema.ForeignKeyAttribute), false).FirstOrDefault() != null
+              || prop.GetCustomAttributes(typeof(IsForeignKeyRezervationAttribute), false).FirstOrDefault() != null;
         }
 
         public List<string> TypyList()
@@ -146,13 +145,22 @@ namespace UctovnyModul.ViewModels
                     switch (UniItemInput)
                     {
                         case PolozkaSkladuConItemPoklDokladu item:
-                            var lista = _db.PolozkySkladu.ToList();
-                            foreach (var ytem in lista)
+                            //var lista = _db.PolozkySkladu.ToList();
+                            var lista = _db.PolozkaSkladuMnozstva
+                            .Include(x => x.PolozkaSkladuX)
+                            .Include(x => x.SkladX)
+                            .ToList();
+                            var listaa = _db.PolozkySkladuConItemPoklDokladu
+                                .Include(x => x.PolozkaSkladuMnozstvaX)
+                                .Select(x => x.PolozkaSkladuMnozstvaX)
+                                .ToList();
+                            foreach (var ytem in listaa)
                             {
-                                if (!_db.PolozkySkladuConItemPoklDokladu.Any(x => x.PolozkaSkladu == ytem.ID))
-                                {
-                                    Polozky.Add(ytem);
-                                }
+                                lista.Remove(ytem);
+                            }
+                            foreach (var ytem in lista.Select(x => x.PolozkaSkladuX).Distinct())
+                            {
+                                Polozky.Add(ytem);
                             }
                             break;
                         case ReservationConItemPoklDokladu item:
@@ -198,11 +206,11 @@ namespace UctovnyModul.ViewModels
             switch (UniItemInput)
             {
                 case PolozkaSkladuConItemPoklDokladu item:
-                    ((PolozkaSkladuConItemPoklDokladu)UniItemInput).PolozkaSkladu = ((PolozkaSkladu)polozka).ID;
-                    ((PolozkaSkladuConItemPoklDokladu)UniItemInput).PredajnaCena = (decimal)((PolozkaSkladu)polozka).Cena;
+                    item.PolozkaSkladuMnozstvaX.PolozkaSkladu = ((PolozkaSkladu)polozka).ID;
+                    item.PredajnaCena = (decimal)((PolozkaSkladu)polozka).Cena;
                     break;
                 case ReservationConItemPoklDokladu item:
-                    ((ReservationConItemPoklDokladu)UniItemInput).Reservation = ((Rezervation)polozka).Id;
+                    item.Reservation = ((Rezervation)polozka).Id;
                     break;
 
                 default: break;
@@ -214,13 +222,15 @@ namespace UctovnyModul.ViewModels
             switch (UniItemInput)       //kontrola FK
             {
                 case PolozkaSkladuConItemPoklDokladu item:
-                    if (string.IsNullOrEmpty(((PolozkaSkladuConItemPoklDokladu)UniItemInput).PolozkaSkladu))
+                    if (string.IsNullOrEmpty(item.PolozkaSkladuMnozstvaX.PolozkaSkladu)
+                        || string.IsNullOrEmpty(item.PolozkaSkladuMnozstvaX.Sklad)
+                        )
                     {
                         return false;
                     }
                     break;
                 case ReservationConItemPoklDokladu item:
-                    if (((ReservationConItemPoklDokladu)UniItemInput).Reservation == 0)
+                    if (item.Reservation == 0)
                     {
                         return false;
                     }
@@ -230,7 +240,24 @@ namespace UctovnyModul.ViewModels
 
             if (!Existuje())
             {
-                _db.Add(UniItemInput);
+                switch (UniItemInput)       //najdenie potrebnych FK
+                {
+                    case PolozkaSkladuConItemPoklDokladu item:
+                        var founded = _db.PolozkaSkladuMnozstva.FirstOrDefault(x =>
+                        x.PolozkaSkladu == item.PolozkaSkladuMnozstvaX.PolozkaSkladu
+                        && x.Sklad == item.PolozkaSkladuMnozstvaX.Sklad);
+
+                        if (founded == null)
+                        {
+                            return false;
+                        }
+                        item.PolozkaSkladuMnozstva = founded.ID;
+                        item.PolozkaSkladuMnozstvaX = founded;
+                        break;
+                    default: break;
+                }
+
+                _db.UniConItemyPoklDokladu.Add(UniItemInput);
             }
             else
             {
@@ -253,16 +280,59 @@ namespace UctovnyModul.ViewModels
             switch (UniItemInput)
             {
                 case PolozkaSkladuConItemPoklDokladu item:
-                    return _db.PolozkaSkladuMnozstva.Include(x => x.SkladX).Where(x => x.ID == UniItemInput.ID).Select(x => x.SkladX).Distinct().ToList();
-                    break;
+                    var list = _db.PolozkaSkladuMnozstva
+                        .Include(x => x.SkladX)
+                        .Where(x => x.PolozkaSkladu == item.PolozkaSkladuMnozstvaX.PolozkaSkladu)
+                        .ToList();
+                    var listt = _db.PolozkySkladuConItemPoklDokladu
+                        .Include(x => x.PolozkaSkladuMnozstvaX)
+                        .Where(x => x.PolozkaSkladuMnozstvaX.PolozkaSkladu == item.PolozkaSkladuMnozstvaX.PolozkaSkladu)
+                        .ToList();
+                    var listtt = new List<Sklad>();
+                    foreach (var ytem in list)
+                    {
+                        if (!listt.Any(x => x.PolozkaSkladuMnozstvaX.PolozkaSkladu == item.PolozkaSkladuMnozstvaX.PolozkaSkladu &&
+                        ytem.Sklad == x.PolozkaSkladuMnozstvaX.Sklad))
+                        {
+                            listtt.Add(ytem.SkladX);
+                        }
+                    }
+                    return listtt.Distinct().ToList();
 
                 default: return new();
             }
         }
 
+        public PropertyInfo GetIdIfKey(PropertyInfo property)
+        {
+            if (IsForeignKeyAttribute(property))       //frkey ID moze byt ine
+            {
+                return new StringPropertyInfo(property.Name, UniItemInput.GetID());
+            }
+            return property;
+        }
+
+        public string GetName(PropertyInfo property)
+        {
+            if (IsForeignKeyAttribute(property))
+            {
+                return UniItemInput.GetTypeUni();
+            }
+            if (IsKeyAttribute(property))
+            {
+                return "ID Spojenia";
+            }
+            return property.Name;
+        }
         public void SpracujSklad(Sklad sk)
         {
-                
+            switch (UniItemInput)
+            {
+                case PolozkaSkladuConItemPoklDokladu item:
+                    item.PolozkaSkladuMnozstvaX.Sklad = sk.ID;
+                    break;
+                default: break;
+            }
         }
     }
 }

@@ -325,6 +325,16 @@
                         }
                     }
 
+                    var attributeDisplay = item.GetCustomAttributes(typeof(DBLayer.DisplayAndValueAttribute<string, T>), false).FirstOrDefault() as DBLayer.DisplayAndValueAttribute<string, T>;
+                    if (attributeDisplay != null)
+                    {
+                        var res = attributeDisplay.GetValue((T)obj);
+                        if (res != null)
+                        {
+                            propRet.Add(new StringPropertyInfo(item.Name, res));
+                            continue;
+                        }
+                    }
 
                     propRet.Add(item);
                     continue;

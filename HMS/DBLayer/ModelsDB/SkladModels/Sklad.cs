@@ -42,7 +42,7 @@ namespace DBLayer.Models
         public static List<RolesOwn> ROLE_CRUD_SKLAD { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Nakupca };
 
         /// <summary>
-        /// Prejde zoznam prijímacích položiek a zistí, či je možné ich prijať.
+        /// Prejde zoznam prijímacích položiek a zistí, či je možné ich vydať.
         /// </summary>
         /// <param name="zoznamPoloziek">Zoznam prijímacích položiek.</param>
         /// <param name="skld">Sklad, z ktorého sa má vydať.</param>

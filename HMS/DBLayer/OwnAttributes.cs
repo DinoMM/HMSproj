@@ -1,7 +1,9 @@
-﻿using System;
+﻿using DBLayer.Models;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,7 +17,7 @@ namespace DBLayer
             if (value == null)
             {
                 return new ValidationResult(ErrorMessage ?? "Null.", ContextMemberNames);
-                
+
             }
 
             if (!(value is decimal decNum))
@@ -74,5 +76,47 @@ namespace DBLayer
         }
     }
 
+    [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
+    public class DisplayAndValueAttribute<TResult, TypeClass> : Attribute
+    {
+        public string Display { get; }
+        //public Func< TResult> Value { get; }
+        public bool GetID { get; }
+
+        public DisplayAndValueAttribute(string display, bool getid = false/*, Func< TResult> value*/)
+        {
+            Display = display;
+            GetID = getid;
+            //Value = value;
+        }
+
+        public TResult? GetValue(TypeClass instance)
+        {
+            if (!GetID)
+            {
+                return default(TResult);
+            }
+            Type type = instance.GetType();
+            MethodInfo methodInfo = type.GetMethod("GetID");
+
+            if (methodInfo != null)
+            {
+                return (TResult?)methodInfo.Invoke(instance, null);
+            }
+            return default(TResult);
+        }
+    }
+
+    //public static class AttributeHelpers
+    //{
+    //    public static string GetID(PolozkaSkladuConItemPoklDokladu instance)
+    //    {
+    //        if (instance is PolozkaSkladuConItemPoklDokladu item)
+    //        {
+    //            return item.GetID();
+    //        }
+    //        throw new ArgumentException("Invalid type", nameof(instance));
+    //    }
+    //}
 
 }

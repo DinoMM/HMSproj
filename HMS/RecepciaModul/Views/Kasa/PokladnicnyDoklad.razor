@@ -9,6 +9,12 @@
 <InfoModal @ref="infomodal" ID="@(ID + "infomodal")" Text="Zmeny boli uložené">
 </InfoModal>
 
+<InfoModal @ref="infomodalbad" ID="@(ID + "infomodalbad")" Text="Nemožno pridať túto položku do zoznamu.">
+</InfoModal>
+
+<InfoModal @ref="infomodalerror" ID="@(ID + "infomodalerror")" Text="Nemožno uložiť.">
+</InfoModal>
+
 <CustomModal @ref="custommodal"
              ID="@(ID + "custommodal")"
              NoButtons="true"
@@ -28,22 +34,38 @@
                                             await custommodal.OpenModal(true);
                                             }"
                                AfterDispose=" async () =>
-                                          {
-                                              var founded = objectHolder.Remove<DBLayer.Models.ItemPokladDokladu>();
-                                              if (founded != null)
                                               {
-                                                  if (marked == null)
+                                                  var founded = objectHolder.Remove<DBLayer.Models.ItemPokladDokladu>();
+                                                  if (founded != null)
                                                   {
-                                                      ViewModel.PridatItemDokladu(founded);
+                                                      var cont = true;
+                                                      if (ViewModel.KontrolaOnlyOne(founded))
+                                                      {
+                                                          if (!ViewModel.MoznoUlozitOnlyOne(founded))
+                                                          {
+                                                              await infomodalbad.OpenModal(false);
+                                                              cont = false;
+                                                          } 
+                                                          else 
+                                                          {
+                                                          OnlyOneItem = true;
+                                                          }
+                                                      }
+                                                      if (cont)
+                                                      {
+                                                          if (marked == null)
+                                                          {
+                                                              ViewModel.PridatItemDokladu(founded);
+                                                          }
+                                                          else
+                                                          {
+                                                              ViewModel.ZmenitItemDokladu(marked, founded);
+                                                          }
+                                                      }
                                                   }
-                                                  else
-                                                  {
-                                                      ViewModel.ZmenitItemDokladu(marked, founded);
-                                                  }
-                                              }
-                                              custommodal.CloseModalExtern();
-                                              StateHasChanged();
-                                          }">
+                                                  custommodal.CloseModalExtern();
+                                                  StateHasChanged();
+                                              }">
 
             </PridatItemDokladu>
         }
@@ -146,12 +168,12 @@
                             {
                                 <tr @ondblclick="() =>OpenItem(item)" @onclick="() => marked = item" class="@(marked == item ? "selected-row" : "")" style="cursor: pointer;">
                                     <td class="col-resize">@item.Nazov</td>
-                                    <td class="col-resize">@item.Mnozstvo</td>
+                                    <td class="col-resize">@item.Mnozstvo.ToString("F3")</td>
                                     <td class="col-resize">@item.Cena.ToString("F3")</td>
-                                    <td class="col-resize">@item.DPH</td>
-                                    <td class="col-resize">@item.CenaDPH</td>
-                                    <td class="col-resize">@item.CelkovaCena</td>
-                                    <td class="col-resize">@item.CelkovaCenaDPH</td>
+                                    <td class="col-resize">@item.DPH.ToString("F3")</td>
+                                    <td class="col-resize">@item.CenaDPH.ToString("F3")</td>
+                                    <td class="col-resize">@item.CelkovaCena.ToString("F3")</td>
+                                    <td class="col-resize">@item.CelkovaCenaDPH.ToString("F3")</td>
                                     <td>
                                         <ButtonRemove Disabled="@(!ViewModel.ValidateUserD() || ReadOnly || OnlyOneItem)" OnClick="@(() => DeleteItem(item))">
                                         </ButtonRemove>
@@ -197,6 +219,8 @@
     public bool ReadOnly { get; set; } = false;
 
     private InfoModal infomodal = new();
+    private InfoModal infomodalbad = new();
+    private InfoModal infomodalerror = new();
     private ApproveModal approvmod = new();
     private CustomModal custommodal = new();
 
@@ -267,7 +291,6 @@
         }
     }
 
-
     public void Close()
     {
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
@@ -290,28 +313,34 @@
         {
             return;
         }
-
+        objectHolder.Add(item);
         marked = item;
         pridatitem.StartRender();
     }
 
     public void DeleteItem(DBLayer.Models.ItemPokladDokladu item)
     {
-        ViewModel.ZoznamPoloziek.Remove(item);
+        if (ViewModel.MoznoVymazat(item))
+        {
+            ViewModel.Vymazat(item);
+        }
     }
 
     public async Task Buy()
     {
         if (await approvmod.OpenModal(true))
         {
-            if (await ViewModel.Predat())
+            var result = await ViewModel.Predat();
+            if (result == System.ComponentModel.DataAnnotations.ValidationResult.Success)
             {
                 infomodal.UpdateText("Doklad bol zaplatený");
+                ReadOnly = true;
                 await infomodal.OpenModal(true);
+                infomodal.UpdateText("Zmeny boli uložené");
             }
             else
             {
-                infomodal.UpdateText("V doklade je chyba, skontrolujte položky");
+                infomodalerror.UpdateText($"V doklade je chyba, skontrolujte:<br>{result.ErrorMessage}");
                 await infomodal.OpenModal(true);
             }
         }

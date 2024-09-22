@@ -37,7 +37,8 @@ namespace UctovnyModul.ViewModels
         {
             ZoznamPoloziek = new(await _db.UniConItemyPoklDokladu
                 .OrderByDescending(x => x.ID)
-                .Include(x => ((PolozkaSkladuConItemPoklDokladu)x).PolozkaSkladuX)
+                .Include(x => ((PolozkaSkladuConItemPoklDokladu)x).PolozkaSkladuMnozstvaX)
+                .Include(x => ((PolozkaSkladuConItemPoklDokladu)x).PolozkaSkladuMnozstvaX.PolozkaSkladuX)
                 .ToListAsync());
             var polozkyRes = ZoznamPoloziek.Where(x => x is ReservationConItemPoklDokladu).Select(x => ((ReservationConItemPoklDokladu)x)).ToList();
             foreach (var item in polozkyRes)

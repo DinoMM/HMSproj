@@ -21,10 +21,12 @@ namespace DBLayer.Models
         public abstract string GetTypeUni();
         public abstract string GetNameUni();
         public abstract decimal GetCenaUni();
+        public abstract decimal GetDPHUni();
 
         public abstract object Clone();
         public abstract UniConItemPoklDokladu Clon();
         public abstract void SetFrom(UniConItemPoklDokladu item);
+        public abstract bool JeItemOnlyOneTyp();
 
 
 
@@ -87,12 +89,12 @@ namespace DBLayer.Models
         /// <param name="db"></param>
         /// <param name="dbw"></param>
         /// <returns></returns>
-        public static bool SpracujItemPD(ItemPokladDokladu itemPD, in DBContext db, in DataContext dbw)
+        public static ValidationResult SpracujItemPD(ItemPokladDokladu itemPD, in DBContext db, in DataContext dbw)
         {
             var founded = db.UniConItemyPoklDokladu.FirstOrDefault(x => x.ID == itemPD.UniConItemPoklDokladu);
             if (founded == null)
             {
-                return false;
+                return new ValidationResult($"Zvolená položka nemá spojenie. ({itemPD.UniConItemPoklDokladu})");
             }
             switch (founded)
             {
@@ -101,7 +103,7 @@ namespace DBLayer.Models
                         .FirstOrDefault(x => x.Id == item.Reservation);
                     if (founded == null)
                     {
-                        return false;
+                        return new ValidationResult($"Rezervácia sa nenašla. ({itemPD.UniConItemPoklDokladu})");
                     }
                     if (foundedRes.Status == ReservationStatus.SchvalenaNezaplatena.ToString())
                     {
@@ -109,12 +111,30 @@ namespace DBLayer.Models
                     }
                     else
                     {
-                        return false;
+                        return new ValidationResult($"Rezervácia nie je SchvalenaNezaplatena. ({foundedRes.Id})");
                     }
                     break;
-                default: return true;
+                case PolozkaSkladuConItemPoklDokladu item:
+                    var foundedItem = db.PolozkaSkladuMnozstva
+                        .FirstOrDefault(x => x.ID == item.PolozkaSkladuMnozstva);
+                    if (foundedItem == null)
+                    {
+                        return new ValidationResult($"Položka skladu sa nenašla. ({itemPD.UniConItemPoklDokladu})");
+                    }
+                    if (Sklad.MoznoVydať(new List<PrijemkaPolozka> {
+                        new PrijemkaPolozka { PolozkaSkladu = foundedItem.PolozkaSkladu, Mnozstvo = itemPD.Mnozstvo } },
+                        foundedItem.SkladX,
+                        SkladObdobie.GetActualObdobieFromSklad(foundedItem.SkladX, in db),
+                        in db).Count != 0)
+                    {
+                        return new ValidationResult($"Nemožno vydať viacej ako je na sklade. ({foundedItem.PolozkaSkladu})");
+                    }
+                    break;
+
+
+                default: return new ValidationResult($"Nie je naimplementovaná kontrola v UniCon. ({itemPD.UniConItemPoklDokladu})"); 
             }
-            return true;
+            return ValidationResult.Success;
         }
 
         /// <summary>
@@ -140,5 +160,8 @@ namespace DBLayer.Models
             }
             return false;
         }
+
+
+
     }
 }

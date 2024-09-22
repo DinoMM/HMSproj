@@ -27,6 +27,13 @@
                                       if (await iftpoloz.OpenModal(true))
                                       {
                                           ViewModel.SpracujNovuPolozku(iftpoloz.OutSelection.FirstOrDefault());
+                                          switch (ViewModel.UniItemInput)
+                                          {
+                                              case DBLayer.Models.PolozkaSkladuConItemPoklDokladu item:
+                                                  iftsklad.StartRender();
+                                                  break;
+                                              default: break;
+                                          }
                                       }
                                       await iftpoloz.Dispose();
                                       StateHasChanged();
@@ -36,24 +43,23 @@
 
 @if (iftsklad.Rendered)
 {
-<ItemFinderTable T="DBLayer.Models.Sklad"
-                 @ref="iftsklad"
-                 ID="iftsklad"
-                 ColNames="@(new() { "Skratka", "Názov" })"
-                 ColValues="ViewModel.GetSklady()"
-                 SizeInRem="30"
-                 Header="Výber skladu"
-                 KeyAttributeToo="true"
-                 AfterRender="async () => {
+    <ItemFinderTable T="DBLayer.Models.Sklad"
+                     @ref="iftsklad"
+                     ID="iftsklad"
+                     ColNames="@(new() { "Skratka", "Názov" })"
+                     ColValues="ViewModel.GetSklady()"
+                     SizeInRem="30"
+                     Header="Výber skladu"
+                     KeyAttributeToo="true"
+                     AfterRender="async () => {
                                     if (await iftsklad.OpenModal(true))
                                     {
                                         ViewModel.SpracujSklad(iftsklad.OutSelection.FirstOrDefault());
                                     }
                                     await iftsklad.Dispose();
                                     StateHasChanged();
-                                }"
-                 >
-</ItemFinderTable>
+                                }">
+    </ItemFinderTable>
 }
 
 
@@ -66,7 +72,7 @@
         <div class="row g-3 p-3">
 
             <div class="d-flex justify-content-between">
-                <h2 class="text-center">Položka&nbsp;dokladu</h2>
+                <h2 class="text-center">Predloha&nbsp;položky&nbsp;dokladu</h2>
             </div>
             <div class="col">
 
@@ -87,24 +93,39 @@
 
                 @foreach (var property in ViewModel.GetProperties())
                 {
-                    @switch (Type.GetTypeCode(property.PropertyType))
+                    var propKey = ViewModel.GetIdIfKey(property);
+                    @switch (Type.GetTypeCode(propKey.PropertyType))
                     {
-                        case TypeCode.Int32:
                         case TypeCode.Int64:
+                        case TypeCode.Int32:
+                            <div class="row">
+                                <div class="col-3">
+                                    <label>@ViewModel.GetName(property)</label>
+                                    <input type="number" value="@(propKey.GetValue(ViewModel.UniItemInput))" @oninput="(e => OnInputProcess(e, property))" disabled="@ViewModel.IsKeyTypeAttribute(property)" class="form-control" />
+                                </div>
+                            </div>
+                            break;
                         case TypeCode.Double:
+                            <div class="row">
+                                <div class="col-3">
+                                    <label>@ViewModel.GetName(property)</label>
+                                    <input type="number" step="0.01" value="@((double)property.GetValue(ViewModel.UniItemInput))" @oninput="(e => OnInputProcess(e, property))" disabled="@ViewModel.IsKeyTypeAttribute(property)" class="form-control" />
+                                </div>
+                            </div>
+                            break;
                         case TypeCode.Decimal:
                             <div class="row">
                                 <div class="col-3">
-                                    <label>@property.Name</label>
-                                    <input type="number" value="@property.GetValue(ViewModel.UniItemInput)" @oninput="(e => OnInputProcess(e, property))" disabled="@ViewModel.IsKeyTypeAttribute(property)" class="form-control" />
+                                    <label>@ViewModel.GetName(property)</label>
+                                    <input type="number" step="0.01" value="@(ParseDecimal(propKey.GetValue(ViewModel.UniItemInput)))" @oninput="(e => OnInputProcess(e, propKey))" disabled="@ViewModel.IsKeyTypeAttribute(property)" class="form-control" />
                                 </div>
                             </div>
                             break;
                         case TypeCode.String:
                             <div class="row">
                                 <div class="col col-5">
-                                    <label>@property.Name</label>
-                                    <input type="text" value="@((string)property.GetValue(ViewModel.UniItemInput))" @oninput="(e => OnInputProcess(e, property))" disabled="@ViewModel.IsKeyTypeAttribute(property)" class="form-control" />
+                                    <label>@ViewModel.GetName(property)</label>
+                                    <input type="text" value="@((string?)propKey.GetValue(ViewModel.UniItemInput) ?? "")" @oninput="(e => OnInputProcess(e, property))" disabled="@ViewModel.IsKeyTypeAttribute(property)" class="form-control" />
                                 </div>
                             </div>
                             break;
@@ -176,6 +197,10 @@
         {
             await InfoMod.OpenModal(true);
         }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("addStyleClassUntilClick", "ulozbuttonUniItem", "btn-danger");
+        }
     }
 
     public async Task FindTyp()
@@ -195,6 +220,25 @@
     public void OnInputProcess(ChangeEventArgs e, System.Reflection.PropertyInfo property)
     {
         var input = e.Value?.ToString() ?? "";
-        property.SetValue(ViewModel.UniItemInput, Convert.ChangeType(input, property.PropertyType));
+        if (property.PropertyType == typeof(decimal))
+        {
+            if (decimal.TryParse(input, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var result))
+            {
+                property.SetValue(ViewModel.UniItemInput, result);
+            }
+        }
+        else
+        {
+            property.SetValue(ViewModel.UniItemInput, Convert.ChangeType(input, property.PropertyType));
+        }
+    }
+
+    private string ParseDecimal(object value)
+    {
+        if (value is decimal decimalValue)
+        {
+            return decimalValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+        return Convert.ToDecimal(value).ToString(System.Globalization.CultureInfo.InvariantCulture);
     }
 }

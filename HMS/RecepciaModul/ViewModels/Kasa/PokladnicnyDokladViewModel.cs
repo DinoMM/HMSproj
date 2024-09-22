@@ -4,6 +4,7 @@ using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using Kkasa = DBLayer.Models.Kasa;
 using PpokladnicnyDoklad = DBLayer.Models.PokladnicnyDoklad;
 
@@ -67,19 +68,26 @@ namespace RecepciaModul.ViewModels
                     .ToListAsync());
 
             }
+
             ZoznamUniConItems.Clear();
-            ZoznamUniConItems.AddRange(await _db.UniConItemyPoklDokladu.ToListAsync());
+            ZoznamUniConItems.AddRange(await _db.PolozkySkladuConItemPoklDokladu
+                .Include(x => x.PolozkaSkladuMnozstvaX)
+                .Include(x => x.PolozkaSkladuMnozstvaX.PolozkaSkladuX)
+                .Include(x => x.PolozkaSkladuMnozstvaX.SkladX)
+                .ToListAsync());
+            ZoznamUniConItems.AddRange(await _db.ReservationConItemyPoklDokladu.ToListAsync());
+
             NacitavaniePoloziek = false;
         }
 
         public bool MoznoVymazat(ItemPokladDokladu item)
         {
-            return false;
+            return true;
         }
 
         public void Vymazat(ItemPokladDokladu item)
         {
-
+            ZoznamPoloziek.Remove(item);
         }
 
         public bool SetPoklDokl(PpokladnicnyDoklad item)
@@ -188,21 +196,22 @@ namespace RecepciaModul.ViewModels
             return true;
         }
 
-        public async Task<bool> Predat()
+        public async Task<ValidationResult> Predat()
         {
             if (!JeNastavenaKasa())
             {
-                return false;
+                return new ValidationResult("Nie je nastavená kasa.");
             }
             if (await Ulozit())
             {
                 foreach (var item in ZoznamPoloziek)
                 {
-                    if (!UniConItemPoklDokladu.SpracujItemPD(item, in _db, in _dbw))
+                    var result = UniConItemPoklDokladu.SpracujItemPD(item, in _db, in _dbw);
+                    if (result != ValidationResult.Success)
                     {
                         _dbw.ClearPendingChanges();
                         _db.ClearPendingChanges();
-                        return false;
+                        return result;
                     }
                 }
                 PoklDokladInput.Kasa = AktKasa?.ID;
@@ -213,7 +222,7 @@ namespace RecepciaModul.ViewModels
                 var foundedPd = _db.PokladnicneDoklady.FirstOrDefault(x => x.ID == PoklDokladInput.ID);
                 if (foundedPd == null)
                 {
-                    return false;
+                    return new ValidationResult("Pokladnièný doklad neexistuje");
                 }
                 foundedPd.Kasa = AktKasa?.ID;
                 foundedPd.KasaX = AktKasa;
@@ -222,9 +231,9 @@ namespace RecepciaModul.ViewModels
                 _db.SaveChanges();
                 _dbw.SaveChanges();
                 await _sessionStorage.SetItemAsync("UniconChanged", true);
-                return true;
+                return ValidationResult.Success;
             }
-            return false;
+            return new ValidationResult("Uloženie dokladu neprebehlo úspešne, skontrolujte doklad.");
         }
 
         public bool JeNastavenaKasa()
@@ -234,12 +243,38 @@ namespace RecepciaModul.ViewModels
 
         public void PridatItemDokladu(ItemPokladDokladu item)
         {
-
+            item.Skupina = PoklDokladInput.ID;
+            ZoznamPoloziek.Add(item);
         }
 
         public void ZmenitItemDokladu(ItemPokladDokladu original, ItemPokladDokladu novy)
         {
+            ZoznamPoloziek.Remove(original);
+            PridatItemDokladu(novy);
+        }
 
+        public bool KontrolaOnlyOne(ItemPokladDokladu item)
+        {
+            return item.UniConItemPoklDokladuX.JeItemOnlyOneTyp();
+        }
+
+        public bool MoznoUlozitOnlyOne(ItemPokladDokladu item)
+        {
+            if (ZoznamPoloziek.Count == 0)
+            {
+                return true;
+            }
+
+            if (ZoznamPoloziek.Count > 1)
+            {
+                return false;
+            }
+
+            if (ZoznamPoloziek[0].UniConItemPoklDokladuX.GetType() == item.UniConItemPoklDokladuX.GetType())
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

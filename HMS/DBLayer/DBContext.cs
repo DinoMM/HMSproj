@@ -168,7 +168,7 @@ namespace DBLayer
             .IsUnique();
 
             modelBuilder.Entity<PolozkaSkladuConItemPoklDokladu>()
-            .HasIndex(e => e.PolozkaSkladu)
+            .HasIndex(e => e.PolozkaSkladuMnozstva)
             .IsUnique();
         }
 

@@ -66,5 +66,15 @@ namespace DBLayer.Models
                 throw new InvalidCastException("Nemožno skopírovat z ineho typu ako ReservationConItemPoklDokladu");
             }
         }
+
+        public override bool JeItemOnlyOneTyp()
+        {
+            return true;
+        }
+
+        public override decimal GetDPHUni()
+        {
+            return 10;
+        }
     }
 }
