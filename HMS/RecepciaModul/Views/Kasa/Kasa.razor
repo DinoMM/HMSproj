@@ -36,6 +36,10 @@
                 <button @onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRU())" class="btn btn-primary">➕Vytvoriť doklad</button>
                 <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary">Otvoriť</button>
                 <button type="button" @onclick="ForceOpenKasa" disabled="@(!ViewModel.ValidateUserKasaR())" class="btn btn-info">Pokladňa: @(ViewModel.AktlKasa?.ID ?? "-")</button>
+                @if (ViewModel.ValidateUserKasaCRUD())
+                {
+                    <button type="button" @onclick="CreateKasa" class="btn btn-primary">Správa&nbsp;pokladní</button>
+                }
             </div>
         </div>
 
@@ -207,5 +211,10 @@
         forceask = true;
         await ViewModel.NacitajKasy();
         vyberkasamod.StartRender();
+    }
+
+    public void CreateKasa()
+    {
+        Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDKasa"));
     }
 }

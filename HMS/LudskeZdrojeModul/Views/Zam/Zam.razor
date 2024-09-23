@@ -38,18 +38,18 @@
         <div class="col-12" style="max-height: 30rem;overflow: auto;">
             <SimpleTable ID="tableid">
                 <THEAD>
-
-                <th class="col-resize" scope="col">Meno</th>
-                <th class="col-resize" scope="col">Priezvisko</th>
-                <th class="col-resize" scope="col">Email</th>
-                <th class="col-resize" scope="col">Telefón</th>
+                    
+                <ThSort>Meno</ThSort>
+                <ThSort>Priezvisko</ThSort>
+                <ThSort>Email</ThSort>
+                <ThSort>Telefón</ThSort>
                 @if (ViewModel.ValidateUserCRUD())
                 {
-                    <th class="col-resize" scope="col">IBAN</th>
-                    <th class="col-resize" scope="col">Adresa</th>
+                    <ThSort>IBAN</ThSort>
+                    <ThSort>Adresa</ThSort>
                 }
-                <th class="col-resize" scope="col">Role</th>
-                <th class="col-resize" scope="col"></th>
+                <ThSort>Role</ThSort>
+                <ThSort></ThSort>
 
                 </THEAD>
                 <TBODY>
@@ -74,15 +74,15 @@
                                     <td class="col-resize">@item.IBAN</td>
                                     <td class="col-resize">@item.Adresa</td>
                                 }
-                                    <td class="col-resize">@ViewModel.GetRoleString(item)</td>
-                                    <td>
-                                        @if (ViewModel.ValidateUserCRUD())
-                                        {
-                                            <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
-                                        }
-                                    </td>
+                                <td class="col-resize">@ViewModel.GetRoleString(item)</td>
+                                <td>
+                                    @if (ViewModel.ValidateUserCRUD())
+                                    {
+                                        <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
+                                    }
+                                </td>
 
-                                </tr>
+                            </tr>
                         }
                     }
                     <span id="observerTarget"></span>

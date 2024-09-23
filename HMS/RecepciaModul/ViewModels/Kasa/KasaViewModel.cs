@@ -47,6 +47,11 @@ namespace RecepciaModul.ViewModels
             return _userService.IsLoggedUserInRoles(DBLayer.Models.Kasa.ROLE_R_KASA);
         }
 
+        public bool ValidateUserKasaCRUD()
+        {
+            return _userService.IsLoggedUserInRoles(DBLayer.Models.Kasa.ROLE_CRUD_KASA);
+        }
+
         public async Task NacitajZoznamy()
         {
             await NacitajKasy();
@@ -82,5 +87,6 @@ namespace RecepciaModul.ViewModels
             _db.PokladnicneDoklady.Remove(item);
             _db.SaveChanges();
         }
+
     }
 }

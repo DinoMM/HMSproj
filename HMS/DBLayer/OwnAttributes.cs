@@ -107,6 +107,9 @@ namespace DBLayer
         }
     }
 
+    /// <summary>
+    /// Označenie, pre skrytie vstupu z používateľského rozhrania.
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
     public class HideFromInputAttribute : Attribute  
     {

@@ -27,3 +27,7 @@
 ::deep.table tbody tr.selected-row {
     --bs-table-bg: #9d9b9bef;
 }
+
+::deep .th-sortable {
+    user-select: none;
+}

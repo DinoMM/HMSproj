@@ -1,0 +1,157 @@
+﻿@namespace RecepciaModul
+@page "/Kasa/CRUDKasa"
+@inject CRUDKasaViewModel ViewModel
+
+
+<InfoModal @ref="InfoMod" Text="Zmeny boli uložené." ID="uniinfomod"></InfoModal>
+
+<ItemFinderTable T="DBLayer.Models.Kasa"
+                 @ref="iftkasa"
+                 ID="itfkasa"
+                 ColNames="@(new(){"ID", "Organizácia"})"
+                 ColValues="ViewModel.ZoznamKas"
+                 CutOffTail="true"
+                 ForeignAttributesToo="true"
+                 KeyAttributeToo="true"
+                 SelectEmptyInstance="true"
+                 SizeInRem="30"></ItemFinderTable>
+
+<ItemFinderTable T="DBLayer.Models.Dodavatel"
+                 @ref="iftorg"
+                 ID="itforg"
+                 ColNames="@(new(){"ICO", "Názov", "Obec", "Adresa", "IBAN"})"
+                 ColValues="ViewModel.ZoznamOrganizacii"
+                 KeyAttributeToo="true"
+                 SizeInRem="70"></ItemFinderTable>
+
+<EditForm Model="ViewModel.KasaInput" OnValidSubmit="() => Save()">
+    <DataAnnotationsValidator />
+
+
+    <div class="container px-5">
+
+        <div class="row g-3 p-3">
+
+            <div class="d-flex justify-content-between">
+                <h2 class="text-center">@(ViewModel.Existuje() ? "Nastavenie" : "Vytvorenie")&nbsp;pokladne</h2>
+            </div>
+            <div class="col">
+
+                <div class="row">
+                    <div class="col col-5">
+                        <label>Unikátne&nbsp;označenie&nbsp;pokladne</label>
+                        <InputText @bind-Value="@ViewModel.KasaInput.ID" disabled="@ViewModel.Existuje()" class="form-control" placeholder="ID označenie" />
+                        <ValidationMessage For="@(() => ViewModel.KasaInput.ID)" />
+                    </div>
+                    <div class="col col-1 d-flex flex-column">
+                        <label>Kasa</label>
+                        <BtnFind OnClick="FindKasa"></BtnFind>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-3">
+                        <label>Organizácia</label>
+                        <input type="text" disabled value="@ViewModel.KasaInput.Dodavatel" class="form-control" />
+                        <ValidationMessage For="@(() => ViewModel.KasaInput.Dodavatel)" />
+                    </div>
+                    <div class="col col-5">
+                        <label>Názov</label>
+                        <input type="text" disabled value="@ViewModel.KasaInput.DodavatelX?.Nazov" class="form-control" />
+                    </div>
+                    <div class="col col-1 d-flex flex-column">
+                        <label>Organizácia</label>
+                        <BtnFind OnClick="FindOrg"></BtnFind>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-5">
+                        <label>Aktuálny&nbsp;používateľ</label>
+                        <input type="text" disabled value="@(ViewModel.KasaInput.ActualUserX?.Email ?? "-")" class="form-control" />
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <hr>
+        <div class="row pt-2">
+            <div class="col text-center">
+
+                <button type="button" class="btn btn-secondary" @onclick="Close">Zavrieť</button>
+                <SimpleButton ID="ulozbutton" Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Pridať", "Uložiť"))"></SimpleButton>
+                <SimpleButton ID="zmazbutton" Type="button" ZmenaTextu="@(("Vymazať", "Vymazať"))" Disabled="!ViewModel.Existuje() ||!ViewModel.MoznoVymazat(ViewModel.KasaInput)" Class="btn btn-danger" OnClick="Vymazat"></SimpleButton>
+
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+
+@code {
+
+    private InfoModal InfoMod = new();
+    private ItemFinderTable<DBLayer.Models.Kasa> iftkasa = new();
+    private ItemFinderTable<DBLayer.Models.Dodavatel> iftorg = new();
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            return;
+        }
+        await ViewModel.NacitajZoznamy();
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public async Task Save()
+    {
+        if (ViewModel.Ulozit())
+        {
+            await InfoMod.OpenModal(true);
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("addStyleClassUntilClick", "ulozbutton", "btn-danger");
+        }
+    }
+
+    public async Task FindKasa()
+    {
+        if (await iftkasa.OpenModal(true))
+        {
+            ViewModel.SetKasa(iftkasa.OutSelection.FirstOrDefault());
+        }
+    }
+
+    public async Task FindOrg()
+    {
+        if (await iftorg.OpenModal(true))
+        {
+            ViewModel.KasaInput.Dodavatel = iftorg.OutSelection.FirstOrDefault().ICO;
+            ViewModel.KasaInput.DodavatelX = iftorg.OutSelection.FirstOrDefault();
+        }
+    }
+
+    public async Task Vymazat()
+    {
+        if (ViewModel.Vymazat(ViewModel.KasaInput))
+        {
+            await InfoMod.OpenModal(true);
+            Close();
+        }
+    }
+}

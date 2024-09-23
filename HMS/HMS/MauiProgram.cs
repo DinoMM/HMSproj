@@ -147,6 +147,7 @@ namespace HMS
             builder.Services.AddTransient<KasaViewModel>();
             builder.Services.AddTransient<PokladnicnyDokladViewModel>();
             builder.Services.AddTransient<PridatItemDokladuViewModel>();
+            builder.Services.AddTransient<CRUDKasaViewModel>();
             #endregion
 
 

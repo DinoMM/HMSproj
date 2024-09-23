@@ -13,8 +13,7 @@
     </table>
 </div>
 
-<script>
-    window.resizeColumns = function() {
+<script>window.resizeColumns = function() {
          const thElms = document.querySelectorAll(".col-resize");
 
         thElms.forEach(thElm => {
@@ -36,8 +35,7 @@
                 }
             });
         });
-    }
-</script>
+    }</script>
 
 
 @code {
@@ -52,6 +50,7 @@
         if (firstRender)
         {
             await JSRuntime.InvokeVoidAsync("resizeColumns");
+            await JSRuntime.InvokeVoidAsync("sortTableByTh");
         }
     }
     [Parameter]

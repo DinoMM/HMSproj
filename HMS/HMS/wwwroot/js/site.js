@@ -58,3 +58,34 @@ function showPopover(id, content, direction) {
     }
 }
 
+//Pomoc od AI
+window.sortTableByTh = function () {
+    const thElms = document.querySelectorAll(".th-sortable");
+
+    thElms.forEach(thElm => {
+        thElm.addEventListener("dblclick", function () {
+            const table = thElm.closest("table");
+            const columnIndex = Array.from(thElm.parentNode.children).indexOf(thElm);
+            const rows = Array.from(table.rows).slice(1); // Exclude header row
+
+            // Sort rows
+            const sortedRows = rows.slice().sort((a, b) => {
+                const cellA = a.cells[columnIndex].innerText.toLowerCase();
+                const cellB = b.cells[columnIndex].innerText.toLowerCase();
+                return cellA.localeCompare(cellB);
+            });
+
+            // Check if the sorted list is the same as the current list
+            const isAlreadySorted = rows.every((row, index) => row === sortedRows[index]);
+
+            // If already sorted, reverse the order
+            if (isAlreadySorted) {
+                sortedRows.reverse();
+            }
+
+            // Append sorted rows back to the table
+            sortedRows.forEach(row => table.tBodies[0].appendChild(row));
+        });
+    });
+}
+
