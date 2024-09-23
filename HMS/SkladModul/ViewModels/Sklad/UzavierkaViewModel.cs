@@ -28,6 +28,8 @@ namespace SkladModul.ViewModels.Sklad
         private List<PolozkaSkladu> zoznamPrijatehoZPrijemok = new(); //zoznam prijatych mnozstiev len z prijemok
         private List<PolozkaSkladu> zoznamVydateho = new(); //zoznam vydatych mnozstiev
         private List<PolozkaSkladu> zoznamPrevodiekZoSkladu = new(); //zoznam vydatych mnozstiev z prevodiek z tohto skladu
+        private List<PolozkaSkladu> zoznamPredaneho = new(); //zoznam predanych mnozstiev
+
         private double DiffMedziVydatymAPrijatym = 0.0;
 
         public bool NacitavaniePoloziek = true;
@@ -68,6 +70,10 @@ namespace SkladModul.ViewModels.Sklad
         public string GetVydateMnozstvo(PolozkaSkladu poloz)
         {
             return zoznamVydateho.FirstOrDefault(x => x.ID == poloz.ID)?.Mnozstvo.ToString("F3") ?? 0.ToString("F3");
+        }
+        public string GetPredaneMnozstvo(PolozkaSkladu poloz)
+        {
+            return zoznamPredaneho.FirstOrDefault(x => x.ID == poloz.ID)?.Mnozstvo.ToString("F3") ?? 0.ToString("F3");
         }
         public PolozkaSkladu GetPolozkaPrijemky(PolozkaSkladu poloz)
         {
@@ -110,6 +116,7 @@ namespace SkladModul.ViewModels.Sklad
             //TODO kontrola spracovania faktury
             zoznamPrijateho = Ssklad.GetPoctyZPrijemok(Sklad, Obdobie, in _db);
             zoznamVydateho = Ssklad.GetPoctyZVydajok(Sklad, Obdobie, in _db);
+            zoznamPredaneho = Ssklad.GetPoctyZPredaja(Sklad, Obdobie, in _db);
             Ssklad.LoadMnozstvoPoloziek(zoznamAktualnehoMnozstva, Sklad, in _db); //aktualne obdobie
 
             foreach (var item in zoznamPrijateho)
@@ -149,7 +156,9 @@ namespace SkladModul.ViewModels.Sklad
                     var vydateAll = Ssklad.GetPoctyZVydajok(Sklad, item.Obdobie, in _db);
                     var vydatePrevodky = Ssklad.GetPoctyZPrevodiekZoSkladu(Sklad, item.Obdobie, in _db);
                     double sumaVydate = vydateAll.Sum(x => x.CelkovaCena) - vydatePrevodky.Sum(x => x.CelkovaCena);
-                    DiffMedziVydatymAPrijatym += sumaVydate - prijate.Sum(x => x.CelkovaCena);
+                    var predanePD = Ssklad.GetPoctyZPredaja(Sklad, item.Obdobie, in _db);
+
+                    DiffMedziVydatymAPrijatym += sumaVydate + predanePD.Sum(x => x.CelkovaCena) - prijate.Sum(x => x.CelkovaCena);
 
                     ZozPrijat.AddRange(prijate);
                     ZozPrijat = PolozkaSkladu.ZosumarizujListPoloziek(in ZozPrijat, true);

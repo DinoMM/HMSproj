@@ -152,7 +152,7 @@ namespace DBLayer.Models
                     item.Obdobie.Value,
                     in db).Count != 0)
                 {
-                    return new ValidationResult($"Nemožno vydať viacej ako je na sklade. ({item.PolozkaSkladu})");
+                    return new ValidationResult($"Nemožno vydať viacej ako je na sklade: {item.Sklad} - {item.PolozkaSkladu.ID}");
                 }
             }
             return ValidationResult.Success;

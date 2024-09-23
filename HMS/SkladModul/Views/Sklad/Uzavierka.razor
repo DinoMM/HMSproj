@@ -46,9 +46,11 @@
                 <th scope="col">Cena prij.</th>
                 <th scope="col">Cena s DPH prij.</th>
                 <th scope="col">Začiatočné Množstvo</th>
-                <th scope="col">Aktuálne Množstvo</th>
+
                 <th scope="col">Prijaté Množstvo</th>
                 <th scope="col">Vydané Množstvo</th>
+                <th scope="col">Predané Množstvo</th>
+                <th scope="col">Aktuálne Množstvo</th>
                 </THEAD>
                 <TBODY>
                     @if (ViewModel.NacitavaniePoloziek)
@@ -71,9 +73,10 @@
                                 <td class="col-resize">@ViewModel.GetPolozkaPrijemky(item).Cena.ToString("F4") </td>
                                 <td class="col-resize">@ViewModel.GetPolozkaPrijemky(item).CenaDPH.ToString("F4") </td>
                                 <td class="col-resize">@ViewModel.GetMnozstvoZaciatok(item)</td>
-                                <td class="col-resize">@ViewModel.GetAktualneMnozstvo(item)</td>
                                 <td class="col-resize">@ViewModel.GetPrijateMnozstvo(item)</td>
                                 <td class="col-resize">@ViewModel.GetVydateMnozstvo(item)</td>
+                                <td class="col-resize">@ViewModel.GetPredaneMnozstvo(item)</td>
+                                <td class="col-resize">@ViewModel.GetAktualneMnozstvo(item)</td>
                             </tr>
                         }
                     }

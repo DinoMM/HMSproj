@@ -62,6 +62,9 @@ namespace DBLayer.Models
             #region nacitanie poloziek zo SCHVALENYCH prevodiek
             List<PolozkaSkladu> celkoveMnozstvaZPrevodiek = GetPoctyZPrevodiek(skld, obdobie, in db);
             #endregion
+            #region nacitanie poloziek zo SCHVALENYCH pokladnicnych dokladov(predané)
+            List<PolozkaSkladu> celkoveMnozstvaZPokladnicnychDokladov = GetPoctyZPredaja(skld, obdobie, in db);
+            #endregion
             foreach (var item in zoznamPoloziek)       //prejdenie poloziek zo zoznamu
             {
                 var found = db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.PolozkaSkladu && x.Sklad == skld.ID); //najde polozku na sklade
@@ -70,7 +73,8 @@ namespace DBLayer.Models
                     double pridan = celkoveMnozstvaZPrijemok.FirstOrDefault(x => x.ID == item.PolozkaSkladu)?.Mnozstvo ?? 0;
                     double odobrat = celkoveMnozstvaZVydajok.FirstOrDefault(x => x.ID == item.PolozkaSkladu)?.Mnozstvo ?? 0;
                     double prevod = celkoveMnozstvaZPrevodiek.FirstOrDefault(x => x.ID == item.PolozkaSkladu)?.Mnozstvo ?? 0;
-                    if (found.Mnozstvo + pridan + prevod - odobrat - item.Mnozstvo < 0) //ak je mnozstvo na sklade mensie ako mnozstvo ktore chceme vydat
+                    double predajPD = celkoveMnozstvaZPokladnicnychDokladov.FirstOrDefault(x => x.ID == item.PolozkaSkladu)?.Mnozstvo ?? 0;
+                    if (found.Mnozstvo + pridan + prevod - odobrat - predajPD - item.Mnozstvo < 0) //ak je mnozstvo na sklade mensie ako mnozstvo ktore chceme vydat
                     {
                         listNemozno.Add(item.PolozkaSkladu);
                     }
@@ -168,7 +172,9 @@ namespace DBLayer.Models
             #region nacitanie poloziek zo SCHVALENYCH prevodiek
             List<PolozkaSkladu> celkoveMnozstvaZPrevodiek = GetPoctyZPrevodiek(skladDo, aktualneObdobie, in db);
             #endregion
-
+            #region nacitanie poloziek zo SCHVALENYCH pokladnicnych dokladov(predané)
+            List<PolozkaSkladu> celkoveMnozstvaZPokladnicnychDokladov = GetPoctyZPredaja(skladDo, aktualneObdobie, in db);
+            #endregion
             foreach (var item in zoznamPoloziek)       //prejdenie poloziek zo zoznamu
             {
                 var found = db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.ID && x.Sklad == skladDo.ID);
@@ -177,7 +183,8 @@ namespace DBLayer.Models
                     double pridan = celkoveMnozstvaZPrijemok.FirstOrDefault(x => x.ID == item.ID)?.Mnozstvo ?? 0;
                     double odobrat = celkoveMnozstvaZVydajok.FirstOrDefault(x => x.ID == item.ID)?.Mnozstvo ?? 0;
                     double prevod = celkoveMnozstvaZPrevodiek.FirstOrDefault(x => x.ID == item.ID)?.Mnozstvo ?? 0;
-                    item.Mnozstvo = found.Mnozstvo + pridan + prevod - odobrat;
+                    double predajPD = celkoveMnozstvaZPokladnicnychDokladov.FirstOrDefault(x => x.ID == item.ID)?.Mnozstvo ?? 0;
+                    item.Mnozstvo = found.Mnozstvo + pridan + prevod - odobrat - predajPD;
                 }
                 else
                 {
@@ -212,7 +219,9 @@ namespace DBLayer.Models
             #region nacitanie poloziek zo SCHVALENYCH prevodiek
             List<PolozkaSkladu> celkoveMnozstvaZPrevodiek = GetPoctyZPrevodiek(sklad, obdobie, in db);
             #endregion
-
+            #region nacitanie poloziek zo SCHVALENYCH pokladnicnych dokladov(predané)
+            List<PolozkaSkladu> celkoveMnozstvaZPokladnicnychDokladov = GetPoctyZPredaja(sklad, obdobie, in db);
+            #endregion
             foreach (var item in zoznamPoloziek)       //prejdenie poloziek zo zoznamu
             {
                 var found = db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == item.ID && x.Sklad == sklad.ID);
@@ -221,7 +230,8 @@ namespace DBLayer.Models
                     double pridan = celkoveMnozstvaZPrijemok.FirstOrDefault(x => x.ID == item.ID)?.Mnozstvo ?? 0;
                     double odobrat = celkoveMnozstvaZVydajok.FirstOrDefault(x => x.ID == item.ID)?.Mnozstvo ?? 0;
                     double prevod = celkoveMnozstvaZPrevodiek.FirstOrDefault(x => x.ID == item.ID)?.Mnozstvo ?? 0;
-                    item.Mnozstvo = pridan + prevod - odobrat;
+                    double predajPD = celkoveMnozstvaZPokladnicnychDokladov.FirstOrDefault(x => x.ID == item.ID)?.Mnozstvo ?? 0;
+                    item.Mnozstvo = pridan + prevod - odobrat - predajPD;
                 }
                 else
                 {
