@@ -1,0 +1,40 @@
+﻿@namespace UniComponents
+
+<th class="col-resize nonselecttext" scope="col" @ondblclick="() => SortMethod.Invoke(PropertyName, GetParam())">
+    @ChildContent
+</th>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string PropertyName { get; set; } = string.Empty;
+
+    [Parameter]
+    public Func<string, object, Task> SortMethod { get; set; } = null!;
+
+    //[Parameter]
+    //public Func<string, bool, Task> SortMethod { get; set; } = null!;
+
+    //[Parameter]
+    //public Func<string, List<string>, Task> SortMethodSelect { get; set; } = null!;
+
+    [Parameter]
+    public List<string>? SelectionList { get; set; } = null;
+
+    private bool sortDirection = false;
+
+
+    private object GetParam()
+    {
+        if (SelectionList != null)
+        {
+            return SelectionList;
+        }
+        else
+        {
+            return sortDirection = !sortDirection;
+        }
+    }
+}

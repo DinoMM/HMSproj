@@ -98,7 +98,7 @@ namespace RecepciaModul.ViewModels
                 if (SmerNacitavaniaAll)
                 {
                     var yesterday = DateTime.Today.AddDays(-1);
-                    ZoznamVsetkychRezervacii = new(await _dbw.Rezervations
+                    ZoznamVsetkychRezervacii.AddRange(await _dbw.Rezervations
                             .Include(x => x.Guest)
                             .Include(x => x.Room)
                             .Include(x => x.Coupon)
@@ -109,7 +109,7 @@ namespace RecepciaModul.ViewModels
                 }
                 else
                 {
-                    ZoznamVsetkychRezervacii = new(await _dbw.Rezervations
+                    ZoznamVsetkychRezervacii.AddRange(await _dbw.Rezervations
                             .Include(x => x.Guest)
                             .Include(x => x.Room)
                             .Include(x => x.Coupon)
@@ -343,8 +343,7 @@ namespace RecepciaModul.ViewModels
 
         public async Task ZmenSmerNacitavania() {
             SmerNacitavaniaAll = !SmerNacitavaniaAll;
-            ZoznamVsetkychRezervacii.Clear();
-            await NacitajZoznamRezervacieAll();
+            await NacitajZoznamRezervacieAll(true);
         }
 
         //    public async ValueTask<ItemsProviderResult<Rezervation>> LoadReservations(

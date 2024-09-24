@@ -3,8 +3,7 @@
 @inject RezervaciaViewModel ViewModel
 @using UniComponents
 @using Microsoft.AspNetCore.Components.Forms
-
-
+@inherits ASortDataPage<DBLayer.Models.Rezervation>
 <!-- časový diagram od https://codepen.io/ph1p/pen/JBBjNy?utm_source=bypeople -->
 
 
@@ -104,8 +103,14 @@
 
 </CustomModal>
 
-<CustomModal @ref="resaslistmod" ID="resaslist" Header="Zoznam rezervácií" OneButtonOnly="true" ButtonPosition="true" SizeInRem="80">
+
+
+
+
+<CustomModal @ref="resaslistmod" ID="resaslist" Header="Zoznam rezervácií" OneButtonOnly="true" ButtonPosition="true" SizeInRem="80" >
     <BODY>
+
+
         @if (resaslistmod.Render)
         {
             <div class="row">
@@ -121,64 +126,55 @@
                             <i class="bi bi-arrow-left"></i>
                         }
                     </button>
+                </div>
             </div>
-        </div>
 
-        <div class="col-12" style="max-height: 30rem;overflow: auto;">
-            <SimpleTable ID="resaslisttableres">
-                <THEAD>
+            <div class="col-12" style="max-height: 30rem;overflow: auto;">
+                <SimpleTable ID="resaslisttableres">
+                    <THEAD>
 
-                <th class="col-resize" scope="col">Príchod</th>
-                <th class="col-resize" scope="col">Odchod</th>
-                <th class="col-resize" scope="col">Plánovaný počet</th>
-                <th class="col-resize" scope="col">Cena</th>
-                <th class="col-resize" scope="col">Izba</th>
-                <th class="col-resize" scope="col">Web&nbsp;používateľ</th>
-                <th class="col-resize" scope="col">Status</th>
-                @*<th class="col-resize" scope="col"></th>*@
+                        <ThManualSort PropertyName="ArrivalDate" SortMethod="Sort">Príchod</ThManualSort>
+                        <ThManualSort PropertyName="DepartureDate" SortMethod="Sort">Odchod</ThManualSort>
+                        <ThManualSort PropertyName="NumberGuest" SortMethod="Sort">Plánovaný počet</ThManualSort>
+                        <ThManualSort PropertyName="CelkovaSuma" SortMethod="Sort">Cena</ThManualSort>
+                        <ThManualSort PropertyName="RoomNumber" SortMethod="Sort">Izba</ThManualSort>
+                        <ThManualSort PropertyName="Guest.Email" SortMethod="Sort">Web&nbsp;používateľ</ThManualSort>
+                        <ThManualSort PropertyName="Status" SortMethod="Sort" SelectionList="Enum.GetNames(typeof(DBLayer.Models.ReservationStatus)).ToList()">Status</ThManualSort>
+                        @*<th class="col-resize" scope="col"></th>*@
 
-                </THEAD>
-                <TBODY>
+                    </THEAD>
+                    <TBODY>
 
-                    <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Context="item" Items="ViewModel.ZoznamVsetkychRezervacii" SpacerElement="tr">
-                        <ItemContent>
-                            <tr style="height: 30px;">
-                                <td class="col-resize">@item.ArrivalDate.ToString("dd.MM.yyyy")</td>
-                                <td class="col-resize">@item.DepartureDate.ToString("dd.MM.yyyy")</td>
-                                <td class="col-resize">@item.NumberGuest</td>
-                                <td class="col-resize">@item.CelkovaSuma</td>
-                                <td class="col-resize">@item.RoomNumber</td>
-                                <td class="col-resize">@(item.Guest?.Email ?? "")</td>
-                                <td class="col-resize">@item.Status</td>
-                            </tr>
-                        </ItemContent>
-                        <Placeholder>
-                            <SpinnerLoading Size="2"></SpinnerLoading>
-                        </Placeholder>
-                        <EmptyContent>
-                            <div class="d-flex align-items-center">Zoznam je prázdny</div>
-                        </EmptyContent>
-                    </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
+                        <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Context="item" Items="ViewModel.ZoznamVsetkychRezervacii" SpacerElement="tr">
+                            <ItemContent>
+                                <tr @key="item.Id" style="height: 30px;" @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(async () => { resaslistmod.CloseModalExtern(); await OpenRes(item); })">
+                                    <td class="col-resize">@item.ArrivalDate.ToString("dd.MM.yyyy")</td>
+                                    <td class="col-resize">@item.DepartureDate.ToString("dd.MM.yyyy")</td>
+                                    <td class="col-resize">@item.NumberGuest</td>
+                                    <td class="col-resize">@item.CelkovaSuma</td>
+                                    <td class="col-resize">@item.RoomNumber</td>
+                                    <td class="col-resize">@(item.Guest?.Email ?? "")</td>
+                                    <td class="col-resize">@item.Status</td>
+                                </tr>
+                            </ItemContent>
+                            <Placeholder>
+                                <SpinnerLoading Size="2"></SpinnerLoading>
+                            </Placeholder>
+                            <EmptyContent>
+                                <div class="d-flex align-items-center">Zoznam je prázdny</div>
+                            </EmptyContent>
+                        </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
 
-                    @*@foreach (var item in VyberHosti)
-                        {
-                            <tr @ondblclick="() => OpenHostFrom(item.HostX)">
+                    </TBODY>
 
-                                    <ButtonRemove Disabled="@(ValidateChangeability())" OnClick="@(() => DeleteHostCon(item))"></ButtonRemove>
-                                </td>
+                </SimpleTable>
+            </div>
 
-                            </tr>
-                        }
-
-                        <span id="observerTarget"></span>*@
-                </TBODY>
-
-            </SimpleTable>
-        </div>
-
-    }
+        }
+        <SelectModal @ref="SortSelectModal"></SelectModal>
     </BODY>
 </CustomModal>
+
 
 <ItemFinderTable T="DBLayer.Models.Rezervation" @ref="nespracRes" ID="RawResPick" ColNames="@(new() { "Príchod", "Odchod", "Plánovaný počet", "Cena", "Status"  })" ColValues="ViewModel.ZoznamNespracRezervacii"></ItemFinderTable>
 
@@ -326,6 +322,7 @@
         }
         await ViewModel.NacitajZoznamy();
         RoomsToShow = new(ViewModel.ZoznamIzieb.ToList());
+        ZoznamSort = ViewModel.ZoznamVsetkychRezervacii;
     }
 
     public void Close()

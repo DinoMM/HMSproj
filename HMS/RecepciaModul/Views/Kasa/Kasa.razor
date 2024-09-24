@@ -1,6 +1,7 @@
 ﻿@namespace RecepciaModul
 @page "/Kasa"
 @inject KasaViewModel ViewModel
+@inherits ASortDataPage<DBLayer.Models.PokladnicnyDoklad>
 
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
@@ -52,12 +53,12 @@
             <SimpleTable ID="tableid">
                 <THEAD>
 
-                <th class="col-resize" scope="col">ID</th>
-                <th class="col-resize" scope="col">Vznik</th>
-                <th class="col-resize" scope="col">Zaplatený</th>
-                <th class="col-resize" scope="col">Pokladňa</th>
-                <th class="col-resize" scope="col">Typ&nbsp;platby</th>
-                <th class="col-resize" scope="col"></th>
+                    <ThManualSort PropertyName="ID" SortMethod="Sort">ID</ThManualSort>
+                    <ThManualSort PropertyName="Vznik" SortMethod="Sort">Vznik</ThManualSort>
+                    <ThManualSort PropertyName="Spracovana" SortMethod="Sort">Zaplatený</ThManualSort>
+                    <ThManualSort PropertyName="Kasa" SortMethod="Sort">Pokladňa</ThManualSort>
+                    <ThManualSort PropertyName="TypPlatby" SortMethod="Sort">Typ&nbsp;platby</ThManualSort>
+                <th></th>
 
                 </THEAD>
                 <TBODY>
@@ -71,10 +72,7 @@
                     {
                         <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items="ViewModel.ZoznamBlockov" Context="item" SpacerElement="tr" ItemSize="50">
                             <ItemContent>
-
-
-
-                                <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
+                                <tr @key="item.ID" @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
 
                                     <td class="col-resize">@item.ID</td>
                                     <td class="col-resize">@item.Vznik.ToString("dd.MM.yyyy HH:mm:ss")</td>
@@ -148,6 +146,7 @@
                 StateHasChanged();
             }
         }
+
     }
 
     protected override async Task OnInitializedAsync()
@@ -157,6 +156,7 @@
             return;
         }
         await ViewModel.NacitajZoznamy();
+        ZoznamSort = ViewModel.ZoznamBlockov;
     }
 
     public void Close()
@@ -197,7 +197,6 @@
 
     public async Task OpenKasa()
     {
-
         if (await vyberkasamod.VyberKasu(forceask))  //fyzicky statie programu
         {
             ViewModel.AktlKasa = vyberkasamod.GetKasa();
@@ -209,7 +208,7 @@
     public async Task ForceOpenKasa()
     {
         forceask = true;
-        await ViewModel.NacitajKasy();
+        ViewModel.NacitajKasy();
         vyberkasamod.StartRender();
     }
 
@@ -217,4 +216,15 @@
     {
         Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDKasa"));
     }
+
+    //public override async Task Sort(string propertyName, bool sortMethod)
+    //{
+    //    await SortData<DBLayer.Models.PokladnicnyDoklad>(propertyName, sortMethod, ViewModel.ZoznamBlockov);
+    //}
+
+    //public override async Task Sort(string propertyName, List<string> zoznamSelect)
+    //{
+    //    await SortData<DBLayer.Models.PokladnicnyDoklad>(propertyName, zoznamSelect, ViewModel.ZoznamBlockov);
+    //}
+
 }

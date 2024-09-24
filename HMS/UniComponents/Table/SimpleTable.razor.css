@@ -20,7 +20,7 @@
             right: -2px;
             bottom: 0;
             width: 5px;
-            cursor: col-resize;
+            cursor: ew-resize;
             border-right: 1px solid #dee2e6;
         }
 
@@ -31,3 +31,8 @@
 ::deep .th-sortable {
     user-select: none;
 }
+
+::deep .nonselecttext {
+    user-select: none;
+}
+

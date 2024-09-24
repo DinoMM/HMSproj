@@ -8,10 +8,4 @@
 @code {
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
-
-
-    private async Task SortTableByTh() //@ondblclick="SortTableByTh"
-    {
-        await JSRuntime.InvokeVoidAsync("sortTableByTh");
-    }
 }

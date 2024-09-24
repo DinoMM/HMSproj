@@ -55,20 +55,20 @@
                     @if (ViewModel.TypeOfPohJednotka == typeof(PrijemkaPolozka))
                     {
 
-                    <th class="col-resize">ČísloID</th>
+                    <ThSort>ČísloID</ThSort>
                 }
 
-                    <th class="col-resize">Názov Položky</th>
-                    <th class="col-resize">Množstvo</th>
-                    <th class="col-resize">Cena</th>
+                    <ThSort>Názov Položky</ThSort>
+                    <ThSort>Množstvo</ThSort>
+                    <ThSort>Cena</ThSort>
 
                     @if (ViewModel.TypeOfPohJednotka == typeof(PrijemkaPolozka))
                     {
-                        <th class="col-resize">Merná jednotka</th>
+                        <ThSort>Merná jednotka</ThSort>
                     }
-                    <th class="col-resize">Cena s DPH</th>
-                    <th class="col-resize">Celková Cena</th>
-                    <th class="col-resize">Celková Cena s DPH</th>
+                    <ThSort>Cena s DPH</ThSort>
+                    <ThSort>Celková Cena</ThSort>
+                    <ThSort>Celková Cena s DPH</ThSort>
                     <th></th>
                     </THEAD>
                     <TBODY>
@@ -86,7 +86,7 @@
                                 <td><input type="number" disabled="@ReadOnly" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.01" class="w-100 col-resize" /></td>
                                 @if (ViewModel.TypeOfPohJednotka == typeof(PrijemkaPolozka))
                                 {
-                                    <th class="col-resize">@(((PrijemkaPolozka)item).PolozkaSkladuX.MernaJednotka)</th>
+                                    <ThSort>@(((PrijemkaPolozka)item).PolozkaSkladuX.MernaJednotka)</ThSort>
                                 }
                                 <td class="col-resize">@(item.CenaDPH.ToString("F3"))</td>
                                 <td class="col-resize">@(item.CelkovaCena.ToString("F3"))</td>

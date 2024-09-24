@@ -2,11 +2,15 @@
 
 @if (Checked)
 {
-    <i class="bi bi-check-circle-fill text-success @("fs-" + Size)"></i>
+    <i class="bi bi-check-circle-fill text-success @("fs-" + Size)">
+        <span class="sr-only">yas</span>
+    </i>
 }
 else
 {
-    <i class="bi bi-x-circle-fill text-danger @("fs-" + Size)"></i>
+    <i class="bi bi-x-circle-fill text-danger @("fs-" + Size)">
+        <span class="sr-only">n</span>
+    </i>
 }
 
 @code {

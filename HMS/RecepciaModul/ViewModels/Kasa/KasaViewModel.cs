@@ -4,13 +4,13 @@ using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using System.Collections.ObjectModel;
+using UniComponents;
 
 namespace RecepciaModul.ViewModels
 {
     public partial class KasaViewModel : ObservableObject
     {
-        [ObservableProperty]
-        private ObservableCollection<DBLayer.Models.PokladnicnyDoklad> zoznamBlockov = new();
+        public List<DBLayer.Models.PokladnicnyDoklad> ZoznamBlockov = new();
         public List<DBLayer.Models.Kasa> ZoznamKas = new();
 
         public bool NacitavaniePoloziek { get; private set; } = true;
@@ -54,21 +54,21 @@ namespace RecepciaModul.ViewModels
 
         public async Task NacitajZoznamy()
         {
-            await NacitajKasy();
-            ZoznamBlockov = new(await _db.PokladnicneDoklady
+            NacitajKasy();
+            ZoznamBlockov = new(_db.PokladnicneDoklady
                 .Include(x => x.KasaX)
                 .OrderByDescending(x => x.Vznik)
-                .ToListAsync());
+                .ToList());
             NacitavaniePoloziek = false;
         }
 
-        public async Task NacitajKasy()
+        public void NacitajKasy()
         {
             ZoznamKas.Clear();
-            ZoznamKas.AddRange(await _db.Kasy
+            ZoznamKas.AddRange(_db.Kasy
                 .Include(x => x.ActualUserX)
                 .Include(x => x.DodavatelX)
-                .ToListAsync());
+                .ToList());
         }
 
         public bool MoznoVymazat(DBLayer.Models.PokladnicnyDoklad item)

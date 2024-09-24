@@ -62,12 +62,12 @@
             <SimpleTable ID="tableid">
                 <THEAD>
 
-                <th class="col-resize" scope="col">ID</th>
-                <th class="col-resize" scope="col">Názov</th>
-                <th class="col-resize" scope="col">Merná jednotka</th>
-                <th class="col-resize" scope="col">Cena</th>
-                <th class="col-resize" scope="col">Cena s DPH</th>
-                <th class="col-resize" scope="col"><button @onclick=@ViewModel.LoadMnozstvo disabled="@ViewModel.NacitaneMnozstvo" class="btn btn-sm @(ViewModel.NacitaneMnozstvo ? "btn-light" : "btn-dark")">Množstvo</button> </th>
+                <ThSort>ID</ThSort>
+                <ThSort>Názov</ThSort>
+                <ThSort>Merná jednotka</ThSort>
+                <ThSort>Cena</ThSort>
+                <ThSort>Cena s DPH</ThSort>
+                <ThSort><button @onclick=@ViewModel.LoadMnozstvo disabled="@ViewModel.NacitaneMnozstvo" class="btn btn-sm @(ViewModel.NacitaneMnozstvo ? "btn-light" : "btn-dark")">Množstvo</button> </ThSort>
                 <th class="col-resize" scope="col"></th>
 
                 </THEAD>
