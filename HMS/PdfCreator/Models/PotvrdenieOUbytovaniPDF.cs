@@ -1,13 +1,18 @@
 ﻿using DBLayer.Models;
+using PdfSharp.Drawing;
+using PdfSharp.Pdf.IO;
+using PdfSharp.Pdf;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UglyToad.PdfPig;
 using UglyToad.PdfPig.Content;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.Writer;
+using PdfDocument = PdfSharp.Pdf.PdfDocument;
 
 namespace PdfCreator.Models
 {
@@ -25,56 +30,104 @@ namespace PdfCreator.Models
         /// + stiahnuté 2 fonty Montserrat (.ttf) (lebo diakritika) -> https://www.fontspace.com/collection/best-of-mo-peterson-design-cw3d9qd
         /// </summary>
         /// <param name="objednavka"></param>
-        public void GenerujPdf(HostConReservation con)       //vygeneruje pdf z objednavky
+        public void GenerujPdf(HostConReservation con, Dodavatel organizacia)       //vygeneruje pdf z objednavky
         {
-
-            PdfDocumentBuilder builder = new PdfDocumentBuilder();              //vytvorenie buildera, ktory to na konci vsetko prevedie to reality
-            PdfPageBuilder page = builder.AddPage(PageSize.A4);                 //takto sa prida stránka do buildera
-
-            #region basic
-            string fontPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MontserratRegular.ttf");    //vlastny font potrebujeme lebo klasicke nepodporuju naše znaky(ľščťžýáí..)
-            byte[] fontBites = System.IO.File.ReadAllBytes(fontPath);                       //font sa precita zo subora do byte []
-            PdfDocumentBuilder.AddedFont fontR = builder.AddTrueTypeFont(fontBites);            //nasledne mozeme vyuzit tento font
-            fontPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "MontserratBold.ttf");      //Bold
-            fontBites = System.IO.File.ReadAllBytes(fontPath);
-            PdfDocumentBuilder.AddedFont fontB = builder.AddTrueTypeFont(fontBites);
-            #endregion
-
-            int Sx = 30;                //pomocne Pointy -> pre Ohranicenie, riadkovanie, text
-            int Ex = 565;
-            int Sy = 42;
-            int Ey = 800;
-            int Riad = 30;
-            int TSx = 35;
-            int TEx = 560;
-            int TSy = 47;
-            int TEy = 788;
-
             int fontSize = 12;
+            var originalsablona = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Registraciaform.pdf");
 
-            string datumVystavenia = (DateOnly.FromDateTime(DateTime.Today)).ToString("dd-MM-yyyy", CultureInfo.InvariantCulture);  // datum
+            PdfDocument outputDocument = new PdfDocument();     //vysledne pdf
+            PdfDocument inputDocument = PdfReader.Open(originalsablona, PdfDocumentOpenMode.Import);  //nacitanie sablony
+
+            PdfPage page = inputDocument.Pages[0];      //pridanie strany cez copy
+            var newpage = outputDocument.AddPage(page);
+            XGraphics gfx = XGraphics.FromPdfPage(newpage);
+
+            XFont font = new XFont("Arial", fontSize);
+
+            // datum
+
+            string datumVystavenia = (DateOnly.FromDateTime(DateTime.Today)).ToString("dd-MM-yyyy", CultureInfo.InvariantCulture);
+
+            string text = datumVystavenia;
+            gfx.DrawString("Dátum vystavenia: " + text, font, XBrushes.Black, new XPoint(370, 98));
+
+            // tabulka
+
+            int x = 235;
+            int y = 50;
+
+            text = con.ReservationZ?.RoomNumber ?? "";
+            text = text.Length <= 30 ? text : text.Substring(0, 35);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(75, 130));
+
+            text = con.HostX.Surname + " " + con.HostX.Name;
+            text = text.Length <= 30 ? text : text.Substring(0, 35);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(75, 130 + (y * 1)));
+
+            text = con.HostX.Address;
+            text = text.Length <= 30 ? text : text.Substring(0, 35);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(75, 130 + (y * 2) - 1));
+
+            text = con.HostX.Nationality;
+            text = text.Length <= 30 ? text : text.Substring(0, 35);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(75, 130 + (y * 3) - 1));
+
+            text = con.HostX.Sex ? "Žena" : "Muž";
+            text = text.Length <= 30 ? text : text.Substring(0, 35);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(75, 130 + (y * 4) - 1));
+
+            text = con.HostX.GuestZ?.PhoneNumber ?? "";
+            text = text.Length <= 30 ? text : text.Substring(0, 35);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(75, 130 + (y * 5) - 4));
+
+            ////////
+
+            text = con.HostX.BirthDate.ToString("dd.MM.yyyy");
+            text = text.Length <= 30 ? text : text.Substring(0, 35);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(75 + x, 130 + (y * 0)));
+
+            text = con.HostX.CitizenID;
+            text = text.Length <= 30 ? text : text.Substring(0, 35);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(75 + x, 130 + (y * 1)));
+
+            text = con.HostX.Passport;
+            text = text.Length <= 30 ? text : text.Substring(0, 35);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(75 + x, 130 + (y * 2) - 1));
+
+            text = con.HostX.BirthNumber;
+            text = text.Length <= 30 ? text : text.Substring(0, 35);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(75 + x, 130 + (y * 3) - 1));
+
+            //volne policko
+
+            text = con.HostX.GuestZ?.Email ?? "";
+            text = text.Length <= 30 ? text : text.Substring(0, 35);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(75 + x, 130 + (y * 5) - 4));
 
 
-            page.DrawRectangle(new PdfPoint(Sx, Sy), 535, 758);     //HlavneBoundary
+            ////////////////Organizacia
+            text = organizacia.Nazov;
+            text = text.Length <= 50 ? text : text.Substring(0, 50);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(245, 639));
+
+            text = organizacia.Obec;
+            text = text.Length <= 50 ? text : text.Substring(0, 50);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(125, 666));
+
+            text = organizacia.Adresa;
+            text = text.Length <= 50 ? text : text.Substring(0, 50);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(135, 692));
+
+            text = organizacia.ICO;
+            text = text.Length <= 50 ? text : text.Substring(0, 50);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(115, 718));
 
 
-            page.AddText("Potvrdenie o ubytovaní", fontSize + 4, new PdfPoint(TEx / 2 - 35, TEy - 18), fontB);
-            /////////////////////////////////
-            page.DrawRectangle(new PdfPoint(Sx + 3, Ey - 200 - Riad - 10), Ex / 2 - 20, 200 - 3);       //prvy stvorcek DODAVATEL
-            PdfPoint start = new PdfPoint(Sx + 3, Ey - 200 - Riad - 10);
-            double width = Ex / 2 - 20;
-            double height = 200 - 3;
+            outputDocument.Save(FullPathPDF);
+
+           
 
 
-
-
-
-
-            #region Build
-            byte[] documentBytes = builder.Build();         //skonvertovanie do byte
-
-            System.IO.File.WriteAllBytes(FullPathPDF, documentBytes);         //vysledne pdf
-            #endregion
         }
 
     }

@@ -21,6 +21,17 @@
     </CompVyberKasa>
 }
 
+<CustomModal @ref="uzavretiemod" ID="uzavretiemod" OneButtonOnly="true" Header="Kontrola&nbsp;obdobia" SizeInRem="60">
+    <BODY>
+        @if (uzavretiemod.Render)
+        {
+            <KontrolaUzavretia></KontrolaUzavretia>
+        }
+
+    </BODY>
+
+</CustomModal>
+
 <div class="container">
 
     <div class="row pb-1">
@@ -37,6 +48,7 @@
                 <button @onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRU())" class="btn btn-primary">➕Vytvoriť doklad</button>
                 <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary">Otvoriť</button>
                 <button type="button" @onclick="ForceOpenKasa" disabled="@(!ViewModel.ValidateUserKasaR())" class="btn btn-info">Pokladňa: @(ViewModel.AktlKasa?.ID ?? "-")</button>
+                <button type="button" @onclick="OpenUzavierka" class="btn btn-primary">Uzávierka</button>
                 @if (ViewModel.ValidateUserKasaCRUD())
                 {
                     <button type="button" @onclick="CreateKasa" class="btn btn-primary">Správa&nbsp;pokladní</button>
@@ -116,6 +128,8 @@
     private DBLayer.Models.PokladnicnyDoklad? marked;
     private ApproveModal AprovMod = new();
     private CompVyberKasa vyberkasamod = new();
+    private CustomModal uzavretiemod = new();
+    private KontrolaUzavretia kontrolauzavretiacomp = new();
 
     private bool forceask = false;
 
@@ -215,6 +229,14 @@
     public void CreateKasa()
     {
         Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDKasa"));
+    }
+
+    public async Task OpenUzavierka()
+    {
+        //kontrolauzavretiacomp.StartRender();
+        uzavretiemod.Render = true;
+        await uzavretiemod.OpenModal(true);
+        uzavretiemod.Render = false; 
     }
 
     //public override async Task Sort(string propertyName, bool sortMethod)

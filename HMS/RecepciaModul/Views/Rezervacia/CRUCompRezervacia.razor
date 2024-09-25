@@ -862,14 +862,26 @@
         PDFLoading = true;
         PotvrdenieOUbytovaniPDF creator = new PotvrdenieOUbytovaniPDF();
 
+        con.ReservationZ = dbw.Rezervations
+            .Include(x => x.Guest)
+            .Include(x => x.Room)
+            .Include(x => x.Coupon)
+            .FirstOrDefault(x => x.Id == con.Reservation);
+        if (!string.IsNullOrEmpty(con.HostX.Guest))
+        {
+            con.HostX.GuestZ = dbw.Users.FirstOrDefault(x => x.Id == con.HostX.Guest);
+        }
+
+        var organizacia = db.Dodavatelia.FirstOrDefault(x => x.ICO == "123456");
+
         await Task.Run(() =>
         {
-            creator.GenerujPdf(con);
+            creator.GenerujPdf(con, organizacia);
             creator.OpenPDF();
 
         });
 
-        PDFLoading = true;
+        PDFLoading = false;
     }
 
     private async Task OpenPickKasa()

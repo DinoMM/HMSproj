@@ -1,0 +1,177 @@
+﻿@namespace RecepciaModul
+@inject KontrolaUzavretiaViewModel ViewModel
+@inherits DynamicLoadedComponent
+
+
+<ItemFinderTable T="DBLayer.Models.Kasa"
+                 @ref="iftkasa"
+                 ID="itfkasa"
+                 ColNames="@(new(){"ID", "Organizácia"})"
+                 ColValues="ViewModel.ZoznamKas"
+                 CutOffTail="true"
+                 ForeignAttributesToo="true"
+                 KeyAttributeToo="true"
+                 SelectEmptyInstance="true"
+                 SizeInRem="30"></ItemFinderTable>
+
+<EditForm Model="ViewModel" OnValidSubmit="() => Calculate()">
+    <DataAnnotationsValidator />
+
+
+    <div class="container px-5">
+
+        <div class="row g-3 p-3">
+            <div class="col">
+
+                <div class="row">
+                    <div class="h3 text-black">Kontrola&nbsp;obdobia</div>
+                </div>
+
+                <div class="row">
+                    <div class="col col-6">
+                        <label>Dátum od</label>
+                        <InputDate @bind-Value="@ViewModel.DatumOd" class="form-control" />
+                        <ValidationMessage For="@(() => ViewModel.DatumOd)" />
+                    </div>
+
+                    <div class="col col-6">
+                        <label>Dátum do</label>
+                        <InputDate @bind-Value="@ViewModel.DatumDo" class="form-control" />
+                        <ValidationMessage For="@(() => ViewModel.DatumDo)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-6">
+                        <label>Pokladňa</label>
+                        <input type="text" disabled value="@(ViewModel.VybranaKasa)" class="form-control" />
+                        <ValidationMessage For="@(() => ViewModel.VybranaKasa)" />
+                    </div>
+                    <div class="col col-1 d-flex flex-column">
+                        <div style="height:24px"></div>
+                        <BtnFind OnClick="FindKasa"></BtnFind>
+                    </div>
+                </div>
+
+                <hr>
+                <div class="row pt-2">
+                    <div class="col text-center">
+                        <SimpleButton ID="ulozbutton" Type="submit" ZmenaTextu="@(("Vypočítať", "Vypočítať"))"></SimpleButton>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col-1">
+                <div class="vr h-100" style="width:1px"></div>
+            </div>
+
+            <div class="col">
+
+                <div class="row">
+                    <div class="h3 text-success">Spracované&nbsp;doklady</div>
+                </div>
+                <div class="row">
+                    <div class="col col-6">
+                        <label>Výsledná&nbsp;suma</label>
+                        <input type="text" disabled value="@ViewModel.VyslednaSuma.ToString("F3")" class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-6">
+                        <label>Výsledná&nbsp;suma&nbsp;s&nbsp;DPH</label>
+                        <input type="text" disabled value="@ViewModel.VyslednaSumaDPH.ToString("F3")" class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-4">
+                        <label>DPH</label>
+                        <input type="text" disabled value="@ViewModel.DPH.ToString("F4")" class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-4">
+                        <label>Počet&nbsp;dokladov</label>
+                        <input type="text" disabled value="@ViewModel.Pocet" class="form-control" />
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="h3 text-warning">Nespracované&nbsp;doklady</div>
+                </div>
+                <div class="row">
+                    <div class="col col-6">
+                        <label>Výsledná&nbsp;suma</label>
+                        <input type="text" disabled value="@ViewModel.VyslednaSumaNesprac.ToString("F3")" class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-6">
+                        <label>Výsledná&nbsp;suma&nbsp;s&nbsp;DPH</label>
+                        <input type="text" disabled value="@ViewModel.VyslednaSumaDPHNesprac.ToString("F3")" class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-4">
+                        <label>DPH</label>
+                        <input type="text" disabled value="@ViewModel.DPHNesprac.ToString("F4")" class="form-control" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col col-4">
+                        <label>Počet&nbsp;dokladov</label>
+                        <input type="text" disabled value="@ViewModel.PocetNesprac" class="form-control" />
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+    </div>
+</EditForm>
+
+
+@code {
+
+    private ItemFinderTable<DBLayer.Models.Kasa> iftkasa = new();
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            return;
+        }
+        await ViewModel.NacitajZoznamy();
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public async Task FindKasa()
+    {
+        if (await iftkasa.OpenModal(true))
+        {
+            ViewModel.SetKasa(iftkasa.OutSelection.FirstOrDefault());
+        }
+    }
+
+    public async Task Calculate()
+    {
+        if (!ViewModel.Vypocitaj())
+        {
+            await JSRuntime.InvokeVoidAsync("addStyleClassUntilClick", "ulozbutton", "btn-danger");
+        }
+    }
+}

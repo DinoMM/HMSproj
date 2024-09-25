@@ -82,5 +82,6 @@ namespace DBLayer.Models
             this.DPH = item.DPH;
             this.Obdobie = item.Obdobie;
         }
+        
     }
 }

@@ -5,16 +5,15 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="staticBackdropLabelS">@Header</h5>
+                <h5 class="modal-title" id="@(ID + "staticBackdropLabelS")">@Header</h5>
             </div>
-            <div class="modal-body" id="modalASTextLabel" style="height: 10rem; overflow-y: auto;">
+            <div class="modal-body" id="@(ID + "modalASTextLabel")" style="height: 10rem; overflow-y: auto;">
 
-                <select id="modalselectorselect" class="form-select" @bind="@Value" aria-label="Default select example">
+                <select id="modalselectorselect" class="form-select" @bind="@Value">
                     @foreach (var item in SelectionList)
                     {
                         <option value="@item">@item</option>
                     }
-
                 </select>
 
             </div>
@@ -27,6 +26,10 @@
 </div>
 
 @code {
+
+    /// <summary>
+    /// Hlavička modalu, default "Výber"
+    /// </summary>
     [Parameter]
     public string Header { get; set; } = "Výber";
 
