@@ -3,6 +3,8 @@ using DBLayer;
 using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
+using PdfCreator.Models;
+using PdfSharp.Pdf.Advanced;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using Kkasa = DBLayer.Models.Kasa;
@@ -18,6 +20,7 @@ namespace RecepciaModul.ViewModels
         public List<DBLayer.Models.UniConItemPoklDokladu> ZoznamUniConItems { get; set; } = new();
 
         public bool NacitavaniePoloziek { get; private set; } = true;
+        public bool PDFLoading { get; private set; } = false;
 
         public Kkasa? AktKasa { get; set; } = null;
 
@@ -287,6 +290,21 @@ namespace RecepciaModul.ViewModels
                 return true;
             }
             return false;
+        }
+
+        public async Task CreatePdf()
+        {
+            PDFLoading = true;
+            BlocekPDF creator = new BlocekPDF();
+
+            await Task.Run(() =>
+            {
+                creator.GenerujPdf(PoklDokladInput, ZoznamPoloziek.ToList());
+                creator.OpenPDF();
+
+            });
+
+            PDFLoading = false;
         }
     }
 }

@@ -39,7 +39,6 @@ namespace PdfCreator
         /// </summary>
         public void OpenPDF()
         {
-
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
                 FileName = FullPathPDF,

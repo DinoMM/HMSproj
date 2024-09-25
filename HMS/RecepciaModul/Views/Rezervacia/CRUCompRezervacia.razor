@@ -872,7 +872,11 @@
             con.HostX.GuestZ = dbw.Users.FirstOrDefault(x => x.Id == con.HostX.Guest);
         }
 
-        var organizacia = db.Dodavatelia.FirstOrDefault(x => x.ICO == "123456");
+        var organizacia = db.Dodavatelia.FirstOrDefault(x => x.ICO == "123456");    //TODO
+        if (organizacia == null)
+        {
+            organizacia = new();
+        }
 
         await Task.Run(() =>
         {

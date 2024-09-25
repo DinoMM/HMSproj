@@ -8,11 +8,8 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using UglyToad.PdfPig;
-using UglyToad.PdfPig.Content;
-using UglyToad.PdfPig.Core;
-using UglyToad.PdfPig.Writer;
 using PdfDocument = PdfSharp.Pdf.PdfDocument;
+using System.Diagnostics;
 
 namespace PdfCreator.Models
 {
@@ -26,30 +23,37 @@ namespace PdfCreator.Models
         }
 
         /// <summary>
-        /// Použitá stiahnutá knižnica z NuGet -> PdfPig -> https://www.nuget.org/packages/PdfPig/#readme-body-tab
-        /// + stiahnuté 2 fonty Montserrat (.ttf) (lebo diakritika) -> https://www.fontspace.com/collection/best-of-mo-peterson-design-cw3d9qd
+        /// Použitá knižnica PdfSharp (nuget) => https://www.nuget.org/packages/PDFsharp/6.1.1?_src=template
         /// </summary>
-        /// <param name="objednavka"></param>
+        /// <param name="con"></param>
+        /// <param name="organizacia"></param>
         public void GenerujPdf(HostConReservation con, Dodavatel organizacia)       //vygeneruje pdf z objednavky
         {
-            int fontSize = 12;
+            #region start
             var originalsablona = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Registraciaform.pdf");
 
             PdfDocument outputDocument = new PdfDocument();     //vysledne pdf
             PdfDocument inputDocument = PdfReader.Open(originalsablona, PdfDocumentOpenMode.Import);  //nacitanie sablony
 
+            if (inputDocument.PageCount == 0)
+            {
+                Debug.WriteLine($"Nepodarilo sa nájsť/otvoriť šablonu: {originalsablona}");
+                return;
+            }
             PdfPage page = inputDocument.Pages[0];      //pridanie strany cez copy
             var newpage = outputDocument.AddPage(page);
             XGraphics gfx = XGraphics.FromPdfPage(newpage);
 
-            XFont font = new XFont("Arial", fontSize);
-
+            int fontSize = 12;
+            XFont font = new XFont("Arial", fontSize);      //font
+            #endregion
+            #region write
             // datum
 
-            string datumVystavenia = (DateOnly.FromDateTime(DateTime.Today)).ToString("dd-MM-yyyy", CultureInfo.InvariantCulture);
+            string datumVystavenia = (DateTime.Now).ToString("dd-MM-yyyy HH:mm:ss"); ;
 
             string text = datumVystavenia;
-            gfx.DrawString("Dátum vystavenia: " + text, font, XBrushes.Black, new XPoint(370, 98));
+            gfx.DrawString("Dátum vystavenia: " + text, font, XBrushes.Black, new XPoint(355, 98));
 
             // tabulka
 
@@ -98,7 +102,7 @@ namespace PdfCreator.Models
             text = text.Length <= 30 ? text : text.Substring(0, 35);
             gfx.DrawString(text, font, XBrushes.Black, new XPoint(75 + x, 130 + (y * 3) - 1));
 
-            //volne policko
+            //volne policko TU
 
             text = con.HostX.GuestZ?.Email ?? "";
             text = text.Length <= 30 ? text : text.Substring(0, 35);
@@ -121,13 +125,10 @@ namespace PdfCreator.Models
             text = organizacia.ICO;
             text = text.Length <= 50 ? text : text.Substring(0, 50);
             gfx.DrawString(text, font, XBrushes.Black, new XPoint(115, 718));
-
-
-            outputDocument.Save(FullPathPDF);
-
-           
-
-
+            #endregion
+            #region build
+            outputDocument.Save(FullPathPDF);       //vysledne ulozenie pdf
+            #endregion
         }
 
     }

@@ -8,7 +8,6 @@ using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.Writer;
 using DBLayer.Models;
 using System.Collections.ObjectModel;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace PdfCreator.Models
 {

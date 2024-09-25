@@ -198,6 +198,13 @@
                 }
                 <SimpleButton ID="ulozbuttonid" Type="submit" disabled="@ReadOnly" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
                 <SimpleButton ID="zaplatbuttnid" Type="button" disabled="@(ReadOnly || !ViewModel.Existuje() || !ViewModel.JeNastavenaKasa())" OnClick="Buy" ZmenaStavuTextu="ViewModel.JeNastavenaKasa()" ZmenaTextu="@(("Zaplatiť", "Nastavte kasu"))"></SimpleButton>
+                <button type="button" disabled="@(ViewModel.PDFLoading || !ViewModel.Existuje() || !ViewModel.PoklDokladInput.Spracovana)" class="btn btn-info" @onclick="() => ViewModel.CreatePdf()">
+                    <i class="bi bi-filetype-pdf"></i>
+                    @if (ViewModel.PDFLoading)
+                    {
+                        <SpinnerLoading ExtraSmall="true"></SpinnerLoading>
+                    } 
+                </button>
             </div>
         </div>
     </div>
