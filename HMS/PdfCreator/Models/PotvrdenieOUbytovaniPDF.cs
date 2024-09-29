@@ -80,31 +80,33 @@ namespace PdfCreator.Models
             text = text.Length <= 30 ? text : text.Substring(0, 35);
             gfx.DrawString(text, font, XBrushes.Black, new XPoint(75, 130 + (y * 4) - 1));
 
-            text = con.HostX.GuestZ?.PhoneNumber ?? "";
+            text = con.HostX.BirthDate.ToString("dd.MM.yyyy");
             text = text.Length <= 30 ? text : text.Substring(0, 35);
             gfx.DrawString(text, font, XBrushes.Black, new XPoint(75, 130 + (y * 5) - 4));
 
             ////////
 
-            text = con.HostX.BirthDate.ToString("dd.MM.yyyy");
+            text = con.HostX.CitizenID;
             text = text.Length <= 30 ? text : text.Substring(0, 35);
             gfx.DrawString(text, font, XBrushes.Black, new XPoint(75 + x, 130 + (y * 0)));
 
-            text = con.HostX.CitizenID;
+            text = con.HostX.Passport;
             text = text.Length <= 30 ? text : text.Substring(0, 35);
             gfx.DrawString(text, font, XBrushes.Black, new XPoint(75 + x, 130 + (y * 1)));
 
-            text = con.HostX.Passport;
+            text = con.HostX.BirthNumber;
             text = text.Length <= 30 ? text : text.Substring(0, 35);
             gfx.DrawString(text, font, XBrushes.Black, new XPoint(75 + x, 130 + (y * 2) - 1));
 
-            text = con.HostX.BirthNumber;
+            text = con.HostX.GuestZ?.PhoneNumber ?? "";
             text = text.Length <= 30 ? text : text.Substring(0, 35);
             gfx.DrawString(text, font, XBrushes.Black, new XPoint(75 + x, 130 + (y * 3) - 1));
 
-            //volne policko TU
-
             text = con.HostX.GuestZ?.Email ?? "";
+            text = text.Length <= 30 ? text : text.Substring(0, 35);
+            gfx.DrawString(text, font, XBrushes.Black, new XPoint(75 + x, 130 + (y * 4) - 1));
+
+            text = con.ReservationZ.ArrivalDate.ToString("dd.MM.yyyy") + " - " + con.ReservationZ.DepartureDate.ToString("dd.MM.yyyy") + $" ({(con.ReservationZ.DepartureDate - con.ReservationZ.ArrivalDate).Days})";
             text = text.Length <= 30 ? text : text.Substring(0, 35);
             gfx.DrawString(text, font, XBrushes.Black, new XPoint(75 + x, 130 + (y * 5) - 4));
 
