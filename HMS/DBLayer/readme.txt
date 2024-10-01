@@ -37,3 +37,20 @@ Pre buildovania Blazor-servera na dockeri
 	6.docker-compose build --no-cache ossemes		--zrebuildovanie, nie vzdy treba --no-cache
 	7.docker-compose up -d --build ossemes			--zrebuildi a spusti, tzv. restart
 
+
+  Pre build na NGROK
+		docker run --net=host -it --name NGROK_web -e NGROK_AUTHTOKEN=24f5uoLyMQkN8XyNqHWGT_7zJUMHf5bVMVEfQwCUL6a ngrok/ngrok:latest http --url=cobra-novel-wolf.ngrok-free.app 8000
+
+Conenction string localhost source
+	localhost,1433		--pre connection stirng na local
+
+
+
+pre prejdene do command line v dockri do sql servera
+	docker exec -it SQL_server bash			
+	/opt/mssql-tools18/bin/sqlcmd -S localhost -U SA -P 'TaJnEhEsLo!!!123456789' -C
+
+
+
+otvor ngrok spojenie pre databazu --(uistit ze je zaznamenany authtoken)
+	ngrok tcp 1433     
