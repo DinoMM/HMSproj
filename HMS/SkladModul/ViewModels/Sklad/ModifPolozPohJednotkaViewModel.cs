@@ -77,6 +77,7 @@ namespace SkladModul.ViewModels.Sklad
 
         public async Task LoadZoznam()
         {
+            Ssklad sklad;
             ZoznamPoloziek.Clear();
             if (TypeOfPohSkupina == typeof(Pprijemka))
             {
@@ -84,6 +85,7 @@ namespace SkladModul.ViewModels.Sklad
                 .Where(x => x.Sklad == ((Pprijemka)PohSkupina).Sklad)
                 .Select(x => x.PolozkaSkladuX)
                 .ToList());
+                sklad = ((Pprijemka)PohSkupina).SkladX;
             }
             else
             {
@@ -91,8 +93,12 @@ namespace SkladModul.ViewModels.Sklad
                 .Where(x => x.Sklad == ((Vvydajka)PohSkupina).Sklad)
                 .Select(x => x.PolozkaSkladuX)
                 .ToList());
+                sklad = ((Vvydajka)PohSkupina).SkladX;
             }
             ZoznamPoloziek = ZoznamPoloziek.DistinctBy(x => x.ID).OrderBy(x => x.ID).ToList();
+
+            //var zoznamPrijateho = Ssklad.GetPoctyZPrijemok(sklad, Obdobie, in _db);
+            //Ssklad.LoadMnozstvoPoloziek(ZoznamPoloziek, sklad, in _db);
         }
 
         [RelayCommand]
@@ -137,6 +143,7 @@ namespace SkladModul.ViewModels.Sklad
                 Uprava = false;
                 NovaPoloz = (PohJednotka)Activator.CreateInstance(TypeOfPohJednotka);       //naslo polozku tak nacitame info
                 ((DBLayer.Models.PrijemkaPolozka)NovaPoloz).SetZPolozSkladuMnozstva(najd.PolozkaSkladuX);
+
                 //NovaPoloz.Cena = Math.Round(NovaPoloz.Cena, 3);
             }
         }

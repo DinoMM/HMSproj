@@ -160,8 +160,10 @@ namespace SkladModul.ViewModels.Sklad
 
                     DiffMedziVydatymAPrijatym += sumaVydate + predanePD.Sum(x => x.CelkovaCena) - prijate.Sum(x => x.CelkovaCena);
 
+
                     ZozPrijat.AddRange(prijate);
                     ZozPrijat = PolozkaSkladu.ZosumarizujListPoloziek(in ZozPrijat, true);
+
                     //ZozVydat.AddRange(vydateAll);
                     //ZozVydat = PolozkaSkladu.ZosumarizujListPoloziek(in ZozVydat);
                     //ZozPrevod.AddRange(vydatePrevodky);

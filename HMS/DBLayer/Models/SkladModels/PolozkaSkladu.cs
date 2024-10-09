@@ -71,14 +71,18 @@ namespace DBLayer.Models
         public static List<PolozkaSkladu> ZosumarizujListPoloziek(in List<PolozkaSkladu> polozky, bool checkNan = false)
         {
             var list = polozky.GroupBy(x => x.ID) //spoji duplikaty do unikatneho listu
-            .Select(group => new PolozkaSkladu()
+            .Select(group =>
             {
-                ID = group.Key,
-                //Nazov = group.First().Nazov,
-                //MernaJednotka = group.First().MernaJednotka,
-                Mnozstvo = group.Sum(x => x.Mnozstvo),
-                Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo),
-                DPH = group.Sum(x => (decimal)x.DPH * (decimal)x.Mnozstvo) / (decimal)group.Sum(x => x.Mnozstvo)
+                var totalMnozstvo = group.Sum(x => x.Mnozstvo);
+                return new PolozkaSkladu()
+                {
+                    ID = group.Key,
+                    //Nazov = group.First().Nazov,
+                    //MernaJednotka = group.First().MernaJednotka,
+                    Mnozstvo = totalMnozstvo,
+                    Cena = totalMnozstvo != 0 ? group.Sum(x => x.Cena * x.Mnozstvo) / totalMnozstvo : 0,
+                    DPH = totalMnozstvo != 0 ? group.Sum(x => (decimal)x.DPH * (decimal)x.Mnozstvo) / (decimal)totalMnozstvo : 0
+                };
             })
             .ToList();
             if (checkNan) {
