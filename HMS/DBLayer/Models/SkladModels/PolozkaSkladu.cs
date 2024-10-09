@@ -43,7 +43,7 @@ namespace DBLayer.Models
             clone.ID = ID;
             clone.MernaJednotka = MernaJednotka;
             clone.Mnozstvo = Mnozstvo;
-            clone.Cena = Math.Round(Cena, 4);
+            clone.Cena = Cena;
             clone.DPH = DPH;
 
             return clone;

@@ -137,7 +137,7 @@ namespace SkladModul.ViewModels.Sklad
                 Uprava = false;
                 NovaPoloz = (PohJednotka)Activator.CreateInstance(TypeOfPohJednotka);       //naslo polozku tak nacitame info
                 ((DBLayer.Models.PrijemkaPolozka)NovaPoloz).SetZPolozSkladuMnozstva(najd.PolozkaSkladuX);
-                NovaPoloz.Cena = Math.Round(NovaPoloz.Cena, 3);
+                //NovaPoloz.Cena = Math.Round(NovaPoloz.Cena, 3);
             }
         }
 
