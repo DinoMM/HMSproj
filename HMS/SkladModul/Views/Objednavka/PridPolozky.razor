@@ -66,7 +66,7 @@
                             <td class="col-resize"><input type="text" disabled="@ViewModel.Locked()" value="@item.Nazov" @onchange=@((ChangeEventArgs arg) => { item.Nazov = arg.Value.ToString(); ViewModel.Zmena = true; } ) /></td>
                             <td class="col-resize"><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.Mnozstvo" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" class="w-75" /></td>
                             <td class="col-resize">@item.PolozkaSkladuX.MernaJednotka</td>
-                            <td class="col-resize"><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" class="w-75" /></td>
+                            <td class="col-resize"><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" class="w-100" /></td>
                             <td class="col-resize">@item.CenaDPH.ToString("F3")</td>
                             <td class="col-resize">@item.CelkovaCena.ToString("F3")</td>
                             <td class="col-resize">@item.CelkovaCenaDPH.ToString("F3")</td>

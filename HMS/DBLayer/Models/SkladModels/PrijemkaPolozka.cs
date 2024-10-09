@@ -17,7 +17,9 @@ namespace DBLayer.Models
         public string Skupina { get; set; } = default!;
         public PohSkup SkupinaX { get; set; }
         public string? Nazov { get; set; } = default!;
+        [Column(TypeName = "decimal(18, 4)")]
         public double Mnozstvo { get; set; }
+        [Column(TypeName = "decimal(18, 3)")]
         public double Cena { get; set; }
         [NotMapped]
         public double CelkovaCena { get => (double)Mnozstvo * Cena; }

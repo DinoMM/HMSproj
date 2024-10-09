@@ -22,9 +22,11 @@ namespace DBLayer.Models
         public string? Nazov { get; set; }
 
         [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty")]
+        [Column(TypeName = "decimal(18, 4)")]
         public double Mnozstvo { get; set; }
 
         [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty")]
+        [Column(TypeName = "decimal(18, 3)")]
         public double Cena { get; set; }
 
         [NotMapped]

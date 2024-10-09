@@ -24,7 +24,7 @@ namespace DBLayer.Models
         public double Mnozstvo { get; set; } = 0;
 
         [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty")]
-        [Column(TypeName = "decimal(18, 4)")]
+        [Column(TypeName = "decimal(18, 3)")]
         public double Cena { get; set; } = 0;
 
         [NotMapped]

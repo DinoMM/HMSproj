@@ -17,6 +17,7 @@ namespace DBLayer.Models
         public int NumberGuest { get; set; }            //počet hosti
 
         [Range(0, int.MaxValue, ErrorMessage = "Len kladné hodnoty.")]
+        [Column(TypeName = "decimal(18, 2)")]
         public decimal CelkovaSuma { get; set; }        //celkova suma, ktora sa ma vypočitat pri vytvoreni rezervacie
 
         [Column(TypeName = "nvarchar(450)")]

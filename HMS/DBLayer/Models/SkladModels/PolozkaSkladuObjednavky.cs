@@ -20,7 +20,9 @@ namespace DBLayer.Models
         public string PolozkaSkladu { get; set; }
         public PolozkaSkladu PolozkaSkladuX { get; set; }
         public string? Nazov { get; set; }      //mozno zmenit nazov ak treba
+        [Column(TypeName = "decimal(18, 4)")]
         public double Mnozstvo { get; set; }
+        [Column(TypeName = "decimal(18, 3)")]
         public double Cena { get; set; }
 
         [NotMapped]

@@ -14,6 +14,7 @@ namespace DBLayer.Models
         public int MaxNumberOfGuest { get; set; }
 
         [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty.")]
+        [Column(TypeName = "decimal(18, 2)")]
         public double Cost { get; set; }
         [NotMapped]
         public string[] RoomIds { get; set; }

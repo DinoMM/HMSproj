@@ -22,6 +22,7 @@ namespace DBLayer.Models
         public string OdKoho { get; set; } = default!;
         public Dodavatel OdKohoX { get; set; }
         public bool Spracovana { get; set; } = false;
+        [Column(TypeName = "decimal(18, 3)")]
         public double CenaBezDPH { get; set; } = default!;
         [NotMapped]
         public double CenaDPH { get => (CenaBezDPH * 120) / 100; }
