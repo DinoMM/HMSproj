@@ -83,10 +83,10 @@
                                 }
                                 <td><input type="text" disabled="@ReadOnly" value="@item.Nazov" @onchange=@((ChangeEventArgs arg) => {item.Nazov = arg.Value.ToString(); ViewModel.Zmena = true; } ) class="w-100 col-resize" /></td>
                                 <td><input type="number" disabled="@ReadOnly" @bind-value="@item.Mnozstvo" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" class="w-75 col-resize" /></td>
-                                <td><input type="number" disabled="@ReadOnly" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.01" class="w-100 col-resize" /></td>
+                                <td><input type="number" disabled="@(ReadOnly || ViewModel.TypeOfPohSkupina == typeof(DBLayer.Models.Vydajka))" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" class="w-100 col-resize" /></td>
                                 @if (ViewModel.TypeOfPohJednotka == typeof(PrijemkaPolozka))
                                 {
-                                    <ThSort>@(((PrijemkaPolozka)item).PolozkaSkladuX.MernaJednotka)</ThSort>
+                                    <td>@(((PrijemkaPolozka)item).PolozkaSkladuX.MernaJednotka)</td>
                                 }
                                 <td class="col-resize">@(item.CenaDPH.ToString("F3"))</td>
                                 <td class="col-resize">@(item.CelkovaCena.ToString("F3"))</td>
@@ -109,6 +109,7 @@
                                 </td>
                                 @*<td>@ViewModel.NovaPoloz.PolozkaSkladuX?.MernaJednotka</td>*@
                                 <td>@ViewModel.NovaPoloz.Cena</td>
+                                <td></td>
                                 <td></td>
                                 <td></td>
                                 <td></td>

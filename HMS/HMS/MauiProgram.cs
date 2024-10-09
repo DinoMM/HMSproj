@@ -57,7 +57,7 @@ namespace HMS
                 usr = "publicUser";
                 tpswd = "TaJnEhEsLo???123456789";
 #endif
-                builder.Services.AddDbContext<DBContext>(opt => opt.UseSqlServer($"Data Source=6.tcp.eu.ngrok.io,13142;Database=MyDatabase;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions => {
+                builder.Services.AddDbContext<DBContext>(opt => opt.UseSqlServer($"Data Source=localhost,1433;Database=MyDatabase;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions => {
                     sqlOptions.EnableRetryOnFailure(
                         maxRetryCount: 3,
                         maxRetryDelay: TimeSpan.FromSeconds(15),
@@ -66,7 +66,7 @@ namespace HMS
                 }
                 ));               //(pomohol som si z internetu tutoriály/AI)
 
-                builder.Services.AddDbContext<DataContext>(opt => opt.UseSqlServer($"Data Source=6.tcp.eu.ngrok.io,13142;Database=HlavnaDatabaza;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions => {
+                builder.Services.AddDbContext<DataContext>(opt => opt.UseSqlServer($"Data Source=localhost,1433;Database=HlavnaDatabaza;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions => {
                     sqlOptions.EnableRetryOnFailure(
                         maxRetryCount: 3,
                         maxRetryDelay: TimeSpan.FromSeconds(15),

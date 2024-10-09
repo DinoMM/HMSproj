@@ -5,8 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using PdfCreator.Models;
 using PdfSharp.Pdf.Advanced;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using Kkasa = DBLayer.Models.Kasa;
 using PpokladnicnyDoklad = DBLayer.Models.PokladnicnyDoklad;
 
@@ -35,6 +37,7 @@ namespace RecepciaModul.ViewModels
         private readonly UserService _userService;
         private readonly IJSRuntime _jsRuntime;
         private readonly Blazored.SessionStorage.ISessionStorageService _sessionStorage;
+
 
         public PokladnicnyDokladViewModel(DBContext db, UserService userService, DataContext dbw, IJSRuntime jsRuntime, Blazored.SessionStorage.ISessionStorageService sessionStorage)
         {
@@ -69,16 +72,16 @@ namespace RecepciaModul.ViewModels
                     .Include(x => x.UniConItemPoklDokladuX)
                     .Where(x => x.Skupina == PoklDokladInput.ID)
                     .ToListAsync());
-
             }
 
             ZoznamUniConItems.Clear();
-            ZoznamUniConItems.AddRange(await _db.PolozkySkladuConItemPoklDokladu
+            ZoznamUniConItems.AddRange(_db.PolozkySkladuConItemPoklDokladu
                 .Include(x => x.PolozkaSkladuMnozstvaX)
-                .Include(x => x.PolozkaSkladuMnozstvaX.PolozkaSkladuX)
-                .Include(x => x.PolozkaSkladuMnozstvaX.SkladX)
-                .ToListAsync());
-            ZoznamUniConItems.AddRange(await _db.ReservationConItemyPoklDokladu.ToListAsync());
+                .ThenInclude(x => x.PolozkaSkladuX)
+                .Include(x => x.PolozkaSkladuMnozstvaX)
+                .ThenInclude(x => x.SkladX)
+                .ToList());
+            ZoznamUniConItems.AddRange(_db.ReservationConItemyPoklDokladu.ToList());
 
             NacitavaniePoloziek = false;
         }
@@ -238,7 +241,7 @@ namespace RecepciaModul.ViewModels
                 PoklDokladInput.Spracovana = true;
                 PoklDokladInput.Vznik = DateTime.Now;
 
-                
+
                 foundedPd.Kasa = AktKasa?.ID;
                 foundedPd.KasaX = AktKasa;
                 foundedPd.Spracovana = true;

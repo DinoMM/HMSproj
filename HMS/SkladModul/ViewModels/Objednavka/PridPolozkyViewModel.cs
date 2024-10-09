@@ -106,6 +106,7 @@ namespace SkladModul.ViewModels.Objednavka
             Uprava = false;
             NovaPoloz = new();      //naslo polozku tak nacitame info
             NovaPoloz.SetZPolozkySkladu(res);
+            NovaPoloz.Cena = Math.Round(NovaPoloz.Cena, 3);
         }
 
         [RelayCommand]

@@ -34,7 +34,7 @@ namespace DBLayer.Models
         /// povolene role pre zobrazenie poloziek dokladov
         /// </summary>
         [NotMapped]
-        public static List<RolesOwn> ROLE_R_POLOZKY { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.Nakupca, RolesOwn.RCVeduci, RolesOwn.Uctovnik, RolesOwn.Recepcny };
+        public static List<RolesOwn> ROLE_R_POLOZKY { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.RCVeduci, RolesOwn.Uctovnik, RolesOwn.Recepcny };
 
         /// <summary>
         /// povolene role pre upravu dokladov

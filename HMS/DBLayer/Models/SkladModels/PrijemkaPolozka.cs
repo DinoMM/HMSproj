@@ -50,7 +50,7 @@ namespace DBLayer.Models
         public object Clone() {
             var novy = new PrijemkaPolozka();
             novy.ID = ID;
-            novy.Cena = Cena;
+            novy.Cena = Math.Round(Cena, 3);
             novy.Mnozstvo = Mnozstvo;
             novy.Nazov = Nazov;
             novy.PolozkaSkladu = PolozkaSkladu;

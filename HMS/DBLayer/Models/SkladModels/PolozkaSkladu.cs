@@ -22,7 +22,9 @@ namespace DBLayer.Models
         public string MernaJednotka { get; set; } = default!;
         [NotMapped]
         public double Mnozstvo { get; set; } = 0;
+
         [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty")]
+        [Column(TypeName = "decimal(18, 4)")]
         public double Cena { get; set; } = 0;
 
         [NotMapped]
@@ -41,7 +43,7 @@ namespace DBLayer.Models
             clone.ID = ID;
             clone.MernaJednotka = MernaJednotka;
             clone.Mnozstvo = Mnozstvo;
-            clone.Cena = Cena;
+            clone.Cena = Math.Round(Cena, 4);
             clone.DPH = DPH;
 
             return clone;
