@@ -4,7 +4,7 @@
 
 <ApproveModal @ref=AprovMod ID="closeseason"
               Text="Naozaj chcete uzavrieť aktuálne obdobie? <br> Vytvorí sa nové podľa aktuálneho mesiaca alebo nasledovnosti"
-              FuncOnSucc="ViewModel.UzavrietObdobie"
+              FuncOnSucc="EventCallback.Empty"
               FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
 <div class="container">
@@ -41,10 +41,10 @@
                 <ThSort>ID</ThSort>
                 <ThSort>Názov Položky</ThSort>
                 <ThSort>Merná jednotka</ThSort>
-                <ThSort>Cena</ThSort>
-                <ThSort>Cena s DPH</ThSort>
-                <ThSort>Cena prij.</ThSort>
-                <ThSort>Cena s DPH prij.</ThSort>
+                <ThSort><div style="text-decoration:overline">Cena</div></ThSort>
+                <ThSort><div style="text-decoration:overline">Cena&nbsp;</div>s&nbsp;DPH</ThSort>
+                <ThSort><div style="text-decoration:overline">Cena&nbsp;príjem</div></ThSort>
+                <ThSort><div style="text-decoration:overline">Cena&nbsp;príjem&nbsp;</div>s&nbsp;DPH</ThSort>
                 <ThSort>Začiatočné Množstvo</ThSort>
 
                 <ThSort>Prijaté Množstvo</ThSort>
@@ -90,7 +90,7 @@
 
 @code {
 
-    ApproveModal AprovMod = new();
+        ApproveModal AprovMod = new();
 
     protected override void OnInitialized()
     {
@@ -120,7 +120,10 @@
     {
         if (await AprovMod.OpenModal(true))
         {
-            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            if (ViewModel.UzavrietObdobie())
+            {
+                Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            }
         };
     }
 

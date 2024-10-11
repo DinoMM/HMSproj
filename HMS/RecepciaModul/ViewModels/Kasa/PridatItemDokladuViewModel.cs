@@ -58,7 +58,10 @@ namespace RecepciaModul.ViewModels
                 switch (item)
                 {
                     case PolozkaSkladuConItemPoklDokladu ytem:
-                        ZoznamUniConItemsObjekty.Add(ytem.PolozkaSkladuMnozstvaX.PolozkaSkladuX);
+                        if (!ZoznamUniConItemsObjekty.Any(x => ((PolozkaSkladu)x).ID == ytem.PolozkaSkladuMnozstvaX.PolozkaSkladu))
+                        {
+                            ZoznamUniConItemsObjekty.Add(ytem.PolozkaSkladuMnozstvaX.PolozkaSkladuX);
+                        }
                         break;
                     case ReservationConItemPoklDokladu ytem:
                         if (_db.ItemyPokladDokladu
@@ -115,7 +118,7 @@ namespace RecepciaModul.ViewModels
             switch (UniConItemPoklDokladuInput)
             {
                 case PolozkaSkladuConItemPoklDokladu item:
-                    return new List<string> { "ID", "Názov", "Merná jednotka" };
+                    return new List<string> { "ID", "Názov", "Merná jednotka", "Sklad" };
                 case ReservationConItemPoklDokladu item:
                     return new List<string> { "ID" };
 
@@ -153,6 +156,48 @@ namespace RecepciaModul.ViewModels
             }
 
             UniConItemPoklDokladuInput = newItem;
+        }
+
+        public List<Sklad> GetSklady()
+        {
+            switch (UniConItemPoklDokladuInput)
+            {
+                case PolozkaSkladuConItemPoklDokladu item:
+                    return _db.PolozkySkladuConItemPoklDokladu
+                        .Include(x => x.PolozkaSkladuMnozstvaX)
+                        .ThenInclude(x => x.SkladX)
+                        .Where(x => x.PolozkaSkladuMnozstvaX.PolozkaSkladu == item.PolozkaSkladuMnozstvaX.PolozkaSkladu)
+                        .Select(x => x.PolozkaSkladuMnozstvaX.SkladX)
+                        .Distinct()
+                        .ToList();
+                default: return new();
+            }
+        }
+        public void SpracujSklad(Sklad sk)
+        {
+            switch (UniConItemPoklDokladuInput)
+            {
+                case PolozkaSkladuConItemPoklDokladu item:
+                    var unicon = _db.PolozkySkladuConItemPoklDokladu
+                        .Include(x => x.PolozkaSkladuMnozstvaX)
+                        .ThenInclude(x => x.PolozkaSkladuX)
+                        .Include(x => x.PolozkaSkladuMnozstvaX)
+                        .ThenInclude(x => x.SkladX)
+                        .FirstOrDefault(x => x.PolozkaSkladuMnozstvaX.PolozkaSkladu == item.PolozkaSkladuMnozstvaX.PolozkaSkladu &&
+                        x.PolozkaSkladuMnozstvaX.Sklad == sk.ID);
+                    if (unicon == null) {
+                        break;
+                    }
+                    UniConItemPoklDokladuInput = unicon;
+                    ItemPokladDokladuInput.Nazov = UniConItemPoklDokladuInput.GetNameUni();
+                    ItemPokladDokladuInput.Cena = (double)UniConItemPoklDokladuInput.GetCenaUni();
+                    ItemPokladDokladuInput.DPH = UniConItemPoklDokladuInput.GetDPHUni();
+                    ItemPokladDokladuInput.Mnozstvo = 1;
+                    ItemPokladDokladuInput.UniConItemPoklDokladu = UniConItemPoklDokladuInput.ID;
+                    ItemPokladDokladuInput.UniConItemPoklDokladuX = UniConItemPoklDokladuInput;
+                    break;
+                default: break;
+            }
         }
     }
 }

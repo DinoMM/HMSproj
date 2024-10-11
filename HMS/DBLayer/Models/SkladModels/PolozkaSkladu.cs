@@ -23,8 +23,8 @@ namespace DBLayer.Models
         [NotMapped]
         public double Mnozstvo { get; set; } = 0;
 
+        [NotMapped]
         [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty")]
-        [Column(TypeName = "decimal(18, 3)")]
         public double Cena { get; set; } = 0;
 
         [NotMapped]
@@ -55,16 +55,31 @@ namespace DBLayer.Models
 
         public static List<PolozkaSkladu> ZosumarizujListPoloziek(in List<PolozkaSkladuObjednavky> polozky)
         {
-            return polozky.GroupBy(x => x.PolozkaSkladu) //spoji duplikaty do unikatneho listu
-            .Select(group => new PolozkaSkladu()
+            return polozky.GroupBy(x =>
+            x.PolozkaSkladu) //spoji duplikaty do unikatneho listu
+            .Select(group =>
             {
-                ID = group.Key,
-                //Nazov = group.First().Nazov,
-                //MernaJednotka = group.First().MernaJednotka,
-                Mnozstvo = group.Sum(x => x.Mnozstvo),
-                Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo),
-                DPH = group.Sum(x => (decimal)x.DPH * (decimal)x.Mnozstvo) / (decimal)group.Sum(x => x.Mnozstvo)
+                var totalMnozstvo = group.Sum(x => x.Mnozstvo);
+                return new PolozkaSkladu()
+                {
+                    ID = group.Key,
+                    //Nazov = group.First().Nazov,
+                    //MernaJednotka = group.First().MernaJednotka,
+                    Mnozstvo = totalMnozstvo,
+                    Cena = totalMnozstvo != 0 ? group.Sum(x => x.Cena * x.Mnozstvo) / totalMnozstvo : 0,
+                    DPH = totalMnozstvo != 0 ? group.Sum(x => (decimal)x.DPH * (decimal)x.Mnozstvo) / (decimal)totalMnozstvo : 0
+                };
             })
+
+            //    group => new PolozkaSkladu()
+            //{
+            //    ID = group.Key,
+            //    //Nazov = group.First().Nazov,
+            //    //MernaJednotka = group.First().MernaJednotka,
+            //    Mnozstvo = group.Sum(x => x.Mnozstvo),
+            //    Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo),
+            //    DPH = group.Sum(x => (decimal)x.DPH * (decimal)x.Mnozstvo) / (decimal)group.Sum(x => x.Mnozstvo)
+            //})
             .ToList();
         }
 
@@ -85,8 +100,10 @@ namespace DBLayer.Models
                 };
             })
             .ToList();
-            if (checkNan) {
-                foreach (var item in list) {
+            if (checkNan)
+            {
+                foreach (var item in list)
+                {
                     item.Cena = double.IsNaN(item.Cena) ? 0.0 : item.Cena;
                 }
             }
@@ -96,15 +113,28 @@ namespace DBLayer.Models
         public static List<PolozkaSkladu> ZosumarizujListPoloziek(in List<PrijemkaPolozka> polozky)
         {
             return polozky.GroupBy(x => x.PolozkaSkladu) //spoji duplikaty do unikatneho listu
-            .Select(group => new PolozkaSkladu()
+            .Select(group =>
             {
-                ID = group.Key,
-                //Nazov = group.First().Nazov,
-                //MernaJednotka = group.First().MernaJednotka,
-                Mnozstvo = group.Sum(x => x.Mnozstvo),
-                Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo),
-                DPH = group.Sum(x => (decimal)x.DPH * (decimal)x.Mnozstvo) / (decimal)group.Sum(x => x.Mnozstvo)
+                var totalMnozstvo = group.Sum(x => x.Mnozstvo);
+                return new PolozkaSkladu()
+                {
+                    ID = group.Key,
+                    //Nazov = group.First().Nazov,
+                    //MernaJednotka = group.First().MernaJednotka,
+                    Mnozstvo = totalMnozstvo,
+                    Cena = totalMnozstvo != 0 ? group.Sum(x => x.Cena * x.Mnozstvo) / totalMnozstvo : 0,
+                    DPH = totalMnozstvo != 0 ? group.Sum(x => (decimal)x.DPH * (decimal)x.Mnozstvo) / (decimal)totalMnozstvo : 0
+                };
             })
+            //    group => new PolozkaSkladu()
+            //{
+            //    ID = group.Key,
+            //    //Nazov = group.First().Nazov,
+            //    //MernaJednotka = group.First().MernaJednotka,
+            //    Mnozstvo = group.Sum(x => x.Mnozstvo),
+            //    Cena = group.Sum(x => x.Cena * x.Mnozstvo) / group.Sum(x => x.Mnozstvo),
+            //    DPH = group.Sum(x => (decimal)x.DPH * (decimal)x.Mnozstvo) / (decimal)group.Sum(x => x.Mnozstvo)
+            //})
             .ToList();
         }
 

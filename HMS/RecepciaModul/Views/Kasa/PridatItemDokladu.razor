@@ -27,11 +27,39 @@
                                       if (await iftunicon.OpenModal(true))
                                       {
                                           ViewModel.SpracujUniCon(iftunicon.OutSelection.FirstOrDefault());
+                                          switch (ViewModel.UniConItemPoklDokladuInput)
+                                            {
+                                            case DBLayer.Models.PolozkaSkladuConItemPoklDokladu item:
+                                                iftsklad.StartRender();
+                                                break;
+                                                default: break;
+                                            }
                                       }
                                       await iftunicon.Dispose();
                                       StateHasChanged();
                                   }">
 
+    </ItemFinderTable>
+}
+
+@if (iftsklad.Rendered)
+{
+    <ItemFinderTable T="DBLayer.Models.Sklad"
+                     @ref="iftsklad"
+                     ID="iftsklad"
+                     ColNames="@(new() { "Skratka", "Názov" })"
+                     ColValues="ViewModel.GetSklady()"
+                     SizeInRem="30"
+                     Header="Výber skladu"
+                     KeyAttributeToo="true"
+                     AfterRender="async () => {
+                                    if (await iftsklad.OpenModal(true))
+                                    {
+                                        ViewModel.SpracujSklad(iftsklad.OutSelection.FirstOrDefault());
+                                    }
+                                    await iftsklad.Dispose();
+                                    StateHasChanged();
+                                }">
     </ItemFinderTable>
 }
 
@@ -154,6 +182,7 @@
     InfoModal infomodal = new();
     ItemFinderTable<object> iftunicon = new();
     ItemFinderTable<string> ifttype = new();
+    private ItemFinderTable<DBLayer.Models.Sklad> iftsklad = new();
 
     protected override void OnInitialized()
     {

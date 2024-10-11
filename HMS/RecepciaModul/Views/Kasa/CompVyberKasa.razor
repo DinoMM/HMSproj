@@ -2,6 +2,7 @@
 @inherits DynamicLoadedComponent
 @inject DBContext db
 @inject UniComponents.Services.IAppLifeCycleService AppLifeCycleService
+@using Microsoft.EntityFrameworkCore;
 
 
 <ItemFinderTable @ref="iftvyberkasy"
@@ -157,7 +158,10 @@
         if (!firstCheck)
         {
             firstCheck = true;
-            var ckeckifexist = db.Kasy.FirstOrDefault(x => x.ActualUser == UserService.LoggedUser.Id);
+            var ckeckifexist = db.Kasy
+                .Include(x => x.DodavatelX)
+                .Include(x => x.ActualUserX)
+                .FirstOrDefault(x => x.ActualUser == UserService.LoggedUser.Id);
             if (ckeckifexist != null)
             {
                 objectHolder.Add(ckeckifexist);

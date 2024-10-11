@@ -35,6 +35,11 @@ function addWarningPopOverUntilClick(id, content, direction)
     showPopover(id, content, direction);
 }
 
+function addInfoPopOverUntilClick(id, content, direction) {
+    addStyleClassUntilClick(id, "border-info");
+    showPopover(id, content, direction);
+}
+
 //zobrazi popover pri elemente s danym id, + text a smer  ("bottom", "right", "left", "top")
 function showPopover(id, content, direction) {
     var element = document.getElementById(id);
@@ -48,8 +53,8 @@ function showPopover(id, content, direction) {
 
         // Attach a click event listener to the document
         $(document).on('click.popover', function (e) {
-            // Check if the click occurred outside the popover
-            if (!$(e.target).closest('.popover').length && !$(e.target).is(element)) {
+            // Check if the click occurred outside the popover or on the input element itself
+            if (!$(e.target).closest('.popover').length || $(e.target).is(element)) {
                 $(element).popover('hide');
                 // Remove the event listener after hiding the popover
                 $(document).off('click.popover');

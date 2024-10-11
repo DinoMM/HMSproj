@@ -27,7 +27,7 @@
             <h2 class="text-center font-weight-bold">Príjemky za obdobie</h2>
             <div class="col">
                 <button @onclick="() => Navigator.NavigateTo(Navigator.RemoveLastUrl())" class="btn btn-primary  mb-3" type="button">Späť</button>
-                <button @onclick="Create" class="btn btn-primary  mb-3" type="button">➕Pridať príjemku</button>
+                <button @onclick="Create" disabled="@(!ViewModel.IsObdobieActual())" class="btn btn-primary  mb-3" type="button">➕Pridať príjemku</button>
                 <button @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary  mb-3" type="button">📩Otvoriť príjemku</button>
             </div>
         </div>

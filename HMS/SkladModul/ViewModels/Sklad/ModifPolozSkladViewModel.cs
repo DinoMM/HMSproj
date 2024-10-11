@@ -37,7 +37,7 @@ namespace SkladModul.ViewModels.Sklad
         public void SetExist(PolozkaS poloz)
         {
             Polozka = poloz;
-            var activcon = _db.PolozkaSkladuMnozstva.Include(x => x.SkladX).Where(x => x.PolozkaSkladu == Polozka.ID);
+            var activcon = _db.PolozkaSkladuMnozstva.Include(x => x.SkladX).Where(x => x.PolozkaSkladu == Polozka.ID).ToList();
             foreach (var item in activcon)
             {
                 ZoznamOnacenych.Add(item.SkladX);

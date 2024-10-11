@@ -46,7 +46,7 @@ namespace SkladModul.ViewModels.Sklad
 
             List<PohSkup> spojPrAPre = new(prijemky); //spojenie zoznamov
             spojPrAPre.AddRange(prevodky);//spojenie zoznamov
-            spojPrAPre = spojPrAPre.OrderByDescending(x =>  x.Vznik).ToList(); //zoradenie podla datumu
+            spojPrAPre = spojPrAPre.OrderByDescending(x => x.Vznik).ToList(); //zoradenie podla datumu
             foreach (var item in spojPrAPre)  //pridanie prevodiek do zoznamu
             {
                 ZoznamPrijemok.Add(item);
@@ -86,10 +86,11 @@ namespace SkladModul.ViewModels.Sklad
             {
                 return Ssklad.ShortFromObdobie(((Vydajka)polozka).Obdobie);
             }
+        }
 
-
-
-
+        public bool IsObdobieActual()
+        {
+            return SkladObdobie.IsObdobieActual(Sklad, Obdobie, in _db);
         }
     }
 }

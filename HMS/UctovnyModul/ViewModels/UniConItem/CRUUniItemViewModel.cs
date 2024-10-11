@@ -201,7 +201,7 @@ namespace UctovnyModul.ViewModels
             switch (UniItemInput)
             {
                 case PolozkaSkladuConItemPoklDokladu item:
-                    return new List<string> { "ID", "Názov", "MernaJednotka", "Cena" };
+                    return new List<string> { "ID", "Názov", "MernaJednotka" };
                 case ReservationConItemPoklDokladu item:
                     return new List<string> { "ID", "Príchod", "Odchod", "Poèet plán. hostí", "Celková suma", "Status" };
 

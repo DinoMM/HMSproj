@@ -185,6 +185,7 @@ namespace DBLayer.Models
                     double prevod = celkoveMnozstvaZPrevodiek.FirstOrDefault(x => x.ID == item.ID)?.Mnozstvo ?? 0;
                     double predajPD = celkoveMnozstvaZPokladnicnychDokladov.FirstOrDefault(x => x.ID == item.ID)?.Mnozstvo ?? 0;
                     item.Mnozstvo = found.Mnozstvo + pridan + prevod - odobrat - predajPD;
+                    item.Cena = found.Cena;
                 }
                 else
                 {

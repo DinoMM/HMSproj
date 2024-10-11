@@ -52,5 +52,5 @@ pre prejdene do command line v dockri do sql servera
 
 
 
-otvor ngrok spojenie pre databazu --(uistit ze je zaznamenany authtoken)
+otvor ngrok app spojenie pre databazu --( uistit ze je zaznamenany authtoken)
 	ngrok tcp 1433     

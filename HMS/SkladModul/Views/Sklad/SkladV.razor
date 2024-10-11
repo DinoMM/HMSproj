@@ -159,6 +159,7 @@
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
+        ViewModel.NacitatDostupneSklady();
         var founded1 = objectHolder.Remove<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska
         if (founded1 == null)
         {

@@ -409,6 +409,8 @@
                 break;
             }
         }
+        ViewModel.ClearChangesDB();
+        await ViewModel.SpracujZmeny();
     }
 
     private async Task ListAll()
@@ -417,6 +419,8 @@
         await ViewModel.NacitajZoznamRezervacieAll();
         await resaslistmod.OpenModal(true);
         resaslistmod.Render = false;
+        ViewModel.ClearChangesDB();
+        await ViewModel.SpracujZmeny();
 
     }
 }

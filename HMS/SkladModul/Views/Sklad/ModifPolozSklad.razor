@@ -46,7 +46,7 @@
                 <input type="text" @bind-value=@ViewModel.Polozka.Nazov @bind-value:event="oninput" @onchange="() =>ViewModel.Saved = false" class="form-control w-75" placeholder="Zadajte názov">
                 <ValidationMessage For="@(() => ViewModel.Polozka.Nazov)" />
             </div>
-            <div class="col">
+            @*<div class="col">
                 <div class="container px-0">
                     <div class="row gx-0">
                         <div class="col">
@@ -60,7 +60,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div>*@
         </div>
 
         <div class="row">

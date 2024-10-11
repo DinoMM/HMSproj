@@ -338,12 +338,12 @@
         #region kontrola zvolenia storno
         if (Marked.Status == DBLayer.Models.ReservationStatus.Stornovana.ToString())
         {
-            infomod.UpdateText("Chcete túto rezerváciu stornovať?. " + (UserService.IsLoggedUserInRoles(DBLayer.Models.Rezervation.ROLE_CRUD_REZERVACIA) ? "" : "Ďalšia úprava nie je možná pre Vás."));
+            infomod.UpdateText("Chcete túto rezerváciu stornovať?" + (UserService.IsLoggedUserInRoles(DBLayer.Models.Rezervation.ROLE_CRUD_REZERVACIA) ? "" : "Ďalšia úprava nie je pre Vás možná."));
             if (!await infomod.OpenModal(true))
             {
                 return;
             }
-            Warned = false;
+            Warned = true;
         }
         #endregion
         #region kontrola zvolenia blokovana
@@ -386,6 +386,7 @@
             dbw.SaveChanges();
             db.SaveChanges();
             infomod.UpdateText("Aktualizacia izby na blokovanu. ");
+            await sessionStorage.SetItemAsync("RezervationChanged", true);
             await infomod.OpenModal(true);
             return;
         }
@@ -398,6 +399,7 @@
                 Warned = true;
                 return;
             }
+            Warned = false;
         }
         #endregion
         #region update kupona
@@ -502,7 +504,7 @@
             warnfound = true;
         }
 
-        if (IsCompleted() || IsStorno())
+        if (IsCompleted())
         {
             await JSRuntime.InvokeVoidAsync("showPopover", "selectstav", "Ručné zadávanie sa nedoporučuje. Skontrolujte pravdivosť hodnôt", "right");
             warnfound = true;

@@ -47,5 +47,10 @@ namespace SkladModul.ViewModels.Sklad
             _db.Vydajky.Remove(poloz);
             _db.SaveChanges();
         }
+
+        public bool IsObdobieActual()
+        {
+            return SkladObdobie.IsObdobieActual(Sklad, Obdobie, in _db);
+        }
     }
 }

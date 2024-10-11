@@ -210,6 +210,14 @@ namespace DBLayer
             return (await _userManager.DeleteAsync(found)).Succeeded;
         }
 
+        public bool IsThisUserLoggedIn(IdentityUserOwn user)
+        {
+            if (LoggedUser is null)
+            {
+                return false;
+            }
+            return LoggedUser.Id == user.Id;
+        }
 
     }
 

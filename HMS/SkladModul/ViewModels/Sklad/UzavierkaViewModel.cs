@@ -163,6 +163,7 @@ namespace SkladModul.ViewModels.Sklad
 
                     ZozPrijat.AddRange(prijate);
                     ZozPrijat = PolozkaSkladu.ZosumarizujListPoloziek(in ZozPrijat, true);
+                    PolozkaSkladu.SpracListySpolu(ZozPrijat, in vydateAll, (x, y) => x.Mnozstvo -= y.Mnozstvo);
 
                     //ZozVydat.AddRange(vydateAll);
                     //ZozVydat = PolozkaSkladu.ZosumarizujListPoloziek(in ZozVydat);
@@ -195,9 +196,9 @@ namespace SkladModul.ViewModels.Sklad
             return SkladObdobie.MoznoUzavrietObdobie(Sklad, Obdobie, in _db, in _uservice);
         }
 
-        public void UzavrietObdobie()
+        public bool UzavrietObdobie()
         {
-            SkladObdobie.UzavrietObdobie(Sklad, Obdobie, in _db, in _uservice);
+            return SkladObdobie.UzavrietObdobie(Sklad, Obdobie, zoznamAktualnehoMnozstva, in _db, in _uservice);
         }
 
         public async Task VytvorPDF() //vygeneruje a otvori objednavku v pdf v default nastavenom programe

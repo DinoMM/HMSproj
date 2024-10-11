@@ -58,42 +58,35 @@ namespace DBLayer.Models
             db.SaveChanges();
         }
 
-        public static void UzavrietObdobie(Sklad sklad, DateTime obdobie, in DBContext db, in UserService uservice)
+        public static bool UzavrietObdobie(Sklad sklad, DateTime obdobie, List<PolozkaSkladu> zoznam, in DBContext db, in UserService uservice)
         {
             #region kontrola
             if (!MoznoUzavrietObdobie(sklad, obdobie, in db, in uservice)) //kontrola ci je mozne uzavriet obdobie
             {
-                return;
+                return false;
             }
             #endregion
-            #region aktualizacia poloziek mnozstva
+            #region aktualizacia poloziek mnozstva a ceny
             var listActual = DBLayer.Models.Sklad.GetAktualneMnozstva(sklad, in db); //ziskanie aktualnych mnozstiev
             var listNoveMnozstvo = db.PolozkaSkladuMnozstva.Where(x => x.Sklad == sklad.ID).ToList();
-            bool Rollback = false;
-            using (var transaction = db.Database.BeginTransaction())
-            {
-                foreach (var item in listNoveMnozstvo)
-                {
-                    item.Mnozstvo = listActual.FirstOrDefault(x => x.ID == item.PolozkaSkladu)?.Mnozstvo ?? 0; //nastavenie mnozstva
-                    if (item.Mnozstvo < 0)      //pre istotu kontrola
-                    {
-                        Rollback = true;
-                        break;
-                    }
-                }
-                if (Rollback)
-                {
-                    transaction.Rollback();
-                    return;
-                }
 
-                db.SaveChanges();
-                transaction.Commit();
+            foreach (var item in listNoveMnozstvo)
+            {
+                item.Mnozstvo = listActual.FirstOrDefault(x => x.ID == item.PolozkaSkladu)?.Mnozstvo ?? 0; //nastavenie mnozstva
+                if (item.Mnozstvo < 0)      //pre istotu kontrola
+                {
+                    db.ClearPendingChanges();
+                    return false;
+                }
+                item.Cena = zoznam.FirstOrDefault(x => x.ID == item.PolozkaSkladu)?.Cena ?? 0; //nastavenie ceny
             }
+            db.SaveChanges();
+
             #endregion
             #region pridanie noveho obdobia
             CreateObdobie(sklad, GetNextObdobie(sklad, obdobie, in db), in db); //vytvorenie noveho obdobia podla určeneho pravidla
             #endregion
+            return true;
         }
 
         public static bool MoznoUzavrietObdobie(Sklad sklad, DateTime obdobie, in DBContext db, in UserService uservice)
@@ -130,7 +123,7 @@ namespace DBLayer.Models
         /// <returns>Nasledujúce obdobie pre daný sklad.</returns>
         private static DateTime GetNextObdobie(Sklad sklad, DateTime obdobie, in DBContext db)
         {
-            obdobie = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1); // nastavenie na prvy den aktualneho mesiaca
+            obdobie = new DateTime(obdobie.Year, obdobie.Month, 1); // nastavenie na prvy den aktualneho mesiaca
 
             if (SkladObdobie.GetActualObdobieFromSklad(sklad, in db) == obdobie) // ak je to aktualne obdobie, tak sa posunie o jeden mesiac
             {
@@ -152,6 +145,14 @@ namespace DBLayer.Models
             return db.SkladObdobi.Where(x => x.Sklad == sklad.ID && x.Obdobie >= obdobiePo)
               .OrderByDescending(x => x.Obdobie)
               .Select(x => x.Obdobie).ToList();
+        }
+
+        public static bool IsObdobieActual(Sklad sklad, DateTime obdobie, in DBContext db)
+        {
+            var actualDate = db.SkladObdobi.Where(x => x.Sklad == sklad.ID)
+                .OrderByDescending(x => x.Obdobie)
+                .FirstOrDefault()?.Obdobie;
+            return actualDate == obdobie;
         }
     }
 

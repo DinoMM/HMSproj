@@ -24,7 +24,7 @@ namespace DBLayer.Models
         [NotMapped]
         public double CelkovaCena { get => (double)Mnozstvo * Cena; }
         [NotMapped]
-        public double CenaDPH { get => (double)(100 + DPH) / 100; }
+        public double CenaDPH { get => (Cena * (double)(100 + DPH)) / 100; }
         [NotMapped]
         public double CelkovaCenaDPH { get => (double)Mnozstvo * CenaDPH; }
         [NotMapped]

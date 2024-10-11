@@ -14,6 +14,8 @@ using Ssklad = DBLayer.Models.Sklad;
 using Pprijemka = DBLayer.Models.Prijemka;
 using Vvydajka = DBLayer.Models.Vydajka;
 using UniComponents;
+using DBLayer.Migrations;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace SkladModul.ViewModels.Sklad
 {
@@ -77,7 +79,6 @@ namespace SkladModul.ViewModels.Sklad
 
         public async Task LoadZoznam()
         {
-            Ssklad sklad;
             ZoznamPoloziek.Clear();
             if (TypeOfPohSkupina == typeof(Pprijemka))
             {
@@ -85,15 +86,18 @@ namespace SkladModul.ViewModels.Sklad
                 .Where(x => x.Sklad == ((Pprijemka)PohSkupina).Sklad)
                 .Select(x => x.PolozkaSkladuX)
                 .ToList());
-                sklad = ((Pprijemka)PohSkupina).SkladX;
             }
             else
             {
-                ZoznamPoloziek.AddRange(_db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
+                var zoz = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
                 .Where(x => x.Sklad == ((Vvydajka)PohSkupina).Sklad)
-                .Select(x => x.PolozkaSkladuX)
-                .ToList());
-                sklad = ((Vvydajka)PohSkupina).SkladX;
+                .ToList();
+                zoz.ForEach(x =>
+                {
+                    x.PolozkaSkladuX.Cena = x.Cena;
+                    x.PolozkaSkladuX.Mnozstvo = x.Mnozstvo;
+                });
+                ZoznamPoloziek.AddRange(zoz.Select(x => x.PolozkaSkladuX));
             }
             ZoznamPoloziek = ZoznamPoloziek.DistinctBy(x => x.ID).OrderBy(x => x.ID).ToList();
 
@@ -127,6 +131,8 @@ namespace SkladModul.ViewModels.Sklad
                     return;
                 }
 
+                najd = najd.Clon(); //klonovanie aby sa nezmenila hodnota ceny v databaze
+
                 if (TypeOfPohSkupina == typeof(Vvydajka))
                 {
                     if (!string.IsNullOrEmpty(((Vvydajka)PohSkupina).SkladDo))  //ak je vydajka nastavena ako prevodka, musi to byt platny SkladDo
@@ -138,8 +144,24 @@ namespace SkladModul.ViewModels.Sklad
                             return;
                         }
                     }
+                    #region vypocet ceny zásoby pomocou priemeru
+                    var polozPrijem = Ssklad.GetPoctyZPrijemok(najd.SkladX, SkladObdobie.GetActualObdobieFromSklad(najd.SkladX, in _db), in _db).FirstOrDefault(x => x.ID == najd.PolozkaSkladu);   //ziskanie polozky z prijemok (cenu + mnozstvo) v aktualnom obdobi
+                    if (polozPrijem != null)
+                    {
+                        var found = ZoznamPoloziek.FirstOrDefault(x => x.ID == najd.PolozkaSkladu); //najdenie polozky v zozname (obsahuje aktualnu cenu + aktualne mnozstvo na sklade na zaciatku obdobia)
+                        if (found != null)
+                        {
+                            var sumMnozstvo = (found.Mnozstvo + polozPrijem.Mnozstvo);
+                            if (sumMnozstvo != 0)
+                            {
+                                najd.PolozkaSkladuX.Cena = ((found.Cena * found.Mnozstvo) + (polozPrijem.Cena * polozPrijem.Mnozstvo)) / sumMnozstvo; //vypocet priemeru ceny
+                            }
+                        }
+                    }
+                    #endregion
                 }
-
+                najd.PolozkaSkladuX.Mnozstvo = 0;
+                najd.PolozkaSkladuX.Cena = Math.Round(najd.PolozkaSkladuX.Cena, 3);
                 Uprava = false;
                 NovaPoloz = (PohJednotka)Activator.CreateInstance(TypeOfPohJednotka);       //naslo polozku tak nacitame info
                 ((DBLayer.Models.PrijemkaPolozka)NovaPoloz).SetZPolozSkladuMnozstva(najd.PolozkaSkladuX);

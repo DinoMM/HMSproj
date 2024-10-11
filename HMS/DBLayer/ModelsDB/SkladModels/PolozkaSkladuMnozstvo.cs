@@ -24,6 +24,7 @@ namespace DBLayer.Models
                 if (found != null)
                 {
                     item.Mnozstvo = found.Mnozstvo;
+                    item.Cena = found.Cena;
                 }
             }
         }

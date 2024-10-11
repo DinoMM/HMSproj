@@ -9,6 +9,15 @@
               FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
 
+<ItemFinderTable T="string"
+                 @ref="ifttype"
+                 ID="itftype"
+                 ColNames="@(new(){"Typ"})"
+                 ColValues="ViewModel.TypyList()"
+                 SizeInRem="30"
+                 Header="Filter podľa typu">
+</ItemFinderTable>
+
 <div class="container">
 
     <div class="row pb-1">
@@ -16,7 +25,7 @@
         <div class="col-1"></div>
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="5" TableID="tableid" PlaceHolder="Vyhľadaj položku..."></SearchInput>
+            <SearchInput NumCols="6" TableID="tableid" PlaceHolder="Vyhľadaj položku..."></SearchInput>
         </div>
 
         <div class="col-8">
@@ -24,6 +33,7 @@
                 <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
                 <button @onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRUD())" class="btn btn-primary">➕Vytvoriť položku</button>
                 <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary">Otvoriť</button>
+                <button type="button" class="btn btn-info" @onclick="FindTyp">Typ:&nbsp;@ViewModel.GetTypNazov()</button>
 
             </div>
         </div>
@@ -37,11 +47,12 @@
             <SimpleTable ID="tableid">
                 <THEAD>
 
-                <ThSort>ID Spojenia</ThSort>
-                <ThSort>ID</ThSort>
-                <ThSort>Typ</ThSort>
-                <ThSort>Názov</ThSort>
-                <ThSort>Cena</ThSort>
+                    <ThSort>ID Spojenia</ThSort>
+                    <ThSort>ID</ThSort>
+                    <ThSort>Typ</ThSort>
+                    <ThSort>Názov</ThSort>
+                    <ThSort>@ViewModel.GetHeaderTable()</ThSort>
+                    <ThSort>Cena</ThSort>
                 <th class="col-resize" scope="col"></th>
 
                 </THEAD>
@@ -63,6 +74,7 @@
                                     <td class="col-resize">@item.GetID()</td>
                                     <td class="col-resize">@item.GetTypeUni()</td>
                                     <td class="col-resize">@item.GetNameUni()</td>
+                                    <td class="col-resize">@ViewModel.GetValTable(item)</td>
                                     <td class="col-resize">@item.GetCenaUni()</td>
                                     <td>
                                         @if (ViewModel.ValidateUserCRUD())
@@ -97,6 +109,7 @@
 
     private DBLayer.Models.UniConItemPoklDokladu? marked;
     private ApproveModal AprovMod = new();
+    private ItemFinderTable<string> ifttype = new();
 
     protected override void OnInitialized()
     {
@@ -149,6 +162,14 @@
             {
                 ViewModel.Vymazat(item);
             }
+        }
+    }
+
+    public async Task FindTyp()
+    {
+        if (await ifttype.OpenModal(true))
+        {
+            ViewModel.SpravujZmenuTypu(ifttype.OutSelection.FirstOrDefault());
         }
     }
 

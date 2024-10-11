@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DBLayer;
 using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.ObjectModel;
 
 namespace UctovnyModul.ViewModels
@@ -10,8 +11,11 @@ namespace UctovnyModul.ViewModels
     {
         [ObservableProperty]
         ObservableCollection<UniConItemPoklDokladu> zoznamPoloziek = new();
+        List<UniConItemPoklDokladu> zoznamPoloziekAll = new();
 
         public bool NacitavaniePoloziek { get; private set; } = true;
+
+        Type typSpojenia = typeof(PolozkaSkladuConItemPoklDokladu);
 
         private readonly DBContext _db;
         private readonly DataContext _dbw;
@@ -35,12 +39,14 @@ namespace UctovnyModul.ViewModels
 
         public async Task NacitajZoznamy()
         {
-            ZoznamPoloziek = new(await _db.UniConItemyPoklDokladu
+            zoznamPoloziekAll = new(await _db.UniConItemyPoklDokladu
                 .OrderByDescending(x => x.ID)
                 .Include(x => ((PolozkaSkladuConItemPoklDokladu)x).PolozkaSkladuMnozstvaX)
-                .Include(x => ((PolozkaSkladuConItemPoklDokladu)x).PolozkaSkladuMnozstvaX.PolozkaSkladuX)
+                .ThenInclude(x => x.PolozkaSkladuX)
                 .ToListAsync());
-            var polozkyRes = ZoznamPoloziek.Where(x => x is ReservationConItemPoklDokladu).Select(x => ((ReservationConItemPoklDokladu)x)).ToList();
+            var polozkyRes = zoznamPoloziekAll.Where(x => x is ReservationConItemPoklDokladu)
+                .Select(x => ((ReservationConItemPoklDokladu)x))
+                .ToList();
             foreach (var item in polozkyRes)
             {
                 var found = await _dbw.Rezervations
@@ -54,6 +60,14 @@ namespace UctovnyModul.ViewModels
                 }
                 item.ReservationZ = found;
             }
+            ZoznamPoloziek.Clear();
+            foreach (var item in zoznamPoloziekAll)
+            {
+                if (item.GetType() == typSpojenia)
+                {
+                    ZoznamPoloziek.Add(item);
+                }
+            }
             NacitavaniePoloziek = false;
         }
 
@@ -65,7 +79,69 @@ namespace UctovnyModul.ViewModels
         public void Vymazat(UniConItemPoklDokladu item)
         {
 
+        }
+
+        public List<string> TypyList()
+        {
+            List<string> list = new();
+            list.Add(new ReservationConItemPoklDokladu().GetTypeUni());
+            list.Add(new PolozkaSkladuConItemPoklDokladu().GetTypeUni());
+            return list;
+        }
+
+        public string GetTypNazov()
+        {
+            if (typSpojenia == typeof(ReservationConItemPoklDokladu))
+            {
+                return new ReservationConItemPoklDokladu().GetTypeUni();
+            }
+            return new PolozkaSkladuConItemPoklDokladu().GetTypeUni();
+        }
+
+        public void SpravujZmenuTypu(string typ)
+        {
+            if (!TypyList().Contains(typ))
+            {
+                return;
+            }
+
+            if (typ == new ReservationConItemPoklDokladu().GetTypeUni())
+            {
+                typSpojenia = typeof(ReservationConItemPoklDokladu);
+            }
+            else if (typ == new PolozkaSkladuConItemPoklDokladu().GetTypeUni())
+            {
+                typSpojenia = typeof(PolozkaSkladuConItemPoklDokladu);
+            }
+
+            ZoznamPoloziek.Clear();
+            foreach (var item in zoznamPoloziekAll)
+            {
+                if (item.GetType() == typSpojenia)
+                {
+                    ZoznamPoloziek.Add(item);
+                }
+            }
 
         }
+
+        public string GetHeaderTable()
+        {
+            if (typSpojenia == typeof(ReservationConItemPoklDokladu))
+            {
+                return "Rezervácia";
+            }
+            return "Sklad";
+        }
+
+        public string GetValTable(UniConItemPoklDokladu item)
+        {
+            if (item is ReservationConItemPoklDokladu ytem)
+            {
+                return ytem.ReservationZ?.Guest?.Email ?? ytem.ReservationZ?.RoomNumber ?? "-";
+            }
+            return ((PolozkaSkladuConItemPoklDokladu)item).PolozkaSkladuMnozstvaX.Sklad;
+        }
+
     }
 }

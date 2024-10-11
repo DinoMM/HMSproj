@@ -300,6 +300,14 @@ namespace RecepciaModul.ViewModels
             PDFLoading = true;
             BlocekPDF creator = new BlocekPDF();
 
+            if (PoklDokladInput.KasaX!.DodavatelX == null)
+            {
+                PoklDokladInput.KasaX!.DodavatelX = _db.Kasy
+                    .Include(x => x.DodavatelX)
+                    .Include(x => x.ActualUserX)
+                    .FirstOrDefault(x => x.ID == PoklDokladInput.Kasa).DodavatelX;
+            }
+
             await Task.Run(() =>
             {
                 creator.GenerujPdf(PoklDokladInput, ZoznamPoloziek.ToList());

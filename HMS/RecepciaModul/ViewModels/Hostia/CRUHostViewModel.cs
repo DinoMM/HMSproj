@@ -118,11 +118,12 @@ namespace RecepciaModul.ViewModels
         {
             if (BolVarovany)
             {
+                BolVarovany = false;
                 return false;
             }
 
             bool vysledok = false;
-            #region warning1
+            #region info1
 
             if (DateTime.Today <= HostInput.BirthDate.AddYears(18))   //je dospeli?
             {
@@ -132,34 +133,34 @@ namespace RecepciaModul.ViewModels
                     {
                         if (DateTime.Today <= HostInput.BirthDate.AddYears(2)) //batola
                         {
-                            await _JSRuntime.InvokeVoidAsync("addWarningPopOverUntilClick", ids[0], "Do 2 rokov.", "right");
+                            await _JSRuntime.InvokeVoidAsync("addInfoPopOverUntilClick", ids[0], "Do 2 rokov.", "right");
                         }
                         else
                         {
-                            await _JSRuntime.InvokeVoidAsync("addWarningPopOverUntilClick", ids[0], "Do 5 rokov.", "right");
+                            await _JSRuntime.InvokeVoidAsync("addInfoPopOverUntilClick", ids[0], "Do 5 rokov.", "right");
                         }
                     }
                     else
                     {
-                        await _JSRuntime.InvokeVoidAsync("addWarningPopOverUntilClick", ids[0], "Do 12 rokov.", "right");
+                        await _JSRuntime.InvokeVoidAsync("addInfoPopOverUntilClick", ids[0], "Do 12 rokov.", "right");
                     }
                 }
                 else
                 {
-                    await _JSRuntime.InvokeVoidAsync("addWarningPopOverUntilClick", ids[0], "Nemá 18 rokov.", "right");
+                    await _JSRuntime.InvokeVoidAsync("addInfoPopOverUntilClick", ids[0], "Nemá 18 rokov.", "right");
                 }
-                vysledok = true;
+                //vysledok = true;
             }
             #endregion
             #region warning2
-            if (string.IsNullOrEmpty(HostInput.CitizenID) && _db.Hostia.Any(x => x.CitizenID == HostInput.CitizenID && x.ID != HostInput.ID))
+            if (!string.IsNullOrEmpty(HostInput.CitizenID) && _db.Hostia.Any(x => x.CitizenID == HostInput.CitizenID && x.ID != HostInput.ID))
             {
                 await _JSRuntime.InvokeVoidAsync("addWarningPopOverUntilClick", ids[1], "Èíslo obèianského už existuje v systéme", "left");
                 vysledok = true;
             }
             #endregion
             #region warning3
-            if (string.IsNullOrEmpty(HostInput.Passport) && _db.Hostia.Any(x => x.Passport == HostInput.Passport && x.ID != HostInput.ID))
+            if (!string.IsNullOrEmpty(HostInput.Passport) && _db.Hostia.Any(x => x.Passport == HostInput.Passport && x.ID != HostInput.ID))
             {
                 await _JSRuntime.InvokeVoidAsync("addWarningPopOverUntilClick", ids[2], "Èíslo pasu už existuje v systéme", "left");
                 vysledok = true;

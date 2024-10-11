@@ -31,6 +31,8 @@ namespace SkladModul.ViewModels.Sklad
         [ObservableProperty]
         ObservableCollection<PolozkaS> zoznamPoloziekSkladu = new();
 
+        IdentityUserOwn? actualUser = null;
+
 
         readonly DBContext _db;
         readonly UserService _userService;
@@ -41,53 +43,57 @@ namespace SkladModul.ViewModels.Sklad
             _db = db;
             _userService = userService;
             _sessionStorage = sessionStorage;
-
-            if (_userService.LoggedUser == null)
-            {
-                Debug.WriteLine("Neni prihlaseny uzivatel");
-                return;
-            }
-            if (true)
-            {
-                var skladuziv = _db.SkladUzivatelia.Include(x => x.SkladX).Where(x => x.Uzivatel == _userService.LoggedUser.Id).ToList();
-
-                if (skladuziv.Count > 0 || _userService.IsLoggedUserInRoles(Ssklad.ZMENAPOLOZIEKROLE))
-                {
-                    if (_userService.IsLoggedUserInRoles(Ssklad.ZMENAPOLOZIEKROLE))
-                    {
-                        Sklady = _db.Sklady.ToList();
-                    }
-                    else
-                    {
-                        Sklady = skladuziv.Select(x => x.SkladX).ToList();
-                    }
-                    Sklad = Sklady.FirstOrDefault()!;
-                    Obdobie = Ssklad.ShortFromObdobie(SkladObdobie.GetActualObdobieFromSklad(Sklad, _db)); //ziska aktualne obdobie, ak neexistuje tak sa vytvori
-                    AktualneObdobie = true; //mali by sme mat urcite aktualne obdobie po vytvoreni ViewModela
-
-                    if (Ssklad.ZMENAPOLOZIEKROLE.Contains(_userService.LoggedUserRole))
-                    {
-                        if (Sklady.FirstOrDefault(x => x.ID == "ALL") == null)  //prida moznost pre zobrazenie vsetkych skladovych poloziek
-                        {
-                            Sklady.Add(new Ssklad() { ID = "ALL", Nazov = "Zobrazenie všetkých položiek"/*, Obdobie = DateTime.Today*/ });
-                        }
-                    }
-                    /*CheckIsObdobieActual();*/     //kontrola ci je obdobie aktualne, nastavenie priznakov
-
-                }
-                else
-                {
-                    Debug.WriteLine("Ziadne sklady!");
-                }
-            }
-
         }
 
         public void SetProp(Ssklad sk, string ob)
         {
-            Sklad = sk;
-            Obdobie = ob;
-            CheckIsObdobieActual();     //kontrola ci je obdobie aktualne
+            if (Sklady.Any(x => x.ID == sk.ID))
+            {
+                Sklad = sk;
+                Obdobie = ob;
+                CheckIsObdobieActual();     //kontrola ci je obdobie aktualne
+            }
+        }
+
+        public void NacitatDostupneSklady()
+        {
+            if (actualUser != null && _userService.IsThisUserLoggedIn(actualUser))  //ak neni ziaden actualUser alebo actualUser neni prihlaseny -> nacitat sklady
+            {
+                return;
+            }
+            actualUser = _userService.LoggedUser;
+            #region nacitanie typ skladov
+            var skladuziv = _db.SkladUzivatelia.Include(x => x.SkladX).Where(x => x.Uzivatel == actualUser.Id).ToList();
+
+            if (skladuziv.Count > 0 || _userService.IsLoggedUserInRoles(Ssklad.ZMENAPOLOZIEKROLE))
+            {
+                if (_userService.IsLoggedUserInRoles(Ssklad.ZMENAPOLOZIEKROLE))
+                {
+                    Sklady = _db.Sklady.ToList();
+                }
+                else
+                {
+                    Sklady = skladuziv.Select(x => x.SkladX).ToList();
+                }
+                Sklad = Sklady.FirstOrDefault()!;
+                Obdobie = Ssklad.ShortFromObdobie(SkladObdobie.GetActualObdobieFromSklad(Sklad, _db)); //ziska aktualne obdobie, ak neexistuje tak sa vytvori
+                AktualneObdobie = true; //mali by sme mat urcite aktualne obdobie po vytvoreni ViewModela
+
+                if (Ssklad.ZMENAPOLOZIEKROLE.Contains(_userService.LoggedUserRole))
+                {
+                    if (Sklady.FirstOrDefault(x => x.ID == "ALL") == null)  //prida moznost pre zobrazenie vsetkych skladovych poloziek
+                    {
+                        Sklady.Add(new Ssklad() { ID = "ALL", Nazov = "Zobrazenie všetkých položiek"/*, Obdobie = DateTime.Today*/ });
+                    }
+                }
+                /*CheckIsObdobieActual();*/     //kontrola ci je obdobie aktualne, nastavenie priznakov
+
+            }
+            else
+            {
+                Debug.WriteLine("Ziadne sklady!");
+            }
+            #endregion
         }
 
         /// <summary>
@@ -242,7 +248,16 @@ namespace SkladModul.ViewModels.Sklad
                         foreach (var item in obdSkladu)
                         {
                             Ssklad.LoadMnozstvoZaObdobie(zoznamPoloziekObd, Sklad, item, in _db);
-                            PolozkaS.SpracListySpolu(ZoznamPoloziekSkladu, in zoznamPoloziekObd, (x, y) => x.Mnozstvo -= y.Mnozstvo);
+                            var prijem = Ssklad.GetPoctyZPrijemok(Sklad, item, in _db);
+                            PolozkaS.SpracListySpolu(ZoznamPoloziekSkladu, in zoznamPoloziekObd, (x, y) =>
+                            {
+                                x.Mnozstvo -= y.Mnozstvo;
+                                var prijPoloz = prijem.FirstOrDefault(z => z.ID == x.ID);
+                                if (prijPoloz != null)
+                                {
+                                    x.Cena = x.Mnozstvo != 0 ? ((x.Cena * (x.Mnozstvo + prijPoloz.Mnozstvo) - (prijPoloz.Cena * prijPoloz.Mnozstvo)) / x.Mnozstvo) : prijPoloz.Cena;
+                                }
+                            });
                             PolozkaS.ResetMnozstva(zoznamPoloziekObd);
                         }
                     }
