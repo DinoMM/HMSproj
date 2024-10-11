@@ -40,6 +40,9 @@ namespace DBLayer.Models
 
         public string Status { get; set; } = ReservationStatus.VytvorenaRucne.ToString();
 
+        public string? RecentChangesUser { get; set; }
+
+
         [NotMapped]
         [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty.")]
         public double UbytovaciPoplatok { get; set; } = 0.0;
@@ -60,6 +63,7 @@ namespace DBLayer.Models
             Status = res.Status;
             CouponId = res.CouponId;
             Coupon = res.Coupon;
+            RecentChangesUser = res.RecentChangesUser;
         }
 
         public object Clone()
@@ -77,6 +81,7 @@ namespace DBLayer.Models
             clone.Room = this.Room;
             clone.Coupon = this.Coupon;
             clone.Status = this.Status;
+            clone.RecentChangesUser = this.RecentChangesUser;
             return clone;
         }
         public Rezervation Clon()

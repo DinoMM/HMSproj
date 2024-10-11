@@ -72,6 +72,7 @@ namespace DBLayer
         public DbSet<PrijemkaPolozka> VydajkyPolozky { get; set; }      //ten isty typ pre Prijem/Vydaj
         
         public DbSet<Faktura> Faktury { get; set; }
+        public DbSet<DruhPohybu> DruhyPohybov { get; set; }
 
         public DbSet<Host> Hostia { get; set; }
         public DbSet<HostFlag> HostFlags { get; set; }

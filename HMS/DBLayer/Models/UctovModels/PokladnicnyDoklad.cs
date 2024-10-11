@@ -17,6 +17,10 @@ namespace DBLayer.Models
         [BooleanStringValues("Platobná karta", "Hotovosť")]
         public bool TypPlatby { get; set; } = false;
 
+        [ForeignKey("HostX")]
+        public string? Host { get; set; } = default!;
+        public Host? HostX { get; set; }
+
         public object Clone()
         {
             return new PokladnicnyDoklad
@@ -27,7 +31,9 @@ namespace DBLayer.Models
                 Spracovana = this.Spracovana,
                 Kasa = this.Kasa,
                 KasaX = this.KasaX,
-                TypPlatby = this.TypPlatby
+                TypPlatby = this.TypPlatby,
+                Host = this.Host,
+                HostX = this.HostX
             };
         }
         public PokladnicnyDoklad Clon()

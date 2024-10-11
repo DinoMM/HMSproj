@@ -23,6 +23,11 @@ namespace DBLayer.Models
         public string? ActualUser { get; set; } = default!;
         public IdentityUserOwn? ActualUserX { get; set; }
 
+        [HideFromInput]
+        [Column(TypeName = "decimal(12, 2)")]
+        public double HotovostStav { get; set; } = 0;
+
+
         public object Clone()
         {
             return new Kasa

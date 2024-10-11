@@ -17,5 +17,11 @@ namespace DBLayer.Models
         public Sklad SkladX { get; set; }
         public DateTime Obdobie { get; set; } = SkladObdobie.GetSeassonFromToday();
 
+        [ForeignKey("DruhPohybuX")]
+        public string? DruhPohybu { get; set; } = default!;
+        public DruhPohybu? DruhPohybuX { get; set; } 
+
+
     }
+    
 }

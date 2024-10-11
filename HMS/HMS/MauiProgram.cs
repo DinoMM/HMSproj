@@ -24,6 +24,7 @@ using SkladModul.ViewModels.Sklady;
 using UctovnyModul.ViewModels;
 using UctovnyModul.ViewModels.Faktury;
 using RecepciaModul.ViewModels;
+using Microsoft.AspNetCore.DataProtection;
 
 
 namespace HMS
@@ -89,6 +90,8 @@ namespace HMS
                 .AddRoles<IdentityRole>()
                 .AddUserValidator<CustomUserValidator<IdentityUserOwn>>();      //(pomohol som si z internetu tutoriály/AI)
 
+            builder.Services.AddDataProtection().SetApplicationName("HMS_app"); //pridanie scopu na ochranu dat -> Microsoft.AspNetCore.DataProtection
+            DataEncryptor.Init(builder.Services.BuildServiceProvider().GetRequiredService<IDataProtectionProvider>()); //inicializacia DataEncryptor
 
             //builder.Services.AddBlazorWebView()
             // .AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUserOwn>>();

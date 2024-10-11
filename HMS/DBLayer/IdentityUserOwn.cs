@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Microsoft.AspNetCore.DataProtection;
 
 namespace DBLayer
 {
@@ -28,6 +28,34 @@ namespace DBLayer
         [PersonalData]
         [Column(TypeName = "nvarchar(64)")]
         public string? Adresa { get; set; } = default!;
+
+        private string _rodneCislo = default!;
+        [PersonalData]
+        [Column(TypeName = "nvarchar(256)")]
+        public string RodneCislo
+        {
+            get => DataEncryptor.Unprotect(_rodneCislo);
+            set => _rodneCislo = DataEncryptor.Protect(value);
+        }
+
+        private string _obcianskyID = default!;
+        [PersonalData]
+        [Column(TypeName = "nvarchar(256)")]
+        public string ObcianskyID
+        {
+            get => DataEncryptor.Unprotect(_obcianskyID);
+            set => _obcianskyID = DataEncryptor.Protect(value);
+        }
+        /// <summary>
+        /// false - male, true - female
+        /// </summary>
+        [PersonalData]
+        [BooleanStringValues("Muž", "Žena")]
+        public bool Sex { get; set; } = false;
+
+        [PersonalData]
+        [Column(TypeName = "nvarchar(128)")]
+        public string Nationality { get; set; } = "";
 
 
         /// <summary>
@@ -72,7 +100,8 @@ namespace DBLayer
 
         public virtual async Task<IdentityResult> ValidateAsync(UserManager<TUser> manager, TUser user)
         {
-            if (manager is null || user is null) {
+            if (manager is null || user is null)
+            {
                 throw new ArgumentNullException(manager is null ? nameof(manager) : nameof(user));
             }
             var errors = await ValidateUserName(manager, user).ConfigureAwait(false);
@@ -111,7 +140,7 @@ namespace DBLayer
 
             return errors;
         }
-        
+
         private async Task<List<IdentityError>?> ValidateEmail(UserManager<TUser> manager, TUser user, List<IdentityError>? errors)
         {
             var email = await manager.GetEmailAsync(user).ConfigureAwait(false);
