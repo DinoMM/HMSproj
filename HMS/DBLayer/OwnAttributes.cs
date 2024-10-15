@@ -19,10 +19,18 @@ namespace DBLayer
                 return new ValidationResult(ErrorMessage ?? "Null.", ContextMemberNames);
 
             }
-
-            if (!(value is decimal decNum))
+            decimal decNum;
+            if (!(value is decimal dnum))
             {
-                return new ValidationResult(ErrorMessage ?? "Zlý formát pri hodnote ID.", ContextMemberNames);
+                if (!(value is double doubleNum))
+                {
+                    return new ValidationResult(ErrorMessage ?? "Zlý formát pri hodnote ID.", ContextMemberNames);
+                }
+                decNum = (decimal)doubleNum;
+            }
+            else
+            {
+                decNum = dnum;
             }
 
             if (decNum < 0)
@@ -111,7 +119,7 @@ namespace DBLayer
     /// Označenie, pre skrytie vstupu z používateľského rozhrania.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property, Inherited = false, AllowMultiple = false)]
-    public class HideFromInputAttribute : Attribute  
+    public class HideFromInputAttribute : Attribute
     {
         public HideFromInputAttribute()
         {

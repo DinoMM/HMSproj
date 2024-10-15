@@ -1,0 +1,30 @@
+﻿@namespace UniComponents
+<span style="white-space: nowrap;">
+    <i class="bi @Icon @Color @(Size != null ? $"fs-{Size}": "") me-1"></i>@ChildContent
+</span>
+@code {
+    /// <summary>
+    /// Icona na zobrazenie, defaultne "bi-x-lg"
+    /// </summary>
+    [Parameter]
+    public string Icon { get; set; } = "bi-x-lg";
+
+    /// <summary>
+    /// Obsah, ktory sa ma zobrazit za ikonou, default nic
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Farba Icony, defaultne nativna
+    /// </summary>
+    [Parameter]
+    public string Color { get; set; } = "";
+
+    /// <summary>
+    /// Veľkosť Icony (1-6), defaultne nativna
+    /// </summary>
+    [Parameter]
+    public int? Size { get; set; }
+
+}

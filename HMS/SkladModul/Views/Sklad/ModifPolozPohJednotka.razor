@@ -41,10 +41,10 @@
 
     <div class="row h-25">
         <div class="col col-1">
-            <button type="button" class="btn btn-secondary" @onclick="Close">Späť</button>
+            <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
         </div>
         <div class="col col-1 me-2">
-            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false)) disabled="@(ReadOnly || !ViewModel.Zmena)">Uložiť</button>
+            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false)) disabled="@(ReadOnly || !ViewModel.Zmena)"><IconTextSave></IconTextSave></button>
         </div>
     </div>
 
@@ -104,7 +104,7 @@
                                 <td><input type="text" readonly disabled="disabled" @bind="ViewModel.NovaPoloz.Nazov" /> </td>
                                 <td>
                                     <div class="col col-2">
-                                        <button type="button" disabled="@(ViewModel.Uprava || ReadOnly)" @onclick=@(async () => {ViewModel.PridatPolozkuCommand.Execute(null);await ClearInput();}) class="btn btn-success">Pridať položku</button>
+                                        <button type="button" disabled="@(ViewModel.Uprava || ReadOnly)" @onclick=@(async () => {ViewModel.PridatPolozkuCommand.Execute(null);await ClearInput();}) class="btn btn-success"><IconText Icon="bi-plus-circle">Pridať položku</IconText></button>
                                     </div>
                                 </td>
                                 @*<td>@ViewModel.NovaPoloz.PolozkaSkladuX?.MernaJednotka</td>*@

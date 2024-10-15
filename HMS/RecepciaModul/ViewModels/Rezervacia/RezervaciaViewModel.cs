@@ -5,6 +5,7 @@ using DBLayer.Models;
 using Microsoft.AspNetCore.Components.Web.Virtualization;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
+using UniComponents;
 
 namespace RecepciaModul.ViewModels
 {
@@ -45,8 +46,9 @@ namespace RecepciaModul.ViewModels
         private readonly DataContext _dbw;
         private readonly UserService _userService;
         private readonly Blazored.SessionStorage.ISessionStorageService _sessionStorage;
+        private readonly ObjectHolder _objectHolder;
 
-        public RezervaciaViewModel(DBContext db, UserService userService, DataContext dbw, Blazored.SessionStorage.ISessionStorageService sessionStorage)
+        public RezervaciaViewModel(DBContext db, UserService userService, DataContext dbw, Blazored.SessionStorage.ISessionStorageService sessionStorage, ObjectHolder objectHolder)
         {
             _db = db;
             _userService = userService;
@@ -54,6 +56,7 @@ namespace RecepciaModul.ViewModels
 
             ZoznamDatumovNaZobrazenie = GetRozmedzieDatumov(-3, DateTime.Today, 10);     //zakladne rozmedzie datumov na zobrazenie
             _sessionStorage = sessionStorage;
+            _objectHolder = objectHolder;
         }
 
         public bool ValidateUser()
@@ -86,6 +89,10 @@ namespace RecepciaModul.ViewModels
                     .OrderBy(x => x.ArrivalDate)
                     .ToListAsync()
                     );  //naèítané rezervacie v rozmedzi datumov
+            foreach (var item in ZoznamRezervacii)
+            {
+                item.RecentChangesUserZ = item.RecentChangesUserZ ?? Rezervation.GetRecentChangedUser(item, in _db); //nacita recent userov
+            }
         }
         public async Task NacitajZoznamRezervacieAll(bool refresh = false)
         {
@@ -118,7 +125,10 @@ namespace RecepciaModul.ViewModels
                             .ToListAsync()
                             );  //naèítané rezervacie v rozmedzi datumov
                 }
+
+                ZoznamVsetkychRezervacii.ForEach(x => x.RecentChangesUserZ = x.RecentChangesUserZ ?? Rezervation.GetRecentChangedUser(x, in _db)); //nacita recent userov
             }
+
         }
         private async Task NacitajIzbyRezervacie()
         {
@@ -296,9 +306,10 @@ namespace RecepciaModul.ViewModels
         {
             if (await _sessionStorage.GetItemAsync<bool>("RezervationChanged"))
             {
-                await NacitajZoznamRezervacie();
-                await NacitajNespracovaneRezervacie(true);
                 await _sessionStorage.SetItemAsync("RezervationChanged", false);
+                await NacitajZoznamRezervacie();
+                ZoznamNespracRezervacii.Clear();
+                ZoznamVsetkychRezervacii.Clear();
             }
         }
 
@@ -338,10 +349,13 @@ namespace RecepciaModul.ViewModels
                     .Where(x => x.Status == ReservationStatus.VytvorenaWeb.ToString() || x.Status == ReservationStatus.VytvorenaRucne.ToString())
                     .OrderBy(x => x.ArrivalDate)
                     .ToListAsync());
+
+                ZoznamNespracRezervacii.ForEach(x => x.RecentChangesUserZ = x.RecentChangesUserZ ?? Rezervation.GetRecentChangedUser(x, in _db)); //nacita recent userov
             }
         }
 
-        public async Task ZmenSmerNacitavania() {
+        public async Task ZmenSmerNacitavania()
+        {
             SmerNacitavaniaAll = !SmerNacitavaniaAll;
             await NacitajZoznamRezervacieAll(true);
         }

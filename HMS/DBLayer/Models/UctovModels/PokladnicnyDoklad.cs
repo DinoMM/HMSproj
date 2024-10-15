@@ -18,8 +18,11 @@ namespace DBLayer.Models
         public bool TypPlatby { get; set; } = false;
 
         [ForeignKey("HostX")]
-        public string? Host { get; set; } = default!;
+        public long? Host { get; set; } = default!;
         public Host? HostX { get; set; }
+        [NotMapped]
+        public string GetMenoHosta { get => HostX != null ? HostX.Name + " " + HostX.Surname : "-"; }
+
 
         public object Clone()
         {
@@ -40,5 +43,6 @@ namespace DBLayer.Models
         {
             return (PokladnicnyDoklad)this.Clone();
         }
+        
     }
 }

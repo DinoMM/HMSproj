@@ -15,17 +15,15 @@
 
     <div class="row pb-1">
 
-        <div class="col-1"></div>
-
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="2" PlaceHolder="Vyhľadaj faktúru..." TableID="tableid"></SearchInput>
+            <SearchInput NumCols="9" PlaceHolder="Vyhľadaj faktúru..." TableID="tableid"></SearchInput>
         </div>
 
-        <div class="col-8">
+        <div class="col-9">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRU())" type="button" class="btn btn-primary">➕Vytvoriť Faktúru</button>
-                <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUserCRU())" class="btn btn-primary">Otvoriť</button>
+                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRU())" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></button>
+                <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUserCRU())" class="btn btn-primary"> <IconTextOpen></IconTextOpen></button>
             </div>
         </div>
 

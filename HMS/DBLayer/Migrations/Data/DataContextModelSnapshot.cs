@@ -177,6 +177,9 @@ namespace DBLayer.Migrations.Data
                     b.Property<int>("NumberGuest")
                         .HasColumnType("int");
 
+                    b.Property<string>("RecentChangesUser")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("RoomNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");

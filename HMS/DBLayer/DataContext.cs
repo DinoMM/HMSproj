@@ -65,6 +65,12 @@ namespace DBLayer
         public DbSet<UserHEvent> UserHEvents { get; set; }
 
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            
+        }
+
     }
 
     public class YourDbContextFactory : IDesignTimeDbContextFactory<DataContext>    //(pomohol som si z internetu tutoriály/AI)
@@ -72,7 +78,7 @@ namespace DBLayer
         public DataContext CreateDbContext(string[] args)
         {
             var optionsBuilder = new DbContextOptionsBuilder<DataContext>();
-            optionsBuilder.UseSqlServer("Data Source=localhost;User ID=sa;Password=TaJnEhEsLo!!!123456789;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False;Initial Catalog=HlavnaDatabaza");
+            optionsBuilder.UseSqlServer("Data Source=localhost; Database = HlavnaDatabaza;User ID=sa;Password=TaJnEhEsLo!!!123456789;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False;");
 
             return new DataContext(optionsBuilder.Options);
         }

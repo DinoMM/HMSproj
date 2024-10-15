@@ -16,17 +16,16 @@
 
     <div class="row pb-1">
 
-        <div class="col-1"></div>
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="9" TableID="tableid"></SearchInput>
+            <SearchInput NumCols="9" TableID="tableid" PlaceHolder="Vyhľadaj uživateľa..."></SearchInput>
         </div>
 
-        <div class="col-8">
+        <div class="col-9">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-                <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/AddPouzivatel")))" type="button" class="btn btn-primary">➕Vytvoriť uživateľa</button>
-                <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary">Otvoriť</button>
+                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+                <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/AddPouzivatel")))" type="button" class="btn btn-primary"><IconTextCreate></IconTextCreate></button>
+                <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
             </div>
         </div>
 
@@ -45,9 +44,7 @@
                 <ThSort>Použivateľ</ThSort>
                 <ThSort>Email</ThSort>
                 <ThSort>Telefón</ThSort>
-                <ThSort>IBAN</ThSort>
-                <ThSort>Adresa</ThSort>
-                <ThSort>Role</ThSort>
+                <ThSort>Profesia</ThSort>
                 <th></th>
 
                 </THEAD>
@@ -72,8 +69,6 @@
                                 </td>
                                 <td class="col-resize">@item.Email</td>
                                 <td class="col-resize">@item.PhoneNumber</td>
-                                <td class="col-resize">@item.IBAN</td>
-                                <td class="col-resize">@item.Adresa</td>
                                 <td class="col-resize">@ViewModel.GetRoleString(item)</td>
                                 <td>
                                     @*<a @onclick="@(() => Delete(item))" style="@(!ViewModel.MoznoVymazat(item) ? "pointer-events: none;" : "") "><i href="#" class="bi bi-x-circle btn btn-danger @(!ViewModel.MoznoVymazat(item) ? "disabled" : "")"></i></a>*@

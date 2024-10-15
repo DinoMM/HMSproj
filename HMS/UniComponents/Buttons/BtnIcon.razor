@@ -1,0 +1,45 @@
+﻿@namespace UniComponents
+
+<a @onclick="OnClick" style="@(Disabled || Loading ? " pointer-events: none;" : "" ) ">
+    <i href="#" class="bi @IconClass btn @ButtonClass @(Disabled || Loading ? " disabled" : "" )">
+        @if (Loading)
+        {
+            <SpinnerLoading ExtraSmall="true"></SpinnerLoading>
+        }
+    </i>
+
+</a>
+
+
+@code
+{
+    /// <summary>
+    /// Vypnutie tlačidla, Default false
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; } = false;
+
+    /// <summary>
+    /// Vnutro @onclick, Default EventCallback.Empty
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClick { get; set; } = EventCallback.Empty;
+
+    /// <summary>
+    /// Zobraziť loading spinner a vypne tlačidlo pokiaľ true, Default false
+    /// </summary>
+    [Parameter]
+    public bool Loading { get; set; } = false;
+
+    /// <summary>
+    /// Classa ikony(výzor), Default "bi-box-arrow-in-down"
+    /// </summary>
+    [Parameter]
+    public string IconClass { get; set; } = "bi-box-arrow-in-down";
+
+    /// <summary>
+    /// Classa tlačidla(farba), Default "btn-secondary"
+    /// </summary>
+    [Parameter]
+    public string ButtonClass { get; set; } = "btn-secondary";
+}

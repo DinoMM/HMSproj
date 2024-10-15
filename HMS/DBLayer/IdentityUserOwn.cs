@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.DataProtection;
 namespace DBLayer
 {
 
-    public class IdentityUserOwn : IdentityUser
+    public class IdentityUserOwn : IdentityUser, ICloneable
     {
         [PersonalData]
         [Column(TypeName = "nvarchar(64)")]
@@ -29,7 +29,7 @@ namespace DBLayer
         [Column(TypeName = "nvarchar(64)")]
         public string? Adresa { get; set; } = default!;
 
-        private string _rodneCislo = default!;
+        private string _rodneCislo = "";
         [PersonalData]
         [Column(TypeName = "nvarchar(256)")]
         public string RodneCislo
@@ -38,7 +38,7 @@ namespace DBLayer
             set => _rodneCislo = DataEncryptor.Protect(value);
         }
 
-        private string _obcianskyID = default!;
+        private string _obcianskyID = "";
         [PersonalData]
         [Column(TypeName = "nvarchar(256)")]
         public string ObcianskyID
@@ -56,6 +56,43 @@ namespace DBLayer
         [PersonalData]
         [Column(TypeName = "nvarchar(128)")]
         public string Nationality { get; set; } = "";
+
+
+
+        public object Clone()
+        {
+            return new IdentityUserOwn
+            {
+                Id = this.Id,
+                UserName = this.UserName,
+                NormalizedUserName = this.NormalizedUserName,
+                Email = this.Email,
+                NormalizedEmail = this.NormalizedEmail,
+                EmailConfirmed = this.EmailConfirmed,
+                PasswordHash = this.PasswordHash,
+                SecurityStamp = this.SecurityStamp,
+                ConcurrencyStamp = this.ConcurrencyStamp,
+                PhoneNumber = this.PhoneNumber,
+                PhoneNumberConfirmed = this.PhoneNumberConfirmed,
+                TwoFactorEnabled = this.TwoFactorEnabled,
+                LockoutEnd = this.LockoutEnd,
+                LockoutEnabled = this.LockoutEnabled,
+                AccessFailedCount = this.AccessFailedCount,
+                Name = this.Name,
+                Surname = this.Surname,
+                IBAN = this.IBAN,
+                Adresa = this.Adresa,
+                RodneCislo = this.RodneCislo,
+                ObcianskyID = this.ObcianskyID,
+                Sex = this.Sex,
+                Nationality = this.Nationality
+            };
+        }
+
+        public IdentityUserOwn Clon()
+        {
+            return (IdentityUserOwn)Clone();
+        }
 
 
         /// <summary>

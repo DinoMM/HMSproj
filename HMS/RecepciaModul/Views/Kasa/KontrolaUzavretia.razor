@@ -71,25 +71,39 @@
                     <div class="h3 text-success">Spracované&nbsp;doklady</div>
                 </div>
                 <div class="row">
-                    <div class="col col-6">
+                    <div class="col col-4 me-1">
                         <label>Výsledná&nbsp;suma</label>
                         <input type="text" disabled value="@ViewModel.VyslednaSuma.ToString("F3")" class="form-control" />
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col col-6">
-                        <label>Výsledná&nbsp;suma&nbsp;s&nbsp;DPH</label>
-                        <input type="text" disabled value="@ViewModel.VyslednaSumaDPH.ToString("F3")" class="form-control" />
+                    <div class="vr p-0"></div>
+                    <div class="col col-4">
+                        <label>Suma&nbsp;v&nbsp;hotovosti</label>
+                        <input type="text" disabled value="@ViewModel.VyslednaSumaHotovost" class="form-control" />
+                    </div>
+                    <div class="col col-3">
+                        <label>Hotovosť&nbsp;v&nbsp;pokladni</label>
+                        <input type="text" disabled value="@ViewModel.VyslednaSumaPokladne" class="form-control" />
                     </div>
                 </div>
                 <div class="row">
+                    <div class="col col-4 me-1">
+                        <label>Výsledná&nbsp;suma&nbsp;s&nbsp;DPH</label>
+                        <input type="text" disabled value="@ViewModel.VyslednaSumaDPH.ToString("F3")" class="form-control" />
+                    </div>
+                    <div class="vr p-0"></div>
+                    <div class="col col-4">
+                        <label>Suma&nbsp;platobnou&nbsp;kartou</label>
+                        <input type="text" disabled value="@ViewModel.VyslednaSumaKarta" class="form-control" />
+                    </div>
+                </div>
+                @*<div class="row">
                     <div class="col col-4">
                         <label>DPH</label>
                         <input type="text" disabled value="@ViewModel.DPH.ToString("F4")" class="form-control" />
                     </div>
-                </div>
+                </div>*@
                 <div class="row">
-                    <div class="col col-4">
+                    <div class="col col-3">
                         <label>Počet&nbsp;dokladov</label>
                         <input type="text" disabled value="@ViewModel.Pocet" class="form-control" />
                     </div>
@@ -101,25 +115,25 @@
                     <div class="h3 text-warning">Nespracované&nbsp;doklady</div>
                 </div>
                 <div class="row">
-                    <div class="col col-6">
+                    <div class="col col-4">
                         <label>Výsledná&nbsp;suma</label>
                         <input type="text" disabled value="@ViewModel.VyslednaSumaNesprac.ToString("F3")" class="form-control" />
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col col-6">
+                    <div class="col col-4">
                         <label>Výsledná&nbsp;suma&nbsp;s&nbsp;DPH</label>
                         <input type="text" disabled value="@ViewModel.VyslednaSumaDPHNesprac.ToString("F3")" class="form-control" />
                     </div>
                 </div>
-                <div class="row">
+                @*<div class="row">
                     <div class="col col-4">
                         <label>DPH</label>
                         <input type="text" disabled value="@ViewModel.DPHNesprac.ToString("F4")" class="form-control" />
                     </div>
-                </div>
+                </div>*@
                 <div class="row">
-                    <div class="col col-4">
+                    <div class="col col-3">
                         <label>Počet&nbsp;dokladov</label>
                         <input type="text" disabled value="@ViewModel.PocetNesprac" class="form-control" />
                     </div>

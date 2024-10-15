@@ -22,6 +22,18 @@ namespace DBLayer.Models
         /// </summary>
         [NotMapped]
         public static List<RolesOwn> ROLE_SPECIAL_REZERVACIA { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.RCVeduci };
+
+
+        /// <summary>
+        /// Vrati IdentityUserOwn z rezervacie (naposledy upravil) alebo null
+        /// </summary>
+        /// <param name="res"></param>
+        /// <param name="db"></param>
+        /// <returns></returns>
+        public static IdentityUserOwn? GetRecentChangedUser(Rezervation res, in DBContext db)
+        {
+            return db.Users.FirstOrDefault(x => x.Id == res.RecentChangesUser);
+        }
     }
 
 

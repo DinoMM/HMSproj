@@ -48,9 +48,13 @@ namespace DBLayer.Models
                 return;
             }
 
-            var foundedObjednavka = db.Objednavky.FirstOrDefault(x => x.ID == prijemka.Objednavka && x.Stav == StavOBJ.Schvalena || x.Stav == StavOBJ.Ukoncena);
+            var foundedObjednavka = db.Objednavky.FirstOrDefault(x => x.ID == prijemka.Objednavka);
             if (foundedObjednavka == null)
             {           //ak sa nenasla schvalena/ukoncena objednavka
+                return;
+            }
+            if (!(foundedObjednavka.Stav == StavOBJ.Schvalena || foundedObjednavka.Stav == StavOBJ.Ukoncena || foundedObjednavka.Stav == StavOBJ.Objednana)) //musi byt v jednom zo stavov
+            {
                 return;
             }
             #region nacitanie poloziek z objednavky
@@ -101,7 +105,7 @@ namespace DBLayer.Models
                 }
             }
             #endregion
-            if (foundedObjednavka.Stav == StavOBJ.Schvalena)
+            if (foundedObjednavka.Stav == StavOBJ.Schvalena || foundedObjednavka.Stav == StavOBJ.Objednana)
             {
                 foundedObjednavka.Stav = StavOBJ.Ukoncena;
                 db.SaveChanges();

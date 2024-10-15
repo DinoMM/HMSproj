@@ -1,0 +1,15 @@
+﻿@namespace UniComponents
+@if (Saved)
+{
+    <IconTextOpen></IconTextOpen>
+}
+else
+{
+    <IconTextSave></IconTextSave>
+}
+
+@code{
+    [Parameter]
+    public bool Saved { get; set; } = false;
+
+}

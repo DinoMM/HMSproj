@@ -115,7 +115,7 @@
         {
             <div class="row">
                 <div class="col-3 mb-2">
-                    <SearchInput ID="searchvirtual" NumCols="7" TableID="resaslisttableres" PlaceHolder="Vyhľadaj rezerváciu.."></SearchInput>
+                    <SearchInput ID="searchvirtual" NumCols="8" TableID="resaslisttableres" PlaceHolder="Vyhľadaj rezerváciu.."></SearchInput>
                 </div>
                 <div class="col-3 mb-2">
                     <button type="button" class="btn btn-primary" data-toggle="tooltip" data-placement="right" title="Zmeniť smer načítavania rezervácií (minulosť/budúcnosť)" @onclick="() => ViewModel.ZmenSmerNacitavania()">
@@ -140,6 +140,7 @@
                         <ThManualSort PropertyName="RoomNumber" SortMethod="Sort">Izba</ThManualSort>
                         <ThManualSort PropertyName="Guest.Email" SortMethod="Sort">Web&nbsp;používateľ</ThManualSort>
                         <ThManualSort PropertyName="Status" SortMethod="Sort" SelectionList="Enum.GetNames(typeof(DBLayer.Models.ReservationStatus)).ToList()">Status</ThManualSort>
+                        <ThSort>Naposledy&nbsp;upravil</ThSort>
                         @*<th class="col-resize" scope="col"></th>*@
 
                     </THEAD>
@@ -155,6 +156,7 @@
                                     <td class="col-resize">@item.RoomNumber</td>
                                     <td class="col-resize">@(item.Guest?.Email ?? "")</td>
                                     <td class="col-resize">@item.Status</td>
+                                    <td class="col-resize">@item.GetRecentChangedUserName()</td>
                                 </tr>
                             </ItemContent>
                             <Placeholder>
@@ -176,7 +178,7 @@
 </CustomModal>
 
 
-<ItemFinderTable T="DBLayer.Models.Rezervation" @ref="nespracRes" ID="RawResPick" ColNames="@(new() { "Príchod", "Odchod", "Plánovaný počet", "Cena", "Status"  })" ColValues="ViewModel.ZoznamNespracRezervacii"></ItemFinderTable>
+<ItemFinderTable T="DBLayer.Models.Rezervation" @ref="nespracRes" CutOffTail="true" ID="RawResPick" ColNames="@(new() { "Príchod", "Odchod", "Plánovaný počet", "Cena", "Status"  })" ColValues="ViewModel.ZoznamNespracRezervacii"></ItemFinderTable>
 
 <InfoModal @ref="modsaved" Text="Zmeny boli uložené"></InfoModal>
 
@@ -192,8 +194,8 @@
 <div class="gantt">
     <div class="sticky1 ms-1">
         <div class="sticky1 d-flex" role="group">
-            <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-            <button type="button" class="btn btn-primary" @onclick="Create">➕Vytvoriť rezerváciu</button>
+            <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+            <button type="button" class="btn btn-primary" @onclick="Create"><IconTextCreate></IconTextCreate></button>
             <button type="button" class="btn btn-info" @onclick="OpenChangeDate">@ViewModel.ZoznamDatumovNaZobrazenie[0].ToString("dd.MM.-")@ViewModel.ZoznamDatumovNaZobrazenie.Last().ToString("dd.MM.")</button>
             <button type="button" class="btn btn-primary" @onclick="ListRawRes">⏳Zoznam nespracovaných</button>
             <button type="button" class="btn btn-primary" @onclick="ListAll">📆Zoznam rezervácií</button>

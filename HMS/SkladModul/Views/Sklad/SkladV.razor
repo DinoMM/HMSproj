@@ -24,32 +24,43 @@
 
     <div class="row pb-1">
         <div class="col-2">
-            <a class="btn btn-primary" id="uctobd" style="cursor:pointer" @onclick="ChangeObd">Obdobie:@ViewModel.Obdobie </a>
+            <a class="btn btn-info" id="uctobd" style="cursor:pointer" @onclick="ChangeObd">Obdobie:@ViewModel.Obdobie </a>
         </div>
         <div class="col-2">
-            <a class="btn btn-primary" id="skldpick" style="cursor:pointer" @onclick="ChangeSkl">Sklad:@ViewModel.Sklad.ID </a>
+            <a class="btn btn-info" id="skldpick" style="cursor:pointer" @onclick="ChangeSkl">Sklad:@ViewModel.Sklad.ID </a>
         </div>
     </div>
 
     <div class="row pb-1">
-        <div class="col-1"></div>
+        @*<div class="col-1"></div>*@
         <div class="col-3 d-flex justify-content-bottom mb-2">
             <SearchInput NumCols="2" TableID="tableid"></SearchInput>
         </div>
         <div class="col-8">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
+                <button type="button" class="btn btn-secondary" @onclick="Close">
+                    <IconTextClose></IconTextClose>
+                </button>
                 @if (UserService.IsLoggedUserInRoles(Sklad.ZMENAPOLOZIEKROLE))
                 {
-                    <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad")))" type="button" class="btn btn-primary">➕Pridať položku</button>
+                    <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad")))" type="button" class="btn btn-primary">
+                        <IconText Icon="bi-plus">Pridať položku</IconText>
+                    </button>
+
                 }
                 @if (UserService.IsLoggedUserInRoles(Sklad.SKLADOVEPOHYBYROLE))
                 {
-                    <button type="button" @onclick="Prijem" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬇Spravovať Príjem</button>
-                    <button type="button" @onclick="Vydaj" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">⬆Spravovať Výdaj</button>
+                    <button type="button" @onclick="Prijem" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">
+                        <IconText Icon="bi-chevron-bar-down">Spravovať príjem</IconText>
+                    </button>
+                    <button type="button" @onclick="Vydaj" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">
+                        <IconText Icon="bi-chevron-bar-up">Spravovať výdaj</IconText>
+                    </button>
                 }@if (UserService.IsLoggedUserInRoles(Sklad.SKLADOVEPOHYBYROLE.Concat(Sklad.ROLE_R_SKLADOVEPOHYBY).ToList()))
                 {
-                    <button type="button" @onclick="Uzavriet" disabled="@(ViewModel.Sklad.ID == "ALL" || !ViewModel.AktualneObdobie)" class="btn btn-primary">➰Uzavrieť obdobie</button>
+                    <button type="button" @onclick="Uzavriet" disabled="@(ViewModel.Sklad.ID == "ALL" || !ViewModel.AktualneObdobie)" class="btn btn-primary">
+                        <IconText Icon="bi-calendar3">Uzavrieť obdobie</IconText>
+                    </button>
                 }
             </div>
         </div>
@@ -57,17 +68,17 @@
     </div>
 
     <div class="row">
-        <div class="col-1"></div>
+        @*<div class="col-1"></div>*@
         <div class="col-12" style="max-height: 50rem;overflow: auto;">
             <SimpleTable ID="tableid">
                 <THEAD>
 
-                <ThSort>ID</ThSort>
-                <ThSort>Názov</ThSort>
-                <ThSort>Merná jednotka</ThSort>
-                <ThSort>Cena</ThSort>
-                <ThSort>Cena s DPH</ThSort>
-                <ThSort><button @onclick=@ViewModel.LoadMnozstvo disabled="@ViewModel.NacitaneMnozstvo" class="btn btn-sm @(ViewModel.NacitaneMnozstvo ? "btn-light" : "btn-dark")">Množstvo</button> </ThSort>
+                    <ThSort>ID</ThSort>
+                    <ThSort>Názov</ThSort>
+                    <ThSort>Merná jednotka</ThSort>
+                    <ThSort>Cena</ThSort>
+                    <ThSort>Cena s DPH</ThSort>
+                    <ThSort><button @onclick=@ViewModel.LoadMnozstvo disabled="@ViewModel.NacitaneMnozstvo" class="btn btn-sm @(ViewModel.NacitaneMnozstvo ? "btn-light" : "btn-dark")">Množstvo</button> </ThSort>
                 <th class="col-resize" scope="col"></th>
 
                 </THEAD>

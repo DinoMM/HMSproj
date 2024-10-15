@@ -64,8 +64,10 @@
 
         <div class="row pt-2">
             <div class="col text-center">
-                <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
-                <SimpleButton Type="submit" ZmenaTextu="@(("", "Vytvoriť"))"></SimpleButton>
+                <div class="btn-group" role="group">
+                    <button type="button" @onclick="Close" class="btn btn-secondary"><IconTextClose></IconTextClose></button>
+                    <SimpleButton Type="submit" ZmenaTextu="@(("", "Vytvoriť"))"></SimpleButton>
+                </div>
             </div>
         </div>
 

@@ -13,23 +13,24 @@
 </ApproveModal>
 
 <div class="container">
-    <div class="row g-0">
-        <div class="col-1"></div>
-        <div class="col-10">
-            <div class="row h-25 ">
-                <h1 class="text-center">Objednávky</h1>
-                <div class="col">
-                    <button class="btn btn-primary fixed-size-button  mt-3" type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">❌Zavrieť objednávky</button>
-                </div>
-                <div class="col">
-                    <button class="btn btn-primary fixed-size-button mt-3" type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/AddObj")))">➕Pridať objednávku</button>
-                </div>
-                <div class="col">
-                    <button class="btn btn-primary fixed-size-button mt-3 " disabled=@(!IsChecked()) @onclick=@(() => OpenOBJ(marked)) type="button">📩Otvoriť objednávku</button>
-                </div>
-                <div class="col">
-                    <button class="btn btn-primary fixed-size-button mt-3" @onclick="GeneratePDF" disabled=@(!IsChecked() || ViewModel.PdfLoading) type="button">
-                        📄Otvoriť ako PDF
+    <div class="row pb-1">
+        <div class="col-3 d-flex justify-content-bottom mb-2">
+            <SearchInput NumCols="5" TableID="tableid" PlaceHolder="Vyhľadaj objednávku..."></SearchInput>
+        </div>
+        <div class="col-8">
+            <div class="row">
+                <div class="btn-group" role="group">
+                    <button class="btn btn-secondary" type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">
+                        <IconTextClose></IconTextClose>
+                    </button>
+                    <button class="btn btn-primary" type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/AddObj")))">
+                        <IconTextCreate></IconTextCreate>
+                    </button>
+                    <button class="btn btn-primary" disabled=@(!IsChecked()) @onclick=@(() => OpenOBJ(marked)) type="button">
+                        <IconTextOpen></IconTextOpen>
+                    </button>
+                    <button class="btn btn-primary" @onclick="GeneratePDF" disabled=@(!IsChecked() || ViewModel.PdfLoading) type="button">
+                        <IconText Icon="bi-filetype-pdf">Otvoriť</IconText>
                         @if (ViewModel.PdfLoading)
                         {
                             <SpinnerLoading ExtraSmall="false" />
@@ -38,57 +39,62 @@
                 </div>
             </div>
         </div>
+        <div class="col-1"></div>
+    </div>
 
-        <div class="row">
-            <div class="col" style="max-height: 30rem;overflow: auto;">
-                <Sve.Blazor.InfiniteScroll.Components.InfiniteScroll ObserverTargetId="observerTarget" ObservableTargetReached="() => ViewModel.NacitajDalsieCommand.Execute(null)">
-                    <SimpleTable>
-                        <THEAD>
+    <div class="row">
+        @*<div class="col-1"></div>*@
+        <div class="col-12" style="max-height: 30rem;overflow: auto;">
+            <Sve.Blazor.InfiniteScroll.Components.InfiniteScroll ObserverTargetId="observerTarget" ObservableTargetReached="() => ViewModel.NacitajDalsieCommand.Execute(null)">
+                <SimpleTable ID="tableid">
+                    <THEAD>
                         <ThSort>ID</ThSort>
                         <ThSort>Dodavateľ</ThSort>
                         <ThSort>Stav</ThSort>
                         <ThSort>Tvorca</ThSort>
                         <ThSort>Dátum vytvorenia</ThSort>
-                        <th scope="col"></th>
+                    <th scope="col"></th>
 
-                        </THEAD>
-                        <TBODY>
-                            @foreach (var item in ViewModel.ZoznamObjednavok)
-                            {
+                    </THEAD>
+                    <TBODY>
+                        @foreach (var item in ViewModel.ZoznamObjednavok)
+                        {
 
-                                <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick=@(() => OpenOBJ(item)) style="cursor: pointer;">
+                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick=@(() => OpenOBJ(item)) style="cursor: pointer;">
 
-                                    <td class="col-resize" style="cursor:text">@item.ID</td>
-                                    <td class="col-resize">@item.DodavatelX.Nazov</td>
-                                    <td class="col-resize">@item.Stav</td>
-                                    <td class="col-resize">@item.TvorcaX.Surname</td>
-                                    <td class="col-resize">@item.DatumVznik.ToShortDateString()</td>
-                                    @if (item.Stav == DBLayer.Models.StavOBJ.Vytvorena ||
-                                item.Stav == DBLayer.Models.StavOBJ.Neschvalena ||
-                                UserService.LoggedUserRole == DBLayer.RolesOwn.Admin ||
-                                UserService.LoggedUserRole == DBLayer.RolesOwn.Riaditel &&
-                                item.Stav != DBLayer.Models.StavOBJ.Ukoncena)
-                                    {
-                                        <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
-                                    }
-                                    else
-                                    {
-                                        <td class="col-resize"> </td>
-                                    }
-                                </tr>
+                                <td class="col-resize" style="cursor:text">@item.ID</td>
+                                <td class="col-resize">@item.DodavatelX.Nazov</td>
+                                <td class="col-resize">@item.Stav</td>
+                                <td class="col-resize">@item.TvorcaX.Surname</td>
+                                <td class="col-resize">@item.DatumVznik.ToShortDateString()</td>
+                                @if (item.Stav == DBLayer.Models.StavOBJ.Vytvorena ||
+                    item.Stav == DBLayer.Models.StavOBJ.Neschvalena ||
+                    UserService.LoggedUserRole == DBLayer.RolesOwn.Admin ||
+                    UserService.LoggedUserRole == DBLayer.RolesOwn.Riaditel &&
+                    item.Stav != DBLayer.Models.StavOBJ.Ukoncena)
+                                {
+                                    <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
+                                }
+                                else
+                                {
+                                    <td class="col-resize"> </td>
+                                }
+                            </tr>
 
-                            }
-                            <span id="observerTarget"></span>
-                        </TBODY>
+                        }
+                        <span id="observerTarget"></span>
+                    </TBODY>
 
-                    </SimpleTable>
-                </Sve.Blazor.InfiniteScroll.Components.InfiniteScroll>
-            </div>
+                </SimpleTable>
+            </Sve.Blazor.InfiniteScroll.Components.InfiniteScroll>
         </div>
-        <div class="row h-25"></div>
-
         <div class="col-1"></div>
     </div>
+
+    <div class="row">
+        <div class="col-12"></div>
+    </div>
+
 </div>
 
 

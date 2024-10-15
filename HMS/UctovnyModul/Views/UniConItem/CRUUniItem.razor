@@ -145,10 +145,11 @@
         <ValidationSummary />
         <div class="row pt-2">
             <div class="col text-center">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+                    <SimpleButton ID="ulozbuttonUniItem" Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))" Disabled="ViewModel.LoadingZoznam"></SimpleButton>
 
-                <button type="button" class="btn btn-secondary" @onclick="Close">Zavrieť</button>
-                <SimpleButton ID="ulozbuttonUniItem" Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Pridať", "Uložiť"))" Disabled="ViewModel.LoadingZoznam"></SimpleButton>
-
+                </div>
             </div>
         </div>
     </div>

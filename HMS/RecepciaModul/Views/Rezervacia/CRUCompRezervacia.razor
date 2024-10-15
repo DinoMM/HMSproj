@@ -44,17 +44,19 @@
     <BODY>
         @if (cusopendoklad.Render)
         {
-            <PokladnicnyDoklad AsComponent="true" OnlyOneItem="true"></PokladnicnyDoklad>
+            <PokladnicnyDoklad AsComponent="true" OnlyOneItem="OnlyOneItemPD"></PokladnicnyDoklad>
         }
     </BODY>
 
 </CustomModal>
 
+
+
 @if (compVybkasa.Rendered)
 {
     <CompVyberKasa @ref="compVybkasa"
                    AfterRender="OpenPickKasa"
-                   AfterDispose="OpenDokladMod"
+                   AfterDispose="OpenPD"
                    Kasy="ZoznamKas"></CompVyberKasa>
 }
 
@@ -89,7 +91,24 @@
                     @foreach (var item in VyberHosti)
                     {
                         <tr @ondblclick="() => OpenHostFrom(item.HostX)">
-                            <td class="col-resize"></td>
+                            <td class="col-resize">
+                                @if (item.HostX.PokladnicnyDokladZ == null)
+                                {
+                                    <BtnIcon Disabled="!IsHostPDPossible()"
+                                             IconClass="bi-receipt"
+                                             OnClick="() => OtvorPD(item.HostX)">
+                                    </BtnIcon>
+
+                                }
+                                else
+                                {
+                                    <BtnIcon Disabled="!IsHostPDPossible()"
+                                             IconClass="bi-receipt"
+                                             OnClick="() => OtvorPD(item.HostX)"
+                                             ButtonClass="btn-warning">
+                                    </BtnIcon>
+                                }
+                            </td>
                             <td class="col-resize">@item.HostX.Name</td>
                             <td class="col-resize">@item.HostX.Surname</td>
                             <td class="col-resize">@item.HostX.Address</td>
@@ -170,7 +189,7 @@
                     </div>
                     <div class="col-1 me-2">
                         <div style="height: 24px;"></div>
-                        <button id="numguestshow" disabled="@(ValidateChangeability() || Marked.Room == null || Marked.Id == 0)" type="button" @onclick="OpenHostTab" class="btn btn-secondary">
+                        <button id="numguestshow" disabled="@(Marked.Room == null || Marked.Id == 0)" type="button" @onclick="OpenHostTab" class="btn @(MaNezaplatenePD() ? "btn-warning" : "btn-secondary")">
                             <i class="bi bi-people-fill"></i>
                         </button>
                     </div>
@@ -256,6 +275,15 @@
                         </button>
                     </div>
                 </div>
+
+                <hr>
+
+                <div class="row">
+                    <div class="col-6">
+                        <label>Naposledy&nbsp;upravil</label>
+                        <input disabled readonly value="@Marked.GetRecentChangedUserName()" class="form-control" />
+                    </div>
+                </div>
                 <div class="row">
 
                 </div>
@@ -270,20 +298,21 @@
 
         <div class="row pt-2">
             <div class="col text-center">
-                <SimpleButton ID="submitbttn" Disabled="ValidateChangeability()" ZmenaStavuTextu="Exist()" Type="submit" ZmenaTextu="@(("Uložiť", "Vytvoriť"))" Class="btn btn-primary me-2"> </SimpleButton>
-                @if (Marked.ArrivalDate == DateTime.Today && IsZaplatena())
-                {
-                    <SimpleButton ID="checkinbttn" OnClick="ProcessCheckIN" Disabled="ValidateChangeability() || Marked.Id == 0 " Type="button" Class="btn btn-success" ZmenaTextu="@(("CHECK-IN", "CHECK-IN"))"> </SimpleButton>
-                }
-                else if (Marked.DepartureDate == DateTime.Today && IsCompleted())
-                {
-                    <SimpleButton ID="checkoutbttn" OnClick="ProcessCheckOUT" Disabled="ValidateChangeability()  || Marked.Id == 0" Type="button" Class="btn btn-danger" ZmenaTextu="@(("CHECK-OUT", "CHECK-OUT"))"> </SimpleButton>
-                }
-                @if (IsSpracovana())
-                {
-                    <SimpleButton ID="kasabttn" OnClick="OpenDoklad" Type="button" ZmenaTextu="@(("KASA", "KASA"))" Class="btn btn-primary ms-2"> </SimpleButton>
-                }
-                @*<button type="button" @onclick="OpenPickKasa">aaaa</button>*@
+                <div class="btn-group" role="group">
+                    <SimpleButton ID="submitbttn" Disabled="ValidateChangeability()" ZmenaStavuTextu="Exist()" Type="submit" ZmenaTextu="@(("Uložiť", "Vytvoriť"))" Class="btn btn-primary"> </SimpleButton>
+                    @if (Marked.ArrivalDate == DateTime.Today && IsZaplatena())
+                    {
+                        <SimpleButton ID="checkinbttn" OnClick="ProcessCheckIN" Disabled="Marked.Id == 0 " Type="button" Class="btn btn-success" ZmenaTextu="@(("CHECK-IN", "CHECK-IN"))"> </SimpleButton>
+                    }
+                    else if (Marked.DepartureDate == DateTime.Today && Marked.Status == DBLayer.Models.ReservationStatus.Checked_IN.ToString())
+                    {
+                        <SimpleButton ID="checkoutbttn" OnClick="ProcessCheckOUT" Disabled="Marked.Id == 0 || MaNezaplatenePD()" Type="button" Class="btn btn-danger" ZmenaTextu="@(("CHECK-OUT", "CHECK-OUT"))"> </SimpleButton>
+                    }
+                    @if (IsSpracovana())
+                    {
+                        <SimpleButton ID="kasabttn" OnClick="OpenDoklad" Type="button" ZmenaTextu="@(("KASA", "KASA"))" Class="btn btn-primary"> </SimpleButton>
+                    }
+                </div>
             </div>
         </div>
     </div>
@@ -325,6 +354,8 @@
     private Array SelectValues = Enum.GetValues(typeof(DBLayer.Models.ReservationStatus));
     private List<DBLayer.Models.HostConReservation> VyberHosti = new();
     private List<DBLayer.Models.Kasa> ZoznamKas = new();
+    private bool OnlyOneItemPD = true;  // v pokladnicnom bloku moze byt but len jeden alebo viacej poloziek
+    private DBLayer.Models.Host? MarkedHost = null;
 
 
     protected override void OnInitialized()
@@ -383,6 +414,7 @@
                 Marked.Coupon = null;
             }
             found.setFromReservation(Marked);
+            found.RecentChangesUser = UserService.LoggedUser.Id;
             dbw.SaveChanges();
             db.SaveChanges();
             infomod.UpdateText("Aktualizacia izby na blokovanu. ");
@@ -412,6 +444,7 @@
         if (!Exist())
         {
             dbw.Add(Marked);
+            Marked.RecentChangesUser = UserService.LoggedUser.Id;
         }
         else
         {
@@ -442,6 +475,7 @@
 
 
             found.setFromReservation(Marked);       //update
+            found.RecentChangesUser = UserService.LoggedUser.Id;
         }
         #endregion
         #region update prepojeni
@@ -672,12 +706,11 @@
         if (!ValidateSpecial() && !ValidateChangeability())
         {
             DBLayer.Models.ReservationStatus[] newarr = new DBLayer.Models.ReservationStatus[5];
-            newarr[0] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(0);
-            newarr[1] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(1);
-            newarr[2] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(2);
-            //newarr[3] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(3);
-            newarr[3] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(4);
-            newarr[4] = (DBLayer.Models.ReservationStatus)SelectValues.GetValue(5);
+            newarr[0] = DBLayer.Models.ReservationStatus.VytvorenaWeb;
+            newarr[1] = DBLayer.Models.ReservationStatus.VytvorenaRucne;
+            newarr[2] = DBLayer.Models.ReservationStatus.SchvalenaNezaplatena;
+            newarr[3] = DBLayer.Models.ReservationStatus.Stornovana;
+            newarr[4] = DBLayer.Models.ReservationStatus.Blokovana;
             SelectValues = newarr;
         }
 
@@ -685,6 +718,7 @@
         {
             VyberHosti.Clear();
             VyberHosti.AddRange(db.HostConReservations.Include(x => x.HostX).Where(x => x.Reservation == Marked.Id));       //bez instancie rezervacie
+            VyberHosti.ForEach(x => x.HostX.PokladnicnyDokladZ = DBLayer.Models.Host.GetActivePokladnicneDoklady(x.HostX, db).FirstOrDefault()); //priradenie prveho pokladnicneho dokladu, ak ich je viacej tak sa nic nedeje, mozno niekedy opravit
         }
         ZoznamKas.Clear();
         ZoznamKas.AddRange(db.Kasy.Include(x => x.ActualUserX).ToList());
@@ -707,6 +741,12 @@
     {
         return Marked.Status == DBLayer.Models.ReservationStatus.Checked_IN.ToString() ||
                Marked.Status == DBLayer.Models.ReservationStatus.Checked_OUT.ToString();
+    }
+
+    private bool IsHostPDPossible()
+    {
+        return Marked.Status == DBLayer.Models.ReservationStatus.SchvalenaZaplatena.ToString() ||
+               Marked.Status == DBLayer.Models.ReservationStatus.Checked_IN.ToString();
     }
 
     private bool IsStorno()
@@ -912,12 +952,41 @@
         objectHolder.Remove<DBLayer.Models.ReservationConItemPoklDokladu>();        //pre istotu
         objectHolder.Add(con);
         await cusopendoklad.OpenModal(true);
-        if (await sessionStorage.GetItemAsync<bool>("UniconChanged"))
+        await sessionStorage.SetItemAsync("PDChanged", false);      //nic netreba robit
+        if (await sessionStorage.GetItemAsync<bool>("PDSold"))
         {
             Marked.setFromReservation(dbw.Rezervations.FirstOrDefault(x => x.Id == Marked.Id));
-            await sessionStorage.SetItemAsync("UniconChanged", false);
+            await sessionStorage.SetItemAsync("PDSold", false);
             await sessionStorage.SetItemAsync("RezervationChanged", true);
         }
+        cusopendoklad.Render = false;
+        StateHasChanged();
+    }
+
+    private async Task OpenDokladHostMod(DBLayer.Models.Host host)
+    {
+        cusopendoklad.Render = true;
+
+        objectHolder.Add(host);
+        await cusopendoklad.OpenModal(true);
+        await sessionStorage.SetItemAsync("PDSold", false); //nic netreba robit
+        if (await sessionStorage.GetItemAsync<bool>("PDChanged"))
+        {
+            await sessionStorage.SetItemAsync("PDChanged", false);
+            var found = DBLayer.Models.Host.GetActivePokladnicneDoklady(host, db).FirstOrDefault();
+            if (found != null)
+            {
+                if (!DBLayer.Models.PokladnicnyDoklad.VymazAkPrazdnyZoznamPoloziek(found, db))
+                {
+                    host.PokladnicnyDokladZ = found;
+                }
+                else
+                {
+                    host.PokladnicnyDokladZ = null;
+                }
+            }
+        }
+        MarkedHost = null;
         cusopendoklad.Render = false;
         StateHasChanged();
     }
@@ -925,6 +994,39 @@
     private async Task OpenDoklad()
     {
         await Save(silent: true);
+        OnlyOneItemPD = true;
+        MarkedHost = null;  //pre istotu
         compVybkasa.StartRender();
     }
+
+    private async Task OtvorPD(DBLayer.Models.Host host)
+    {
+        await Save(silent: true);
+        OnlyOneItemPD = false;
+        MarkedHost = host;
+        compVybkasa.StartRender();
+    }
+
+    private async Task OpenPD()
+    {
+        if (MarkedHost == null)
+        {
+            await OpenDokladMod();
+            return;
+        }
+        await OpenDokladHostMod(MarkedHost);
+    }
+
+    private bool MaNezaplatenePD()
+    {
+        foreach (var item in VyberHosti)
+        {
+            if (item.HostX.PokladnicnyDokladZ != null)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

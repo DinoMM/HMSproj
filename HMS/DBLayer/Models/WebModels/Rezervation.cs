@@ -42,12 +42,15 @@ namespace DBLayer.Models
 
         public string? RecentChangesUser { get; set; }
 
+        [NotMapped]
+        public IdentityUserOwn? RecentChangesUserZ { get; set; }
 
         [NotMapped]
         [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty.")]
         public double UbytovaciPoplatok { get; set; } = 0.0;
         [NotMapped]
         public double CelkovaSumaDPH { get => (double)CelkovaSuma * 1.2; }
+        
 
         public void setFromReservation(Rezervation res)
         {
@@ -64,6 +67,7 @@ namespace DBLayer.Models
             CouponId = res.CouponId;
             Coupon = res.Coupon;
             RecentChangesUser = res.RecentChangesUser;
+            RecentChangesUserZ = res.RecentChangesUserZ;
         }
 
         public object Clone()
@@ -82,11 +86,17 @@ namespace DBLayer.Models
             clone.Coupon = this.Coupon;
             clone.Status = this.Status;
             clone.RecentChangesUser = this.RecentChangesUser;
+            clone.RecentChangesUserZ = this.RecentChangesUserZ;
             return clone;
         }
         public Rezervation Clon()
         {
             return (Rezervation)Clone();
+        }
+
+        public string GetRecentChangedUserName()
+        {
+            return RecentChangesUserZ != null ? RecentChangesUserZ.Name + " " + RecentChangesUserZ.Surname : "-";
         }
     }
     public enum ReservationStatus

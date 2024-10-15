@@ -57,12 +57,20 @@ namespace DBLayer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<string>("Nationality")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(128)");
+
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("ObcianskyID")
+                        .IsRequired()
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("PasswordHash")
@@ -74,8 +82,15 @@ namespace DBLayer.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("RodneCislo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(256)");
+
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Sex")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Surname")
                         .IsRequired()
@@ -127,6 +142,28 @@ namespace DBLayer.Migrations
                     b.ToTable("Dodavatelia");
                 });
 
+            modelBuilder.Entity("DBLayer.Models.DruhPohybu", b =>
+                {
+                    b.Property<string>("ID")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("DAL")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("MD")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Nazov")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("DruhyPohybov");
+                });
+
             modelBuilder.Entity("DBLayer.Models.Faktura", b =>
                 {
                     b.Property<string>("ID")
@@ -171,18 +208,18 @@ namespace DBLayer.Migrations
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasColumnType("nvarchar(192)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("BirthDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("BirthNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(32)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("CitizenID")
                         .IsRequired()
-                        .HasColumnType("nvarchar(32)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("Guest")
                         .HasColumnType("nvarchar(max)");
@@ -201,7 +238,7 @@ namespace DBLayer.Migrations
 
                     b.Property<string>("Passport")
                         .IsRequired()
-                        .HasColumnType("nvarchar(32)");
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("Sex")
                         .HasColumnType("bit");
@@ -313,6 +350,9 @@ namespace DBLayer.Migrations
                     b.Property<string>("Dodavatel")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
+
+                    b.Property<decimal>("HotovostStav")
+                        .HasColumnType("decimal(12, 2)");
 
                     b.HasKey("ID");
 
@@ -768,11 +808,16 @@ namespace DBLayer.Migrations
                 {
                     b.HasBaseType("DBLayer.Models.PohSkup");
 
+                    b.Property<long?>("Host")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Kasa")
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("TypPlatby")
                         .HasColumnType("bit");
+
+                    b.HasIndex("Host");
 
                     b.HasIndex("Kasa");
 
@@ -785,6 +830,9 @@ namespace DBLayer.Migrations
 
                     b.Property<string>("DodaciID")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DruhPohybu")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("FakturaID")
                         .HasColumnType("nvarchar(max)");
@@ -799,6 +847,8 @@ namespace DBLayer.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.HasIndex("DruhPohybu");
+
                     b.HasIndex("Sklad");
 
                     b.ToTable("Prijemky");
@@ -807,6 +857,9 @@ namespace DBLayer.Migrations
             modelBuilder.Entity("DBLayer.Models.Vydajka", b =>
                 {
                     b.HasBaseType("DBLayer.Models.PohSkup");
+
+                    b.Property<string>("DruhPohybu")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("Obdobie")
                         .HasColumnType("datetime2");
@@ -820,6 +873,8 @@ namespace DBLayer.Migrations
 
                     b.Property<string>("SkladDo")
                         .HasColumnType("nvarchar(450)");
+
+                    b.HasIndex("DruhPohybu");
 
                     b.HasIndex("Sklad");
 
@@ -1144,26 +1199,42 @@ namespace DBLayer.Migrations
 
             modelBuilder.Entity("DBLayer.Models.PokladnicnyDoklad", b =>
                 {
+                    b.HasOne("DBLayer.Models.Host", "HostX")
+                        .WithMany()
+                        .HasForeignKey("Host");
+
                     b.HasOne("DBLayer.Models.Kasa", "KasaX")
                         .WithMany()
                         .HasForeignKey("Kasa");
+
+                    b.Navigation("HostX");
 
                     b.Navigation("KasaX");
                 });
 
             modelBuilder.Entity("DBLayer.Models.Prijemka", b =>
                 {
+                    b.HasOne("DBLayer.Models.DruhPohybu", "DruhPohybuX")
+                        .WithMany()
+                        .HasForeignKey("DruhPohybu");
+
                     b.HasOne("DBLayer.Models.Sklad", "SkladX")
                         .WithMany()
                         .HasForeignKey("Sklad")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("DruhPohybuX");
+
                     b.Navigation("SkladX");
                 });
 
             modelBuilder.Entity("DBLayer.Models.Vydajka", b =>
                 {
+                    b.HasOne("DBLayer.Models.DruhPohybu", "DruhPohybuX")
+                        .WithMany()
+                        .HasForeignKey("DruhPohybu");
+
                     b.HasOne("DBLayer.Models.PohSkup", null)
                         .WithOne()
                         .HasForeignKey("DBLayer.Models.Vydajka", "ID")
@@ -1180,6 +1251,8 @@ namespace DBLayer.Migrations
                         .WithMany()
                         .HasForeignKey("SkladDo")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("DruhPohybuX");
 
                     b.Navigation("SkladDoX");
 

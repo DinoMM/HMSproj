@@ -22,7 +22,6 @@
                      ColNames="@(new() { "Národ"})"
                      ColValues="RestCountriesService.GetAllCountriesNames(useCommonName: true).ToList()"
                      SizeInRem="20">
-
     </ItemFinderTable>
 </div>
 
@@ -161,11 +160,13 @@
 
         <div class="row pt-2">
             <div class="col text-center">
-                @if (!AsComponent)
-                {
-                    <button type="button" @onclick="Close" class="btn btn-secondary me-2">Späť</button>
-                }
-                <SimpleButton ID="ulozbuttonid" Type="submit" disabled="@ReadOnly" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
+                <div class="btn-group" role="group">
+                    @if (!AsComponent)
+                    {
+                        <button type="button" @onclick="Close" class="btn btn-secondary "><IconTextClose></IconTextClose></button>
+                    }
+                    <SimpleButton ID="ulozbuttonid" Type="submit" disabled="@ReadOnly" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
+                </div>
             </div>
         </div>
     </div>

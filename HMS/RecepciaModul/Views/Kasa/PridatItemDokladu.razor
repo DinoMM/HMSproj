@@ -154,15 +154,17 @@
 
         <div class="row pt-2">
             <div class="col text-center">
-                @if (!ReadOnly)
-                {
-                    <button type="button" class="btn btn-secondary" @onclick="Close">Zavrieť</button>
-                    <SimpleButton ID="ulozbuttonpolozid" Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Pridať", "Uložiť"))"></SimpleButton>
-                }
-                else
-                {
-                    <button type="button" class="btn btn-secondary" @onclick="Close">Zavrieť</button>
-                }
+                <div class="btn-group" role="group">
+                    @if (!ReadOnly)
+                    {
+                        <button type="button" class="btn btn-secondary" @onclick="Close"> <IconTextClose></IconTextClose></button>
+                        <SimpleButton ID="ulozbuttonpolozid" Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
+                    }
+                    else
+                    {
+                <button type="button" class="btn btn-secondary" @onclick="Close"> <IconTextClose></IconTextClose></button>
+                    }
+                </div>
             </div>
         </div>
     </div>

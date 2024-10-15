@@ -24,6 +24,7 @@ namespace DBLayer.Models
         public IdentityUserOwn? ActualUserX { get; set; }
 
         [HideFromInput]
+        [DecimalNonNegative]
         [Column(TypeName = "decimal(12, 2)")]
         public double HotovostStav { get; set; } = 0;
 
@@ -36,7 +37,8 @@ namespace DBLayer.Models
                 Dodavatel = this.Dodavatel,
                 DodavatelX = this.DodavatelX,
                 ActualUser = this.ActualUser,
-                ActualUserX = this.ActualUserX
+                ActualUserX = this.ActualUserX,
+                HotovostStav = this.HotovostStav
             };
         }
 
@@ -52,6 +54,7 @@ namespace DBLayer.Models
             this.DodavatelX = other.DodavatelX;
             this.ActualUser = other.ActualUser;
             this.ActualUserX = other.ActualUserX;
+            this.HotovostStav = other.HotovostStav;
         }
     }
 }

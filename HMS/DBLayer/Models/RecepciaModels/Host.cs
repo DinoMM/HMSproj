@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Globalization;
+using Microsoft.AspNetCore.Identity;
 
 namespace DBLayer.Models
 {
@@ -24,18 +25,37 @@ namespace DBLayer.Models
         [Column(TypeName = "nvarchar(128)")]
         public string Surname { get; set; } = "";
 
-        [Column(TypeName = "nvarchar(192)")]
-        public string Address { get; set; } = "";
+        private string _address = "";
+        [Column(TypeName = "nvarchar(max)")]
+        public string Address
+        {
+            get => DataEncryptor.Unprotect(_address);
+            set => _address = DataEncryptor.Protect(value);
+        }
 
-        [Column(TypeName = "nvarchar(32)")]
-        public string BirthNumber { get; set; } = "";
+        private string _birthNumber = "";
+        [Column(TypeName = "nvarchar(256)")]
+        public string BirthNumber
+        {
+            get => DataEncryptor.Unprotect(_birthNumber);
+            set => _birthNumber = DataEncryptor.Protect(value);
+        }
 
-        [Column(TypeName = "nvarchar(32)")]
-        public string Passport { get; set; } = "";
+        private string _passport = "";
+        [Column(TypeName = "nvarchar(256)")]
+        public string Passport
+        {
+            get => DataEncryptor.Unprotect(_passport);
+            set => _passport = DataEncryptor.Protect(value);
+        }
 
-        [Column(TypeName = "nvarchar(32)")]
-        public string CitizenID { get; set; } = "";
-
+        private string _citizenID = "";
+        [Column(TypeName = "nvarchar(256)")]
+        public string CitizenID
+        {
+            get => DataEncryptor.Unprotect(_citizenID);
+            set => _citizenID = DataEncryptor.Protect(value);
+        }
         /// <summary>
         /// false - male, true - female
         /// </summary>
@@ -56,6 +76,9 @@ namespace DBLayer.Models
         [NotMapped]
         public IdentityUserWebOwn? GuestZ { get; set; }
 
+        [NotMapped]
+        public PokladnicnyDoklad? PokladnicnyDokladZ { get; set; }
+
         public object Clone()
         {
             var newHost = new Host()
@@ -71,8 +94,8 @@ namespace DBLayer.Models
                 Guest = this.Guest,
                 Sex = this.Sex,
                 Nationality = this.Nationality,
-                Note = this.Note
-                
+                Note = this.Note,
+                PokladnicnyDokladZ = this.PokladnicnyDokladZ
                 //GuestZ = this.GuestZ.
             };
             return newHost;

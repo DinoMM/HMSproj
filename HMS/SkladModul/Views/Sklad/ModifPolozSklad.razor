@@ -41,26 +41,26 @@
 
         <div class="row">
 
-            <div class="col">
+            <div class="col col-8">
                 <label>Názov</label>
                 <input type="text" @bind-value=@ViewModel.Polozka.Nazov @bind-value:event="oninput" @onchange="() =>ViewModel.Saved = false" class="form-control w-75" placeholder="Zadajte názov">
                 <ValidationMessage For="@(() => ViewModel.Polozka.Nazov)" />
             </div>
             @*<div class="col">
-                <div class="container px-0">
-                    <div class="row gx-0">
-                        <div class="col">
-                            <label>Cena</label>
-                            <input type="number" @bind-value=@ViewModel.Polozka.Cena @bind-value:event="oninput" @onchange="() =>ViewModel.Saved = false" step="0.010" class="form-control w-50" />
-                            <ValidationMessage For="@(() => ViewModel.Polozka.Cena)" />
-                        </div>
-                        <div class="col">
-                            <label>CenaDPH</label>
-                            <input type="text" value="@ViewModel.Polozka.CenaDPH.ToString("F3")" class="form-control w-50" readonly disabled="disabled" />
+                    <div class="container px-0">
+                        <div class="row gx-0">
+                            <div class="col">
+                                <label>Cena</label>
+                                <input type="number" @bind-value=@ViewModel.Polozka.Cena @bind-value:event="oninput" @onchange="() =>ViewModel.Saved = false" step="0.010" class="form-control w-50" />
+                                <ValidationMessage For="@(() => ViewModel.Polozka.Cena)" />
+                            </div>
+                            <div class="col">
+                                <label>CenaDPH</label>
+                                <input type="text" value="@ViewModel.Polozka.CenaDPH.ToString("F3")" class="form-control w-50" readonly disabled="disabled" />
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>*@
+                </div>*@
         </div>
 
         <div class="row">
@@ -79,8 +79,10 @@
 
         <div class="row pt-2">
             <div class="col text-center">
-                <SimpleButton Type="button" Class="btn btn-secondary" ZmenaTextu="@(("" , "Späť"))" OnClick="Close"></SimpleButton>
-                <SimpleButton Disabled="@ViewModel.Saved" ZmenaStavuTextu="@ViewModel.Existuje()" ZmenaTextu="@(("Uložiť" , "Vytvoriť"))"></SimpleButton>
+                <div class="btn-group" role="group">
+                    <button @onclick="Close" class="btn btn-secondary " type="button"><IconTextClose></IconTextClose></button>
+                    <SimpleButton Disabled="@ViewModel.Saved" ZmenaStavuTextu="@ViewModel.Existuje()" ZmenaTextu="@(("Uložiť" , "Vytvoriť"))"></SimpleButton>
+                </div>
             </div>
         </div>
 

@@ -40,8 +40,10 @@
         </div>
         <div class="row pt-2">
             <div class="col text-center">
-                <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
-                <SimpleButton Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
+                <div class="btn-group" role="group">
+                    <button type="button" @onclick="Close" class="btn btn-secondary"><IconTextClose></IconTextClose></button>
+                    <SimpleButton Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
+                </div>
             </div>
         </div>
     </div>
@@ -82,7 +84,7 @@
 
     public async Task OnIvalid(EditContext editContext)
     {
-        if (ViewModel.Existuje())   
+        if (ViewModel.Existuje())
         {
             if (editContext.GetValidationMessages().Count() == 1 &&
                 editContext.GetValidationMessages().Any(x => x == "Sklad už existuje."))

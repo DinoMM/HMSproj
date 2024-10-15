@@ -26,6 +26,7 @@ namespace SkladModul.ViewModels.Sklad
         public List<Ssklad> Sklady { get; set; } = new();
         public bool Readonly { get; set; } = false;
         public bool AktualneObdobie { get; set; } = true;       //true - mozno vytvorit novu vydajku
+        public List<DruhPohybu> DruhyPohybov { get; set; } = new();
 
         readonly DBContext _db;
 
@@ -56,6 +57,17 @@ namespace SkladModul.ViewModels.Sklad
             else //pre novu vydajku nastavime obdobie
             {
                 Polozka.Obdobie = SkladObdobie.GetActualObdobieFromSklad(Sklad, _db);
+            }
+            if (DruhyPohybov.Count == 0)
+            {
+                DruhyPohybov.AddRange(_db.DruhyPohybov
+                    .Where(x => x.MD.StartsWith("5") && x.MD.Length <= 3)
+                    .ToList());     //vybratie podla MD zacinajuceho na 5**
+                if (string.IsNullOrEmpty(Polozka.DruhPohybu))
+                {
+                    Polozka.DruhPohybu = DruhyPohybov.FirstOrDefault()?.ID ?? "";
+                    Polozka.DruhPohybuX = DruhyPohybov.FirstOrDefault();
+                }
             }
 
         }

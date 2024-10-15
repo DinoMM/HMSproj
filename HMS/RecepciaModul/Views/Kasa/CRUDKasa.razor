@@ -69,6 +69,13 @@
                         <input type="text" disabled value="@(ViewModel.KasaInput.ActualUserX?.Email ?? "-")" class="form-control" />
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col col-5">
+                        <label>Predvolená&nbsp;hotovosť</label>
+                        <input type="number" @bind="@ViewModel.KasaInput.HotovostStav" step="0.01" class="form-control" placeholder="predvolená hotovosť v pokladni" />
+                        <ValidationMessage For="@(() => ViewModel.KasaInput.HotovostStav)" />
+                    </div>
+                </div>
 
             </div>
 
@@ -77,11 +84,12 @@
         <hr>
         <div class="row pt-2">
             <div class="col text-center">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+                    <SimpleButton ID="ulozbutton" Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
+                    <SimpleButton ID="zmazbutton" Type="button" ZmenaTextu="@(("Vymazať", "Vymazať"))" Disabled="!ViewModel.Existuje() ||!ViewModel.MoznoVymazat(ViewModel.KasaInput)" Class="btn btn-danger" OnClick="Vymazat"></SimpleButton>
 
-                <button type="button" class="btn btn-secondary" @onclick="Close">Zavrieť</button>
-                <SimpleButton ID="ulozbutton" Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Pridať", "Uložiť"))"></SimpleButton>
-                <SimpleButton ID="zmazbutton" Type="button" ZmenaTextu="@(("Vymazať", "Vymazať"))" Disabled="!ViewModel.Existuje() ||!ViewModel.MoznoVymazat(ViewModel.KasaInput)" Class="btn btn-danger" OnClick="Vymazat"></SimpleButton>
-
+                </div>
             </div>
         </div>
     </div>

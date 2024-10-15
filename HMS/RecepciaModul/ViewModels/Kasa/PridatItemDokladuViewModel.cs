@@ -118,7 +118,7 @@ namespace RecepciaModul.ViewModels
             switch (UniConItemPoklDokladuInput)
             {
                 case PolozkaSkladuConItemPoklDokladu item:
-                    return new List<string> { "ID", "Názov", "Merná jednotka", "Sklad" };
+                    return new List<string> { "ID", "Názov", "Merná jednotka" };
                 case ReservationConItemPoklDokladu item:
                     return new List<string> { "ID" };
 

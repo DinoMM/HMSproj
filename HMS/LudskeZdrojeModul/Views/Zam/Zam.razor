@@ -16,17 +16,15 @@
 
     <div class="row pb-1">
 
-        <div class="col-1"></div>
-
         <div class="col-3 d-flex justify-content-bottom mb-2">
             <SearchInput NumCols="@(ViewModel.ValidateUserCRUD() ? 7 : 5)" PlaceHolder="Vyhľadaj zamestnanca..." TableID="tableid"></SearchInput>
         </div>
 
-        <div class="col-8">
+        <div class="col-9">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">➕Vytvoriť zamestnanca</button>
-                <button type="button" @onclick="Open" disabled="@(marked == null && !UserService.IsLoggedUserInRoles(IdentityUserOwn.ROLE_CRUD_ZAMESTNANCI))" class="btn btn-primary">Otvoriť</button>
+                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary"><IconTextCreate></IconTextCreate></button>
+                <button type="button" @onclick="Open" disabled="@(marked == null || !UserService.IsLoggedUserInRoles(IdentityUserOwn.ROLE_CRUD_ZAMESTNANCI))" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
             </div>
         </div>
 
@@ -38,18 +36,19 @@
         <div class="col-12" style="max-height: 30rem;overflow: auto;">
             <SimpleTable ID="tableid">
                 <THEAD>
-                    
-                <ThSort>Meno</ThSort>
-                <ThSort>Priezvisko</ThSort>
-                <ThSort>Email</ThSort>
-                <ThSort>Telefón</ThSort>
-                @if (ViewModel.ValidateUserCRUD())
-                {
-                    <ThSort>IBAN</ThSort>
-                    <ThSort>Adresa</ThSort>
-                }
-                <ThSort>Role</ThSort>
-                <ThSort></ThSort>
+
+                    <ThSort>Meno</ThSort>
+                    <ThSort>Priezvisko</ThSort>
+                    <ThSort>Email</ThSort>
+                    <ThSort>Telefón</ThSort>
+                    @if (ViewModel.ValidateUserCRUD())
+                    {
+                        <ThSort>IBAN</ThSort>
+                        <ThSort>Adresa</ThSort>
+                        <ThSort>Občiansky</ThSort>
+                    }
+                    <ThSort>Profesia</ThSort>
+                    <ThSort></ThSort>
 
                 </THEAD>
                 <TBODY>
@@ -73,6 +72,7 @@
                                 {
                                     <td class="col-resize">@item.IBAN</td>
                                     <td class="col-resize">@item.Adresa</td>
+                                    <td class="col-resize">@item.ObcianskyID</td>
                                 }
                                 <td class="col-resize">@ViewModel.GetRoleString(item)</td>
                                 <td>

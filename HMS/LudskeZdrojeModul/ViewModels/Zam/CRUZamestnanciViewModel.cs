@@ -37,6 +37,18 @@ namespace LudskeZdrojeModul.ViewModels.Zamestnanci
         [MaxLength(256, ErrorMessage = "Maximálne 256 znakov.")]
         public string Adresa { get; set; } = "";
 
+        [MaxLength(32, ErrorMessage = "Maximálne 32 znakov.")]
+        public string RodneCislo { get; set; } = "";
+
+        [MaxLength(32, ErrorMessage = "Maximálne 32 znakov.")]
+        public string ObcianskyID { get; set; } = "";
+
+        public bool Sex { get; set; } = false;
+
+        public string Nationality { get; set; } = "";
+
+
+
         #endregion
 
         public IdentityUserOwn? User { get; set; } = default!;
@@ -73,7 +85,11 @@ namespace LudskeZdrojeModul.ViewModels.Zamestnanci
             PhoneNumber = user.PhoneNumber ?? "";
             IBAN = user.IBAN ?? "";
             Adresa = user.Adresa ?? "";
-            User = user;
+            Nationality = user.Nationality;
+            RodneCislo = user.RodneCislo;
+            ObcianskyID = user.ObcianskyID;
+            Sex = user.Sex;
+            User = user.Clon();
 
         }
 
@@ -139,6 +155,10 @@ namespace LudskeZdrojeModul.ViewModels.Zamestnanci
                 User.PhoneNumber = PhoneNumber;
                 User.IBAN = IBAN;
                 User.Adresa = Adresa;
+                User.RodneCislo = RodneCislo;
+                User.ObcianskyID = ObcianskyID;
+                User.Sex = Sex;
+                User.Nationality = Nationality;
 
                 if (!await _userService.CreateNewUserNoPSWDAsync(User))
                 {
@@ -155,25 +175,57 @@ namespace LudskeZdrojeModul.ViewModels.Zamestnanci
             }
             else
             {
-                User.Name = Name;
-                User.Surname = Surname;
-                User.Email = Email;
-                User.PhoneNumber = PhoneNumber;
-                User.IBAN = IBAN;
-                User.Adresa = Adresa;
-                if (!await _userService.UpdateUser(User))
+                var found = await _userService.GetUserById(User.Id);
+                if (found is null)
                 {
                     return false;
                 }
-                await _db.Entry(User).ReloadAsync();
+                found.Name = Name;
+                found.Surname = Surname;
+                found.Email = Email;
+                found.PhoneNumber = PhoneNumber;
+                found.IBAN = IBAN;
+                found.Adresa = Adresa;
+                found.RodneCislo = RodneCislo;
+                found.ObcianskyID = ObcianskyID;
+                found.Sex = Sex;
+                found.Nationality = Nationality;
+
+                //User.Name = Name;
+                //User.Surname = Surname;
+                //User.Email = Email;
+                //User.PhoneNumber = PhoneNumber;
+                //User.IBAN = IBAN;
+                //User.Adresa = Adresa;
+                //User.RodneCislo = RodneCislo;
+                //User.ObcianskyID = ObcianskyID;
+                //User.Sex = Sex;
+                //User.Nationality = Nationality;
+
+
+
+                if (!await _userService.UpdateUser(found))
+                {
+                    return false;
+                }
+                var existingEntity = _db.ChangeTracker.Entries<IdentityUserOwn>()
+    .FirstOrDefault(e => e.Entity.Id == found.Id);
+                if (existingEntity != null)
+                {
+                    _db.Entry(existingEntity.Entity).State = EntityState.Detached;
+                }
+
+                // Attach the new entity
+                _db.Entry(found).State = EntityState.Modified;
+                await _db.Entry(found).ReloadAsync();
 
                 foreach (var item in RoleUseraPred)        //najskor vymazeme vsetky zaznamy
                 {
-                    await _userService.RemoveRoleFromUser(User.Id, item.Name);
+                    await _userService.RemoveRoleFromUser(found.Id, item.Name);
                 }
                 foreach (var item in RoleUsera)     //pridame nove
                 {
-                    await _userService.AddRoleToUser(User.Id, item.Name);
+                    await _userService.AddRoleToUser(found.Id, item.Name);
                 }
                 return true;
             }

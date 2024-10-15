@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DBLayer.Migrations.Data
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20241009143243_Sklad3V9995")]
-    partial class Sklad3V9995
+    [Migration("20241011174358_FirstMigDataC")]
+    partial class FirstMigDataC
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -179,6 +179,9 @@ namespace DBLayer.Migrations.Data
 
                     b.Property<int>("NumberGuest")
                         .HasColumnType("int");
+
+                    b.Property<string>("RecentChangesUser")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RoomNumber")
                         .IsRequired()

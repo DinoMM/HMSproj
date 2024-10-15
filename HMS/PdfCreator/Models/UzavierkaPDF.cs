@@ -128,7 +128,7 @@ namespace PdfCreator.Models
                 actual = page.AddText(item.ID, fontSize, actual, fontR)[^1].EndBaseLine;
                 TableStarts[0] = page.AddText(WillFit(page, item.Nazov, fontSize, TableStarts[0], fontR, (int)maxNazov).Item2, fontSize, TableStarts[0].Translate(0, -Riad), fontR)[0].StartBaseLine;
                 TableStarts[1] = page.AddText(WillFit(page, item.MernaJednotka, fontSize, TableStarts[1], fontR, (int)maxMJ).Item2, fontSize, TableStarts[1].Translate(0, -Riad), fontR)[0].StartBaseLine;
-                TableStarts[2] = page.AddText(item.Cena.ToString("F3"), fontSize, TableStarts[2].Translate(0, -Riad), fontR)[0].StartBaseLine;
+                TableStarts[2] = page.AddText(GetAktualnaCena(item), fontSize, TableStarts[2].Translate(0, -Riad), fontR)[0].StartBaseLine;
                 TableStarts[3] = page.AddText(GetAktualneMnozstvo(item), fontSize, TableStarts[3].Translate(0, -Riad), fontR)[0].StartBaseLine;
 
                 page.DrawLine(lineStart, lineEnd);
@@ -190,6 +190,10 @@ namespace PdfCreator.Models
             var sum1 = zoznamVydateho.Sum(x => x.CelkovaCena);
             var sum2 = zoznamPrevodiekZoSkladu.Sum(x => x.CelkovaCena);
             return (zoznamVydateho.Sum(x => x.CelkovaCena) - zoznamPrevodiekZoSkladu.Sum(x => x.CelkovaCena)).ToString("F3");
+        }
+        public string GetAktualnaCena(PolozkaSkladu poloz)
+        {
+            return zoznamAktualnehoMnozstva.FirstOrDefault(x => x.ID == poloz.ID)?.Cena.ToString("F3") ?? 0.ToString("F3");
         }
     }
 }

@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace DBLayer.Models
 {
@@ -39,6 +41,15 @@ namespace DBLayer.Models
             return !valRes.Any(x => x.ErrorMessage == "Zlý formát pri kontrolovaní Guest ID." || x.ErrorMessage == "Priradený guest neexistuje.");
         }
 
+        public static List<PokladnicnyDoklad> GetActivePokladnicneDoklady(Host host, in DBContext db)
+        {
+            return db.PokladnicneDoklady
+                .Include(x => x.KasaX)
+                .Include(x => x.HostX)
+                .Where(x => !x.Spracovana && x.Host == host.ID)
+                .OrderByDescending(x => x.Vznik)
+                .ToList();
+        }
 
     }
 }

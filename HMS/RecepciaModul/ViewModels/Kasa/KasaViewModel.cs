@@ -57,6 +57,7 @@ namespace RecepciaModul.ViewModels
             NacitajKasy();
             ZoznamBlockov = new(_db.PokladnicneDoklady
                 .Include(x => x.KasaX)
+                .Include(x => x.HostX)
                 .OrderByDescending(x => x.Vznik)
                 .ToList());
             NacitavaniePoloziek = false;

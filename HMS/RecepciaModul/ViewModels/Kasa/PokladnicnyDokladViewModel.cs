@@ -29,8 +29,10 @@ namespace RecepciaModul.ViewModels
         public PpokladnicnyDoklad PoklDokladInput { get; set; } = new();
 
         public UniConItemPoklDokladu? UniConItem { get; set; }
+        public double PlatbaOdHostaInput { get; set; } = 0.0;
 
         private bool existuje = false;
+
 
         private readonly DBContext _db;
         private readonly DataContext _dbw;
@@ -102,6 +104,16 @@ namespace RecepciaModul.ViewModels
             existuje = true;
             return UniConItemPoklDokladu.JeItemOnlyOnePD(item, in _db);
         }
+        public bool SetPoklDokl(Host item)
+        {
+            if (item.PokladnicnyDokladZ != null)
+            {
+                return SetPoklDokl(item.PokladnicnyDokladZ);
+            }
+            PoklDokladInput.Host = item.ID;
+            PoklDokladInput.HostX = item;
+            return false;
+        }
 
         /// <summary>
         /// pri conexii, kde moze byt polozka LEN jedna na 1 PD v celom systeme
@@ -144,7 +156,7 @@ namespace RecepciaModul.ViewModels
             return existuje;
         }
 
-        public async Task<bool> Ulozit()
+        public async Task<bool> Ulozit(bool asComponent = false)
         {
             if (UniConItem != null)
             {
@@ -196,13 +208,16 @@ namespace RecepciaModul.ViewModels
             }
             #endregion
 
-
+            if (asComponent)
+            {
+                await _sessionStorage.SetItemAsync("PDChanged", true);
+            }
             _db.SaveChanges();
             existuje = true;
             return true;
         }
 
-        public async Task<ValidationResult> Predat()
+        public async Task<ValidationResult> Predat(bool asComponent = false)
         {
             if (!JeNastavenaKasa())
             {
@@ -248,7 +263,10 @@ namespace RecepciaModul.ViewModels
                 foundedPd.Vznik = DateTime.Now;
                 _db.SaveChanges();
                 _dbw.SaveChanges();
-                await _sessionStorage.SetItemAsync("UniconChanged", true);
+                if (asComponent)
+                {
+                    await _sessionStorage.SetItemAsync("PDSold", true);
+                }
                 return ValidationResult.Success;
             }
             return new ValidationResult("Uloženie dokladu neprebehlo úspešne, skontrolujte doklad.");
@@ -317,5 +335,11 @@ namespace RecepciaModul.ViewModels
 
             PDFLoading = false;
         }
+
+        public double GetSum()
+        {
+            return ZoznamPoloziek.Sum(x => x.CelkovaCenaDPH);
+        }
+
     }
 }

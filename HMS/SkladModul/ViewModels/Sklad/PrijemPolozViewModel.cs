@@ -38,7 +38,9 @@ namespace SkladModul.ViewModels.Sklad
         public void LoadZoznam()
         {
             NacitavaniePoloziek = true;
-            var prijemky = _db.Prijemky.Include(x => x.SkladX)
+            var prijemky = _db.Prijemky
+                .Include(x => x.SkladX)
+                .Include(x => x.DruhPohybuX)
                 .Where(x => x.Obdobie >= Obdobie && x.Sklad == Sklad.ID)
                 .ToList();     //zoznam prijemok
             var prevodky = _db.Vydajky.Include(x => x.SkladX).Include(x => x.SkladDoX).Where(x => x.ObdobieDo >= Obdobie && x.SkladDo == Sklad.ID)

@@ -75,5 +75,22 @@ namespace UniComponents
             return founded;
         }
 
+        /// <summary>
+        /// Zaručí, že v kontajneri bude len jeden objekt daného typu. 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="obj"></param>
+        public void AddOnlyOne<T>(T obj)
+        {
+            while (true)
+            {
+                var found = Remove<T>();
+                if (found == null)
+                {
+                    Add(obj);
+                    break;
+                }
+            }
+        }
     }
 }

@@ -36,7 +36,10 @@ namespace SkladModul.ViewModels.Sklad
 
         public void LoadZoznam()
         {
-            ZoznamVydajok = new(_db.Vydajky.Include(x => x.SkladX).Where(x => x.Obdobie >= Obdobie && x.Sklad == Sklad.ID)
+            ZoznamVydajok = new(_db.Vydajky
+                .Include(x => x.SkladX)
+                .Include(x => x.DruhPohybuX)
+                .Where(x => x.Obdobie >= Obdobie && x.Sklad == Sklad.ID)
                 .OrderByDescending(x => x.Vznik));
         }
 

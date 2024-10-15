@@ -124,10 +124,23 @@
         @* *** *@
         <div class="row g-3 pt-2 align-items-center justify-content-center">
             <div class="col-auto">
-                <button type="button" class="btn btn-secondary me-2" @onclick="GoBack">Späť</button>
-                <button type="button" disabled="@(!ViewModel.CorrectDod || !ViewModel.CorrectOdo)" @onclick="GoNext" class="btn btn-primary me-2">@(ViewModel.Exist() ? ViewModel.PozriZmeny() ? "Uložiť" : "Otvoriť" : "Vytvoriť")</button>
-                <button type="button" class="btn btn-danger" @onclick="DelteObj" disabled="@(!ViewModel.Prazdna)">Vymazať</button>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-secondary" @onclick="GoBack">
+                        <IconTextClose></IconTextClose>
+                    </button>
+                    <button type="button" disabled="@(!ViewModel.CorrectDod || !ViewModel.CorrectOdo)" @onclick="GoNext" class="btn btn-primary">
+                        @if (!ViewModel.Exist())
+                        {
+                            <IconTextCreate></IconTextCreate>
+                        }
+                        else
+                        {
+                            <IconTextSaveOpen Saved="!ViewModel.PozriZmeny()"></IconTextSaveOpen>
+                        }
+                    </button>
+                    <button type="button" class="btn btn-danger" @onclick="DelteObj" disabled="@(!ViewModel.Prazdna)"><IconTextDelete></IconTextDelete></button>
 
+                </div>
             </div>
         </div>
 

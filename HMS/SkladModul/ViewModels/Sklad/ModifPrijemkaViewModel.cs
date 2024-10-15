@@ -33,6 +33,10 @@ namespace SkladModul.ViewModels.Sklad
         public double CelkovaSuma { get; set; } = 0;
 
         public bool AktualneObdobie { get; set; } = true;       //true - mozno vytvorit novu prijemku
+        public List<DruhPohybu> DruhyPohybov { get; set; } = new();
+
+        public List<DBLayer.Models.Objednavka> ZoznamSpracObjednavok = new();
+        public bool ObsahujePolozky { get; set; } = false;
 
         readonly DBContext _db;
 
@@ -56,10 +60,22 @@ namespace SkladModul.ViewModels.Sklad
                 {
                     Saved = true;
                 }
+                ObsahujePolozky = _db.PrijemkyPolozky.Any(x => x.Skupina == Polozka.ID);
             }
             else //pre novu prijemku nastavime obdobie
             {
                 Polozka.Obdobie = SkladObdobie.GetActualObdobieFromSklad(Sklad, _db);
+            }
+            if (DruhyPohybov.Count == 0)
+            {
+                DruhyPohybov.AddRange(_db.DruhyPohybov
+                    .Where(x => x.MD.StartsWith("1") && x.MD.Length <= 3)
+                    .ToList());     //vybratie podla MD zacinajuceho na 1**
+                if (string.IsNullOrEmpty(Polozka.DruhPohybu))
+                {
+                    Polozka.DruhPohybu = DruhyPohybov.FirstOrDefault()?.ID ?? "";
+                    Polozka.DruhPohybuX = DruhyPohybov.FirstOrDefault();
+                }
             }
         }
         public async void Uloz()
@@ -93,13 +109,14 @@ namespace SkladModul.ViewModels.Sklad
             Sklad = new();
             Obdobie = default!;
             CelkovaSuma = 0;
+            DruhyPohybov.Clear();
         }
 
         public async Task SpracujPrijemku(IModal zoznamprazdnymodal)
         {
             if (!Polozka.Spracovana)
             {
-                if (!ObsahujePolozky())
+                if (!ObsahujePolozky)
                 {
                     await zoznamprazdnymodal.OpenModal();
                     return;
@@ -121,7 +138,7 @@ namespace SkladModul.ViewModels.Sklad
                 _db.SaveChanges();
 
                 #region kontrola vsetkych prijemok, ktore maju rovnaku objednavku ci nesplnaju pocty pre ukoncenie objednavky automaticky
-                DBLayer.Models.Objednavka.NastavStavZPrijemok(Polozka,in _db);
+                DBLayer.Models.Objednavka.NastavStavZPrijemok(Polozka, in _db);
                 #endregion
 
             }
@@ -142,15 +159,6 @@ namespace SkladModul.ViewModels.Sklad
             return CelkovaSuma;
         }
 
-        public bool ObsahujePolozky()
-        {
-            if (string.IsNullOrEmpty(Polozka.ID))
-            {
-                return false;
-            }
-            return _db.PrijemkyPolozky.FirstOrDefault(x => x.Skupina == Polozka.ID) != null;
-        }
-
         public async Task NacitajZObjednavky(IModal succmodal, IModal notfoundModal, IModal someExcluded)
         {
             Uloz();     //automaticke ulozenie
@@ -158,7 +166,7 @@ namespace SkladModul.ViewModels.Sklad
             {   //ak sa nepodarilo ulozit
                 return;
             }
-            if (ObsahujePolozky())
+            if (ObsahujePolozky)
             {
                 return;
             }
@@ -208,6 +216,16 @@ namespace SkladModul.ViewModels.Sklad
             }
             await succmodal.OpenModal(true);
             _db.SaveChanges();
+        }
+
+        public async Task NacitajSpracovaneObjednavky()
+        {
+            ZoznamSpracObjednavok.Clear();
+            ZoznamSpracObjednavok.AddRange(await _db.Objednavky
+                .Where(x => x.Stav == StavOBJ.Objednana 
+                || x.Stav == StavOBJ.Schvalena)
+                .OrderByDescending(x => x.ID)
+                .ToListAsync());
         }
 
     }

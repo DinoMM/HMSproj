@@ -21,11 +21,20 @@
 
     <div class="row">
         <div class="col-12">
-            <h2 class="text-center font-weight-bold">Výdajky za obdobie</h2>
-            <div class="col">
-                <button @onclick="() => Navigator.NavigateTo(Navigator.RemoveLastUrl())" class="btn btn-primary  mb-3" type="button">Späť</button>
-                <button @onclick="Create" disabled="@(!ViewModel.IsObdobieActual())" class="btn btn-primary  mb-3" type="button">➕Pridať výdajku</button>
-                <button @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary  mb-3" type="button">📩Otvoriť výdajku</button>
+            <div class="row">
+                <h2 class="text-center font-weight-bold">Výdaj za obdobie</h2>
+            </div>
+            <div class="row">
+                <div class="col-3 d-flex justify-content-bottom mb-2">
+                    <SearchInput NumCols="6" TableID="tableid" PlaceHolder="Vyhľadaj výdaj..."></SearchInput>
+                </div>
+                <div class="col-9">
+                    <div class="btn-group mb-2" role="group">
+                        <button @onclick="() => Navigator.NavigateTo(Navigator.RemoveLastUrl())" class="btn btn-primary  " type="button"><IconTextClose></IconTextClose></button>
+                        <button @onclick="Create" disabled="@(!ViewModel.IsObdobieActual())" class="btn btn-primary  " type="button"><IconTextCreate></IconTextCreate></button>
+                        <button @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary  " type="button"><IconTextOpen></IconTextOpen> </button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -35,13 +44,14 @@
 
     <div class="row">
         <div class="col-12" style="height:30rem; overflow:auto">
-            <SimpleTable>
+            <SimpleTable ID="tableid">
                 <THEAD>
-                <ThSort>ID</ThSort>
-                <ThSort>Vznik</ThSort>
-                <ThSort>Obdobie</ThSort>
-                <ThSort>OK</ThSort>
-                <ThSort>Prevodka do</ThSort>
+                    <ThSort>ID</ThSort>
+                    <ThSort>Vznik</ThSort>
+                    <ThSort>Obdobie</ThSort>
+                    <ThSort>OK</ThSort>
+                    <ThSort>Prevodka do</ThSort>
+                    <ThSort>Druh&nbsp;Pohybu</ThSort>
                 <th class="col-resize" scope="col"></th>
                 </THEAD>
                 <TBODY>
@@ -56,6 +66,7 @@
                                 <SimpleCheckMark Checked="@item.Spracovana" Size="5"></SimpleCheckMark>
                             </td>
                             <td class="col-resize">@(string.IsNullOrEmpty(item.SkladDo) ? "-" : item.SkladDo) </td>
+                            <td class="col-resize">@item.DruhPohybu</td>
                             @if (!item.Spracovana)
                             {
                                 <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>

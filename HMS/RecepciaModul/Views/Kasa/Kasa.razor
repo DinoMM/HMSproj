@@ -21,7 +21,7 @@
     </CompVyberKasa>
 }
 
-<CustomModal @ref="uzavretiemod" ID="uzavretiemod" OneButtonOnly="true" Header="Kontrola&nbsp;obdobia" SizeInRem="60">
+<CustomModal @ref="uzavretiemod" ID="uzavretiemod" OneButtonOnly="true" Header="Kontrola&nbsp;obdobia" SizeInRem="80">
     <BODY>
         @if (uzavretiemod.Render)
         {
@@ -36,22 +36,21 @@
 
     <div class="row pb-1">
 
-        <div class="col-1"></div>
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
             <SearchInput NumCols="5" TableID="tableid" PlaceHolder="Vyhľadaj doklad..."></SearchInput>
         </div>
 
-        <div class="col-8">
+        <div class="col-9">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-primary" @onclick="Close">❌Späť</button>
-                <button @onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRU())" class="btn btn-primary">➕Vytvoriť doklad</button>
-                <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary">Otvoriť</button>
-                <button type="button" @onclick="ForceOpenKasa" disabled="@(!ViewModel.ValidateUserKasaR())" class="btn btn-info">Pokladňa: @(ViewModel.AktlKasa?.ID ?? "-")</button>
-                <button type="button" @onclick="OpenUzavierka" class="btn btn-primary">Uzávierka</button>
+                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+                <button @onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRU())" class="btn btn-primary"><IconTextCreate></IconTextCreate></button>
+                <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                <button type="button" @onclick="ForceOpenKasa" disabled="@(!ViewModel.ValidateUserKasaR())" class="btn btn-info"><IconText Icon="">Pokladňa: @(ViewModel.AktlKasa?.ID ?? "-")</IconText></button>
+                <button type="button" @onclick="OpenUzavierka" class="btn btn-primary"><IconText Icon="bi-calendar3">Uzávierka</IconText></button>
                 @if (ViewModel.ValidateUserKasaCRUD())
                 {
-                    <button type="button" @onclick="CreateKasa" class="btn btn-primary">Správa&nbsp;pokladní</button>
+                    <button type="button" @onclick="CreateKasa" class="btn btn-primary"> <IconText Icon="bi-pc-display-horizontal">Správa pokladní</IconText></button>
                 }
             </div>
         </div>
@@ -70,6 +69,7 @@
                     <ThManualSort PropertyName="Spracovana" SortMethod="Sort">Zaplatený</ThManualSort>
                     <ThManualSort PropertyName="Kasa" SortMethod="Sort">Pokladňa</ThManualSort>
                     <ThManualSort PropertyName="TypPlatby" SortMethod="Sort">Typ&nbsp;platby</ThManualSort>
+                    <ThManualSort PropertyName="GetMenoHosta" SortMethod="Sort">Hosť</ThManualSort>
                 <th></th>
 
                 </THEAD>
@@ -92,8 +92,9 @@
                                         <SimpleCheckMark Checked="item.Spracovana" Size="5"></SimpleCheckMark>
                                     </td>
                                     <td class="col-resize">@(item?.Kasa ?? "-")</td>
-                                    <td>@(item.TypPlatby ? "Platobná&nbsp;karta" : "Hotovosť")</td>
-                                    <td>
+                                    <td class="col-resize">@(item.TypPlatby ? "Hotovosť" : "Platobná karta")</td>
+                                    <td class="col-resize">@item.GetMenoHosta</td>
+                                    <td class="col-resize">
                                         @if (ViewModel.ValidateUserD())
                                         {
                                             <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))" TooltipMessage="Nemožno vymazať tento doklad lebo je zaplatený."></ButtonRemove>
@@ -236,7 +237,7 @@
         //kontrolauzavretiacomp.StartRender();
         uzavretiemod.Render = true;
         await uzavretiemod.OpenModal(true);
-        uzavretiemod.Render = false; 
+        uzavretiemod.Render = false;
     }
 
     //public override async Task Sort(string propertyName, bool sortMethod)

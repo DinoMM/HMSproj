@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace DBLayer.Migrations.Data
 {
     /// <inheritdoc />
-    public partial class Reservation3v81 : Migration
+    public partial class FirstMigDataC : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -91,7 +91,7 @@ namespace DBLayer.Migrations.Data
                     RoomNumber = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     RoomCategory = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     MaxNumberOfGuest = table.Column<int>(type: "int", nullable: false),
-                    Cost = table.Column<double>(type: "float", nullable: false)
+                    Cost = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -239,10 +239,11 @@ namespace DBLayer.Migrations.Data
                     DepartureDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     NumberGuest = table.Column<int>(type: "int", nullable: false),
                     CelkovaSuma = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    GuestId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    GuestId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     RoomNumber = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     CouponId = table.Column<string>(type: "nvarchar(10)", nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RecentChangesUser = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -251,8 +252,7 @@ namespace DBLayer.Migrations.Data
                         name: "FK_Rezervations_AspNetUsers_GuestId",
                         column: x => x.GuestId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Rezervations_Coupons_CouponId",
                         column: x => x.CouponId,

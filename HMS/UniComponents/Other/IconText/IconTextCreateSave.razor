@@ -1,0 +1,15 @@
+﻿@namespace UniComponents
+@if (Exist)
+{
+    <IconTextSave></IconTextSave>
+}
+else
+{
+    <IconTextCreate></IconTextCreate>
+}
+
+@code{
+    [Parameter]
+    public bool Exist { get; set; } = false;
+
+}

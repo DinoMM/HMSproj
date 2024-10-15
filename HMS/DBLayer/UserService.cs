@@ -182,22 +182,30 @@ namespace DBLayer
             return false;
         }
 
+        /// <summary>
+        /// Updatne usera
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         public async Task<bool> UpdateUser(IdentityUserOwn user)
         {
-            var found = await _userManager.FindByIdAsync(user.Id);
-            if (found is null)
-            {
-                return false;
-            }
-            found.UserName = user.UserName;
-            found.Name = user.Name;
-            found.Surname = user.Surname;
-            found.Email = user.Email;
-            found.PhoneNumber = user.PhoneNumber;
-            found.IBAN = user.IBAN;
-            found.Adresa = user.Adresa;
-
-            return (await _userManager.UpdateAsync(found)).Succeeded;
+            //var found = await _userManager.FindByIdAsync(user.Id);
+            //if (found is null)
+            //{
+            //    return false;
+            //}
+            //found.UserName = user.UserName;
+            //found.Name = user.Name;
+            //found.Surname = user.Surname;
+            //found.Email = user.Email;
+            //found.PhoneNumber = user.PhoneNumber;
+            //found.IBAN = user.IBAN;
+            //found.Adresa = user.Adresa;
+            //found.RodneCislo = user.RodneCislo;
+            //found.ObcianskyID = user.ObcianskyID;
+            //found.Sex = user.Sex;
+            //found.Nationality = user.Nationality;
+            return (await _userManager.UpdateAsync(user)).Succeeded;
         }
 
         public async Task<bool> DeleteUser(IdentityUserOwn user)
@@ -217,6 +225,11 @@ namespace DBLayer
                 return false;
             }
             return LoggedUser.Id == user.Id;
+        }
+
+        public async Task<IdentityUserOwn?> GetUserById(string id)
+        {
+            return await _userManager.FindByIdAsync(id);
         }
 
     }

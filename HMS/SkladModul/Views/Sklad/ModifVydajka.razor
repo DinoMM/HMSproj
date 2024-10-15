@@ -67,8 +67,19 @@
                 </div>
                 <div class="row">
                     <div class="col-6">
-                        <label>Spracovaná</label>
-                        <input type="text" id="spracsel" value=@(ViewModel.Polozka.Spracovana ? "Áno" : "Nie") disabled="disabled" readonly class="form-control" placeholder="" />
+                        <label class="me-2">Spracovaná</label>
+                        <SimpleCheckMark Checked="ViewModel.Polozka.Spracovana" Size="3"></SimpleCheckMark>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-10">
+                        <label>Druh pohybu</label>
+                        <select class="form-select" @bind="@ViewModel.Polozka.DruhPohybu">
+                            @foreach (var item in ViewModel.DruhyPohybov)
+                            {
+                                <option value="@item.ID">@(item.ID + " - " + item.Nazov)  </option>
+                            }
+                        </select>
                     </div>
                 </div>
                 <div class="row">
@@ -83,14 +94,13 @@
                 <div class="row">
                     <div class="col-6">
                         <label>Prevodka na sklad</label>
-                        <select id="skldsel" @bind-value="@ViewModel.Polozka.SkladDo" @bind-value:event="oninput" disabled="@(ViewModel.Polozka.Spracovana || ViewModel.Readonly || !ViewModel.Saved)" @onchange="() => ViewModel.Saved = false" class="form-select">
+                        <select id="skldsel" @bind-value="@ViewModel.Polozka.SkladDo" @bind-value:event="oninput" disabled="@(ViewModel.Polozka.Spracovana || ViewModel.Readonly)" @onchange="() => ViewModel.Saved = false" class="form-select">
                             <option value="">-</option>
                             @foreach (var item in ViewModel.Sklady.Select(x => x.ID))
                             {
                                 <option value="@item">@item</option>
                             }
                         </select>
-                        @*<input type="text" @bind-value=@ViewModel.Polozka.SkladDo @bind-value:event="oninput" @onchange="() =>ViewModel.Saved = false" class="form-control" placeholder="ID skladu">*@
                         <ValidationMessage For="@(() => ViewModel.Polozka.SkladDo)" />
                     </div>
                 </div>
@@ -100,10 +110,21 @@
 
         <div class="row pt-2">
             <div class="col text-center">
-                <button type="button" @onclick="Close" class="btn btn-secondary">Späť</button>
-                <button type="submit" class="btn btn-primary">@(ViewModel.Saved ? "Otvoriť" : "Uložiť")</button>
-                <button type="button" disabled="@(!ViewModel.Saved || ViewModel.Polozka.Spracovana || (!string.IsNullOrEmpty(ViewModel.Polozka.SkladDo) && !ViewModel.Readonly))" @onclick="Finnish" class="btn btn-secondary">Spracovať</button>
+                <div class="btn-group" role="group">
+                    <button type="button" @onclick="Close" class="btn btn-secondary"><IconTextClose></IconTextClose></button>
+                    <button type="submit" class="btn btn-primary">
+                        @if (string.IsNullOrEmpty(ViewModel.Polozka.ID))
+                        {
+                            <IconTextCreate></IconTextCreate>
+                        }
+                        else
+                        {
+                            <IconTextSaveOpen Saved="ViewModel.Saved"></IconTextSaveOpen>
+                        }
+                    </button>
+                    <button type="button" disabled="@(!ViewModel.Saved || ViewModel.Polozka.Spracovana || (!string.IsNullOrEmpty(ViewModel.Polozka.SkladDo) && !ViewModel.Readonly))" @onclick="Finnish" class="btn btn-secondary"><IconTextProcess></IconTextProcess></button>
 
+                </div>
             </div>
         </div>
 

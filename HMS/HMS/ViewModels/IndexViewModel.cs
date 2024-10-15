@@ -58,7 +58,6 @@ namespace HMS.ViewModels
                 AppLifecycleService.Destroying += ensureKasaLogOff;
                 AppLifecycleService.LogOff += ensureKasaLogOff;
             }
-
         }
 
         private void OnAppDestroying()

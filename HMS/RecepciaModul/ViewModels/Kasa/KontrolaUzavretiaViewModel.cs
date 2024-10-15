@@ -20,13 +20,17 @@ namespace RecepciaModul.ViewModels
 
         [Required(ErrorMessage = "Povinné pole.")]
         public string VybranaKasa { get; set; }
-        public Kkasa VybranaKasaX { get; set; }
+        public Kkasa? VybranaKasaX { get; set; }
         #endregion
         #region vystupy
         public decimal VyslednaSuma { get; set; } = 0;
         public decimal VyslednaSumaDPH { get; set; }
         public decimal DPH { get; set; } = 0;
         public int Pocet { get; set; } = 0;
+
+        public decimal VyslednaSumaHotovost { get; set; } = 0;
+        public decimal VyslednaSumaKarta { get; set; } = 0;
+        public double VyslednaSumaPokladne { get => (VybranaKasaX?.HotovostStav ?? 0) + (double)VyslednaSumaHotovost;  }
 
         public decimal VyslednaSumaNesprac { get; set; }
         public decimal VyslednaSumaDPHNesprac { get; set; }
@@ -96,6 +100,7 @@ namespace RecepciaModul.ViewModels
             foreach (var item in dokladySchvalene)
             {
                 itemySchvalene.AddRange(_db.ItemyPokladDokladu
+                    .Include(x => x.SkupinaX)
                     .Where(x => x.Skupina == item.ID)
                     .ToList());
             }
@@ -123,6 +128,8 @@ namespace RecepciaModul.ViewModels
                 DPH = 0;
             }
             Pocet = dokladySchvalene.Count;
+            VyslednaSumaHotovost = (decimal)itemySchvalene.Where(x => ((PpDoklad)x.SkupinaX).Spracovana == true).Sum(x => x.CelkovaCenaDPH);
+            VyslednaSumaKarta = (decimal)itemySchvalene.Where(x => ((PpDoklad)x.SkupinaX).Spracovana == false).Sum(x => x.CelkovaCenaDPH);
 
             VyslednaSumaNesprac = (decimal)itemyNeSchvalene.Sum(x => x.CelkovaCena);
             VyslednaSumaDPHNesprac = (decimal)itemyNeSchvalene.Sum(x => x.CelkovaCenaDPH);

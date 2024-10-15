@@ -152,7 +152,21 @@ namespace DBLayer
                 //    _db.SkladObdobi.Add(polozka);
                 //}
                 #endregion*/
-
+                #region pridanie default DruhPohybov
+                List<DruhPohybu> listDRP = new List<DruhPohybu>();
+                listDRP.Add(new DruhPohybu() { ID = "PRMANA", Nazov = "Príjem materiálu z nákupu", MD="112", DAL="321" });
+                listDRP.Add(new DruhPohybu() { ID = "PRTONA", Nazov = "Príjem tovaru z nákupu", MD = "132", DAL = "321" });
+                listDRP.Add(new DruhPohybu() { ID = "VYMASP", Nazov = "Výdaj materiálu na spotrebu", MD = "501", DAL = "112" });
+                listDRP.Add(new DruhPohybu() { ID = "VYTOPR", Nazov = "Výdaj tovaru na predaj", MD = "504", DAL = "132" });
+                foreach (var item in listDRP)
+                {
+                    var drp = _db.DruhyPohybov.FirstOrDefault(x => x.ID == item.ID);
+                    if (drp == null)
+                    {
+                        _db.DruhyPohybov.Add(item);
+                    }
+                }
+                #endregion
                 #region vymazanie default user validatora
                 _userManager.UserValidators.RemoveAt(0);    //mam vytvoreny vlastny a default som nevedel dat inak prec. Predpokladam, ze default validator sa vytvara vzdy ako prvy. Robim to pre to lebo default validator ma automaticky nastavene ze UserName nesmie byt null aj ked to DB umoznuje tak som si vytvoril vlastny
                 #endregion

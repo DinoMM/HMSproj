@@ -22,35 +22,42 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-12 text-center">
-            <button type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))" class="btn btn-secondary m-2">Späť</button>
-            <button class="btn btn-primary fixed-size-button" @onclick="GeneratePDF" disabled=@(ViewModel.PdfLoading) type="button">
-                📄Otvoriť ako PDF
-                @if (ViewModel.PdfLoading)
-                {
-                    <SpinnerLoading ExtraSmall="true" />
-                }
-            </button>
-            <button type="button" disabled="@(!ViewModel.MoznoUzavrietObdobie())" class="btn btn-primary m-2" @onclick="CloseSeasson">Uzavrieť obdobie</button>
+        <div class="col-2"></div>
+        <div class="col-3 d-flex justify-content-bottom mb-2">
+            <SearchInput NumCols="5" TableID="tableid" PlaceHolder="Vyhľadaj položku..."></SearchInput>
         </div>
+        <div class="col-5">
+            <div class="btn-group" role="group">
+                <button type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))" class="btn btn-secondary"><IconTextClose></IconTextClose></button>
+                <button class="btn btn-primary fixed-size-button" @onclick="GeneratePDF" disabled=@(ViewModel.PdfLoading) type="button">
+                    <IconText Icon="bi-filetype-pdf">Otvoriť</IconText>
+                    @if (ViewModel.PdfLoading)
+                    {
+                        <SpinnerLoading ExtraSmall="true" />
+                    }
+                </button>
+                <button type="button" disabled="@(!ViewModel.MoznoUzavrietObdobie())" class="btn btn-primary" @onclick="CloseSeasson"><IconText Icon="bi-calendar3">Uzavrieť obdobie</IconText></button>
+            </div>
+        </div>
+        <div class="col-2"></div>
     </div>
     <div class="row">
         <div class="col-12" style="max-height: 30rem;overflow: auto;">
-            <SimpleTable>
+            <SimpleTable ID="tableid">
                 <THEAD>
-                <ThSort>ID</ThSort>
-                <ThSort>Názov Položky</ThSort>
-                <ThSort>Merná jednotka</ThSort>
-                <ThSort><div style="text-decoration:overline">Cena</div></ThSort>
-                <ThSort><div style="text-decoration:overline">Cena&nbsp;</div>s&nbsp;DPH</ThSort>
-                <ThSort><div style="text-decoration:overline">Cena&nbsp;príjem</div></ThSort>
-                <ThSort><div style="text-decoration:overline">Cena&nbsp;príjem&nbsp;</div>s&nbsp;DPH</ThSort>
-                <ThSort>Začiatočné Množstvo</ThSort>
+                    <ThSort>ID</ThSort>
+                    <ThSort>Názov Položky</ThSort>
+                    <ThSort>Merná jednotka</ThSort>
+                    <ThSort><div style="text-decoration:overline">Cena</div></ThSort>
+                    <ThSort><div style="text-decoration:overline">Cena&nbsp;</div>s&nbsp;DPH</ThSort>
+                    <ThSort><div style="text-decoration:overline">Cena&nbsp;príjem</div></ThSort>
+                    <ThSort><div style="text-decoration:overline">Cena&nbsp;príjem&nbsp;</div>s&nbsp;DPH</ThSort>
+                    <ThSort>Začiatočné Množstvo</ThSort>
 
-                <ThSort>Prijaté Množstvo</ThSort>
-                <ThSort>Vydané Množstvo</ThSort>
-                <ThSort>Predané Množstvo</ThSort>
-                <ThSort>Aktuálne Množstvo</ThSort>
+                    <ThSort>Prijaté Množstvo</ThSort>
+                    <ThSort>Vydané Množstvo</ThSort>
+                    <ThSort>Predané Množstvo</ThSort>
+                    <ThSort>Aktuálne Množstvo</ThSort>
                 </THEAD>
                 <TBODY>
                     @if (ViewModel.NacitavaniePoloziek)
@@ -90,7 +97,7 @@
 
 @code {
 
-        ApproveModal AprovMod = new();
+    ApproveModal AprovMod = new();
 
     protected override void OnInitialized()
     {
