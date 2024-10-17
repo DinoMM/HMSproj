@@ -73,6 +73,7 @@ namespace DBLayer
         
         public DbSet<Faktura> Faktury { get; set; }
         public DbSet<DruhPohybu> DruhyPohybov { get; set; }
+        public DbSet<ZmenaMeny> ZmenyMien { get; set; }
 
         public DbSet<Host> Hostia { get; set; }
         public DbSet<HostFlag> HostFlags { get; set; }

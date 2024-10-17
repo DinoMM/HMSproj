@@ -4,6 +4,7 @@ using DBLayer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DBLayer.Migrations
 {
     [DbContext(typeof(DBContext))]
-    partial class DBContextModelSnapshot : ModelSnapshot
+    [Migration("20241016024106_Uctovnictvo4")]
+    partial class Uctovnictvo4
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -618,6 +621,36 @@ namespace DBLayer.Migrations
                     b.ToTable("SkladUzivatelia");
                 });
 
+            modelBuilder.Entity("DBLayer.Models.UctovModels.ZmenaMeny", b =>
+                {
+                    b.Property<long>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ID"));
+
+                    b.Property<decimal>("Kurz")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<string>("MenaDO")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<string>("MenaZ")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(16)");
+
+                    b.Property<decimal>("SumaZ")
+                        .HasColumnType("decimal(18, 2)");
+
+                    b.Property<DateTime>("Vznik")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("ZmenyMien");
+                });
+
             modelBuilder.Entity("DBLayer.Models.UniConItemPoklDokladu", b =>
                 {
                     b.Property<long>("ID")
@@ -672,36 +705,6 @@ namespace DBLayer.Migrations
                     b.HasKey("ID");
 
                     b.ToTable("UniConItemPoklDokladuFlagy");
-                });
-
-            modelBuilder.Entity("DBLayer.Models.ZmenaMeny", b =>
-                {
-                    b.Property<long>("ID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("ID"));
-
-                    b.Property<decimal>("Kurz")
-                        .HasColumnType("decimal(18, 3)");
-
-                    b.Property<string>("MenaDO")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(16)");
-
-                    b.Property<string>("MenaZ")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(16)");
-
-                    b.Property<decimal>("SumaZ")
-                        .HasColumnType("decimal(18, 2)");
-
-                    b.Property<DateTime>("Vznik")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("ID");
-
-                    b.ToTable("ZmenyMien");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

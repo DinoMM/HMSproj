@@ -1,0 +1,102 @@
+﻿@namespace RecepciaModul
+@inject HostConFlagyViewModel ViewModel
+
+@if (ReadOnlyHost != null)
+{
+
+
+    @if (ifthostflag.Rendered)
+    {
+        <ItemFinderTableProp T="DBLayer.Models.HostFlag"
+                         @ref="ifthostflag"
+                         ColNames="@(new () { ( "ID", "ID" ), ("Popis", "StringValue"), ("Hodnota", "NumericValue"), ("Dátum", "DateValue")})"
+                         ColValues="ViewModel.ZoznamVsetkychFlagov"
+                         ID="ifthostflag"
+                         MultiSelect="true"
+                         SizeInRem="70"
+                         Header="Výber značenia pre hosťa"
+                         AfterRender="async () => {
+                                      if (await ifthostflag.OpenModal(true))
+                                      {
+                                          ViewModel.SpracujNovyFlag(ifthostflag.OutSelection);
+                                          await ifthostflag.Dispose();
+                                          StateHasChanged();
+                                              
+                                      }
+                                      }">
+        </ItemFinderTableProp>
+    }
+
+    <div class="row">
+        <SimpleTable ID="tableid">
+            <THEAD>
+            <th><ButtonAdd OnClick="AddCon"></ButtonAdd></th>
+            <ThSort>ID</ThSort>
+            <ThSort>Popis</ThSort>
+            <ThSort>Hodnota</ThSort>
+            <ThSort>Dátum</ThSort>
+            <th></th>
+            </THEAD>
+            <TBODY>
+                @if (ViewModel.NacitavaniePoloziek)
+                {
+                    <div class="ms-1">
+                        <SpinnerLoading Size="2.0"></SpinnerLoading>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var item in ViewModel.ZoznamFlagovHost)
+                    {
+                        <tr>
+                            <td class="col-resize"></td>
+                            <td class="col-resize">@item.HostFlagX.ID</td>
+                            <td class="col-resize">@(item.HostFlagX.StringValue ?? "-")</td>
+                            <td class="col-resize">@(item.HostFlagX.NumericValue?.ToString("F2") ?? "-")</td>
+                            <td class="col-resize">@(item.HostFlagX.DateValue?.ToString("dd.MM.yyyy") ?? "-")</td>
+                            <td>
+                                <ButtonRemove OnClick="@(() => Delete(item))"></ButtonRemove>
+                            </td>
+
+                        </tr>
+                    }
+                }
+            </TBODY>
+
+        </SimpleTable>
+    </div>
+}
+@code {
+    [Parameter]
+    [EditorRequired]
+    public DBLayer.Models.Host? ReadOnlyHost { get; set; }
+
+    private ItemFinderTableProp<DBLayer.Models.HostFlag> ifthostflag = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        ViewModel.ReadOnlyHost = ReadOnlyHost;
+        await ViewModel.NacitajZoznamy();
+    }
+
+    private void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    private void Delete(DBLayer.Models.HostConFlag item)
+    {
+        ViewModel.Delete(item);
+    }
+
+    private void AddCon()
+    {
+        ifthostflag.StartRender();
+    }
+
+    public void ExternalSave()
+    {
+        ViewModel.Ulozit();
+    }
+}

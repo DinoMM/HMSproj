@@ -40,7 +40,7 @@
                                             {
                                                 break;
                                             }
-                                            <td class="col-resize">@ytem.GetValue(item)</td>
+                                            <td class="col-resize">@(ytem?.GetValue(item) ?? "")</td>
                                             ++i;
                                         }
                                     </tr>
@@ -309,7 +309,7 @@
                 }
 
                 var propType = item.PropertyType;
-                if (propType == typeof(string) || propType == typeof(int) || propType == typeof(bool) || propType == typeof(double) || propType == typeof(DateTime) || propType == typeof(decimal) || propType == typeof(long) || propType.IsEnum)
+                if (propType == typeof(string) || propType == typeof(int) || propType == typeof(bool) || propType == typeof(double) || propType == typeof(DateTime) || propType == typeof(decimal) || propType == typeof(long) || propType.IsEnum || propType == typeof(DateTime?) || propType == typeof(double?))
                 {
 
                     if (propType == typeof(bool))   // pre booleany s atributom

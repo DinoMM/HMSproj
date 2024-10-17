@@ -1,0 +1,309 @@
+﻿@namespace UniComponents
+@implements IModal
+@inherits DynamicLoadedComponent
+@inject IJSRuntime JSRuntime
+
+@typeparam T where T : class
+
+<div class="modal fade" id="@ID" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true" @onkeydown="HandleKeyDown">
+    <div class="modal-dialog modal-lg" style="@($"max-width:{SizeInRem}rem") ">
+        <div class="modal-content">
+            <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
+                <div class="col-3 d-flex justify-content-bottom mb-1">
+                    <SearchInput @ref="srchinp" ID="@IDSearch" NumCols="@NumCols" PlaceHolder="Vyhľadaj..." TableID="@IDTable" SearchValue="@SearchedValue"></SearchInput>
+                </div>
+                <div class="modal-title h3 text-dark ms-4" id="staticBackdropLabel">
+                    @Header
+                </div>
+            </div>
+            <div class="modal-body @(ChangeColor ? "custom-modal-body" : "")" id="modalATextxLabel">
+
+                <div class="col-12" style="max-height: 30rem;overflow: auto;">
+                    <SimpleTable ID="@IDTable">
+                        <THEAD>
+
+                            @foreach (var item in ColNames)
+                            {
+                                <ThSort>@item.Item1</ThSort>
+                            }
+                        </THEAD>
+                        <TBODY>
+
+                            @foreach (var item in ColValues)
+                            {
+                                <tr @onclick=@(() => SelectRow(item)) @ondblclick="@(() => SelectDbClick(item))" class="@(ContainsRow(item) ? "selected-row" : "")" style="cursor: pointer;">
+                                    @foreach (var ytem in ColNames)
+                                    {
+                                        <td class="col-resize">@(GetProperty(item, ytem.Item2) ?? "")</td>
+                                    }
+                                </tr>
+                            }
+
+                        </TBODY>
+
+                    </SimpleTable>
+                </div>
+
+            </div>
+
+            <div class="modal-footer @(ChangeColor ? "custom-modal-footer" : "")">
+                @if (SelectEmptyInstance)
+                {
+                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal" @onclick="EmptyInstance">Vyčistiť</button>
+                }
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" disabled="@(OutSelection.Count == 0)" @onclick="CloseSucc">Vyber</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zruš</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+        window.setInput = function (inputId, invalue) {
+            document.getElementById(inputId).value = invalue;
+        }
+    function getInputValue(inputId) {
+    return document.getElementById(inputId).value;
+}
+</script>
+
+@code {
+    private SearchInput srchinp = new();
+
+    /// <summary>
+    /// Unikatne ID podla ktoreho vieme rozoznat medzi viacerymi modalmi
+    /// </summary>
+    [Parameter]
+    public string ID { get; set; } = "staticItemFinderTableProperty";
+
+    /// <summary>
+    /// Nastaví popisok okna, default ""
+    /// </summary>
+    [Parameter]
+    public string Header { get; set; } = "";
+
+    /// <summary>
+    /// Názvy (stĺpcov, property) tabuľky
+    /// </summary>
+    [Parameter]
+    public List<(string, string)> ColNames { get; set; } = new();
+
+    /// <summary>
+    /// Hodnoty stĺpcov tabuľky typu T
+    /// </summary>
+    [Parameter]
+    public List<T> ColValues { get; set; } = new();
+
+    /// <summary>
+    /// Hodnota, ktorá sa má vyhľadávať v tabuľke
+    /// </summary>
+    [Parameter]
+    public string SearchedValue { get; set; } = "";
+
+    /// <summary>
+    ///Viac násobný výber z tabuľky, default false
+    /// </summary>
+    [Parameter]
+    public bool MultiSelect { get; set; } = false;
+
+    /// <summary>
+    /// Vybrané hodnoty z tabuľky, spracuj po tom čo sa zavrie modal
+    /// </summary>
+    [Parameter]
+    public List<T> OutSelection { get; set; } = new();
+
+    /// <summary>
+    /// Nastaví zmenu farby okna na predvolenú, default false
+    /// </summary>
+    [Parameter]
+    public bool ChangeColor { get; set; } = false;
+
+    /// <summary>
+    /// Šírka tabulky v rem, default 100
+    /// </summary>
+    [Parameter]
+    public int SizeInRem { get; set; } = 100;
+ 
+    /// <summary>
+    ///Pridať možnosť vybranie prázneho výberu(vráti novu prazdnu inštancia (nie null)), default false
+    /// </summary>
+    [Parameter]
+    public bool SelectEmptyInstance { get; set; } = false;
+
+    private string IDTable { get => "tableid" + ID; }
+    private string IDSearch { get => "searchinp" + ID; }
+    private int NumCols { get => ColNames.Count; }
+
+    private TaskCompletionSource<bool> tcs;
+    private bool tstop = false;
+
+    /// <summary>
+    ///  Otvori modal pod ulozenym ID, vracia hodnotu podla toho, ci uzivatel klikol ano alebo nie
+    /// </summary>
+    /// <param name="stop"> Vrati true ak uzivatel prijal, inak false</param>
+    /// <returns></returns>
+    public async Task<bool> OpenModal(bool stop = false)
+    {
+        StateHasChanged();
+
+        await srchinp.Forcesearch();
+
+
+        tstop = stop;
+        if (stop)
+        {
+            tcs = new TaskCompletionSource<bool>();
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            await tcs.Task;             //fyzické statie programu
+            return tcs.Task.Result;
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            return true;
+        }
+
+    }
+
+    public async Task<bool> OpenModal(bool stop = false, bool forcesearch = true)
+    {
+        StateHasChanged();
+        if (forcesearch)
+        {
+            await srchinp.Forcesearch();
+        }
+
+        tstop = stop;
+        if (stop)
+        {
+            tcs = new TaskCompletionSource<bool>();
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            await tcs.Task;             //fyzické statie programu
+            return tcs.Task.Result;
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            return true;
+        }
+    }
+
+    private void CloseModal(bool ans)
+    {
+        if (!ans)
+        {
+            OutSelection.Clear();
+        }
+
+        if (tstop)
+        {
+            tcs.SetResult(ans); //zastavi fyzické státie programu
+        }
+        JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('hide');"); //(pomohol som si z internetu tutoriály/AI)
+    }
+
+    public void UpdateText(string newText) { }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")       //po stlaceni enteru sa vykona akcia Ano
+        {
+            if (OutSelection.Count != 0)
+            {
+                CloseModal(true);
+            }
+        }
+        if (e.Key == "Escape")       //po stlaceni escape sa vykona akcia Nie
+        {
+            CloseModal(false);
+        }
+    }
+
+    public async Task PassSearchText(string text)
+    {
+        SearchedValue = text;
+    }
+
+    public object? GetProperty(T item, string propertyName)
+    {
+        var propertyInfo = typeof(T).GetProperty(propertyName);
+        return propertyInfo?.GetValue(item);
+    }
+
+    private void SelectRow(object item)
+    {
+        if (MultiSelect)
+        {
+            if (OutSelection.Contains(item))
+            {
+                OutSelection.Remove((T)item);
+            }
+            else
+            {
+                OutSelection.Add((T)item);
+            }
+        }
+        else
+        {
+            OutSelection.Clear();
+            OutSelection.Add((T)item);
+        }
+    }
+
+    private void SelectDbClick(object item)
+    {
+        if (!MultiSelect)
+        {
+            OutSelection.Clear();
+            OutSelection.Add((T)item);
+            CloseModal(true);
+        }
+    }
+
+    private bool ContainsRow(object item)
+    {
+        return OutSelection.Contains((T)item);
+    }
+
+    /// <summary>
+    /// Vráti hodnotu z inputu podla jeho ID
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public async Task<string> GetInputValue(string id)
+    {
+        return await JSRuntime.InvokeAsync<string>("getInputValue", id);
+    }
+
+    /// <summary>
+    /// Nastavi input na hodnotu podla jeho ID
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public async Task SetInput(string id, string text)
+    {
+        await JSRuntime.InvokeVoidAsync("setInput", id, text);
+    }
+
+    public void EmptyInstance()
+    {
+        OutSelection.Clear();
+        OutSelection.Add(Activator.CreateInstance<T>());
+        CloseModal(true);
+    }
+
+    public void SetListValues(List<T> values)
+    {
+        ColValues = new(values);
+        StateHasChanged();
+    }
+
+    public void CloseSucc()
+    {
+        if (OutSelection.Count == 0)
+        {
+            CloseModal(false);
+        }
+        CloseModal(true);
+    }
+}

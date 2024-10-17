@@ -1,0 +1,243 @@
+﻿@namespace UctovnyModul
+@page "/Zmenaren"
+@inject ZmenarenViewModel ViewModel
+@using Microsoft.AspNetCore.Components.Forms
+
+
+
+@if (!ViewModel.NacitavaniePoloziek && ViewModel.ZoznamCurrencies != null)
+{
+    <CustomModal @ref="cuscreatetrans"
+                 ID="cuscreatetrans"
+                 SizeInRem="50"
+                 OneButtonOnly="true"
+                 Header="Vytvorenie prevodu">
+        <BODY>
+
+            <div class="container">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="row">
+                            <div class="col-5">
+                                <label>Prijatá&nbsp;mena</label>
+                                <input type="text" class="form-control" disabled value="@ViewModel.NovaTransakcia.MenaZ" />
+                            </div>
+                            <div class="col-1">
+                                <div style="height:24px"></div>
+                                <BtnFind OnClick="OpenPick"></BtnFind>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-5">
+                                <label>Prijatá&nbsp;suma</label>
+                                <input type="number" step="0.1" class="form-control" @bind="@ViewModel.NovaTransakcia.SumaZ" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-5">
+                                <label>Kurz</label>
+                                <input type="text" class="form-control" disabled value="@ViewModel.NovaTransakcia.Kurz.ToString("F3") @(ViewModel.ZoznamCurrencies?.FirstOrDefault(x => x.Code == ViewModel.NovaTransakcia.MenaZ)?.Symbol ?? "")" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="row">
+                            <div class="col-5">
+                                <label>Vydávaná&nbsp;mena</label>
+                                <input type="text" class="form-control" disabled value="@ViewModel.NovaTransakcia.MenaDO" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-5">
+                                <label>Vydaná&nbsp;suma</label>
+                                <input type="text" step="0.1" class="form-control" disabled value="@ViewModel.NovaTransakcia.SumaDO.ToString("F2") @(ViewModel.ZoznamCurrencies?.FirstOrDefault(x => x.Code == ViewModel.NovaTransakcia.MenaDO)?.Symbol ?? "")" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="row">
+                    <div class="col-4"></div>
+                    <div class="col-8">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-primary" disabled="@(!ViewModel.CheckIfOk())" @onclick="FindRate">Nájsť&nbsp;kurz</button>
+                            <button type="button" class="btn btn-primary" disabled="@(!ViewModel.CheckIfOk() || ViewModel.NovaTransakcia.Kurz == 0)" @onclick="ProcessTransaction"><IconTextCreate></IconTextCreate></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </BODY>
+    </CustomModal>
+
+    <ItemFinderTable T="string"
+                     @ref="iftmena"
+                     ColNames="@(new() { "Mena" })"
+                     ColValues="@ViewModel.ZoznamCurrencies.Where(x => x.Code != "EUR").Select(x => x.Code).ToList()"
+                     SizeInRem="30"
+                     Header="Výber meny"
+                     ID="iftmena"
+                     CutOffTail="true">
+    </ItemFinderTable>
+}
+
+<InfoModal @ref="InfoModSaved" ID="infosaved"
+           Text="Zmeny boli uložené." />
+
+<div class="container">
+    <div class="row">
+        <div class="row ">
+            <div class="col-12 text-center">
+                <h1>Zmenáreň</h1>
+            </div>
+        </div>
+        <div class="row pb-1">
+            <div class="col-3 d-flex justify-content-bottom mb-2">
+                <SearchInput NumCols="2" PlaceHolder="Vyhľadaj doklad..." TableID="tableid"></SearchInput>
+            </div>
+
+            <div class="col-9">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+                    <button @onclick="Create" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12" style="max-height: 30rem;overflow: auto;">
+                    <SimpleTable ID="tableid">
+                        <THEAD>
+
+                            <ThSort>Vznik</ThSort>
+                            <ThSort>Prijatá&nbsp;mena</ThSort>
+                            <ThSort>Vydatá&nbsp;mena</ThSort>
+                            <ThSort>Kurz</ThSort>
+                            <ThSort>Prijatá&nbsp;suma</ThSort>
+                            <ThSort>Vydátá&nbsp;suma</ThSort>
+
+
+                        <th></th>
+
+                        </THEAD>
+                        <TBODY>
+                            @if (ViewModel.NacitavaniePoloziek)
+                            {
+                                <div class="ms-1">
+                                    <SpinnerLoading Size="2.0"></SpinnerLoading>
+                                </div>
+                            }
+                            else
+                            {
+                                @if (ViewModel.ChybaPriNacitavani)
+                                {
+                                    <label>Nastala chyba pri načitavaní externej služby. Skúste reštartovať program.</label>
+                                }
+                                else
+                                {
+                                    @foreach (var item in ViewModel.ZoznamTransakcii)
+                                    {
+
+                                        <tr>
+                                            <td class="col-resize">@item.Vznik.ToString("dd.MM.yyyy HH:mm")</td>
+                                            <td class="col-resize">@item.MenaZ</td>
+                                            <td class="col-resize">@item.MenaDO</td>
+                                            <td class="col-resize">@item.Kurz.ToString("F3")</td>
+                                            <td class="col-resize">@item.SumaZ.ToString("F2")</td>
+                                            <td class="col-resize">@item.SumaDO.ToString("F2")</td>
+                                            <td>
+                                                @if (ViewModel.ValidateUserD())
+                                                {
+                                                    <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => ViewModel.Vymazat(item))"></ButtonRemove>
+                                                }
+                                            </td>
+
+                                        </tr>
+                                    }
+                                }
+                            }
+                        </TBODY>
+
+                    </SimpleTable>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+@code {
+    ItemFinderTable<string> iftmena;
+    CustomModal cuscreatetrans;
+    InfoModal InfoModSaved;
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            return;
+        }
+        await ViewModel.NacitajZoznamy();
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public async Task Create()
+    {
+        await cuscreatetrans.OpenModal(true);
+    }
+
+    public async Task OpenPick()
+    {
+        if (await iftmena.OpenModal(true))
+        {
+            var res = iftmena.OutSelection.FirstOrDefault();
+            var found = ViewModel.ZoznamCurrencies.FirstOrDefault(x => x.Code == res);
+            if (found != null)
+            {
+                ViewModel.NovaTransakcia.MenaZ = found.Code;
+            }
+        }
+    }
+
+    public async Task ProcessTransaction()
+    {
+        if (ViewModel.SpracujNovuTransakciu())
+        {
+            await InfoModSaved.OpenModal(true);
+            cuscreatetrans.CloseModalExtern();
+        }
+
+    }
+
+    public void FindRate()
+    {
+        var result = ViewModel.GetCurrencyApiResponse();
+        if (result != null)
+        {
+            if (result.Data.TryGetValue("EUR", out CurrencyValue? eur))
+            {
+                if (eur != null)
+                {
+                    ViewModel.NovaTransakcia.Kurz = Math.Round(eur.Value, 3);
+                }
+            }
+        }
+    }
+
+}

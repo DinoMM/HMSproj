@@ -24,6 +24,7 @@
                 <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
                 <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRU())" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></button>
                 <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUser())" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                <button type="button" class="btn btn-primary" @onclick="OpenFlags"><IconText Icon="bi-flag-fill">Správa značiek</IconText></button>
             </div>
         </div>
 
@@ -36,13 +37,13 @@
             <SimpleTable ID="tableid">
                 <THEAD>
 
-                <ThSort>Meno</ThSort>
-                <ThSort>Priezvisko</ThSort>
-                <ThSort>Národnosť</ThSort>
-                <ThSort>Pohlavie</ThSort>
-                <ThSort>Občan.č.</ThSort>
-                <ThSort>Pas</ThSort>
-                <ThSort>Účet</ThSort>
+                    <ThSort>Meno</ThSort>
+                    <ThSort>Priezvisko</ThSort>
+                    <ThSort>Národnosť</ThSort>
+                    <ThSort>Pohlavie</ThSort>
+                    <ThSort>Občan.č.</ThSort>
+                    <ThSort>Pas</ThSort>
+                    <ThSort>Účet</ThSort>
                 <th></th>
                 </THEAD>
                 <TBODY>
@@ -151,5 +152,10 @@
         {
             Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDHost"));
         }
+    }
+
+    public void OpenFlags()
+    {
+        Navigator.NavigateTo(Navigator.AddNextUrl("HostFlagy"));
     }
 }

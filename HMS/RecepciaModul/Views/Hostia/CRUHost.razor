@@ -119,38 +119,64 @@
             </div>
 
             <div class="vr p-0"></div>
-            <div class="col">
-                <h2 class="text-center">Informácie&nbsp;o&nbsp;web&nbsp;užívateľovi</h2>
-                <div class="row">
-                    <div class="col col-8">
-                        <label>Iniciály</label>
-                        <input type="text" disabled class="form-control" value="@((ViewModel.HostInput.GuestZ?.Name?.First() ?? '-') + "." + (ViewModel.HostInput.GuestZ?.Surname ?? "-"))" />
+            <div class="col-6">
+
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#webuser">Web&nbsp;užívateľ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewModel.Existuje() && !ViewModel.NacitavaniePoloziek ? "" : "disabled")" data-bs-toggle="tab" href="#flags">Značenia</a>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+
+                    <div class="tab-pane fade show active" id="webuser">
+                        <div class="row">
+                            <div class="col col-8">
+                                <label>Iniciály</label>
+                                <input type="text" disabled class="form-control" value="@((ViewModel.HostInput.GuestZ?.Name?.First() ?? '-') + "." + (ViewModel.HostInput.GuestZ?.Surname ?? "-"))" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-8">
+                                <label>Email</label>
+                                <input type="text" disabled class="form-control" value="@(ViewModel.HostInput.GuestZ?.Email ?? "-")" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-8">
+                                <label>Telefón</label>
+                                <input type="text" disabled class="form-control" value="@(ViewModel.HostInput.GuestZ?.PhoneNumber ?? "-")" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col mt-1">
+                                <label>Nájsť uživateľa</label>
+                                <button type="button" disabled="@ReadOnly" @onclick="FindWebUser" class="btn btn-secondary">
+                                    <i class="bi bi-box-arrow-in-down "></i>
+                                    @if (ViewModel.NacitavanieZoznamu)
+                                    {
+                                        <SpinnerLoading ExtraSmall="true"></SpinnerLoading>
+                                    }
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-8">
-                        <label>Email</label>
-                        <input type="text" disabled class="form-control" value="@(ViewModel.HostInput.GuestZ?.Email ?? "-")" />
+
+                    <div class="tab-pane fade " id="flags">
+
+                        @if (ViewModel.Existuje() && !ViewModel.NacitavaniePoloziek)
+                        {
+                            <HostConFlagy @ref="HostConFlagyComp" ReadOnlyHost="ViewModel.Host"></HostConFlagy>
+                        }
+
                     </div>
+
                 </div>
-                <div class="row">
-                    <div class="col-8">
-                        <label>Telefón</label>
-                        <input type="text" disabled class="form-control" value="@(ViewModel.HostInput.GuestZ?.PhoneNumber ?? "-")" />
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col mt-1">
-                        <label>Nájsť uživateľa</label>
-                        <button type="button" disabled="@ReadOnly" @onclick="FindWebUser" class="btn btn-secondary">
-                            <i class="bi bi-box-arrow-in-down "></i>
-                            @if (ViewModel.NacitavanieZoznamu)
-                            {
-                                <SpinnerLoading ExtraSmall="true"></SpinnerLoading>
-                            }
-                        </button>
-                    </div>
-                </div>
+
+
 
             </div>
 
@@ -182,6 +208,7 @@
     private InfoModal InfoModSaved = new();
     private ItemFinderTable<IdentityUserWebOwn> itemFindUser = new();
     private ItemFinderTable<string> iftcountry = new();
+    private HostConFlagy? HostConFlagyComp;
 
     private bool ReadOnly = false;
 
@@ -199,15 +226,17 @@
         if (founded != null)
         {
             ViewModel.SetProp(founded);
+            ViewModel.NacitavaniePoloziek = false;
             return;
         }
         var foundedGuest = objectHolder.Remove<IdentityUserWebOwn>();   //pokusi sa ziskat objekt z uloziska
         if (foundedGuest != null)
         {
             ViewModel.SetNewWebUser(foundedGuest);
+            ViewModel.NacitavaniePoloziek = false;
             return;
         }
-
+        ViewModel.NacitavaniePoloziek = false;
     }
 
     protected override async Task OnInitializedAsync()
@@ -232,10 +261,14 @@
 
         if (await ViewModel.Uloz())
         {
+            if (HostConFlagyComp != null)
+            {
+                HostConFlagyComp.ExternalSave();        //ulozenie flagov
+            }
             if (AsComponent)
             {
                 objectHolder.Remove<DBLayer.Models.Host>();
-                objectHolder.Add(ViewModel.HostInput);
+                objectHolder.Add(ViewModel.Host);
             }
             await InfoModSaved.OpenModal(true);
         }

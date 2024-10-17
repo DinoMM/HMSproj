@@ -72,7 +72,7 @@ namespace DBLayer
             var dbContext = (DataContext)validationContext.GetService(typeof(DataContext));
             if (dbContext == null)
             {
-                throw new InvalidOperationException("DataContext context neni dostopný.");
+                throw new InvalidOperationException("DataContext context neni dostupný.");
             }
 
             if (dbContext.Rezervations.Any(u => u.Id == resId)) //kontrola existencie

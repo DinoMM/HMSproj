@@ -25,6 +25,7 @@ using UctovnyModul.ViewModels;
 using UctovnyModul.ViewModels.Faktury;
 using RecepciaModul.ViewModels;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Configuration;
 
 
 namespace HMS
@@ -45,20 +46,33 @@ namespace HMS
 
             builder.Services.AddMauiBlazorWebView();
 
-
-
+            #region pridanie vlastnych env premennych
+            var dotenv = Path.Combine(AppContext.BaseDirectory, ".env");
+            if (File.Exists(dotenv))
+            {
+                foreach (var line in File.ReadAllLines(dotenv))
+                {
+                    var parts = line.Split('=', 2);
+                    if (parts.Length == 2)
+                    {
+                        Environment.SetEnvironmentVariable(parts[0], parts[1]);
+                    }
+                }
+            }
+            #endregion
             //pridanie service pre pripojenie na databazu
             {
                 string usr;
                 string tpswd;
 #if DEBUG
                 usr = "sa";
-                tpswd = "TaJnEhEsLo!!!123456789";
+                tpswd = Environment.GetEnvironmentVariable("PASSWORD_DB_SA");
 #else
                 usr = "publicUser";
-                tpswd = "TaJnEhEsLo???123456789";
+                tpswd = Environment.GetEnvironmentVariable("PASSWORD_DB_PUBLICUSER");;
 #endif
-                builder.Services.AddDbContext<DBContext>(opt => opt.UseSqlServer($"Data Source=localhost,1433;Database=MyDatabase;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions => {
+                builder.Services.AddDbContext<DBContext>(opt => opt.UseSqlServer($"Data Source=localhost,1433;Database=MyDatabase;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions =>
+                {
                     sqlOptions.EnableRetryOnFailure(
                         maxRetryCount: 3,
                         maxRetryDelay: TimeSpan.FromSeconds(15),
@@ -67,7 +81,8 @@ namespace HMS
                 }
                 ));               //(pomohol som si z internetu tutoriály/AI)
 
-                builder.Services.AddDbContext<DataContext>(opt => opt.UseSqlServer($"Data Source=localhost,1433;Database=HlavnaDatabaza;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions => {
+                builder.Services.AddDbContext<DataContext>(opt => opt.UseSqlServer($"Data Source=localhost,1433;Database=HlavnaDatabaza;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions =>
+                {
                     sqlOptions.EnableRetryOnFailure(
                         maxRetryCount: 3,
                         maxRetryDelay: TimeSpan.FromSeconds(15),
@@ -153,12 +168,16 @@ namespace HMS
 
             builder.Services.AddTransient<UniConItemyViewModel>();
             builder.Services.AddTransient<CRUUniItemViewModel>();
+
+            builder.Services.AddTransient<ZmenarenViewModel>();
             #endregion
             #region RecepciaModul
             builder.Services.AddTransient<RezervaciaViewModel>();
 
             builder.Services.AddTransient<HostiaViewModel>();
             builder.Services.AddTransient<CRUHostViewModel>();
+            builder.Services.AddTransient<HostFlagyViewModel>();
+            builder.Services.AddTransient<HostConFlagyViewModel>();
 
             builder.Services.AddTransient<KasaViewModel>();
             builder.Services.AddTransient<PokladnicnyDokladViewModel>();

@@ -18,6 +18,7 @@ namespace RecepciaModul.ViewModels
         private bool existuje = false;
         private bool BolVarovany = false;
         public bool NacitavanieZoznamu { get; private set; } = false;
+        public bool NacitavaniePoloziek { get; set; } = true;       //pre zistenie ze sme nacitali Host
 
         private readonly DBContext _db;
         private readonly DataContext _dbw;
@@ -62,6 +63,8 @@ namespace RecepciaModul.ViewModels
             if (!Existuje())
             {
                 _db.Hostia.Add(HostInput);
+                Host = HostInput;
+                HostInput = Host.Clon();
             }
             else
             {
