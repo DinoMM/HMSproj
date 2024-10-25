@@ -3,7 +3,7 @@
 @implements IModal
 <!-- Modal -->
 <div class="modal fade" id="@ID" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="@(SizeInRem == 0 ? " max-width:auto; " : $"max-width:{SizeInRem}rem; ") ">
         <div class="modal-content">
             <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
                 <h5 class="modal-title" id="exampleModalLabel">@Header</h5>
@@ -34,6 +34,12 @@
 
     [Parameter]
     public string ID { get; set; } = "exampleModalInfo";
+
+    /// <summary>
+    /// Nastaví maximálnu veľkosť okna, default 0 -> auto
+    /// </summary>
+    [Parameter]
+    public int SizeInRem { get; set; } = 0;
 
     /// <summary>
     /// Nastaví zmenu farby okna na predvolenú, default false

@@ -26,6 +26,7 @@ using UctovnyModul.ViewModels.Faktury;
 using RecepciaModul.ViewModels;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
+using HSKModul.ViewModels;
 
 
 namespace HMS
@@ -151,6 +152,9 @@ namespace HMS
             builder.Services.AddTransient<PouzivateliaViewModel>();
             builder.Services.AddTransient<AddPouzivatelViewModel>();
             builder.Services.AddTransient<ZmenaPouzivatelaViewModel>();
+            #endregion
+            #region HSKModul
+            builder.Services.AddTransient<HousekeepingViewModel>();
             #endregion
             #region LudskeZdrojeModul
             builder.Services.AddTransient<SpravaRoliViewModel>();

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using DBLayer.Models.HSKModels;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Diagnostics.CodeAnalysis;
 
@@ -28,6 +29,9 @@ namespace DBLayer.Models
         public string[] Services { get; set; }
         [NotMapped]
         public string[] Photos { get; set; }
+
+        [NotMapped]
+        public RoomInfo? RoomInfo { get; set; }
 
              //cena za den
 

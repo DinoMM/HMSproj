@@ -29,12 +29,23 @@
 
 @*<InfoModal @ref="ViewModel.CloseAppModal" Text="Chcete ukončiť aplikáciu?"></InfoModal>*@
 <ApproveModal @ref="LogOffModal" Header="" Text="Chcete sa odhlásiť?" FuncOnSucc="EventCallback.Empty" FuncOnDiss="EventCallback.Empty"></ApproveModal>
+    <CustomModal @ref="ShowZmenymod" ID="showzmeny" Header="Nájdené zmeny" SizeInRem="80">
+        <BODY>
+            <textarea class="form-control w-100">@string.Join("", pendingChanges.Select(s => s + "|||\n"))</textarea>
+            </BODY>
+</CustomModal>
 
 @if (UserService.LoggedUser != null)
 {
     <div class="">
         <button type="button" @onclick="LogOff" class="btn btn-primary">Prihlásený: @UserService.LoggedUser?.UserName</button>
-        <div class="d-flex justify-content-center align-items-center vh-100" >
+        @if (pendingChanges.Count != 0)
+        {
+            <button type="button" @onclick="ShowZmeny" class="btn btn-danger ">Nájdene zmeny v DB</button>
+        }
+
+
+        <div class="d-flex justify-content-center align-items-center vh-100">
             <div class="p-3 w-50 h-100" style="max-height: 80vh;">
                 <div class="list-group text-center border border-2 border-black" style="max-height: 100%; overflow-y: auto;">
 
@@ -67,6 +78,9 @@ else
 
     private ApproveModal LogOffModal = new();
 
+    private List<string> pendingChanges = new();
+    private CustomModal ShowZmenymod;
+
     protected override async Task OnInitializedAsync()
     {
         await initDB.TryMustHaveValues();
@@ -84,8 +98,22 @@ else
             Navigator.NavigateTo("/Login");
             return;
         }
+    }
 
-        db.ClearPendingChanges();
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+#if DEBUG
+            pendingChanges = db.ClearPendingChangesDebug();
+            StateHasChanged();
+#endif
+        }
+    }
+
+    private async Task ShowZmeny()
+    {
+        await ShowZmenymod.OpenModal(true);
     }
 
     public void Dispose()

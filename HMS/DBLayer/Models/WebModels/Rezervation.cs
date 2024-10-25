@@ -50,7 +50,7 @@ namespace DBLayer.Models
         public double UbytovaciPoplatok { get; set; } = 0.0;
         [NotMapped]
         public double CelkovaSumaDPH { get => (double)CelkovaSuma * 1.2; }
-        
+
 
         public void setFromReservation(Rezervation res)
         {
@@ -97,6 +97,23 @@ namespace DBLayer.Models
         public string GetRecentChangedUserName()
         {
             return RecentChangesUserZ != null ? RecentChangesUserZ.Name + " " + RecentChangesUserZ.Surname : "-";
+        }
+
+        public string GetHSKStatus(DateTime date)
+        {
+            if (Status != ReservationStatus.Checked_IN.ToString() && Status != ReservationStatus.Checked_OUT.ToString() && ArrivalDate.Date == date.Date)
+            {
+                return "Príchod";
+            }
+            if (Status == ReservationStatus.Checked_IN.ToString() && DepartureDate.Date == date.Date)
+            {
+                return "Odchod";
+            }
+            if (Status == ReservationStatus.Checked_IN.ToString())
+            {
+                return "Obsadená";
+            }
+            return "Neobsadená";
         }
     }
     public enum ReservationStatus

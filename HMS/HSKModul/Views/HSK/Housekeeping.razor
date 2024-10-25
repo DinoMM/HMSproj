@@ -1,0 +1,98 @@
+﻿@namespace HSKModul
+@page "/Housekeeping"
+@inject HousekeepingViewModel ViewModel
+
+
+<div class="container">
+
+    <div class="row pb-1">
+
+        <div class="col-3 d-flex justify-content-bottom mb-2">
+            <SearchInput NumCols="4" PlaceHolder="Vyhľadaj značenie..." TableID="tableid"></SearchInput>
+        </div>
+
+        <div class="col-9">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-secondary" @onclick="Close">
+                    <IconTextClose></IconTextClose>
+                </button>
+                @*<button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUser())" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>*@
+                @*<button @onclick="Create" disabled="@(!ViewModel.ValidateUserCUD())" type="button" class="btn btn-primary">
+                        <IconTextCreate></IconTextCreate>
+                    </button>*@
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-12" style="max-height: 30rem;overflow: auto;">
+            <SimpleTable ID="tableid">
+                <THEAD>
+
+                    <ThSort>Izba</ThSort>
+                    <ThSort>Kategória</ThSort>
+                    <ThSort>Ubytovaní&nbsp;hostia</ThSort>
+                    <ThSort>Status</ThSort>
+                    <ThSort>Status&nbsp;čistoty</ThSort>
+                    <ThSort>Poznámka</ThSort>
+                </THEAD>
+                <TBODY>
+                    @if (ViewModel.NacitavaniePoloziek)
+                    {
+                        <div class="ms-1">
+                            <SpinnerLoading Size="2.0"></SpinnerLoading>
+                        </div>
+                    }
+                    else
+                    {
+                        @foreach (var item in ViewModel.RelevantRezervacie)
+                        {
+
+                            <tr>
+                                <td class="col-resize">@item.RoomNumber</td>
+                                <td class="col-resize">@item.Room.RoomCategory</td>
+                                <td class="col-resize">@ViewModel.RelevantHostia.Where(x => x.Reservation == item.Id).Count()</td>
+                                <td class="col-resize">@item.GetHSKStatus(ViewModel.AktDen)</td>
+                                <td class="col-resize">@(item.Room.RoomInfo?.Status.GetDisplayName() ?? "")</td>
+                                <td class="col-resize">@(item.Room.RoomInfo?.Poznamka ?? "")</td>
+                            </tr>
+                        }
+                    }
+                </TBODY>
+
+            </SimpleTable>
+        </div>
+    </div>
+
+
+</div>
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            return;
+        }
+        await ViewModel.NacitajZoznamy();
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+}

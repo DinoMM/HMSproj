@@ -209,7 +209,7 @@ namespace LudskeZdrojeModul.ViewModels.Zamestnanci
                     return false;
                 }
                 var existingEntity = _db.ChangeTracker.Entries<IdentityUserOwn>()
-    .FirstOrDefault(e => e.Entity.Id == found.Id);
+                                    .FirstOrDefault(e => e.Entity.Id == found.Id);
                 if (existingEntity != null)
                 {
                     _db.Entry(existingEntity.Entity).State = EntityState.Detached;
@@ -227,6 +227,7 @@ namespace LudskeZdrojeModul.ViewModels.Zamestnanci
                 {
                     await _userService.AddRoleToUser(found.Id, item.Name);
                 }
+                //_db.Entry(found).State = EntityState.Unchanged;
                 return true;
             }
 

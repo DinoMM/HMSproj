@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using DBLayer.Models;
 using DBLayer.Models.RecepciaModels;
+using DBLayer.Models.HSKModels;
 
 
 
@@ -58,6 +59,37 @@ namespace DBLayer
                 }
             }
         }
+
+#if DEBUG
+        public List<string> ClearPendingChangesDebug()
+        {
+            var changedEntries = this.ChangeTracker.Entries()
+                    .Where(e => e.State != EntityState.Unchanged)
+                    .ToList();
+
+            var list = new List<string>();
+
+            foreach (var entry in changedEntries)
+            {
+                list.Add($"****PENDING****Entity:{entry.Entity.ToString()}; {entry.State.ToString()};[CURRENT]{string.Join("", entry.Properties.Select(s => s.CurrentValue + "|"))}\n");
+                list.Add($"[ORIGINAL]{string.Join("", entry.Properties.Select(s => s.OriginalValue +"|"))}\n");
+                switch (entry.State)
+                {
+                    case EntityState.Modified:
+                        entry.State = EntityState.Unchanged;
+                        break;
+                    case EntityState.Added:
+                        entry.State = EntityState.Detached;
+                        break;
+                    case EntityState.Deleted:
+                        entry.Reload();
+                        break;
+                }
+            }
+            return list;
+        }
+#endif
+
         public DbSet<Dodavatel> Dodavatelia { get; set; }
         public DbSet<Objednavka> Objednavky { get; set; }
         public DbSet<PolozkaSkladu> PolozkySkladu { get; set; }
@@ -70,7 +102,7 @@ namespace DBLayer
         public DbSet<Prijemka> Prijemky { get; set; }
         public DbSet<Vydajka> Vydajky { get; set; }
         public DbSet<PrijemkaPolozka> VydajkyPolozky { get; set; }      //ten isty typ pre Prijem/Vydaj
-        
+
         public DbSet<Faktura> Faktury { get; set; }
         public DbSet<DruhPohybu> DruhyPohybov { get; set; }
         public DbSet<ZmenaMeny> ZmenyMien { get; set; }
@@ -81,6 +113,8 @@ namespace DBLayer
         public DbSet<HostConReservation> HostConReservations { get; set; }
         public DbSet<RoomFlag> RoomFlags { get; set; }
         public DbSet<RoomConFlag> RoomConFlags { get; set; }
+        public DbSet<RoomInfo> RoomInfos { get; set; }
+
 
         public DbSet<Kasa> Kasy { get; set; }
         public DbSet<PokladnicnyDoklad> PokladnicneDoklady { get; set; }

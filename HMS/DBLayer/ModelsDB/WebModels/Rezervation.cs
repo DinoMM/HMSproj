@@ -23,6 +23,18 @@ namespace DBLayer.Models
         [NotMapped]
         public static List<RolesOwn> ROLE_SPECIAL_REZERVACIA { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.RCVeduci };
 
+        /// <summary>
+        /// povolene role, pre zobrazovanie housekeepingu 
+        /// </summary>
+        [NotMapped]
+        public static List<RolesOwn> ROLE_R_HSK { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.UdalostnyPlanovac, RolesOwn.HKVeduci, RolesOwn.Udrzbar};
+
+        /// <summary>
+        /// povolene role, pre správu housekeepingu 
+        /// </summary>
+        [NotMapped]
+        public static List<RolesOwn> ROLE_CUD_HSK { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Riaditel, RolesOwn.HKVeduci};
+
 
         /// <summary>
         /// Vrati IdentityUserOwn z rezervacie (naposledy upravil) alebo null

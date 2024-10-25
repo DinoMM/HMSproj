@@ -30,6 +30,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildingTemplates", "Buildi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecepciaModul", "RecepciaModul\RecepciaModul.csproj", "{349AEBA5-2936-43C4-8AC1-5BD1175644FA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HSKModul", "HSKModul\HSKModul.csproj", "{F777C587-6CC1-484E-ABAC-32AB49960E9F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,6 +80,10 @@ Global
 		{349AEBA5-2936-43C4-8AC1-5BD1175644FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{349AEBA5-2936-43C4-8AC1-5BD1175644FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{349AEBA5-2936-43C4-8AC1-5BD1175644FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F777C587-6CC1-484E-ABAC-32AB49960E9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F777C587-6CC1-484E-ABAC-32AB49960E9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F777C587-6CC1-484E-ABAC-32AB49960E9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F777C587-6CC1-484E-ABAC-32AB49960E9F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -88,6 +94,7 @@ Global
 		{CB59C3D3-320B-42FD-9F4C-C20CFF370BE1} = {9927ED91-66EE-41EE-8C6E-2E6107C092DE}
 		{B6664FEB-23FF-48A1-9F17-3AF4D6F6ADBB} = {9927ED91-66EE-41EE-8C6E-2E6107C092DE}
 		{349AEBA5-2936-43C4-8AC1-5BD1175644FA} = {9927ED91-66EE-41EE-8C6E-2E6107C092DE}
+		{F777C587-6CC1-484E-ABAC-32AB49960E9F} = {9927ED91-66EE-41EE-8C6E-2E6107C092DE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B166195E-CFC1-410B-A63A-4051F8E42125}
