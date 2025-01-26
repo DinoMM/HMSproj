@@ -2,9 +2,12 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DBLayer;
 using DBLayer.Models;
 using DBLayer.Models.HSKModels;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
+using System.Diagnostics;
 using UniComponents;
 
 namespace HSKModul.ViewModels
@@ -32,7 +35,7 @@ namespace HSKModul.ViewModels
         {
             return _userService.IsLoggedUserInRoles(Rezervation.ROLE_R_HSK);
         }
-
+        
         public async Task NacitajZoznamy()
         {
             NacitavaniePoloziek = true;
@@ -42,10 +45,13 @@ namespace HSKModul.ViewModels
                 .Include(x => x.Guest)
                 .Include(x => x.Room)
                 .Include(x => x.Coupon)
-                .Where(x => x.DepartureDate.Date == AktDen.Date
+                .Where(x =>
+                    (x.DepartureDate.Date == AktDen.Date
                     || x.ArrivalDate.Date == AktDen.Date
                     || x.Status == ReservationStatus.Checked_IN.ToString())
-                    .OrderBy(x => x.ArrivalDate)
+                    && x.Status != ReservationStatus.Stornovana.ToString()
+                    )
+                    .OrderBy(x => x.RoomNumber)
                     .ToList()
                 );
 

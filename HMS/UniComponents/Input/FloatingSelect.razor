@@ -1,0 +1,23 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+@inherits AInput<string>
+
+<div class="form-floating">
+    <select id="@ID" @oninput="(e) => OnInputChange(e)" disabled="@Disabled" class="form-select @ClassInput">
+        @foreach (var item in Items)
+        {
+            <option value="@item" selected="@(Value == item)">@item</option>
+        }
+    </select>
+    <label for="@ID">@Header</label>
+</div>
+
+@code {
+
+    /// <summary>
+    /// Výber položiek
+    /// </summary>
+    [Parameter]
+    public List<string> Items { get; set; } = new();
+
+}

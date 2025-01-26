@@ -30,7 +30,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildingTemplates", "Buildi
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecepciaModul", "RecepciaModul\RecepciaModul.csproj", "{349AEBA5-2936-43C4-8AC1-5BD1175644FA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HSKModul", "HSKModul\HSKModul.csproj", "{F777C587-6CC1-484E-ABAC-32AB49960E9F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HSKModul", "HSKModul\HSKModul.csproj", "{F777C587-6CC1-484E-ABAC-32AB49960E9F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

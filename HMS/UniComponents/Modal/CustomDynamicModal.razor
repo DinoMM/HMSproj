@@ -1,0 +1,164 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+@inherits DynamicLoadedComponent2
+@using Microsoft.AspNetCore.Components.Forms
+
+@if (Rendered)
+{
+    <div class="modal fade" id="@ID" data-bs-backdrop="static" style="@(ZIndex >= 0 ? $"z-index: {ZIndex};" : "")" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true" @onkeydown="HandleKeyDown">
+        <div class="modal-dialog" style="@(SizeInRem == 0 ? " max-width:auto; " : $"max-width:{SizeInRem}rem; ") ">
+            <div class="modal-content">
+                <div class="modal-header d-flex @(ChangeColor ? "custom-modal-header" : "")">
+                    <h5 class="modal-title" id="staticBackdropLabel">@Header</h5>
+                    <div class="ms-auto">
+                        @if (ButtonPosition && !NoButtons)
+                        {
+                            @if (!OneButtonOnly)
+                            {
+                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(true))>@YesNoButtonText.Item1</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>@YesNoButtonText.Item2</button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zrušiť</button>
+                            }
+                        }
+                    </div>
+                </div>
+                <div class="modal-body @(ChangeColor ? "custom-modal-body" : "")" id="modalATextLabel">
+                    @ChildContent
+                </div>
+                <div class="modal-footer @(ChangeColor ? "custom-modal-footer" : "")">
+                    @if (!ButtonPosition && !NoButtons)
+                    {
+                        @if (!OneButtonOnly)
+                        {
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(true))>@YesNoButtonText.Item1</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>@YesNoButtonText.Item2</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zrušiť</button>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+@code {
+    [Parameter]
+    public string Header { get; set; } = "Info";
+
+    private TaskCompletionSource<bool> tcs;
+    private bool tstop = false;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Unikatne ID podla ktoreho vieme rozoznat medzi viacerimi modalmi
+    /// </summary>
+    [Parameter]
+    public string ID { get; set; } = "staticBackdropEmptyModal";
+
+    /// <summary>
+    /// Nastaví počet tlačidiel na 1 s názvom zruš, default false
+    /// </summary>
+    [Parameter]
+    public bool OneButtonOnly { get; set; } = false;
+
+    /// <summary>
+    /// Bez tlačidiel(treba zavolať CloseModalExtern()), default false
+    /// </summary>
+    [Parameter]
+    public bool NoButtons { get; set; } = false;
+
+    /// <summary>
+    /// Nastaví maximálnu veľkosť okna, default 0 -> auto
+    /// </summary>
+    [Parameter]
+    public int SizeInRem { get; set; } = 0;
+
+    /// <summary>
+    /// Nastaví z-index okna, default -1 -> auto
+    /// </summary>
+    [Parameter]
+    public int ZIndex { get; set; } = -1;
+
+    /// <summary>
+    /// Nastaví zmenu farby okna na predvolenú, default false
+    /// </summary>
+    [Parameter]
+    public bool ChangeColor { get; set; } = false;
+
+    /// <summary>
+    /// Pozicia tlacidla false - dole, true hore, default false
+    /// </summary>
+    [Parameter]
+    public bool ButtonPosition { get; set; } = false;
+
+    /// <summary>
+    /// Čo sa udeje po slačeni klavesnice - default nič
+    /// </summary>
+    [Parameter]
+    public Func<KeyboardEventArgs, Task> HandleKeyDown { get; set; } = null!;
+
+    /// <summary>
+    /// Zobrazuje text na dvoch tlačidlách, Default ("Áno", "Nie")
+    /// </summary>
+    [Parameter]
+    public (string, string) YesNoButtonText { get; set; } = ("Áno", "Nie");
+
+    /// <summary>
+    /// Otvorí vlastný modal, dynamicky (spustí sa až po rerenderovaní).
+    /// </summary>
+    /// <param name="act">Voliteľná akcia, ktorá sa vykoná po otvorení modalu(zrenderovaní). Prijíma bool parameter, ktorý indikuje, či bol modal zatvorený s pozitívnym výsledkom od uživateľa. Default nič</param>
+    /// <param name="stop">Fyzicky čaká na pokračovanie. Default true.</param>
+    public async Task OpenModal(Func<bool, Task>? act = null, bool stop = true)
+    {
+        if (!Rendered)
+        {
+            StartRender();
+            AfterRender = () => OpenModal(act, stop);
+            return;
+        }
+        StateHasChanged();
+        tstop = stop;
+        bool ans = false;
+        if (stop)
+        {
+            tcs = new TaskCompletionSource<bool>();
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            await tcs.Task;             //fyzické statie programu, cakanie na zavolanie CloseModal
+            ans = tcs.Task.Result;
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            ans = true;
+        }
+        if (act != null)    //spustenie vnutra
+        {
+            await act(ans);
+        }
+        await Dispose();
+
+    }
+
+    private void CloseModal(bool ans)
+    {
+        if (tstop)
+        {
+            tcs.TrySetResult(ans); //zastavi fyzické státie programu
+        }
+        JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('hide');"); //(pomohol som si z internetu tutoriály/AI)
+    }
+
+    public void CloseModalExtern(bool res = true)
+    {
+        CloseModal(res);
+    }
+}

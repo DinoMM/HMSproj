@@ -1,6 +1,6 @@
 ﻿@namespace UniComponents
 
-<th class="col-resize nonselecttext" scope="col" @ondblclick="() => SortMethod.Invoke(PropertyName, GetParam())">
+<th class="@Class" scope="col" @ondblclick="() => SortMethod.Invoke(PropertyName, GetParam())">
     @ChildContent
 </th>
 
@@ -22,6 +22,12 @@
 
     [Parameter]
     public List<string>? SelectionList { get; set; } = null;
+
+    /// <summary>
+    /// Čo sa zobrazí v class, default: "col-resize nonselecttext"
+    /// </summary>
+    [Parameter]
+    public string Class { get; set; } = "col-resize nonselecttext";
 
     private bool sortDirection = false;
 

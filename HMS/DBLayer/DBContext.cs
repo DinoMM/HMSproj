@@ -13,18 +13,18 @@ using Microsoft.Extensions.DependencyInjection;
 using DBLayer.Models;
 using DBLayer.Models.RecepciaModels;
 using DBLayer.Models.HSKModels;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 
 
 
 namespace DBLayer
 {
-    public class DBContext : IdentityDbContext<IdentityUserOwn>       //(pomohol som si z internetu tutoriály/AI)
+    public class DBContext : IdentityDbContext<IdentityUserOwn>, IDataProtectionKeyContext        //(pomohol som si z internetu tutoriály/AI)
     {
         public DBContext(DbContextOptions<DBContext> opt) : base(opt)
         {
             try
             {
-
                 var databaseCreator = Database.GetService<IDatabaseCreator>() as RelationalDatabaseCreator;
                 if (databaseCreator == null)
                 {
@@ -89,6 +89,8 @@ namespace DBLayer
             return list;
         }
 #endif
+
+        public DbSet<DataProtectionKey> DataProtectionKeys { get; set; } //ukladanie encrypt klucov
 
         public DbSet<Dodavatel> Dodavatelia { get; set; }
         public DbSet<Objednavka> Objednavky { get; set; }

@@ -10,7 +10,7 @@ namespace UniComponents
     /// <summary>
     /// Poskytuje možnosť vytvoriť komponent dynamicky.
     /// </summary>
-    public abstract class DynamicLoadedComponent : ComponentBase
+    public abstract class DynamicLoadedComponent2 : ComponentBase
     {
         /// <summary>
         /// Hodnota ukazuje, či sa má komponent renderovať (Treba spraviť @if(Rendered)). true => renderovať, default false
@@ -18,7 +18,7 @@ namespace UniComponents
         public bool Rendered { get; private set; } = false;
 
         /// <summary>
-        /// Funkcia, ktorá sa vykoná po zrenderovaní komponentu (jeho inicializácií)
+        /// Funkcia, ktorá sa vykoná po zrenderovaní komponentu
         /// </summary>
         [Parameter]
         public Func<Task>? AfterRender { get; set; }
@@ -29,10 +29,13 @@ namespace UniComponents
         [Parameter]
         public Func<Task>? AfterDispose { get; set; }
 
+        private bool onlyOne = false;       //keby sme vypli dvojite renderovanie tak nepotrebujeme toto, pravdepodobne
+
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            if (firstRender)        //pri inicializácii sa vykona určená metóda AfterRender
+            if (Rendered && !onlyOne)        //pri renderovani sa vykona určená metóda AfterRender
             {
+                onlyOne = true;
                 if (AfterRender != null)
                 {
                     await AfterRender();
@@ -43,7 +46,7 @@ namespace UniComponents
         /// <summary>
         /// Nastavuje Rendered = true, bez zastavenia programu
         /// </summary>
-        public void StartRender()
+        protected virtual void StartRender()
         {
             Rendered = true;
         }
@@ -51,9 +54,10 @@ namespace UniComponents
         /// <summary>
         /// nastavuje Rendered = false, spúšťa AfterComplete
         /// </summary>
-        public async Task Dispose()
+        protected async Task Dispose()
         {
             Rendered = false;
+            onlyOne = false;
             if (AfterDispose != null)
             {
                 await AfterDispose();

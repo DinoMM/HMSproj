@@ -2,13 +2,26 @@
 @page "/Housekeeping"
 @inject HousekeepingViewModel ViewModel
 
+<CustomDynamicModal @ref="custommodal"
+                    ID="@("custommodal")"
+                    NoButtons="false"
+                    ChangeColor="false"
+                    Header=""
+                    OneButtonOnly="true"
+                    SizeInRem="70"
+                    >
+
+    <CRURoomComp @ref="roomcomp"></CRURoomComp>
+
+</CustomDynamicModal>
+
 
 <div class="container">
 
     <div class="row pb-1">
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="4" PlaceHolder="Vyhľadaj značenie..." TableID="tableid"></SearchInput>
+            <SearchInput NumCols="6" PlaceHolder="Vyhľadaj..." TableID="tableid"></SearchInput>
         </div>
 
         <div class="col-9">
@@ -16,7 +29,7 @@
                 <button type="button" class="btn btn-secondary" @onclick="Close">
                     <IconTextClose></IconTextClose>
                 </button>
-                @*<button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUser())" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>*@
+                <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
                 @*<button @onclick="Create" disabled="@(!ViewModel.ValidateUserCUD())" type="button" class="btn btn-primary">
                         <IconTextCreate></IconTextCreate>
                     </button>*@
@@ -50,11 +63,11 @@
                         @foreach (var item in ViewModel.RelevantRezervacie)
                         {
 
-                            <tr>
+                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
                                 <td class="col-resize">@item.RoomNumber</td>
                                 <td class="col-resize">@item.Room.RoomCategory</td>
                                 <td class="col-resize">@ViewModel.RelevantHostia.Where(x => x.Reservation == item.Id).Count()</td>
-                                <td class="col-resize">@item.GetHSKStatus(ViewModel.AktDen)</td>
+                                <td class="col-resize">@item.GetHSKStatus(ViewModel.AktDen).GetDisplayName()</td>
                                 <td class="col-resize">@(item.Room.RoomInfo?.Status.GetDisplayName() ?? "")</td>
                                 <td class="col-resize">@(item.Room.RoomInfo?.Poznamka ?? "")</td>
                             </tr>
@@ -70,6 +83,9 @@
 </div>
 
 @code {
+    DBLayer.Models.Rezervation? marked = null;
+    CustomDynamicModal custommodal;
+    CRURoomComp? roomcomp;
 
     protected override void OnInitialized()
     {
@@ -95,4 +111,21 @@
     {
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
+
+
+    public async Task Open()
+    {
+        if (marked != null)
+        {
+            objectHolder.Add(marked);
+            await custommodal.OpenModal(async (bool ans) =>
+            {
+                StateHasChanged();
+            });
+            
+        }
+
+    }
+
+
 }

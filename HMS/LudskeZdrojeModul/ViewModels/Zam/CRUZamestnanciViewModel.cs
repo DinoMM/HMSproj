@@ -227,7 +227,7 @@ namespace LudskeZdrojeModul.ViewModels.Zamestnanci
                 {
                     await _userService.AddRoleToUser(found.Id, item.Name);
                 }
-                //_db.Entry(found).State = EntityState.Unchanged;
+                _db.Entry(found).State = EntityState.Unchanged;
                 return true;
             }
 

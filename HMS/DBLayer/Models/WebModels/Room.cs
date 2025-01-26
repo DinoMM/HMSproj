@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace DBLayer.Models
 {
-    public partial class Room
+    public partial class Room : ICloneable
     {
         [Key]
         public string RoomNumber { get; set; }        //id miestnosti
@@ -17,23 +17,35 @@ namespace DBLayer.Models
         [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty.")]
         [Column(TypeName = "decimal(18, 2)")]
         public double Cost { get; set; }
-        [NotMapped]
-        public string[] RoomIds { get; set; }
-        [NotMapped]
-        public string[] Describe { get; set; }
-        [NotMapped]
-        public string[] Furnishing { get; set; }
-        [NotMapped]
-        public string[] Bathroom { get; set; }
-        [NotMapped]
-        public string[] Services { get; set; }
-        [NotMapped]
-        public string[] Photos { get; set; }
+        //[NotMapped]
+        //public string[] RoomIds { get; set; }
+        //[NotMapped]
+        //public string[] Describe { get; set; }
+        //[NotMapped]
+        //public string[] Furnishing { get; set; }
+        //[NotMapped]
+        //public string[] Bathroom { get; set; }
+        //[NotMapped]
+        //public string[] Services { get; set; }
+        //[NotMapped]
+        //public string[] Photos { get; set; }
 
         [NotMapped]
         public RoomInfo? RoomInfo { get; set; }
 
-             //cena za den
+        public object Clone()
+        {
+            return new Room
+            {
+                RoomNumber = RoomNumber,
+                RoomCategory = RoomCategory,
+                MaxNumberOfGuest = MaxNumberOfGuest,
+                Cost = Cost,
+                RoomInfo = RoomInfo
+            };
+        }
+
+        //cena za den
 
         public void setFromOtherRoom(Room room) {
             RoomNumber = room.RoomNumber;
@@ -45,6 +57,7 @@ namespace DBLayer.Models
             //Photos = room.Photos;
             MaxNumberOfGuest = room.MaxNumberOfGuest;
             Cost = room.Cost;
+            RoomInfo = room.RoomInfo;
         }
 
     }

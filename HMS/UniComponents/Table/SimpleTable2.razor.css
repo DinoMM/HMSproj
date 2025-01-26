@@ -1,0 +1,52 @@
+﻿/*thead tr {
+    position: sticky;
+    top: 0;
+    --bs-table-bg: #f1f1f1d5;
+    border: initial;
+}
+
+.resizable {
+    overflow-y: hidden;*/  /*posledna zmena z overflow: auto; 7.12.2024*/
+/*}
+
+    .resizable .col-resize {
+        position: relative;
+    }
+
+        .resizable .col-resize::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: -2px;
+            bottom: 0;
+            width: 5px;
+            cursor: ew-resize;
+            border-right: 1px solid #dee2e6;
+        }
+
+::deep.table tbody tr.selected-row {
+    --bs-table-bg: #9d9b9bef;
+}
+
+::deep .th-sortable {
+    user-select: none;
+}
+
+::deep .nonselecttext {
+    user-select: none;
+}*/
+
+::deep .trow-odd {
+    background-color: #f8f9fa; /* Light gray */
+    --bs-table-bg: none;
+}
+
+::deep .trow-even {
+    background-color: #ffffff; /* White */
+    --bs-table-bg: none;
+}
+
+::deep .nonselecttext {
+    user-select: none;
+}
+

@@ -1,0 +1,48 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+<div id="@ID" data-bs-toggle="tooltip" data-bs-placement="@Position" data-bs-title="@Text">
+    @ChildContent
+</div>
+
+@code {
+
+    /// <summary>
+    /// Child content, na ktorý sa bude aplikovať tooltip
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// ID aby sa vedelo, ktorý tooltip sa má aktualizovať, default "tooltip"
+    /// </summary>
+    [Parameter]
+    public string ID { get; set; } = "tooltip";
+
+    /// <summary>
+    /// Umiestnenie, default top, možnosti: top, bottom, left, right
+    /// </summary>
+    [Parameter]
+    public string Position { get; set; } = "bottom";
+
+    /// <summary>
+    /// Zobrazovaný text, Default "tooltip"
+    /// </summary>
+    [Parameter]
+    public string Text { get; set; } = "tooltip";
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("initializeTooltip", ID);
+        }
+    }
+
+    public async Task UpdateTooltip(string newText)
+    {
+        Text = newText;
+        await JSRuntime.InvokeVoidAsync("updateTooltipOnHover", ID, newText);
+    }
+
+}

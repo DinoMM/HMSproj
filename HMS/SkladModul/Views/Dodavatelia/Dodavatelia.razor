@@ -1,6 +1,6 @@
 ﻿@namespace SkladModul
 @page "/Dodavatelia"
-@inject DodavateliaViewModel ViewModel
+@inherits TransientHoldedComp<DodavateliaViewModel>
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
               Text="Naozaj chcete odstrániť tento riadok?<br>POZOR môžu sa vymazať prvky, ktoré sú spojené s touto položkou!"
@@ -16,7 +16,7 @@
     <div class="row pb-1">
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="5" PlaceHolder="Vyhľadaj organizáciu..." TableID="tableid"></SearchInput>
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj organizáciu..." OnFilterRequest="(e) => ViewModel.Complextable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
 
         <div class="col-9">
@@ -38,50 +38,19 @@
 
     <div class="row">
         <div class="col-1"></div>
-        <div class="col-12" style="max-height: 30rem;overflow: auto;">
-            <SimpleTable ID="tableid">
-                <THEAD>
+        <div id="@ViewModel.Complextable?.ID_scrollbar" class="col-12" style="max-height: 38rem; overflow: auto;">
+            <ComplexTable @ref="ViewModel.Complextable"
+                          ID="complextable"
+                          T="DBLayer.Models.Dodavatel"
+                          Items="ViewModel.ZoznamDodavatelov"
+                          LoadingItems="ViewModel.NacitavaniePoloziek"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.NacitajZoznamy"
+                          SetTableSettings="@((true, tableSettings, null))">
 
-                    <ThSort>IČO</ThSort>
-                    <ThSort>Názov</ThSort>
-                    <ThSort>Obec</ThSort>
-                    <ThSort>Adresa</ThSort>
-                    <ThSort>IBAN</ThSort>
-                <th></th>
-
-                </THEAD>
-                <TBODY>
-                    @if (ViewModel.NacitavaniePoloziek)
-                    {
-                        <div class="ms-1">
-                            <SpinnerLoading Size="2.0"></SpinnerLoading>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var item in ViewModel.ZoznamDodavatelov)
-                        {
-
-                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
-                                <td class="col-resize">@item.ICO</td>
-                                <td class="col-resize">@item.Nazov</td>
-                                <td class="col-resize">@item.Obec</td>
-                                <td class="col-resize">@item.Adresa</td>
-                                <td class="col-resize">@item.Iban</td>
-                                <td>
-                                    @if (ViewModel.ValidateUserCRUD())
-                                    {
-                                        <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
-                                    }
-                                </td>
-
-                            </tr>
-                        }
-                    }
-                    <span id="observerTarget"></span>
-                </TBODY>
-
-            </SimpleTable>
+            </ComplexTable>
         </div>
         <div class="col-1"></div>
     </div>
@@ -93,11 +62,34 @@
 </div>
 
 @code {
-    private DBLayer.Models.Dodavatel? marked = null;
+    private DBLayer.Models.Dodavatel? marked { get => ViewModel.Complextable?.Marked; }
     private ApproveModal AprovMod = new();
     private InfoModal InfoModHasConneciton = new();
 
-    protected override void OnInitialized()
+    List<TableColumnTemplate<DBLayer.Models.Dodavatel>> tableSettings = new()
+{
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.ICO), HeaderValue = "IČO", CellValue = (item) => item.ICO },
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Nazov), HeaderValue = "Názov", CellValue = (item) => item.Nazov },
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Obec), HeaderValue = "Obec", CellValue = (item) => item.Obec },
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Adresa), HeaderValue = "Adresa", CellValue = (item) => item.Adresa },
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Iban), HeaderValue = "Iban", CellValue = (item) => item.Iban },
+
+    };
+
+    protected override void OnInitializedMustHave()
+    {
+        if (ViewModel.ValidateUserCRUD())
+        {
+            tableSettings.Add(new()
+            {
+                Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove),
+                new RenderFragmentAttribute("onclick", () => Delete(item)),
+                new RenderFragmentAttribute("Disabled", !ViewModel.MoznoVymazat(item)))
+            });
+        }
+    }
+
+    protected override void OnInitializedTransient()
     {
         if (!ViewModel.ValidateUser())
         {
@@ -106,9 +98,18 @@
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedTransientAsync()
     {
         await ViewModel.NacitajZoznamy();
+        //ViewModel.ZoznamDodavatelov.CollectionChanged += (e, y) => ViewModel.Complextable?.OnItemsChange();
+    }
+
+    protected override void OnAfterRenderTransient(bool firstRender)
+    {
+        if (firstRender)
+        {
+            GetHolder().StartMethodAsync = async () => await ViewModel.NacitajZoznamy();
+        }
     }
 
     public void Close()
@@ -135,6 +136,7 @@
             if (await AprovMod.OpenModal(true))
             {
                 await ViewModel.Vymazat(user);
+                StateHasChanged();
             }
         }
         else
@@ -147,6 +149,7 @@
     {
         if (ViewModel.ValidateUserCRUD())
         {
+            SetStartConditionOnVisit();
             Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDodavatel"));
         }
     }

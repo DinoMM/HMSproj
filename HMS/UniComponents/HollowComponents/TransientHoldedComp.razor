@@ -1,0 +1,159 @@
+﻿@namespace UniComponents
+@inject UniComponents.Services.TransientHolderService TransientHolderService
+@inject TransientPageHolder<Transient> TransientPageHolder
+@inject Transient TransientObject
+@implements IDisposable
+
+@typeparam Transient
+
+@code {
+
+    public Transient ViewModel { get => TransientObject; set => TransientObject = value; }
+    /// <summary>
+    /// Nemožno použiť lebo je implementovaná logika na kontrolu inicializácie transientu. Ak chceš použiť, tak použi ekvivalent OnInitializedTransient()
+    /// </summary>
+    sealed protected override void OnInitialized()
+    {
+        OnInitializedMustHave();
+        if (IsTransientPresented())
+        {
+            return;
+        }
+        OnInitializedTransient();
+    }
+
+    /// <summary>
+    /// Nemožno použiť lebo je implementovaná logika na kontrolu inicializácie transientu. Ak chceš použiť, tak použi ekvivalent OnInitializedTransientAsync()
+    /// </summary>
+    sealed protected override async Task OnInitializedAsync()
+    {
+        await OnInitializedMustHaveAsync();
+        if (IsTransientPresented())
+        {
+            return;
+        }
+        await OnInitializedTransientAsync();
+    }
+
+    /// <summary>
+    /// Ekvivalent OnInitialized(). Spustí sa len vtedy, ak sa Transient ešte neinicializoval. Ak sa inicializoval, tak sa nevykonáva.
+    /// </summary>
+    protected virtual void OnInitializedTransient() { }
+
+    /// <summary>
+    /// Ekvivalent OnInitializedAsync(). Spustí sa len vtedy, ak sa Transient ešte neinicializoval. Ak sa inicializoval, tak sa nevykonáva.
+    /// </summary>
+    protected virtual async Task OnInitializedTransientAsync() { }
+
+    /// <summary>
+    /// Ekvivalent OnInitialized(). Spustí sa VŽDY či je alebo nieje Transient inicializovaný.
+    /// </summary>
+    protected virtual void OnInitializedMustHave() { }
+
+    /// <summary>
+    /// Ekvivalent OnInitializedAsync(). Spustí sa VŽDY či je alebo nieje Transient inicializovaný.
+    /// </summary>
+    protected virtual async Task OnInitializedMustHaveAsync() { }
+
+    /// <summary>
+    /// Kontrola, či TransientObject existuje(už bola raz načítaná)<para/>
+    /// true - už je transient v TransientPageHolder a nemusí sa robiť inicializácia (načítavanie dát a pod)<para/>
+    /// false - transient sa prvý krát inicializuje, treba načítať dáta a pod.
+    /// </summary>
+    /// <returns></returns>
+    protected bool IsTransientPresented()
+    {
+        TransientPageHolder.TransientObject = ViewModel;
+        if (TransientHolderService.ContainsHolder(TransientPageHolder))
+        {
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Nemožno použiť lebo je implementovaná logika na inicializáciu transientu. Ak chceš použiť, tak použi ekvivalent OnAfterRenderTransient()
+    /// </summary>
+    /// <param name="firstRender"></param>
+    sealed protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (TransientHolderService.AddOnceOrRetrieve(TransientPageHolder))
+            {
+                StateHasChanged();
+            }
+        }
+        OnAfterRenderTransient(firstRender);
+    }
+
+    /// <summary>
+    /// Ekvivalent OnAfterRender()
+    /// </summary>
+    /// <param name="firstRender"></param>
+    protected virtual void OnAfterRenderTransient(bool firstRender) { }
+
+    /// <summary>
+    /// Nemožno použiť lebo je implementovaná logika na inicializáciu transientu. Ak chceš použiť, tak použi ekvivalent OnAfterRenderTransientAsync()
+    /// </summary>
+    /// <param name="firstRender"></param>
+    sealed protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await TransientHolderService.CheckStartConditionAsync();
+        }
+        await OnAfterRenderTransientAsync(firstRender);
+    }
+
+    /// <summary>
+    /// Ekvivalent OnAfterRenderAsync()
+    /// </summary>
+    /// <param name="firstRender"></param>
+    protected virtual async Task OnAfterRenderTransientAsync(bool firstRender) { }
+
+    /// <summary>
+    /// Treba zavolať base.Dispose(). Nutné pre kontrolu vymazávania transientu na stránke.<para/>
+    /// Ak treba použiť DisposeAsync tak treba vytvoriť vlastnú metódu s spustiť v nej  TransientHolderService.CheckOutScopeAsync();
+    /// </summary>
+    public virtual void Dispose()
+    {
+        TransientHolderService.CheckOutScope();
+    }
+
+    /// <summary>
+    /// Zmení url pre ukončenie životnosti transientu. Default pravdepodobne "/"
+    /// </summary>
+    /// <param name="url"></param>
+    public void TransientHoldCondition(string url)
+    {
+        TransientPageHolder.ConditionEndUrl = url;
+    }
+
+    /// <summary>
+    /// Zmení urls pre spustenie metody transientu pri príchode na stránku v OnAfterRenderAsync. Default nič
+    /// </summary>
+    /// <param name="urls"></param>
+    public void TransientHoldStartCondition(params string[] urls)
+    {
+        TransientPageHolder.ConditionStartUrl = urls;
+    }
+
+    /// <summary>
+    /// Vráti holder, musí sa toto spustiť po inicializácii transientu napr v OninitializedTransient()
+    /// </summary>
+    /// <returns></returns>
+    public ITransientHolder GetHolder()
+    {
+        return TransientHolderService.ZoznamTransients.First(x => x.TransientObject.GetType() == typeof(Transient));
+    }
+
+    /// <summary>
+    /// Nastaví podmienku, pred tym ako sa opustí stránka. Ak sa uživateľ vráti späť na túto stránku tak sa vykoná štartovacia metóda StartMethodAsync
+    /// </summary>
+    /// <param name="state"></param>
+    public void SetStartConditionOnVisit(bool state = true)
+    {
+        GetHolder().NextVisitStart = state;
+    }
+}

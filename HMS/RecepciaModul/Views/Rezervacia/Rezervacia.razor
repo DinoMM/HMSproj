@@ -178,7 +178,12 @@
 </CustomModal>
 
 
-<ItemFinderTable T="DBLayer.Models.Rezervation" @ref="nespracRes" CutOffTail="true" ID="RawResPick" ColNames="@(new() { "Príchod", "Odchod", "Plánovaný počet", "Cena", "Status"  })" ColValues="ViewModel.ZoznamNespracRezervacii"></ItemFinderTable>
+<ItemFinderTableProp T="DBLayer.Models.Rezervation"
+                     @ref="nespracRes" 
+                     ID="RawResPick" 
+                     ColNames="@(new(){("Príchod","ArrivalDate"),("Odchod","DepartureDate"), ("Plánovaný počet","NumberGuest"), ("Cena","CelkovaSuma"), ("Status","Status"), ("Izba","RoomNumber")})" 
+                     ColValues="ViewModel.ZoznamNespracRezervacii"
+                     ></ItemFinderTableProp>
 
 <InfoModal @ref="modsaved" Text="Zmeny boli uložené"></InfoModal>
 
@@ -301,7 +306,7 @@
     InfoModal modsaved = new();
     CRUCompRezervacia rezcom = new();
     CustomModal legndmodal = new();
-    ItemFinderTable<DBLayer.Models.Rezervation> nespracRes = new();
+    ItemFinderTableProp<DBLayer.Models.Rezervation> nespracRes;
     CustomModal resaslistmod = new();
 
 
@@ -404,7 +409,7 @@
             if (await nespracRes.OpenModal(true))
             {
                 await OpenRes(nespracRes.OutSelection.FirstOrDefault());
-
+                await ViewModel.NacitajNespracovaneRezervacie(false);
             }
             else
             {

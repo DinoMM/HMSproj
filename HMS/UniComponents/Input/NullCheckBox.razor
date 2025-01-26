@@ -1,0 +1,55 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+@inherits AInput<bool?>
+
+<input type="checkbox" id="@ID" class="form-check-input @($"transform-{Size}") @ClassInput" checked="@Value" @onchange="OnInputChange" disabled="@Disabled" />
+
+@code {
+    /// <summary>
+    /// Zmení veľkosť checkboxu, Default 0, rozpätie 0-5
+    /// </summary>
+    [Parameter]
+    public int Size { get; set; } = 0;
+
+    private bool lastDisabledState = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (!Value.HasValue)
+            {
+                await JSRuntime.InvokeVoidAsync("setIndeterminate", ID);
+                lastDisabledState = Disabled;
+            }
+        }
+        if (lastDisabledState != Disabled)
+        {
+            lastDisabledState = Disabled;
+            Value = null;
+            await ValueChanged.InvokeAsync(Value);
+            await JSRuntime.InvokeVoidAsync("setIndeterminate", ID);
+
+        }
+    }
+
+    protected override async Task OnInputChange(ChangeEventArgs e)  //kolovanie od null cez true na false a tak ďalej
+    {
+        if (Value == null)
+        {
+            Value = true;
+        }
+        else if (Value == true)
+        {
+            Value = false;
+        }
+        else
+        {
+            Value = null;
+            await JSRuntime.InvokeVoidAsync("setIndeterminate", ID);
+        }
+        await ValueChanged.InvokeAsync(Value);
+    }
+}
+
+

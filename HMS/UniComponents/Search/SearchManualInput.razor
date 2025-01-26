@@ -1,0 +1,56 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+@inherits AInput<string>
+
+<Input ID="@ID"
+       Salt="@Salt"
+       T="string"
+       Header="@Header"
+       ClassInput="@ClassInput"
+       Disabled="@Disabled"
+       Value="@Value"
+       ValueChanged="@(async (e) =>
+                               {
+                                   Value = e;
+                                   await FindItems();
+                               })" />
+
+@code {
+
+    /// <summary>
+    /// Minimálny počet napísaných charakterov pre filtrovanie, Default 1
+    /// </summary>
+    [Parameter]
+    public int MinCharToFilter { get; set; } = 1;
+
+    /// <summary>
+    /// Callback, ktorý sa zavolá pri zmene hodnoty inputu(event oninput).<para/>
+    /// Value - text ktorý je v inpute<para/>
+    /// CanFilter - true ak je možné filtrovať s aktuálnym textom, false ak nieje (kontrola null + minimal characters)
+    /// </summary><para/>
+    [Parameter]
+    public EventCallback<(string? Value, bool CanFilter)> OnFilterRequest { get; set; }
+
+
+    public SearchManualInput()
+    {
+        ID = "searchterm";
+        Header = "Vyhľadaj položku...";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await FindItems();
+        }
+    }
+
+    public async Task FindItems()
+    {
+        if (OnFilterRequest.HasDelegate)
+        {
+            await OnFilterRequest.InvokeAsync((Value?.ToLower(), !string.IsNullOrEmpty(Value) && Value.Length >= MinCharToFilter));
+        }
+    }
+}

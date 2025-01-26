@@ -15,14 +15,23 @@
     <script src="js/site.js"></script>
 </head>
 
-<body>
+<body style="overflow-y: auto;" class="mainbgcolor">
 
     <div class="status-bar-safe-area"></div>
 
-    <div id="app" ></div>    <!--start-->
+    <div id="app">
+        <!--start-->
+        <!--Spinner-->
+        <div class="vh-100" style="display: flex; justify-content: center; align-items: center;">
+            <div class="spinner-border"
+                 style="width:5rem; height:5rem" role="status" aria-hidden="true">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>    
 
     <div id="blazor-error-ui">
-        An unhandled error has occurred.
+        Vyskytla sa neočakávaná chyba, reštartuj applikáciu.
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>

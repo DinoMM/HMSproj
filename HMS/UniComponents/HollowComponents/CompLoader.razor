@@ -1,0 +1,38 @@
+﻿@namespace UniComponents
+@inherits DynamicLoadedComponent2
+
+@if (Rendered)
+{
+    @ChildContent
+}
+
+@code {
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Spustí zrenderovanie vnútra spolu s príslušným kódom
+    /// </summary>
+    /// <param name="act"></param>
+    /// <returns></returns>
+    public async Task StartChildContent(Func<Task>? act = null)
+    {
+        if (!Rendered)  //ak je jeho prve renderovanie tak pošleme act aby sa spustil po zrenderovani ChildContent
+        {
+            StartRender();
+            AfterRender = () => StartChildContent(act);
+            return;
+        }
+        if (act != null)
+        {
+            await act();
+        }
+    }
+
+    public async Task StopChildContent()
+    {
+        await base.Dispose();
+    }
+
+}

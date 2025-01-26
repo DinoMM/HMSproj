@@ -139,7 +139,7 @@ namespace DBLayer.Migrations
 
                     b.HasKey("ICO");
 
-                    b.ToTable("Dodavatelia");
+                    b.ToTable("Dodavatelia", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.DruhPohybu", b =>
@@ -161,7 +161,7 @@ namespace DBLayer.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("DruhyPohybov");
+                    b.ToTable("DruhyPohybov", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.Faktura", b =>
@@ -195,7 +195,27 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("Skupina");
 
-                    b.ToTable("Faktury");
+                    b.ToTable("Faktury", (string)null);
+                });
+
+            modelBuilder.Entity("DBLayer.Models.HSKModels.RoomInfo", b =>
+                {
+                    b.Property<string>("ID_Room")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("LastUpdate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Poznamka")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("ID_Room");
+
+                    b.ToTable("RoomInfos", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.Host", b =>
@@ -249,7 +269,7 @@ namespace DBLayer.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("Hostia");
+                    b.ToTable("Hostia", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.HostConFlag", b =>
@@ -264,7 +284,7 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("HostFlag");
 
-                    b.ToTable("HostConFlags");
+                    b.ToTable("HostConFlags", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.HostConReservation", b =>
@@ -277,7 +297,7 @@ namespace DBLayer.Migrations
 
                     b.HasKey("Host", "Reservation");
 
-                    b.ToTable("HostConReservations");
+                    b.ToTable("HostConReservations", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.HostFlag", b =>
@@ -296,7 +316,7 @@ namespace DBLayer.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("HostFlags");
+                    b.ToTable("HostFlags", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.ItemPokladDokladu", b =>
@@ -336,7 +356,7 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("UniConItemPoklDokladu");
 
-                    b.ToTable("ItemyPokladDokladu");
+                    b.ToTable("ItemyPokladDokladu", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.Kasa", b =>
@@ -360,7 +380,7 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("Dodavatel");
 
-                    b.ToTable("Kasy");
+                    b.ToTable("Kasy", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.Objednavka", b =>
@@ -397,7 +417,7 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("Tvorca");
 
-                    b.ToTable("Objednavky");
+                    b.ToTable("Objednavky", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.PohSkup", b =>
@@ -416,7 +436,7 @@ namespace DBLayer.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("PohSkup");
+                    b.ToTable("PohSkup", (string)null);
 
                     b.UseTptMappingStrategy();
                 });
@@ -438,7 +458,7 @@ namespace DBLayer.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("PolozkySkladu");
+                    b.ToTable("PolozkySkladu", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.PolozkaSkladuMnozstvo", b =>
@@ -469,7 +489,7 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("Sklad");
 
-                    b.ToTable("PolozkaSkladuMnozstva");
+                    b.ToTable("PolozkaSkladuMnozstva", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.PolozkaSkladuObjednavky", b =>
@@ -503,7 +523,7 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("PolozkaSkladu");
 
-                    b.ToTable("PolozkySkladuObjednavky");
+                    b.ToTable("PolozkySkladuObjednavky", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.PrijemkaPolozka", b =>
@@ -537,7 +557,7 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("Skupina");
 
-                    b.ToTable("PrijemkaPolozka");
+                    b.ToTable("PrijemkaPolozka", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.RecepciaModels.RoomFlag", b =>
@@ -556,7 +576,7 @@ namespace DBLayer.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("RoomFlags");
+                    b.ToTable("RoomFlags", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.RoomConFlag", b =>
@@ -571,7 +591,7 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("RoomFlag");
 
-                    b.ToTable("RoomConFlags");
+                    b.ToTable("RoomConFlags", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.Sklad", b =>
@@ -585,7 +605,7 @@ namespace DBLayer.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("Sklady");
+                    b.ToTable("Sklady", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.SkladObdobie", b =>
@@ -600,7 +620,7 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("Sklad");
 
-                    b.ToTable("SkladObdobi");
+                    b.ToTable("SkladObdobi", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.SkladUzivatel", b =>
@@ -615,7 +635,7 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("Uzivatel");
 
-                    b.ToTable("SkladUzivatelia");
+                    b.ToTable("SkladUzivatelia", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.UniConItemPoklDokladu", b =>
@@ -633,7 +653,7 @@ namespace DBLayer.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("UniConItemyPoklDokladu");
+                    b.ToTable("UniConItemyPoklDokladu", (string)null);
 
                     b.HasDiscriminator<string>("Discriminator").HasValue("UniConItemPoklDokladu");
 
@@ -652,7 +672,7 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("UniConItemPoklDokladuFlag");
 
-                    b.ToTable("UniConItemPoklDokladuConFlagy");
+                    b.ToTable("UniConItemPoklDokladuConFlagy", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.UniConItemPoklDokladuFlag", b =>
@@ -671,7 +691,7 @@ namespace DBLayer.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("UniConItemPoklDokladuFlagy");
+                    b.ToTable("UniConItemPoklDokladuFlagy", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.ZmenaMeny", b =>
@@ -701,7 +721,26 @@ namespace DBLayer.Migrations
 
                     b.HasKey("ID");
 
-                    b.ToTable("ZmenyMien");
+                    b.ToTable("ZmenyMien", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("FriendlyName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Xml")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DataProtectionKeys", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -851,7 +890,7 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("Kasa");
 
-                    b.ToTable("PokladnicneDoklady");
+                    b.ToTable("PokladnicneDoklady", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.Prijemka", b =>
@@ -881,7 +920,7 @@ namespace DBLayer.Migrations
 
                     b.HasIndex("Sklad");
 
-                    b.ToTable("Prijemky");
+                    b.ToTable("Prijemky", (string)null);
                 });
 
             modelBuilder.Entity("DBLayer.Models.Vydajka", b =>

@@ -1,9 +1,8 @@
 ﻿@namespace SkladModul
 @page "/Objednavka"
-@inject ObjednavkaViewModel ViewModel
+@inherits TransientHoldedComp<ObjednavkaViewModel>
 @inject ObjectHolder Holder
 
-@using Sve.Blazor.InfiniteScroll.Components
 @using OBJ = DBLayer.Models.Objednavka
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
@@ -15,7 +14,7 @@
 <div class="container">
     <div class="row pb-1">
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="5" TableID="tableid" PlaceHolder="Vyhľadaj objednávku..."></SearchInput>
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj objednávku..." OnFilterRequest="(e) => ViewModel.Complextable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
         <div class="col-8">
             <div class="row">
@@ -23,7 +22,7 @@
                     <button class="btn btn-secondary" type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">
                         <IconTextClose></IconTextClose>
                     </button>
-                    <button class="btn btn-primary" type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/AddObj")))">
+                    <button class="btn btn-primary" type="button" @onclick="@(() => {SetStartConditionOnVisit(); Navigator.NavigateTo(Navigator.AddNextUrl("/AddObj")); })">
                         <IconTextCreate></IconTextCreate>
                     </button>
                     <button class="btn btn-primary" disabled=@(!IsChecked()) @onclick=@(() => OpenOBJ(marked)) type="button">
@@ -44,49 +43,19 @@
 
     <div class="row">
         @*<div class="col-1"></div>*@
-        <div class="col-12" style="max-height: 30rem;overflow: auto;">
-            <Sve.Blazor.InfiniteScroll.Components.InfiniteScroll ObserverTargetId="observerTarget" ObservableTargetReached="() => ViewModel.NacitajDalsieCommand.Execute(null)">
-                <SimpleTable ID="tableid">
-                    <THEAD>
-                        <ThSort>ID</ThSort>
-                        <ThSort>Dodavateľ</ThSort>
-                        <ThSort>Stav</ThSort>
-                        <ThSort>Tvorca</ThSort>
-                        <ThSort>Dátum vytvorenia</ThSort>
-                    <th scope="col"></th>
+        <div id="@ViewModel.Complextable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+            <ComplexTable @ref="ViewModel.Complextable"
+                          ID="complextable"
+                          T="OBJ"
+                          Items="ViewModel.ZoznamObjednavok"
+                          LoadingItems="ViewModel.Loading"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.NacitajZoznam"
+                          SetTableSettings="@((true, tableSettings, null))">
 
-                    </THEAD>
-                    <TBODY>
-                        @foreach (var item in ViewModel.ZoznamObjednavok)
-                        {
-
-                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick=@(() => OpenOBJ(item)) style="cursor: pointer;">
-
-                                <td class="col-resize" style="cursor:text">@item.ID</td>
-                                <td class="col-resize">@item.DodavatelX.Nazov</td>
-                                <td class="col-resize">@item.Stav</td>
-                                <td class="col-resize">@item.TvorcaX.Surname</td>
-                                <td class="col-resize">@item.DatumVznik.ToShortDateString()</td>
-                                @if (item.Stav == DBLayer.Models.StavOBJ.Vytvorena ||
-                    item.Stav == DBLayer.Models.StavOBJ.Neschvalena ||
-                    UserService.LoggedUserRole == DBLayer.RolesOwn.Admin ||
-                    UserService.LoggedUserRole == DBLayer.RolesOwn.Riaditel &&
-                    item.Stav != DBLayer.Models.StavOBJ.Ukoncena)
-                                {
-                                    <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
-                                }
-                                else
-                                {
-                                    <td class="col-resize"> </td>
-                                }
-                            </tr>
-
-                        }
-                        <span id="observerTarget"></span>
-                    </TBODY>
-
-                </SimpleTable>
-            </Sve.Blazor.InfiniteScroll.Components.InfiniteScroll>
+            </ComplexTable>
         </div>
         <div class="col-1"></div>
     </div>
@@ -101,19 +70,52 @@
 
 @code {
 
-    ApproveModal AprovMod = new();
-    OBJ? marked;
+        ApproveModal AprovMod = new();
+        OBJ? marked { get => ViewModel?.Complextable?.Marked; }
+
+        List<TableColumnTemplate<OBJ>> tableSettings = new()
+{
+        new () { ID_Prop = nameof(OBJ.ID), HeaderValue = "ID", CellValue = (item) => item.ID },
+        new () { ID_Prop = nameof(OBJ.DodavatelX), HeaderValue = "Dodávateľ", CellValue = (item) => item.DodavatelX.Nazov, CellConvert = ((item) => item.DodavatelX.Nazov, typeof(string)) },
+        new () { ID_Prop = nameof(OBJ.Stav), HeaderValue = "Stav", CellValue = (item) => item.Stav.ToString() },
+        new () { ID_Prop = nameof(OBJ.TvorcaX), HeaderValue = "Tvorca", CellValue = (item) => item.TvorcaX.Surname, CellConvert = ((item) => item.TvorcaX.Surname, typeof(string)) },
+        new () { ID_Prop = nameof(OBJ.DatumVznik), HeaderValue = "Dátum vytvorenia", CellValue = (item) => item.DatumVznik.ToString("dd.MM.yyyy") },
+         new () { ID_Prop = nameof(OBJ.Popis), HeaderValue = "Popis", CellValue = (item) => item.Popis ?? "", Visible = false},
+    };
+
+    protected override void OnInitializedMustHave()
+    {
+        tableSettings.Add(new()
+        {
+            Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", () => Delete(item)), new RenderFragmentAttribute("Disabled", !(item.Stav == DBLayer.Models.StavOBJ.Vytvorena ||
+                       item.Stav == DBLayer.Models.StavOBJ.Neschvalena ||
+                       UserService.LoggedUserRole == DBLayer.RolesOwn.Admin ||
+                       UserService.LoggedUserRole == DBLayer.RolesOwn.Riaditel &&
+                       item.Stav != DBLayer.Models.StavOBJ.Ukoncena)))
+        });
+    }
+
+    protected override async Task OnInitializedTransientAsync()
+    {
+        await ViewModel.NacitajZoznam();
+    }
+
+    protected override void OnAfterRenderTransient(bool firstRender)
+    {
+        if (firstRender)
+        {
+            GetHolder().StartMethodAsync = async () => await ViewModel.NacitajZoznam();
+        }
+    }
 
     private async Task Delete(OBJ item)
     {
-        marked = item;
         await AprovMod.OpenModal();
     }
 
-    private void DeleteCommand()
+    private async Task DeleteCommand()
     {
         ViewModel.VymazatCommand.Execute(marked);
-        marked = null;
     }
 
     private void OpenOBJ(OBJ? item)
@@ -123,7 +125,6 @@
             //ViewModel.OtvorOBJCommand.Execute(item);
             Holder.Container.Add(item);
             Navigator.NavigateTo(Navigator.AddNextUrl("/AddObj"));
-            marked = null;
         }
     }
 

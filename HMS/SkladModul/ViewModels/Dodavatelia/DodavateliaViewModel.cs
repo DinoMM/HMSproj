@@ -3,20 +3,23 @@ using DBLayer;
 using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
-
+using System.Collections.Specialized;
+using UniComponents;
 using Ddodavatel = DBLayer.Models.Dodavatel;
 
 namespace SkladModul.ViewModels.Dodavatelia
 {
-    public partial class DodavateliaViewModel : ObservableObject
+    public partial class DodavateliaViewModel
     {
-        [ObservableProperty]
-        ObservableCollection<Ddodavatel> zoznamDodavatelov = new();
+        public ObservableCollection<Ddodavatel> ZoznamDodavatelov { get; set; } = new();
 
         public bool NacitavaniePoloziek { get; set; } = true;
 
         private readonly DBContext _db;
         private readonly UserService _userService;
+
+        [CopyProperties]
+        public ComplexTable<DBLayer.Models.Dodavatel>? Complextable { get; set; }
 
         public DodavateliaViewModel(DBContext db, UserService userService)
         {
@@ -36,7 +39,10 @@ namespace SkladModul.ViewModels.Dodavatelia
 
         public async Task NacitajZoznamy()
         {
+            NacitavaniePoloziek = true;
+            ZoznamDodavatelov.CollectionChanged -= OnCollectionChanged;
             ZoznamDodavatelov = new(await _db.Dodavatelia.OrderBy(x => x.Nazov).ToListAsync());
+            ZoznamDodavatelov.CollectionChanged += OnCollectionChanged;
             NacitavaniePoloziek = false;
         }
 
@@ -55,6 +61,14 @@ namespace SkladModul.ViewModels.Dodavatelia
             ZoznamDodavatelov.Remove(dod);
             _db.Dodavatelia.Remove(dod);
             await _db.SaveChangesAsync();
+        }
+
+        private async void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (Complextable != null)
+            {
+                await Complextable.OnItemsChange();
+            }
         }
     }
 }

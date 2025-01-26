@@ -1,0 +1,116 @@
+﻿@namespace HSKModul
+@inject CRURoomCompViewModel ViewModel
+
+<EditForm Model="ViewModel.Entity" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+    <div class="container px-5">
+        <div class="row">
+            <div class="col">
+                <h1 class="text-center">Informácie o izbe</h1>
+            </div>
+        </div>
+
+        <div class="row">
+
+            <div class="col">
+                <div class="row">
+                    <div class="col-2">
+                        <label>Číslo&nbsp;izby</label>
+                        <input type="text" value="@ViewModel.Entity.RoomNumber" class="form-control" disabled />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-5">
+                        <label>Kategória</label>
+                        <input type="text" value="@ViewModel.Entity.Room.RoomCategory" class="form-control" disabled />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-4">
+                        <label>Max. počet hostí</label>
+                        <input type="text" Value="@ViewModel.Entity.Room.MaxNumberOfGuest" class="form-control" disabled />
+                    </div>
+                </div>
+            </div>
+
+            <div class="col">
+                <div class="row">
+                    <div class="col-6">
+                        <label>Status</label>
+                        <select @bind="ViewModel.EntitySaver_RoomInfo.Input.Status" class="form-select">
+                            @foreach (DBLayer.Models.HSKModels.RoomStatus item in Enum.GetValues(typeof(DBLayer.Models.HSKModels.RoomStatus)))
+                            {
+                                <option value="@item">@item.GetDisplayName()</option>
+                            }
+                        </select>
+
+                        <ValidationMessage For="@(() => ViewModel.EntitySaver_RoomInfo.Input.Status)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <label>Posledná&nbsp;zmena</label>
+                        <input type="text" value="@ViewModel.EntitySaver_RoomInfo.Input.LastUpdate.ToString("dd.MM.yyyy HH:mm:ss")" disabled class="form-control" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-6">
+                        <label>Poznámka</label>
+                        <InputTextArea @bind-Value="@ViewModel.EntitySaver_RoomInfo.Input.Poznamka" class="form-control" placeholder="Poznámka" />
+                        <ValidationMessage For="@(() => ViewModel.EntitySaver_RoomInfo.Input.Poznamka)" />
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="row pt-2">
+            <div class="col text-center">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-secondary"><IconTextClose></IconTextClose></button>
+                    <SimpleButton Type="submit" Disabled="!ViewModel.AnyModify()" ZmenaStavuTextu="@(!ViewModel.EntitySaver.Exist)" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
+                </div>
+            </div>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+
+    protected override void OnInitialized()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        if (!ViewModel.EntitySaver.CanSetEntity(objectHolder.Remove<DBLayer.Models.Rezervation>())) //pokusi sa ziskat objekt z uloziska
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        if (!ViewModel.EntitySaver_RoomInfo.CanSetEntity(ViewModel.EntitySaver.Original?.Room.RoomInfo))
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            return;
+        }
+    }
+
+    private void Save()
+    {
+        ViewModel.Save();
+    }
+
+
+
+}

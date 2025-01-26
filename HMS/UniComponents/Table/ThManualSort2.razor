@@ -1,0 +1,48 @@
+﻿@namespace UniComponents
+@typeparam T
+
+<th class="@Class" scope="col" @ondblclick="() => SortMethod.Invoke(PropertyName, GetParam(), GetActualList.Invoke().ToList(), CellConvert.HasValue ? CellConvert.Value.Item1 : null)">
+    @ChildContent
+</th>
+
+@code {
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string PropertyName { get; set; } = string.Empty;
+
+    [Parameter]
+    public Func<string, object, List<T>, Func<T, object?>?, Task> SortMethod { get; set; } = null!;
+
+    [Parameter]
+    public List<string>? SelectionList { get; set; } = null;
+
+    [Parameter]
+    [EditorRequired]
+    public Func<IList<T>> GetActualList { get; set; }
+
+    [Parameter]
+    public (Func<T, object?>, Type)? CellConvert { get; set; } = null;
+
+    /// <summary>
+    /// Čo sa zobrazí v class, default: "nonselecttext"
+    /// </summary>
+    [Parameter]
+    public string Class { get; set; } = "nonselecttext";
+
+    private bool sortDirection = false;
+
+
+    private object GetParam()
+    {
+        if (SelectionList != null)
+        {
+            return SelectionList;
+        }
+        else
+        {
+            return sortDirection = !sortDirection;
+        }
+    }
+}

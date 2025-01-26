@@ -16,24 +16,31 @@ using OBJ = DBLayer.Models.Objednavka;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Components;
 using static System.Net.Mime.MediaTypeNames;
+using System.ComponentModel;
+using UniComponents;
+using System.Collections.Specialized;
 
 namespace SkladModul.ViewModels.Objednavka
 {
     public partial class ObjednavkaViewModel : ObservableObject
     {
-        [ObservableProperty]
-        ObservableCollection<OBJ> zoznamObjednavok = new();
+        public ObservableCollection<OBJ> ZoznamObjednavok { get; set; } = new();
         private DateTime posledneNacitanyDatum = DateTime.Today;
 
         public bool PdfLoading { get; set; } = false;
 
-        private readonly DBContext _db;
-        private readonly PridPolozkyViewModel _polozkyViewModel;
+        public bool Loading { get; set; } = false;
 
-        public ObjednavkaViewModel(DBContext db, PridPolozkyViewModel polozkyViewModel)
+        [CopyProperties]
+        public ComplexTable<OBJ>? Complextable { get; set; }
+
+
+        private readonly DBContext _db;
+
+
+        public ObjednavkaViewModel(DBContext db)
         {
             _db = db;
-            _polozkyViewModel = polozkyViewModel;
         }
 
         [RelayCommand]
@@ -62,6 +69,23 @@ namespace SkladModul.ViewModels.Objednavka
             }
         }
 
+        public async Task NacitajZoznam()
+        {
+            Loading = true;
+            ZoznamObjednavok.CollectionChanged -= OnCollectionChanged;
+            await Task.Run(() =>
+            {
+                ZoznamObjednavok = new(_db.Objednavky
+               .Include(x => x.DodavatelX)
+               .Include(x => x.OdberatelX)
+               .Include(x => x.TvorcaX)
+               .OrderByDescending(x => x.DatumVznik)
+               .ToList());
+            });
+            ZoznamObjednavok.CollectionChanged += OnCollectionChanged;
+            Loading = false;
+        }
+
         [RelayCommand]
         private void Vymazat(OBJ poloz)
         {
@@ -83,6 +107,14 @@ namespace SkladModul.ViewModels.Objednavka
                 
             }); 
             PdfLoading = false;
+        }
+
+        private async void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (Complextable != null)
+            {
+                await Complextable.OnItemsChange();
+            }
         }
 
     }

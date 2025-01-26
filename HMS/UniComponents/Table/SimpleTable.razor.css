@@ -6,7 +6,7 @@
 }
 
 .resizable {
-    overflow: auto;
+    overflow-y: hidden;  /*posledna zmena z overflow: auto; 7.12.2024*/
 }
 
     .resizable .col-resize {
@@ -35,4 +35,5 @@
 ::deep .nonselecttext {
     user-select: none;
 }
+
 

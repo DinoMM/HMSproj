@@ -2,7 +2,7 @@
 @inject IJSRuntime JSRuntime
 <div class="resizable">
     <table class="table table-striped table-hover" id="@ID">
-        <thead>
+        <thead style="@(Sticky ? "position: sticky; top: 0;" : "")">
             <tr style="cursor: pointer;">
                 @THEAD
             </tr>
@@ -44,6 +44,12 @@
 
     [Parameter]
     public RenderFragment TBODY { get; set; }
+
+    /// <summary>
+    /// Určuje aby bola hlavička tabuľky sticky. Default false
+    /// </summary>
+    [Parameter]
+    public bool Sticky { get; set; } = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

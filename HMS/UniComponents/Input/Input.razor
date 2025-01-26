@@ -1,0 +1,29 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+@inherits FloatingInput<T>
+@typeparam T
+
+        <div class="input-group">
+            <input id="@ID"
+                   type="@Type"
+                   class="form-control mb-1 border-secondary-subtle @ClassInput @(IsNull() ? "rounded-end " : "rounded-start border-end-0")"
+                   value="@GetValue()"
+                   @oninput="(e) => OnInputChange(e)"
+                   placeholder="@Header"
+                   disabled="@(Disabled)"
+                   aria-label="."
+                   aria-describedby="@(ID + "addon")"
+                   autocomplete="off"
+                   step="0.0001">
+
+            <button class="btn btn-outline-secondary mb-1 border-secondary-subtle @(IsNull() ? "d-none" : "rounded-end")"
+                    id="@(ID + "addon")"
+                    @onclick="ClearInput">
+                X
+            </button>
+        </div>
+
+
+        @code {
+
+        }

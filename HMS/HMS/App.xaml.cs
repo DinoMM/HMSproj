@@ -25,6 +25,29 @@ namespace HMS
                 _appLifeCycle.NotifyDestroying();
             };
 
+            window.Destroying += async (s, e) =>
+            {
+                await _appLifeCycle.NotifyDestroyingAsync();
+            };
+
+#if ANDROID
+            window.Deactivated += async (s, e) =>
+            {
+                await _appLifeCycle.NotifyDestroyingAsync();
+            };
+
+            _appLifeCycle.OnFileChange += (filename) =>
+            {
+                HMS.Platforms.Android.FileManagerHelper.NotifyFileAdded(filename);
+            };
+#else
+            window.Destroying += async (s, e) =>
+            {
+                await _appLifeCycle.NotifyDestroyingAsync();
+            };
+#endif
+
+
             return window;
         }
     }

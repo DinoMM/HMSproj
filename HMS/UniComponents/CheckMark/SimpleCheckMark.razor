@@ -2,14 +2,14 @@
 
 @if (Checked)
 {
-    <i class="bi bi-check-circle-fill text-success @("fs-" + Size)">
-        <span class="sr-only">yas</span>
+    <i class="bi bi-check-circle-fill text-success @(FixedSizePx == 0 ? ("fs-" + Size) : "")" style="font-size: @(FixedSizePx + "px");">
+        <span class="sr-only visually-hidden">yas</span>
     </i>
 }
 else
 {
-    <i class="bi bi-x-circle-fill text-danger @("fs-" + Size)">
-        <span class="sr-only">n</span>
+    <i class="bi bi-x-circle-fill text-danger @(FixedSizePx == 0 ? ("fs-" + Size) : "")" style="font-size: @(FixedSizePx + "px");">
+        <span class="sr-only visually-hidden">n</span>
     </i>
 }
 
@@ -24,6 +24,12 @@ else
     /// </summary>
     [Parameter]
     public int Size { get; set; } = 5;
+
+    /// <summary>
+    /// Velkost ikony fix, vypína Size ak nastavená, default 0
+    /// </summary>
+    [Parameter]
+    public int FixedSizePx { get; set; } = 0;
 
 
 }

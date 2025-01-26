@@ -1,0 +1,876 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+@typeparam T
+@inherits ASortDataPage<T>
+@implements IAsyncDisposable
+
+
+<CustomDynamicModal @ref="cusfiltermod"
+                    ID="cusfiltermod"
+                    Header="Filter"
+                    SizeInRem="70"
+                    YesNoButtonText="@(("Použiť", "Zrušiť"))"
+                    HandleKeyDown="@(async (e) => { if (e.Key == "Enter") cusfiltermod.CloseModalExtern(true);
+                                                  { if (e.Key == "Escape") cusfiltermod.CloseModalExtern(false); }})">
+
+    <div class="container">
+        <div class="row" style="position: sticky; top: 0; z-index: 2;">
+            <div class="col-1 d-flex justify-content-center"><Tooltip ID="eyefil" Text="Zobraziť stĺpec"><IconText Icon="bi-eye" Size="4"></IconText></Tooltip></div>
+            <div class="col-1"></div>
+            <div class="col-7 d-flex justify-content-center"><Tooltip ID="searchfil" Text="Vyhľadávaná hodnota"><IconText Icon="bi-search" Size="4"></IconText></Tooltip></div>
+            <div class="col-1 d-flex justify-content-center"><Tooltip ID="matchcasefil" Text="Dodržať veľkosť písmen"><IconText Icon="bi-type" Size="4"></IconText></Tooltip></div>
+            <div class="col-1 d-flex justify-content-center"><Tooltip ID="excludefil" Text="Vylúčiť filtrované výsledky"><IconText Icon="bi-exclude" Size="4"></IconText></Tooltip></div>
+            <div class="col-1 d-flex justify-content-center"><Tooltip ID="nullfil" Text="Použiť len prázdne hodnoty"><IconText Icon="bi-slash-circle" Size="4"></IconText></Tooltip></div>
+        </div>
+        @foreach (var item in TableSettings)
+        {
+            if (item.ID_Prop == null)
+            {
+                continue;
+            }
+            var afilter = Filter.First(x => x.Item1.ID_Prop == item.ID_Prop).Item1;
+
+            <div class="row">
+                <div class="col-1 d-flex justify-content-center">
+                    <div class="form-switch">
+                        <input type="checkbox" class="form-check-input mt-4" @bind="item.Visible" />
+                    </div>
+                </div>
+                <div class="col-1">
+                    <div class="vr h-100"></div>
+                </div>
+                <div class="col-7">
+                    @switch (afilter)
+                    {
+                        case TableFilter<T> filter:
+                            <FloatingInput ID="@item.ID_Prop"
+                                           T="object"
+                                           Type="text"
+                                           Header="@item.HeaderValue"
+                                           Value="@filter.FilteredText"
+                                           ValueChanged="@(val => filter.FilteredText = val?.ToString() ?? "")"
+                                           ClassInput="fw-bold"
+                                           Disabled="@(!item.Visible)">
+                            </FloatingInput>
+                            break;
+                        case TableFilterNum<T> filter:
+                            <div class="row">
+                                <div class="col-6">
+                                    <FloatingInput ID="@item.ID_Prop"
+                                                   T="decimal?"
+                                                   Type="number"
+                                                   Header="@(item.HeaderValue + " od")"
+                                                   Value="@filter.FilterOd"
+                                                   ValueChanged="@(val => filter.FilterOd = val)"
+                                                   ClassInput="fw-bold"
+                                                   Disabled="@(!item.Visible)">
+                                    </FloatingInput>
+                                </div>
+                                <div class="col-6">
+                                    <FloatingInput ID="@item.ID_Prop"
+                                                   T="decimal?"
+                                                   Type="number"
+                                                   Header="@(item.HeaderValue + " do")"
+                                                   Value="@filter.FilterDo"
+                                                   ValueChanged="@(val => filter.FilterDo = val)"
+                                                   ClassInput="fw-bold"
+                                                   Disabled="@(!item.Visible)">
+                                    </FloatingInput>
+                                </div>
+                            </div>
+                            break;
+                        case TableFilterDateTime<T> filter:
+                            <div class="row">
+                                <div class="col-6">
+                                    <FloatingInputDate ID="@item.ID_Prop"
+                                                       Header="@(item.HeaderValue + " od")"
+                                                       Value="@filter.FilterOd"
+                                                       ValueChanged="@(val => filter.FilterOd = val)"
+                                                       ClassInput="@(filter.FilterOd != null ? "fw-bold" : "")"
+                                                       Disabled="@(!item.Visible)">
+                                    </FloatingInputDate>
+                                </div>
+                                <div class="col-6">
+                                    <FloatingInputDate ID="@item.ID_Prop"
+                                                       Header="@(item.HeaderValue + " do")"
+                                                       Value="@filter.FilterDo"
+                                                       ValueChanged="@(val => filter.FilterDo = val)"
+                                                       ClassInput="@(filter.FilterDo != null ? "fw-bold" : "")"
+                                                       Disabled="@(!item.Visible)">
+                                    </FloatingInputDate>
+                                </div>
+                            </div>
+                            break;
+                        case TableFilterBool<T> filter:
+                            <div class="border border-1 border-secondary-subtle rounded mb-1">
+                                <div class="row mt-3 mb-3 ms-1">
+                                    <div class="col-5">
+                                        <div class="d-flex justify-content-start">
+                                            <label for="@item.ID_Prop" class="nonselecttext">@item.HeaderValue</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-7">
+                                        <NullCheckBox ID="@item.ID_Prop"
+                                                      Size="4"
+                                                      Value="@filter.FilterB"
+                                                      ValueChanged="@(val => filter.FilterB = val)"
+                                                      ClassInput="@((filter.FilterB == true ? "bg-success border-success" : filter.FilterB == false ? "bg-danger border-danger" : "bg-secondary border-secondary"))"
+                                                      Disabled="@(!item.Visible)">
+                                        </NullCheckBox>
+                                    </div>
+                                </div>
+                            </div>
+                            break;
+                        default: break;
+                    }
+
+                </div>
+
+                <div class="col-1 d-flex justify-content-center">
+                    @if (afilter.UsesMatchCase)
+                    {
+                        <input type="checkbox" class="form-check-input transform-2 mt-4" @bind="afilter.MatchCase" disabled="@(!item.Visible)" />
+                    }
+                </div>
+
+
+                <div class="col-1 d-flex justify-content-center">
+                    @if (afilter.UsesExclude)
+                    {
+                        <input type="checkbox" class="form-check-input transform-2 mt-4" @bind="afilter.Exclude" disabled="@(!item.Visible)" />
+                    }
+                </div>
+
+
+                <div class="col-1 d-flex justify-content-center">
+                    @if (afilter.UsesNullsOnly)
+                    {
+                        <NullCheckBox ID="@item.ID_Prop"
+                                      Salt="nullcheck"
+                                      Size="2"
+                                      Value="@afilter.NullsOnly"
+                                      ValueChanged="@(val => afilter.NullsOnly = val)"
+                                      ClassInput="mt-4"
+                                      Disabled="@(!item.Visible)">
+                        </NullCheckBox>
+                    }
+                </div>
+
+            </div>
+        }
+        <div class="row">
+            <div class="col-2">
+                <button type="button" class="btn btn-secondary mt-4" @onclick="ResetFilter">Reset</button>
+            </div>
+        </div>
+    </div>
+</CustomDynamicModal>
+
+
+
+<SimpleTable2 ID="@ID" Sticky="@Sticky" NumHeaders="@TableNUM" WithToolbar="WithToolBar">
+
+    <Toolbar>
+        <div class="btn-toolbar" role="toolbar">
+            <div class="btn-group" role="group">
+                @if (OnRefresh.HasDelegate)
+                {
+                    <button id="refreshtablebtn" type="button" class="btn btn-outline-primary p-1 border-0 border-start border-end"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            data-bs-title="Obnoviť"
+                            @onclick="OnRefresh"
+                            disabled="@LoadingItems">
+                        <IconText Icon="bi-arrow-clockwise"></IconText>
+                    </button>
+                }
+                @if (MultiSelect)
+                {
+                    <button id="selectallbtn" type="button" class="btn @(!filterApplied ? "btn-outline-secondary " : "btn-outline-info ") @(Markers.Count != 0 ? "btn-dark " : "") p-1 border-0 border-start border-end"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            data-bs-title="Označiť všetko"
+                            @onclick="SelectAll">
+                        <IconText Icon="bi-check-all"></IconText>
+                    </button>
+                }
+                @if (Selectable && (SelectableNull || MultiSelect))
+                {
+                    <button id="clearallbtn" type="button" class="btn @(!filterApplied ? "btn-outline-secondary " : "btn-outline-info ") p-1 border-0 border-start border-end"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            data-bs-title="Odznačiť výber"
+                            disabled="@(Markers.Count == 0)"
+                            @onclick="ClearAll">
+                        <IconText Icon="bi-eraser"></IconText>
+                    </button>
+                }
+                <button id="filterbtn" type="button" class="btn btn-outline-info p-1 border-0 border-start border-end"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="bottom"
+                        data-bs-title="Filtrovať"
+                        @onclick="ShowFilter">
+                    @if (!filterApplied)
+                    {
+                        <IconText Icon="bi-funnel"></IconText>
+                    }
+                    else
+                    {
+                        <IconText Icon="bi-funnel-fill"></IconText>
+                    }
+                </button>
+            </div>
+            <div class="btn-group ms-auto" role="group">
+                @if (MultiSelect)
+                {
+                    if (!filterApplied)
+                    {
+                        <IconText Icon="bi-cursor">@($"Označené {MarkedActualCount}/{MarkedActualMax}")</IconText>
+                    }
+                    else
+                    {
+                        <IconText Icon="bi-cursor-fill text-info">@($"Označené {MarkedActualCount}/{MarkedActualMax}")</IconText>
+                    }
+                }
+            </div>
+
+        </div>
+    </Toolbar>
+
+    <TABLEH>
+        @foreach (var item in TableSettings)
+        {
+            if (!item.Visible)
+            {
+                continue;
+            }
+            if (!string.IsNullOrEmpty(item.ID_Prop))
+            {
+                <ThManualSort2 T="T" PropertyName="@item.ID_Prop" SortMethod="item.DB_Click_Sort ?? SortList" GetActualList="() => ActualList" CellConvert="item.CellConvert" Class="@("nonselecttext" + item.HeaderClass)">@item.HeaderValue</ThManualSort2>
+            }
+            else
+            {
+                <th class="@("nonselecttext " + item.HeaderClass)">@item.HeaderValue</th>
+            }
+        }
+    </TABLEH>
+    <TABLEB>
+        @if (LoadingItems)
+        {
+            <td colspan="@TableNUM" class="ms-1">
+                <SpinnerLoading Size="3.0"></SpinnerLoading>
+            </td>
+        }
+        else
+        {
+            <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items="ActualList" SpacerElement="tr" ItemSize="@ItemSize">
+                <ItemContent Context="item">
+                    <tr @key="item"
+                        @onclick=@(() => ChangePick(item))
+                        class="text-nowrap @(ClassForEach?.Invoke(item) ?? SimpleTable2.StrippedRow(ActualList.IndexOf(item))) @(Markers.Contains(item) ? $"table-active {MarkedClass}" : "")
+                        @(NonSelectTextTD ? "nonselecttext " : "")
+                        @Class"
+                        style="@($"height: {ItemSize}px; " +
+                                 (cursorPointerTD ? "cursor: pointer;" : "")
+                                 )">
+
+                        @foreach (var ytem in TableSettings)
+                        {
+                            if (!ytem.Visible)
+                            {
+                                continue;
+                            }
+                            var filter = Filter.FirstOrDefault(x => x.Item1.ID_Prop == ytem.ID_Prop).Item1;
+                            if (!string.IsNullOrEmpty(ytem.ID_Prop))
+                            {
+                                <td class="@ytem.CellClass">
+                                    @if (ytem.CellValue != null)
+                                    {
+                                        @RenderFragmentTemplate.GenerateRenderFragment(ytem.CellValue(item))
+                                    }
+                                    else
+                                    {
+                                        @ytem.CellComponent.Invoke(item).GenerateRenderFragment()
+                                    }
+                                </td>
+                            }
+                            else
+                            {
+                                if (ytem.Placeholder != null)
+                                {
+                                    @ytem.Placeholder.Invoke(item).GenerateRenderFragment()
+                                }
+                            }
+
+                        }
+                    </tr>
+                </ItemContent>
+                <EmptyContent>
+                    <tr>
+                        <td colspan="@TableNUM" class="h3 text-dark">Zoznam je prázdny</td>
+                    </tr>
+                </EmptyContent>
+                <Placeholder>
+                    <td colspan="@TableNUM" class="ms-1">
+                        <SpinnerLoading Size="3.0"></SpinnerLoading>
+                    </td>
+                </Placeholder>
+            </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
+        }
+    </TABLEB>
+
+</SimpleTable2>
+
+
+@code {
+
+    /// <summary>
+    /// Zobrazí loading spinner ak true, default false
+    /// </summary>
+    [EditorRequired]
+    [Parameter]
+    public bool LoadingItems { get; set; } = false;
+
+    /// <summary>
+    /// Zoznam zobrazených položiek
+    /// </summary>
+    [EditorRequired]
+    [Parameter]
+    public System.Collections.ObjectModel.ObservableCollection<T> Items { get; set; }
+
+    /// <summary>
+    /// ID tabuľky, default "simpletable"
+    /// </summary>
+    [Parameter]
+    public string ID { get; set; } = "simpletable";
+
+    /// <summary>
+    /// Určuje aby bola hlavička tabuľky sticky. Default false
+    /// </summary>
+    [Parameter]
+    public bool Sticky { get; set; } = false;
+
+    /// <summary>
+    /// Určuje aby bol text riadku označovateľný(napr. pre kopírovanie). Default false
+    /// </summary>
+    [Parameter]
+    public bool NonSelectTextTD { get; set; } = false;
+
+    /// <summary>
+    /// Možnosť označit viacej riadkov, tie sú dostupné v prop Markers. Default false
+    /// </summary>
+    [Parameter]
+    public bool MultiSelect { get; set; } = false;
+
+    /// <summary>
+    /// Povolenie na označovanie riadku/ov. Default false
+    /// </summary>
+    [Parameter]
+    public bool Selectable { get; set; } = false;
+
+    /// <summary>
+    /// Povolenie na odznačenie už označeného riadku pri jedno ozťnačení. Default false
+    /// </summary>
+    [Parameter]
+    public bool SelectableNull { get; set; } = false;
+
+    /// <summary>
+    /// Výška riadka v px, default 35
+    /// </summary>
+    [Parameter]
+    public int ItemSize { get; set; } = 35;
+
+    /// <summary>
+    /// Prídavné classy pre tr, default ""
+    /// </summary>
+    [Parameter]
+    public string Class { get; set; } = "";
+
+    /// <summary>
+    /// Prídavné classy pre tr, foreach cez vsetky itemy, default ""
+    /// </summary>
+    [Parameter]
+    public Func<T, string>? ClassForEach { get; set; }
+
+    /// <summary>
+    /// Prídavné classy pre Marked riadky, default ""
+    /// </summary>
+    [Parameter]
+    public string MarkedClass { get; set; } = "";
+
+    /// <summary>
+    /// Event, ktorý sa zavolá pri refreshovaní tabuľky (žiadosť o znovu načítanie údajov, napr. keď chce user refreshnuť výsledky alebo iné..)
+    /// </summary>
+    [Parameter]
+    public EventCallback OnRefresh { get; set; }
+
+    /// <summary>
+    /// Zobrazenie toolbaru (definitívne rozhodnutie). Default true
+    /// </summary>
+    [Parameter]
+    public bool WithToolBar { get; set; } = true;
+
+    /// <summary>
+    /// Slúži pre upade parenta, napr. keď sa zmení Marked/Markers tak aby sa parrent komponent updatol ak využíva Selection. Nahoď sem StateHasChanged, fajn pre @ref spojenia. Default EventCallback.Empty.
+    /// </summary>
+    [Parameter]
+    public EventCallback ParentStateHasChanged { get; set; } = EventCallback.Empty;
+
+    /// <summary>
+    /// Spustí sa vždy keď sa zmení Marked/Markers. Najlepšie v prípadoch, keď neni na tuto tabuľku @ref. Default null
+    /// </summary>
+    [Parameter]
+    public Action<T?, List<T>>? MarkersStateChanged { get; set; }
+
+    [Parameter]
+    public (bool iniCheck, List<TableColumnTemplate<T>>? listTableSettings, List<(string name, Func<T, string>? cellValue, (Func<T, object?>, Type)? cellConvert)>? visibleColls)? SetTableSettings { get; set; } = null;
+
+    /// <summary>
+    /// Nastavenie šablóny pre generovanie hodnôt z jednotlivých sĺpcov tabuľky. Treba nastaviť v OnAfterRenderTransient po prvý krát renderovaní
+    /// </summary>
+    public List<TableColumnTemplate<T>> TableSettings { get; set; } = new();
+
+    /// <summary>
+    /// Vráti počet viditeľných stlpcov tabuľky
+    /// </summary>
+    public int TableNUM { get => TableSettings.Count(x => x.Visible); }
+
+    /// <summary>
+    /// Zoznam filtrovaných položiek, ak je filter aplikovaný
+    /// </summary>
+    public List<T> FilteredResults { get; private set; } = new();
+    public int filteredMarkedCount { get; private set; } = 0;       //počet označených položiek po filtrovaní
+    public bool filterApplied { get; private set; } = false;        //určuje či je(alebo sa má) filter aplikovaný
+    public bool filteredResultsSorted { get; private set; } = false;    //určuje  či už bol vyfiltrovaný zoznam
+
+    /// <summary>
+    ///  Zoznam filtrovaných položiek, ak je vypísaný text do vyhľadávacieho pola
+    /// </summary>
+    public List<T> FilteredSearchResults { get; private set; } = new();
+
+    public T? Marked { get; set; }
+
+    public List<T> Markers { get; set; } = new();
+
+    /// <summary>
+    /// Zobrazuje počet označených položiek, v prípade filtra zobrazuje počet položiek, ktoré sú zahrnuté po výslednej filtrácií
+    /// </summary>
+    public int MarkedActualCount { get => filterApplied ? filteredMarkedCount : Markers.Count; }
+
+    /// <summary>
+    /// Zobrazuje MAX počet položiek  ktoré sa dajú označiť, v prípade filtra zobrazuje MAX počet položiek, ktoré sú zahrnuté po výslednej filtrácií
+    /// </summary>
+    public int MarkedActualMax { get => filterApplied ? FilteredResults.Count : Items.Count; }
+
+    /// <summary>
+    /// Obsahuje všetky položky, ktoré sa dajú zobraziž (ak je použitý filter tak sa zobrazené položky menia a ak neni použitý tak zobrazuje všetky)
+    /// </summary>
+    public IList<T> ActualList { get => filterApplied || !string.IsNullOrEmpty(filteredText) ? string.IsNullOrEmpty(filteredText) ? FilteredResults : FilteredSearchResults : Items; }
+
+    /// <summary>
+    /// Získa ID pre scrollbar tabuľky, default @ID + "scroll"
+    /// </summary>
+    public string ID_scrollbar { get => ID + "scroll"; }
+
+    /// <summary>
+    /// Označuje filter pre jednotlivé stĺpce tabuľky<para/>(modifikovateľný filter uživateľom, filter pred súhlasom o aplikovanie(kópia))
+    /// </summary>
+    private List<(ATableFilter<T>, ATableFilter<T>)> Filter { get; set; } = new();
+
+    /// <summary>
+    /// Zachytí poslednú pozíciu scrollubaru v tabulky
+    /// </summary>
+    public double scrollPosition { get; set; } = 0;
+
+    /// <summary>
+    /// Text, ktorý je napísaný do vyhľadávacieho pola (je aktuálne filtrovaný)
+    /// </summary>
+    private string filteredText { get; set; } = "";
+
+    //modal na filtrovanie
+    private CustomDynamicModal cusfiltermod;
+
+    /// <summary>
+    /// Určuje aby bol riadok klikateľný. Default false
+    /// </summary>
+    private bool cursorPointerTD { get; set; } = false;
+
+    protected override void OnParametersSet()
+    {
+        if (MultiSelect || SelectableNull)
+        {
+            Selectable = true;
+        }
+        if (Selectable)
+        {
+            cursorPointerTD = true;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        ZoznamSort = Items.ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JSRuntime.InvokeVoidAsync("initializeTooltipsAuto");
+            await Task.Delay(25);       //koli najdeniu scrollbaru
+            await JSRuntime.InvokeVoidAsync("setScrollPosition", ID_scrollbar, scrollPosition); //nastavi scrollbar na poziciu pre odchodom zo stranky
+            if (SetTableSettings.HasValue)       //nastavenie z parametra rozloženie/viditeľnosť stĺpcov
+            {
+                bool doit = true;
+                if (SetTableSettings.Value.iniCheck && TableSettings.Count != 0)
+                {
+                    doit = false;
+                }
+                if (doit)
+                {
+                    if (SetTableSettings.Value.listTableSettings != null)
+                    {
+                        TableSettings = new();          //vytvorenie nového TableSettings + klonovanie hodnôt
+                        SetTableSettings.Value.listTableSettings.ForEach(x =>
+                        {
+                            TableSettings.Add(x.Clon());
+                        });
+                    }
+                    if (SetTableSettings.Value.visibleColls != null)
+                    {
+                        SetVisibleToThose(SetTableSettings.Value.visibleColls);    //na aktuálny TableSettings sa použije
+                    }
+
+                    await ParentStateHasChanged.InvokeAsync();
+                    if (MarkersStateChanged != null)
+                    {
+                        MarkersStateChanged(Marked, Markers);
+                    }
+                }
+            }
+        }
+
+        await FilterResults();
+    }
+
+    public async Task ChangePick(T item)
+    {
+        if (!Selectable)
+        {
+            return;
+        }
+        if (item == null)
+        {
+            await SetMarkedNull();
+            return;
+        }
+        if (MultiSelect)
+        {
+            if (!Markers.Remove(item))
+            {
+                Markers.Add(item);
+                filteredMarkedCount += filterApplied && FilteredResults.Contains(item) ? 1 : 0;
+            }
+            else
+            {
+                filteredMarkedCount -= filterApplied && FilteredResults.Contains(item) ? 1 : 0;
+            }
+        }
+        else
+        {
+            if (SelectableNull && object.ReferenceEquals(Marked, item))
+            {
+                await SetMarkedNull();
+                return;
+            }
+            Marked = item;
+            Markers.Clear();
+            Markers.Add(Marked);
+            filteredMarkedCount = filterApplied && FilteredResults.Contains(Marked) ? 1 : 0;
+        }
+        await ParentStateHasChanged.InvokeAsync();
+        if (MarkersStateChanged != null)
+        {
+            MarkersStateChanged(Marked, Markers);
+        }
+    }
+
+    private async Task SetMarkedNull()
+    {
+        if (Marked == null) return;
+        Markers.Remove(Marked);
+        Marked = default(T);
+        filteredMarkedCount = 0;
+        await ParentStateHasChanged.InvokeAsync();
+        if (MarkersStateChanged != null)
+        {
+            MarkersStateChanged(Marked, Markers);
+        }
+
+    }
+
+    private async Task SelectAll()
+    {
+        if (MarkedActualCount != MarkedActualMax)
+        {
+            await ClearAll();
+            Markers.AddRange(ActualList);
+            filteredMarkedCount = MarkedActualMax;
+            await ParentStateHasChanged.InvokeAsync();
+            if (MarkersStateChanged != null)
+            {
+                MarkersStateChanged(Marked, Markers);
+            }
+        }
+    }
+
+    private async Task ClearAll()
+    {
+        if (filterApplied)
+        {
+            Markers.RemoveAll(x => FilteredResults.Contains(x));
+            filteredMarkedCount = 0;
+        }
+        else
+        {
+            Markers.Clear();
+        }
+        await ParentStateHasChanged.InvokeAsync();
+        if (MarkersStateChanged != null)
+        {
+            MarkersStateChanged(Marked, Markers);
+        }
+    }
+
+    private async Task ShowFilter()
+    {
+        foreach (var item in TableSettings)
+        {
+            if (item.ID_Prop == null)
+            {
+                continue;
+            }
+            if (!Filter.Any(x => x.Item1.ID_Prop == item.ID_Prop))
+            {
+                ATableFilter<T> newFilter;
+                if (item.CellConvert == null)
+                {
+                    newFilter = ATableFilter<T>.CreateFilter(item.ID_Prop, item.CellValue);
+                }
+                else
+                {
+                    newFilter = ATableFilter<T>.CreateFilter(item.ID_Prop, item.CellConvert.Value.Item1, item.CellConvert.Value.Item2);
+                }
+                Filter.Add((newFilter, newFilter.Clon()));
+            }
+        }
+
+        await cusfiltermod.OpenModal(async (res) =>
+        {
+            if (res)
+            {
+                Filter.RemoveAll(x => !x.Item1.CheckIfAppliable());
+                for (var i = 0; i < Filter.Count; ++i)
+                {
+                    Filter[i] = (Filter[i].Item1, Filter[i].Item1.Clon());
+                }
+            }
+            else
+            {
+                Filter.RemoveAll(x => !x.Item2.CheckIfAppliable());
+                for (var i = 0; i < Filter.Count; ++i)
+                {
+                    Filter[i] = (Filter[i].Item2.Clon(), Filter[i].Item2);
+                }
+            }
+            Filter.RemoveAll(x => !TableSettings.First(y => y.ID_Prop == x.Item1.ID_Prop).Visible);
+            //await virtualizeComponent.RefreshDataAsync();
+            StateHasChanged();
+
+            if (Filter.Any())      //ak su filtre tak sa aplikuju
+            {
+                filterApplied = true;
+            }
+            else
+            {
+                filterApplied = false;
+                FilteredResults.Clear();
+            }
+            filteredResultsSorted = false;
+
+        });
+    }
+
+    //private async Task ShowTooltip(string id)
+    //{
+    //    switch (id)
+    //    {
+    //        case "selectallbtn":
+
+    //            //await JSRuntime.InvokeVoidAsync("updateTooltipShow", id, true);       //ak chceme/nechceme zobrazit tooltip - FUNGUJE
+    //            //var tooltipText = $"Označené {MarkedActualCount}/{MarkedActualMax}";
+    //            //await JSRuntime.InvokeVoidAsync("updateTooltipOnHover", id, tooltipText);
+
+    //            break;
+
+    //        default: break;
+    //    }
+    //}
+
+    private async Task ResetFilter()
+    {
+        foreach (var item in Filter)
+        {
+            item.Item1.ClearFilter();
+            item.Item2.ClearFilter();
+            await JSRuntime.InvokeVoidAsync("setIndeterminate", item.Item1.ID_Prop + "nullcheck");
+            if (item.Item1 is TableFilterBool<T>)
+            {
+                await JSRuntime.InvokeVoidAsync("setIndeterminate", item.Item1.ID_Prop);
+            }
+        }
+    }
+
+    private async Task FilterResults()
+    {
+        if (!filterApplied)
+        {
+            return;
+        }
+        if (!filteredResultsSorted)
+        {
+            await Task.Run(async () =>
+            {
+                FilteredResults.Clear();
+                filteredMarkedCount = 0;
+                foreach (var item in Items)
+                {
+                    bool filterOk = true;
+                    foreach (var ytem in Filter)
+                    {
+                        //použitie filtra, cez CellValue
+                        if (!ytem.Item1.Filter(ytem.Item1.CellValue?.Invoke(item)))
+                        {
+                            filterOk = false;
+                            break;
+                        }
+                    }
+                    if (filterOk)
+                    {
+                        FilteredResults.Add(item);
+                        filteredMarkedCount += Markers.Contains(item) ? 1 : 0;
+                    }
+                }
+                filteredResultsSorted = true;
+                if (FilteredResults.Count > 0 && !string.IsNullOrEmpty(filteredText))
+                {
+                    await FilterResults((filteredText, true));       //neberie v dotaz minimalny pocet charakterov na filtrovanie
+                }
+                await InvokeAsync(StateHasChanged);
+            });
+
+        }
+    }
+
+    public async Task FilterResults((string? filterText, bool runCond) request)
+    {
+        if (!request.runCond)
+        {
+            filteredText = "";
+            await InvokeAsync(StateHasChanged);
+            return;
+        }
+
+        await Task.Run(async () =>
+        {
+            FilteredSearchResults.Clear();
+            filteredMarkedCount = 0;
+            foreach (var item in (IList<T>)(FilteredResults.Count > 0 ? FilteredResults : Items))
+            {
+                bool filterOk = false;
+                foreach (var ytem in TableSettings)
+                {
+                    if (!ytem.Visible || ytem.CellValue == null)
+                    {
+                        continue;
+                    }
+                    if (ytem.CellValue(item).ToLower().Contains(request.filterText))
+                    {
+                        filterOk = true;
+                        break;
+                    }
+                }
+                if (filterOk)
+                {
+                    FilteredSearchResults.Add(item);
+                    filteredMarkedCount += Markers.Contains(item) ? 1 : 0;
+                }
+            }
+            filteredText = request.filterText;
+            await InvokeAsync(StateHasChanged);
+
+        });
+        //await virtualizeComponent.RefreshDataAsync();
+    }
+
+    /// <summary>
+    /// Treba spustiť ak sa zmenil zoznam Items (pridanie/odobratie/zmena referencii). Zaručuje znovuaplikovanie filtrov po zmene zoznamu Items
+    /// </summary>
+    /// <returns></returns>
+    public async Task OnItemsChange()
+    {
+        FilteredResults.Clear();
+        FilteredSearchResults.Clear();
+        filteredResultsSorted = false;
+        if (!string.IsNullOrEmpty(filteredText) && !filterApplied)
+        {
+            await FilterResults((filteredText, true));
+        }
+    }
+
+    /// <summary>
+    /// Nastaví všetky stĺpce tabuľky na skryté a zviditeľní len tie, ktoré sú v parametri (podľa názvu property). napr nameof(Class.Prop1) ...
+    /// </summary>
+    /// <param name="propNames"></param>
+    public void SetVisibleToThose(List<(string name, Func<T, string>? cellValue, (Func<T, object?>, Type)? cellConvert)> propSettings)
+    {
+        if (propSettings.Count == 0)
+        {
+            return;
+        }
+        foreach (var item in TableSettings)
+        {
+            var found = propSettings.FirstOrDefault(x => x.name == item.ID_Prop);
+            item.Visible = false;
+            if (!string.IsNullOrEmpty(found.name))
+            {
+                item.Visible = true;
+                if (found.cellValue != null)
+                {
+                    item.CellValue = found.cellValue;
+                }
+                if (found.cellConvert != null)
+                {
+                    item.CellConvert = found.cellConvert;
+                }
+            }
+        }
+    }
+
+    //private async ValueTask<Microsoft.AspNetCore.Components.Web.Virtualization.ItemsProviderResult<T>> LoadItems(Microsoft.AspNetCore.Components.Web.Virtualization.ItemsProviderRequest request)
+    //{
+    //    // Get the items for the current request
+    //    var items = ActualList.Skip(request.StartIndex).Take(request.Count).ToList();
+    //    scrlindex = request.StartIndex;
+    //    // Return the items and the total item count
+    //    return new Microsoft.AspNetCore.Components.Web.Virtualization.ItemsProviderResult<T>(items, ActualList.Count);
+    //}
+
+    public async ValueTask DisposeAsync()
+    {
+        scrollPosition = await JSRuntime.InvokeAsync<double>("getScrollPosition", ID_scrollbar);    //pred odchodom sa zisi posledna pozicia scrollu
+    }
+
+
+
+}

@@ -1,0 +1,107 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+@inherits AInput<T>
+@typeparam T
+
+<div class="input-group">
+    <div class="form-floating overflow-hidden">
+        <input id="@ID"
+               type="@Type"
+               class="form-control mb-1 border-secondary-subtle @ClassInput @(IsNull() ? "rounded-end " : "")"
+               value="@GetValue()"
+               @oninput="(e) => OnInputChange(e)"
+               placeholder="."
+               disabled="@(Disabled)"
+               aria-label="."
+               aria-describedby="@(ID + "addon")"
+               autocomplete="off"
+               step="0.0001"
+               >
+        @if (!string.IsNullOrEmpty(Header))
+        {
+            <label for="@ID" class="text-truncate">@Header</label>
+        }
+    </div>
+    <button class="btn btn-outline-secondary mb-1 border-secondary-subtle border-start-0 @(IsNull() ? "d-none" : "")"
+            id="@(ID + "addon")"
+            @onclick="ClearInput">
+        X
+    </button>
+</div>
+
+@code {
+
+    /// <summary>
+    /// Typ vstupu inputu (type="text"). Default "text"
+    /// </summary>
+    [Parameter]
+    public string Type { get; set; } = "text";
+
+    /// <summary>
+    /// Clears the input field
+    /// </summary>
+    protected async Task ClearInput()
+    {
+        await JSRuntime.InvokeVoidAsync("clearInputField", ID);
+        await JSRuntime.InvokeVoidAsync("focusInputField", ID);
+        Value = default(T);
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    protected bool IsNull()
+    {
+        switch (Value)
+        {
+            case string:
+                return string.IsNullOrEmpty(Value.ToString());
+            case int _:
+            case double _:
+            case float _:
+            case decimal _:
+            case bool _:
+                if (Value == null)
+                {
+                    return true;
+                }
+                break;
+            default:
+                return Value == null;
+        }
+
+        return false;
+    }
+
+    protected override async Task OnInputChange(ChangeEventArgs e)
+    {
+        if (Type == "number")
+        {
+            if (e.Value == null)
+            {
+                Value = default(T);
+            }
+            else
+            {
+                if (decimal.TryParse(e.Value?.ToString(), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var parsedValue))
+                {
+                    Value = (T?)(object)parsedValue;
+                }
+                else
+                {
+                    Value = default(T);
+                }
+            }
+            await ValueChanged.InvokeAsync(Value);
+            return;
+        }
+        await base.OnInputChange(e);
+    }
+
+    protected string GetValue()
+    {
+        if (Type == "number" && Value != null)
+        {
+            return Convert.ToString(Value, System.Globalization.CultureInfo.InvariantCulture) ?? "";
+        }
+        return Value?.ToString() ?? "";
+    }
+}

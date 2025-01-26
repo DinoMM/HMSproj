@@ -1,0 +1,71 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+
+<table class="table table-hover" id="@ID">
+    <thead style="@(Sticky ? "position: sticky; top: 0;" : "")">
+        @if (Toolbar != null && WithToolbar)
+        {
+            <tr>
+                <th colspan="@NumHeaders" class="p-0 ms-2">
+                    @Toolbar
+                </th>
+            </tr>
+        }
+        <tr style="cursor: pointer;">
+            @TABLEH
+        </tr>
+    </thead>
+    <tbody>
+        @TABLEB
+    </tbody>
+</table>
+
+@code {
+    [Parameter]
+    public RenderFragment TABLEH { get; set; }
+
+    [Parameter]
+    public RenderFragment TABLEB { get; set; }
+
+    /// <summary>
+    /// Určuje aby bola hlavička tabuľky sticky. Default false
+    /// </summary>
+    [Parameter]
+    public bool Sticky { get; set; } = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        //if (firstRender)
+        //{
+        //    //await JSRuntime.InvokeVoidAsync("resizeColumns");
+        //    await JSRuntime.InvokeVoidAsync("sortTableByTh");
+        //}
+    }
+    [Parameter]
+    public string ID { get; set; } = "simpletable";
+
+    /// <summary>
+    /// Určuje či má mať tabuľka toolbar, default nie
+    /// </summary>
+    [Parameter]
+    public RenderFragment? Toolbar { get; set; }
+
+    /// <summary>
+    /// Určuje či má mať tabuľka toolbar, default true ale musí byť nastavený aj Toolbar
+    /// </summary>
+    [Parameter]
+    public bool WithToolbar { get; set; } = true;
+
+    /// <summary>
+    /// Koľko má mať tabuľka headerov, pre toolbar, default 0
+    /// </summary>
+    [Parameter]
+    public int NumHeaders { get; set; } = 0;
+
+    static public string StrippedRow(int index)
+    {
+        return index % 2 == 0 ? "trow-odd" : "trow-even";       //je to naopak ja viem
+    }
+
+}
+

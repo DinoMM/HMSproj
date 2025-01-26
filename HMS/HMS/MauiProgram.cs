@@ -27,7 +27,7 @@ using RecepciaModul.ViewModels;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using HSKModul.ViewModels;
-
+using System.Globalization;
 
 namespace HMS
 {
@@ -45,7 +45,13 @@ namespace HMS
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
 
+
             builder.Services.AddMauiBlazorWebView();
+
+#if ANDROID
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+#endif
 
             #region pridanie vlastnych env premennych
             var dotenv = Path.Combine(AppContext.BaseDirectory, ".env");
@@ -106,7 +112,11 @@ namespace HMS
                 .AddRoles<IdentityRole>()
                 .AddUserValidator<CustomUserValidator<IdentityUserOwn>>();      //(pomohol som si z internetu tutoriály/AI)
 
-            builder.Services.AddDataProtection().SetApplicationName("HMS_app"); //pridanie scopu na ochranu dat -> Microsoft.AspNetCore.DataProtection
+            builder.Services.AddDataProtection()
+                .PersistKeysToDbContext<DBContext>()
+                .SetDefaultKeyLifetime(TimeSpan.FromDays(7)) //TODO zmenit na vacsi pocet dni
+                .SetApplicationName("HMS_app"); //pridanie scopu na ochranu dat -> Microsoft.AspNetCore.DataProtection
+
             DataEncryptor.Init(builder.Services.BuildServiceProvider().GetRequiredService<IDataProtectionProvider>()); //inicializacia DataEncryptor
 
             //builder.Services.AddBlazorWebView()
@@ -122,6 +132,7 @@ namespace HMS
             builder.Services.AddSingleton<Navigator>();
             builder.Services.AddSingleton<ObjectHolder>();
             builder.Services.AddSingleton<IAppLifeCycleService, AppLifecycleService>();
+            builder.Services.AddSingleton<TransientHolderService>();    //pre manazment Transient objektov na dlhšie ako jedna stranka
 
             builder.Services.AddSingleton<LayoutService>();
 
@@ -155,6 +166,7 @@ namespace HMS
             #endregion
             #region HSKModul
             builder.Services.AddTransient<HousekeepingViewModel>();
+            builder.Services.AddTransient<CRURoomCompViewModel>();
             #endregion
             #region LudskeZdrojeModul
             builder.Services.AddTransient<SpravaRoliViewModel>();
@@ -191,6 +203,9 @@ namespace HMS
             #endregion
 
 
+            #endregion
+            #region Misc
+            builder.Services.AddTransient(typeof(TransientPageHolder<>));   //pridavanie Transient objektov do/z TransientHolderService
             #endregion
 
 

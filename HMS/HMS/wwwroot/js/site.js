@@ -94,3 +94,88 @@ window.sortTableByTh = function () {
     });
 }
 
+//vyčistí input field s daným id, bez kontroly na existenciu
+function clearInputField(id) {
+    document.getElementById(id).value = '';
+}
+
+//focusne input field s daným id
+function focusInputField(id) {
+    const element = document.getElementById(id);
+    if (element) {
+        element.focus();
+    }
+}
+
+
+//inicializuje vsetky tooltipy na stranke, treba spustit na OnAfterRenderAsync po prvy krat. Pre AUTOMATICKE zobrazenie tooltipov AI
+window.initializeTooltipsAuto = () => {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+};
+
+//inicializuje tooltip s danym id, treba spustit na OnAfterRenderAsync po prvy krat
+window.initializeTooltip = (id) => {
+    var tooltipTriggerEl = document.getElementById(id);
+    if (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+    }
+};
+
+// Aktualituje tooltip s danym id na novy text (treba inicializovat js funciu initializeTooltipsAuto)
+window.updateTooltipOnHover = (id, newText) => {
+    var tooltipTriggerEl = document.getElementById(id);
+    if (tooltipTriggerEl) {
+        // Retrieve the existing tooltip instance
+        var tooltip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
+        if (tooltip) {
+            //  Update the tooltip's content dynamically
+            tooltip.setContent({ '.tooltip-inner': newText });
+        }
+    }
+};
+
+//zmeni zobrazenie tooltipu s danym id na show alebo hide
+window.updateTooltipShow = (id, showv) => {
+    var tooltipTriggerEl = document.getElementById(id);
+    if (tooltipTriggerEl) {
+        var tooltip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
+        if (tooltip) {
+            if (showv) {
+                tooltip.show();
+            } else {
+                tooltip.hide();
+            }
+        }
+    }
+};
+
+//pre checkboxy, ktore mozu mat null tak spusti tuto metodu ak su null
+window.setIndeterminate = (id) => {
+    const checkbox = document.getElementById(id);
+    if (checkbox) {
+        checkbox.indeterminate = true;
+    }
+};
+
+function getInputValueById(elementId) {
+    const inputElement = document.getElementById(elementId);
+    return inputElement ? inputElement.value : null;
+}
+
+
+//zachytenie hodnoty scrollbaru
+window.getScrollPosition = (elementId) => {
+    var element = document.getElementById(elementId);
+    return element ? element.scrollTop : 0;
+};
+
+//nastavenie hodnoty scrollbaru
+window.setScrollPosition = (elementId, position) => {
+    var element = document.getElementById(elementId);
+    if (element) {
+        element.scrollTop = position;
+    }
+};

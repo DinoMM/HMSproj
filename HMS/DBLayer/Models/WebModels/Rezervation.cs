@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace DBLayer.Models
@@ -33,7 +34,6 @@ namespace DBLayer.Models
         public string? CouponId { get; set; }
 
         public IdentityUserWebOwn? Guest { get; set; }
-
         public Room Room { get; set; }
 
         public Coupon? Coupon { get; set; }
@@ -99,21 +99,25 @@ namespace DBLayer.Models
             return RecentChangesUserZ != null ? RecentChangesUserZ.Name + " " + RecentChangesUserZ.Surname : "-";
         }
 
-        public string GetHSKStatus(DateTime date)
+        public HSKStatus GetHSKStatus(DateTime date)
         {
+            if (Status == ReservationStatus.Blokovana.ToString())
+            {
+                return HSKStatus.Blokovana;
+            }
             if (Status != ReservationStatus.Checked_IN.ToString() && Status != ReservationStatus.Checked_OUT.ToString() && ArrivalDate.Date == date.Date)
             {
-                return "Príchod";
+                return HSKStatus.Prichod;
             }
             if (Status == ReservationStatus.Checked_IN.ToString() && DepartureDate.Date == date.Date)
             {
-                return "Odchod";
+                return HSKStatus.Odchod;
             }
             if (Status == ReservationStatus.Checked_IN.ToString())
             {
-                return "Obsadená";
+                return HSKStatus.Obsadena;
             }
-            return "Neobsadená";
+            return HSKStatus.Neobsadena;
         }
     }
     public enum ReservationStatus
@@ -126,6 +130,20 @@ namespace DBLayer.Models
         Blokovana,
         Checked_IN,
         Checked_OUT
+    }
+
+    public enum HSKStatus
+    {
+        [Display(Name = "Neobsadená")]
+        Neobsadena,
+        [Display(Name = "Príchod")]
+        Prichod,
+        [Display(Name = "Odchod")]
+        Odchod,
+        [Display(Name = "Obsadená")]
+        Obsadena,
+        [Display(Name = "Blokovaná")]
+        Blokovana
     }
 
     public class DateNotSoonerThanAttribute : ValidationAttribute

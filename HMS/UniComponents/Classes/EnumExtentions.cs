@@ -13,7 +13,7 @@ namespace UniComponents
         /// Vrati DisplayName pre enum hodnotu [Display(Name = "hodnota")]
         /// </summary>
         /// <param name="enumValue"></param>
-        /// <returns>Ak má enum [Display(Name = "hodnota")] tak vtári "hodnota" inak vráti default string z názvu </returns>
+        /// <returns>Ak má enum [Display(Name = "hodnota")] tak vráti "hodnota" inak vráti default string z názvu </returns>
         public static string GetDisplayName(this Enum enumValue)
         {
             var displayName = enumValue.GetType()

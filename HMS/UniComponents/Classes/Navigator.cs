@@ -32,9 +32,12 @@ namespace UniComponents
             private set { }
         }
 
+        public string PreviousPageUrl { get; set; }
+
         public Navigator(NavigationManager NavigationManager)
         {
             urlList = new();
+            PreviousPageUrl = ActualPageUrl;
         }
 
         public void InitializeNavManazer(NavigationManager NavigationManager)
@@ -46,12 +49,18 @@ namespace UniComponents
             }
         }
 
-        public string AddNextUrl(string url) //prida dalsi navazny url link, vracia aktualnu cestu po pridanom url - format "/url" alebo "url"
+        /// <summary>
+        /// prida dalsi navazny url link, vracia aktualnu cestu po pridanom url
+        /// </summary>
+        /// <param name="url">format "/url" alebo "url"</param>
+        /// <returns></returns>
+        public string AddNextUrl(string url) 
         {
             if (url.ElementAt(0) != '/')
             {
                 url = "/" + url;
             }
+            PreviousPageUrl = ActualPageUrl;
             urlList.Push(url);
             return ActualPageUrl;
         }
@@ -60,6 +69,7 @@ namespace UniComponents
         {
             if (urlList.Count != 0)
             {
+                PreviousPageUrl = ActualPageUrl;
                 urlList.Pop();
             }
             return ActualPageUrl;
@@ -72,6 +82,7 @@ namespace UniComponents
 
         public string SetUrl(string wholeUrl, bool cut = true) //vymaze aktualnu url a posklada z vlozeneho
         {
+            PreviousPageUrl = ActualPageUrl;
             urlList.Clear();
             if (cut)
             {
