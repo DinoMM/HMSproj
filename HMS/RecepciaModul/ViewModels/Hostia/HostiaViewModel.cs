@@ -11,6 +11,7 @@ namespace RecepciaModul.ViewModels
     public class HostiaViewModel : AObservableViewModel<Host>, I_ValidationVM, I_RD_TableVM<Host>
     {
         List<(Host, bool)> moznoVymazatList = new();
+        public List<DBLayer.Models.Kasa> ZoznamKas { get; set; } = new();
 
         public bool NacitavaniePoloziek { get => Nacitavanie; set => Nacitavanie = value; }
 
@@ -53,6 +54,12 @@ namespace RecepciaModul.ViewModels
                     moznoVymazatList.Add((item, !_db.HostConReservations.Any(x => x.Host == item.ID /*|| x.ReservationZ.DepartureDate <= DateTime.Today.AddDays(-360)*/)));
                 }
 
+                ZoznamKas.Clear();
+                ZoznamKas.AddRange(await _db.Kasy
+                .Include(x => x.ActualUserX)
+                .Include(x => x.DodavatelX)
+                .OrderBy(x => x.ID)
+                .ToListAsync());         //nacitanie zoznamu kas
 
             });
         }

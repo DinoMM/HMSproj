@@ -11,6 +11,21 @@
            Text="Nemožno vymazať hosťa lebo má aktívnu rezerváciu.">
 </InfoModal>
 
+<CustomDynamicModal @ref="cusopendoklad" ID="cusopenkasamod" Header="Pokladničný blok" OneButtonOnly="true" ChangeColor="true" SizeInRem="90">
+    <PokladnicnyDoklad AsComponent="true" OnlyOneItem="false"></PokladnicnyDoklad>
+</CustomDynamicModal>
+
+
+
+@if (compVybkasa.Rendered)
+{
+    <CompVyberKasa @ref="compVybkasa"
+                   AfterRender="OpenPickKasa"
+                   AfterDispose="OpenPD"
+                   Kasy="ViewModel.ZoznamKas">
+    </CompVyberKasa>
+}
+
 <div class="container maxwidth95">
 
     <div class="row pb-1">
@@ -25,6 +40,7 @@
                 <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRU())" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></button>
                 <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
                 <button type="button" class="btn btn-primary" @onclick="OpenFlags"><IconText Icon="bi-flag-fill">Správa značiek</IconText></button>
+                <button type="button" class="btn btn-primary" @onclick="StartOpenPD" disabled="@(marked == null || marked.PokladnicnyDokladZ == null)"><IconText Icon="bi-receipt-cutoff">Otvoriť pokl. dokl.</IconText></button>
             </div>
         </div>
 
@@ -72,6 +88,8 @@
     private DBLayer.Models.Host? marked { get => ViewModel?.ComplexTable?.Marked; }
     private ApproveModal AprovMod = new();
     private InfoModal InfoModHasConneciton = new();
+    private CompVyberKasa compVybkasa = new();
+    private CustomDynamicModal cusopendoklad;
 
     List<TableColumnTemplate<DBLayer.Models.Host>> tableSettings = new()
 {
@@ -91,9 +109,9 @@
 
     protected override void OnInitializedMustHave()
     {
-        tableSettings.Add(new() { ID_Prop = "mapokladnicnyblok", HeaderValue = "Aktívny poklad. účet", CellComponent = (e) => new RenderFragmentTemplate(typeof(SimpleCheckMarkDiv), new RenderFragmentAttribute("Checked", e.PokladnicnyDokladZ != null)),CellConvert = ((item) => item.PokladnicnyDokladZ != null, typeof(bool)) });
+        tableSettings.Add(new() { ID_Prop = "mapokladnicnyblok", HeaderValue = "Aktívny poklad. účet", CellComponent = (e) => new RenderFragmentTemplate(typeof(SimpleCheckMarkDiv), new RenderFragmentAttribute("Checked", e.PokladnicnyDokladZ != null)), CellConvert = ((item) => item.PokladnicnyDokladZ != null, typeof(bool)) });
         tableSettings.Add(new() { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", CellValue = (item) => item.Note, Visible = false });
-        
+
         tableSettings.Add(new()
         {
             Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))))
@@ -164,4 +182,31 @@
     {
         Navigator.NavigateTo(Navigator.AddNextUrl("HostFlagy"));
     }
+
+    private void StartOpenPD()
+    {
+        compVybkasa.StartRender();
+    }
+
+    private async Task OpenPickKasa()
+    {
+        if (!compVybkasa.JeVybranaKasa())
+        {
+            await compVybkasa.VyberKasu();  //fyzicky statie programu
+        }
+        await compVybkasa.Dispose();
+        StateHasChanged();
+    }
+
+    private async Task OpenPD()
+    {
+        objectHolder.Add(marked.PokladnicnyDokladZ);
+        objectHolder.Add(marked);
+        await cusopendoklad.OpenModal(async (res) =>
+        {
+            await ViewModel.RefreshMaPokladnicnyBlok();
+            StateHasChanged();
+        });
+    }
+
 }
