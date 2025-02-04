@@ -183,6 +183,8 @@ namespace RecepciaModul.ViewModels
                 found.TypPlatby = PoklDokladInput.TypPlatby;
                 found.Kasa = PoklDokladInput.Kasa;
                 found.KasaX = PoklDokladInput.KasaX;
+                //found.Host = PoklDokladInput.Host;
+                //found.HostX = PoklDokladInput.HostX;
             }
             #endregion
 

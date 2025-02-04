@@ -4,6 +4,7 @@ using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using UniComponents;
@@ -349,6 +350,39 @@ namespace UctovnyModul.ViewModels
                     break;
                 default: break;
             }
+        }
+
+        public List<TableColumnTemplate<object>> TableSettings = new();
+
+
+        public void SetSettings()
+        {
+            switch (UniItemInput)
+            {
+                case PolozkaSkladuConItemPoklDokladu item:
+                    //new List<string> { "ID", "Názov", "Merná jednotka" };
+                    TableSettings = new()
+                    {
+                         new () { ID_Prop = "id", HeaderValue = "ID", CellValue = (item) => ((PolozkaSkladu)item).ID, CellConvert = ((item) => ((PolozkaSkladu)item).ID, typeof(string)) },
+                         new () { ID_Prop = "nazov", HeaderValue = "Názov", CellValue = (item) => ((PolozkaSkladu)item).Nazov, CellConvert = ((item) => ((PolozkaSkladu)item).Nazov, typeof(string)) },
+                         new () { ID_Prop = "mj", HeaderValue = "Merná jednotka", CellValue = (item) => ((PolozkaSkladu)item).MernaJednotka, CellConvert = ((item) => ((PolozkaSkladu)item).MernaJednotka, typeof(string)) }
+                    };
+                    break;
+                case ReservationConItemPoklDokladu item:
+                    TableSettings = new()
+                    {
+                         new () { ID_Prop = "id", HeaderValue = "ID", CellValue = (item) => ((Rezervation)item).Id.ToString(), CellConvert = ((item) => ((Rezervation)item).Id, typeof(long)) },
+                          new () { ID_Prop = "prichod", HeaderValue = "Príchod", CellValue = (item) => ((Rezervation)item).ArrivalDate.ToString("dd.MM.yyyy"), CellConvert = ((item) => ((Rezervation)item).ArrivalDate, typeof(DateTime)) },
+                          new () { ID_Prop = "odchod", HeaderValue = "Odchod", CellValue = (item) => ((Rezervation)item).DepartureDate.ToString("dd.MM.yyyy"), CellConvert = ((item) => ((Rezervation)item).DepartureDate, typeof(DateTime)) },
+                          new () { ID_Prop = "pochost", HeaderValue = "Poèet plán. hostí", CellValue = (item) => ((Rezervation)item).NumberGuest.ToString(), CellConvert = ((item) => ((Rezervation)item).NumberGuest, typeof(int)) },
+                        new () { ID_Prop = "cena", HeaderValue = "Celková suma", CellValue = (item) => Math.Round(((Rezervation)item).CelkovaSumaDPH, 2).ToString(CultureInfo.InvariantCulture), CellConvert = ((item) => Math.Round(((Rezervation)item).CelkovaSumaDPH, 2), typeof(decimal)) },
+                         new () { ID_Prop = "status", HeaderValue = "Status", CellValue = (item) => ((Rezervation)item).Status, CellConvert = ((item) => ((Rezervation)item).Status, typeof(string)) }
+                    };
+                    break;
+
+                default: break;
+            }
+            return;
         }
     }
 }

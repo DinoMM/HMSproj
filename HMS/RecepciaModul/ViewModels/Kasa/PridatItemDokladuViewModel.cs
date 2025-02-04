@@ -3,6 +3,8 @@ using DBLayer;
 using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
+using System.Xml.Xsl;
+using UniComponents;
 using Kkasa = DBLayer.Models.Kasa;
 using PpokladnicnyDoklad = DBLayer.Models.PokladnicnyDoklad;
 
@@ -154,7 +156,7 @@ namespace RecepciaModul.ViewModels
             {
                 return;
             }
-
+            
             UniConItemPoklDokladuInput = newItem;
         }
 
@@ -185,7 +187,8 @@ namespace RecepciaModul.ViewModels
                         .ThenInclude(x => x.SkladX)
                         .FirstOrDefault(x => x.PolozkaSkladuMnozstvaX.PolozkaSkladu == item.PolozkaSkladuMnozstvaX.PolozkaSkladu &&
                         x.PolozkaSkladuMnozstvaX.Sklad == sk.ID);
-                    if (unicon == null) {
+                    if (unicon == null)
+                    {
                         break;
                     }
                     UniConItemPoklDokladuInput = unicon;
@@ -199,5 +202,36 @@ namespace RecepciaModul.ViewModels
                 default: break;
             }
         }
+
+
+        public List<TableColumnTemplate<object>> TableSettings = new();
+
+
+        public void SetSettings()
+        {
+            switch (UniConItemPoklDokladuInput)
+            {
+                case PolozkaSkladuConItemPoklDokladu item:
+                    //new List<string> { "ID", "Názov", "Merná jednotka" };
+                    TableSettings = new()
+                    {
+                         new () { ID_Prop = "id", HeaderValue = "ID", CellValue = (item) => ((PolozkaSkladu)item).ID, CellConvert = ((item) => ((PolozkaSkladu)item).ID, typeof(string)) },
+                         new () { ID_Prop = "nazov", HeaderValue = "Názov", CellValue = (item) => ((PolozkaSkladu)item).Nazov, CellConvert = ((item) => ((PolozkaSkladu)item).Nazov, typeof(string)) },
+                         new () { ID_Prop = "mj", HeaderValue = "Merná jednotka", CellValue = (item) => ((PolozkaSkladu)item).MernaJednotka, CellConvert = ((item) => ((PolozkaSkladu)item).MernaJednotka, typeof(string)) }
+                    };
+                      break;
+                case ReservationConItemPoklDokladu item:
+                    TableSettings = new()
+                    {
+                         new () { ID_Prop = "id", HeaderValue = "ID", CellValue = (item) => ((string)item), CellConvert = ((item) => ((PolozkaSkladu)item), typeof(string)) }
+                    };
+                    break;
+
+                default: break;
+            }
+            return ;      
+        }
+
+
     }
 }

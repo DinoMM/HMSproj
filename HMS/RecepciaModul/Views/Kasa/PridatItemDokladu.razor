@@ -10,37 +10,48 @@
                  ColValues="ViewModel.TypyList()"
                  SizeInRem="30"></ItemFinderTable>
 
-@if (iftunicon.Rendered)
-{
-    <ItemFinderTable T="object"
-                     @ref="iftunicon"
-                     ID="@(ID + "itfunicon")"
-                     KeyAttributeToo="true"
-                     ForeignAttributesToo="true"
-                     CutOffTail="true"
-                     ColNames="ViewModel.GetColNames()"
-                     ColValues="ViewModel.ZoznamUniConItemsObjekty"
-                     SizeInRem="75"
-                     Header="Výber položky"
-                     AfterRender="async () =>
-                                  {
-                                      if (await iftunicon.OpenModal(true))
+@*@if (iftunicon.Rendered)
+    {
+        <ItemFinderTable T="object"
+                         @ref="iftunicon"
+                         ID="@(ID + "itfunicon")"
+                         KeyAttributeToo="true"
+                         ForeignAttributesToo="true"
+                         CutOffTail="true"
+                         ColNames="ViewModel.GetColNames()"
+                         ColValues="ViewModel.ZoznamUniConItemsObjekty"
+                         SizeInRem="75"
+                         Header="Výber položky"
+                         AfterRender="async () =>
                                       {
-                                          ViewModel.SpracujUniCon(iftunicon.OutSelection.FirstOrDefault());
-                                          switch (ViewModel.UniConItemPoklDokladuInput)
-                                            {
-                                            case DBLayer.Models.PolozkaSkladuConItemPoklDokladu item:
-                                                iftsklad.StartRender();
-                                                break;
-                                                default: break;
-                                            }
-                                      }
-                                      await iftunicon.Dispose();
-                                      StateHasChanged();
-                                  }">
+                                          if (await iftunicon.OpenModal(true))
+                                          {
+                                              ViewModel.SpracujUniCon(iftunicon.OutSelection.FirstOrDefault());
+                                              switch (ViewModel.UniConItemPoklDokladuInput)
+                                                {
+                                                case DBLayer.Models.PolozkaSkladuConItemPoklDokladu item:
+                                                    iftsklad.StartRender();
+                                                    break;
+                                                    default: break;
+                                                }
+                                          }
+                                          await iftunicon.Dispose();
+                                          StateHasChanged();
+                                      }">
 
-    </ItemFinderTable>
-}
+        </ItemFinderTable>
+    }*@
+
+<ComplexItemFinderTable @ref="ciftunicon"
+                        T="object"
+                        ID="@(ID + "itfunicon")"
+                        Header="Výber položky"
+                        SizeInRem="75"
+                        ParentStateHasChanged="StateHasChanged"
+                        YesNoButtonText="@(("Vybrať", "Zrušiť"))"
+                        SetTableSettings="@((true, ViewModel.TableSettings, null))">
+
+</ComplexItemFinderTable>
 
 @if (iftsklad.Rendered)
 {
@@ -66,7 +77,7 @@
 <EditForm Model="ViewModel.ItemPokladDokladuInput" OnValidSubmit="() => Save()">
     <DataAnnotationsValidator />
 
-    <div class="container px-5">
+    <div class="container maxwidth95">
 
         <div class="row g-3 p-3">
 
@@ -162,7 +173,7 @@
                     }
                     else
                     {
-                <button type="button" class="btn btn-secondary" @onclick="Close"> <IconTextClose></IconTextClose></button>
+                        <button type="button" class="btn btn-secondary" @onclick="Close"> <IconTextClose></IconTextClose></button>
                     }
                 </div>
             </div>
@@ -182,7 +193,8 @@
     public bool ReadOnly { get; set; } = false;
 
     InfoModal infomodal = new();
-    ItemFinderTable<object> iftunicon = new();
+    //ItemFinderTable<object> iftunicon = new();
+    ComplexItemFinderTable<object> ciftunicon;
     ItemFinderTable<string> ifttype = new();
     private ItemFinderTable<DBLayer.Models.Sklad> iftsklad = new();
 
@@ -232,7 +244,22 @@
     public async Task FindCon()
     {
         ViewModel.PripravZoznam();
-        iftunicon.StartRender();
+        ViewModel.SetSettings();
+        ciftunicon.SetItemsFromList(ViewModel.ZoznamUniConItemsObjekty);
+        await ciftunicon.OpenModal(async (res) =>
+        {
+            if (res)
+            {
+                ViewModel.SpracujUniCon(ciftunicon.ComplexTable.Marked);
+                switch (ViewModel.UniConItemPoklDokladuInput)
+                {
+                    case DBLayer.Models.PolozkaSkladuConItemPoklDokladu item:
+                        iftsklad.StartRender();
+                        break;
+                    default: break;
+                }
+            }
+        });
     }
 
 }

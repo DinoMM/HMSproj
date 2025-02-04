@@ -1,6 +1,6 @@
 ﻿@namespace SkladModul
 @page "/Sklad/Prijem"
-@inject PrijemPolozViewModel ViewModel
+@inherits TransientHoldedComp<PrijemPolozViewModel>
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
               Text="Naozaj chcete odstrániť tento riadok?"
@@ -11,7 +11,7 @@
            Text="Nemožno vymazať príjemku lebo obsahuje položky.">
 </InfoModal>
 
-<div class="container">
+<div class="container maxwidth95">
 
     <div class="row pb-1">
         <div class="col-2">
@@ -29,92 +29,37 @@
             </div>
             <div class="row">
                 <div class="col-3 d-flex justify-content-bottom mb-2">
-                    <SearchInput NumCols="9" TableID="tableid" PlaceHolder="Vyhľadaj príjem..."></SearchInput>
+                    <SearchManualInput ID="srchinput" Header="Vyhľadaj príjem..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
                 </div>
                 <div class="col-9">
                     <div class="btn-group mb-2" role="group">
                         <button @onclick="() => Navigator.NavigateTo(Navigator.RemoveLastUrl())" class="btn btn-secondary" type="button"><IconTextClose></IconTextClose></button>
-                        <button @onclick="Create" disabled="@(!ViewModel.IsObdobieActual())" class="btn btn-primary " type="button"><IconTextCreate></IconTextCreate> </button>
+                        <button @onclick="Create" disabled="@(!ViewModel.IsObdobieActual)" class="btn btn-primary " type="button"><IconTextCreate></IconTextCreate> </button>
                         <button @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary  " type="button"><IconTextOpen></IconTextOpen></button>
                     </div>
                 </div>
             </div>
-            </div>
-
+        </div>
 
 
     </div>
 
     <div class="row">
-        <div class="col-12" style="height:30rem; overflow:auto">
-            <SimpleTable ID="tableid">
-                <THEAD>
-                    <ThSort>ID</ThSort>
-                    <ThSort>Vznik</ThSort>
-                    <ThSort>Obdobie</ThSort>
-                    <ThSort>OK</ThSort>
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="height:30rem; overflow:auto">
+            <ComplexTable @ref="ViewModel.ComplexTable"
+                          ID="complextable"
+                          T="DBLayer.Models.PohSkup"
+                          Items="ViewModel.ZoznamPoloziek"
+                          LoadingItems="ViewModel.Nacitavanie"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.NacitajZoznamy"
+                          CollectionChanged="ViewModel.OnCollectionChanged"
+                          SetTableSettings="@((true, tableSettings, null))"
+                          OnDbClick="(item) => Open(item)">
 
-                    <ThSort>Objednavka</ThSort>
-                    <ThSort>Dodaci</ThSort>
-                    <ThSort>Faktúra</ThSort>
-
-                    <ThSort>Prevodka z</ThSort>
-                    <ThSort>Druh&nbsp;Pohybu</ThSort>
-
-                <th></th>
-                </THEAD>
-                <TBODY>
-                    @if (ViewModel.NacitavaniePoloziek)
-                    {
-                        <SpinnerLoading Size="2.0"></SpinnerLoading>
-                    }
-                    else
-                    {
-                        @foreach (var item in ViewModel.ZoznamPrijemok)
-                        {
-
-                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open(item))" style="cursor: pointer;">
-                                <td class="col-resize">@item.ID </td>
-                                <td class="col-resize">@item.Vznik.ToString("dd.MM.yyyy") </td>
-                                <td class="col-resize">@ViewModel.GetObdobie(item) </td>
-                                <td class="col-resize">
-                                    <SimpleCheckMark Checked="@item.Spracovana" Size="5"></SimpleCheckMark>
-                                </td>
-                                @if (item is DBLayer.Models.Prijemka)
-                                {
-                                    <td class="col-resize">@(((DBLayer.Models.Prijemka)item).Objednavka) </td>
-                                    <td class="col-resize">@(((DBLayer.Models.Prijemka)item).DodaciID) </td>
-                                    <td class="col-resize">@(((DBLayer.Models.Prijemka)item).FakturaID) </td>
-                                    <td class="col-resize">-</td>
-                                    <td class="col-resize">@(((DBLayer.Models.Prijemka)item).DruhPohybu)</td>
-                                    @if (!item.Spracovana || DBLayer.Models.Prijemka.TOTAL_MAZANIE_PRIJEMOK.Contains(UserService.LoggedUserRole))
-                                    {
-                                        <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
-                                    }
-                                    else
-                                    {
-                                        <td class="col-resize"></td>
-                                    }
-                                }
-                                else
-                                {
-                                    <td class="col-resize">-</td>
-                                    <td class="col-resize">-</td>
-                                    <td class="col-resize">-</td>
-                                    <td class="col-resize">@(((DBLayer.Models.Vydajka)item).Sklad) </td>
-                                    <td class="col-resize">@(((DBLayer.Models.Vydajka)item).DruhPohybu)</td>
-                                    <td class="col-resize"></td>
-                                }
-
-
-                            </tr>
-
-                        }
-                    }
-                </TBODY>
-
-            </SimpleTable>
-
+            </ComplexTable>
         </div>
     </div>
 
@@ -124,10 +69,37 @@
 @code {
     ApproveModal AprovMod = new();
     InfoModal InfoCantDelete = new();
-    DBLayer.Models.PohSkup? marked;
+    DBLayer.Models.PohSkup? marked { get => ViewModel?.ComplexTable?.Marked; }
 
-    protected override void OnInitialized()
+    List<TableColumnTemplate<DBLayer.Models.PohSkup>> tableSettings = new()
+{
+        new () { ID_Prop = nameof(DBLayer.Models.PohSkup.ID), HeaderValue = "ID", CellValue = (item) => item.ID },
+        new () { ID_Prop = nameof(DBLayer.Models.PohSkup.Vznik), HeaderValue = "Vznik", CellValue = (item) => item.Vznik.ToString("dd.MM.yyyy") },
+        new () { ID_Prop = nameof(DBLayer.Models.PohSkup.Spracovana), HeaderValue = "OK", CellComponent = (e) => new(typeof(SimpleCheckMarkDiv),new RenderFragmentAttribute("Checked", e.Spracovana)) },
+        new () { ID_Prop = nameof(DBLayer.Models.Prijemka.Objednavka), HeaderValue = "Objednávka", CellValue = (item) => item is DBLayer.Models.Prijemka prij ? prij?.Objednavka ?? "" : "", CellConvert = ((item) => item is DBLayer.Models.Prijemka prij ? prij?.Objednavka ?? "" : "" , typeof(string)) },
+        new () { ID_Prop = nameof(DBLayer.Models.Prijemka.DodaciID), HeaderValue = "Dodací", CellValue = (item) => item is DBLayer.Models.Prijemka prij ? prij?.DodaciID ?? "" : "", CellConvert = ((item) => item is DBLayer.Models.Prijemka prij ? prij?.DodaciID ?? "" : "" , typeof(string)) },
+        new () { ID_Prop = nameof(DBLayer.Models.Prijemka.FakturaID), HeaderValue = "Faktúra", CellValue = (item) => item is DBLayer.Models.Prijemka prij ? prij?.FakturaID ?? "" : "", CellConvert = ((item) => item is DBLayer.Models.Prijemka prij ? prij?.FakturaID ?? "" : "" , typeof(string)) },
+        new () { ID_Prop = nameof(DBLayer.Models.Vydajka.Sklad), HeaderValue = "Prevodka z", CellValue = (item) => item is DBLayer.Models.Vydajka vydj ? vydj?.Sklad ?? "" : "", CellConvert = ((item) => item is DBLayer.Models.Vydajka vydj ? vydj?.Sklad ?? "" : "" , typeof(string)) },
+        new () { ID_Prop = nameof(DBLayer.Models.Prijemka.DruhPohybu), HeaderValue = "Druh pohybu", CellValue = (item) => item is DBLayer.Models.Prijemka prij ? prij?.DruhPohybu ?? "" : ((DBLayer.Models.Vydajka)item)?.DruhPohybu ?? "", CellConvert = ((item) => item is DBLayer.Models.Prijemka prij ? prij?.DruhPohybu ?? "" : ((DBLayer.Models.Vydajka)item)?.DruhPohybu ?? "" , typeof(string)) },
+         new () { ID_Prop = nameof(DBLayer.Models.PohSkup.Poznamka), HeaderValue = "Poznámka", CellValue = (item) => item.Poznamka ?? "", Visible = false },
+
+    };
+
+    protected override void OnInitializedMustHave()
     {
+        tableSettings.Insert(2, new()
+        {
+            ID_Prop = "Obdobie",
+            HeaderValue = "Obdobie",
+            CellValue = (item) => ViewModel.GetObdobie(item),
+            CellConvert = ((item) => ViewModel.GetObdobie(item), typeof(string))
+
+        });
+        tableSettings.Add(new()
+        {
+            Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))))
+        });
+
         var founded1 = objectHolder.Find<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska
         if (founded1 == null)
         {
@@ -138,22 +110,28 @@
         if (founded2 != null)
         {
             ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
-
-            ViewModel.LoadZoznam();
         }
         else
         {
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
+
+        TransientHoldCondition("/Sklad");
     }
 
-    private void Open(DBLayer.Models.PohSkup poloz)
+    protected override async Task OnInitializedTransientAsync()
+    {
+        //ViewModel.LoadZoznam();
+        await ViewModel.NacitajZoznamy();
+    }
+
+    private async Task Open(DBLayer.Models.PohSkup poloz)
     {
         if (poloz is DBLayer.Models.Prijemka)
         {
             objectHolder.Add(poloz);
-            Create();
+            Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPrijemka"));
         }
         else  //vydajka
         {
@@ -163,20 +141,16 @@
     }
     private async Task Delete(DBLayer.Models.PohSkup poloz)
     {
-        marked = poloz;
         if (await AprovMod.OpenModal(true))
         {
-            if (ViewModel.Vymaz((DBLayer.Models.Prijemka)marked, DBLayer.Models.Prijemka.TOTAL_MAZANIE_PRIJEMOK.Contains(UserService.LoggedUserRole)))
-            {
-                marked = null;
-                return;
-            }
-            await InfoCantDelete.OpenModal();       //polozka ma polozky, nemozno vymazat
+            ViewModel.Vymazat(poloz);
+            StateHasChanged();
+            //await InfoCantDelete.OpenModal();       //polozka ma polozky, nemozno vymazat
         }
-
     }
     private void Create()
     {
+        SetStartConditionOnVisit();
         Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPrijemka"));
     }
 

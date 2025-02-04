@@ -91,11 +91,11 @@ h1:focus {
 }
 
 .custom-modal-body {
-    background-color: #e2e2e2; 
+    background-color: #e2e2e2;
 }
 
 .custom-modal-footer {
-    background-color: #adadad; 
+    background-color: #adadad;
     color: white;
 }
 
@@ -166,3 +166,20 @@ h1:focus {
     }
 }
 
+/*pre buttony var tabulke*/
+.width10perc {
+    width: 10%;
+}
+
+/*vypne overflow pre x*/
+.nooverflowx {
+    overflow-x: hidden;
+}
+/*vypne overflow pre y*/
+.nooverflowy {
+    overflow-y: hidden;
+}
+
+.autooverflowx {
+    overflow-x: auto;
+}

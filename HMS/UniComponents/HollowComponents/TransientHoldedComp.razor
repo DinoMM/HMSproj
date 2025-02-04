@@ -28,6 +28,7 @@
     sealed protected override async Task OnInitializedAsync()
     {
         await OnInitializedMustHaveAsync();
+
         if (IsTransientPresented())
         {
             return;
@@ -83,6 +84,11 @@
             {
                 StateHasChanged();
             }
+
+            if (TransientObject is IObservableViewModel observableVM)
+            {
+                observableVM.Initialization();
+            }
         }
         OnAfterRenderTransient(firstRender);
     }
@@ -101,7 +107,16 @@
     {
         if (firstRender)
         {
-            await TransientHolderService.CheckStartConditionAsync();
+
+            if (TransientObject is IObservableViewModel observableVM)   //ak je tento typ tak sa uloží metóda na refresh dát po vstupení na stránku
+            {
+                GetHolder().StartMethodAsync = async () => await observableVM.NacitajZoznamy();
+            }
+
+            if (await TransientHolderService.CheckStartConditionAsync())
+            {
+                await InvokeAsync(StateHasChanged);
+            }
         }
         await OnAfterRenderTransientAsync(firstRender);
     }
@@ -119,6 +134,12 @@
     public virtual void Dispose()
     {
         TransientHolderService.CheckOutScope();
+
+        if (TransientObject is IObservableViewModel observableVM)
+        {
+            observableVM.Dispose();
+        }
+
     }
 
     /// <summary>

@@ -12,22 +12,27 @@ using System.Threading.Tasks;
 using Ssklad = DBLayer.Models.Sklad;
 using Pprijemka = DBLayer.Models.Prijemka;
 using CommunityToolkit.Mvvm.Input;
+using UniComponents;
+using System.Drawing;
 
 namespace SkladModul.ViewModels.Sklad
 {
-    public partial class PrijemPolozViewModel : ObservableObject
+    public class PrijemPolozViewModel : AObservableViewModel<PohSkup>
     {
-        [ObservableProperty]
-        ObservableCollection<PohSkup> zoznamPrijemok = new();
-        public DateTime Obdobie { get; set; }
-        public Ssklad Sklad { get; set; }
-        public bool NacitavaniePoloziek { get; set; } = true;
+        public DateTime Obdobie { get; set; } = new();
+        public Ssklad Sklad { get; set; } = new();
+
+        public bool IsObdobieActual { get; set; } = false;
+
+        private List<(PohSkup, bool)> MoznoVymazatList = new();
 
         readonly DBContext _db;
+        readonly UserService _userService;
 
-        public PrijemPolozViewModel(DBContext db)
+        public PrijemPolozViewModel(DBContext db, UserService userService)
         {
             _db = db;
+            _userService = userService;
         }
 
         public void SetProp(Ssklad sk, string ob)
@@ -35,25 +40,31 @@ namespace SkladModul.ViewModels.Sklad
             Sklad = sk;
             Obdobie = Ssklad.DateFromShortForm(ob);
         }
-        public void LoadZoznam()
-        {
-            NacitavaniePoloziek = true;
-            var prijemky = _db.Prijemky
-                .Include(x => x.SkladX)
-                .Include(x => x.DruhPohybuX)
-                .Where(x => x.Obdobie >= Obdobie && x.Sklad == Sklad.ID)
-                .ToList();     //zoznam prijemok
-            var prevodky = _db.Vydajky.Include(x => x.SkladX).Include(x => x.SkladDoX).Where(x => x.ObdobieDo >= Obdobie && x.SkladDo == Sklad.ID)
-                .ToList();      //zoznam prevodiek urcene pre aktualny sklad, ignorujeme obdobie kedze mozu mat rozdielne obdobia
 
-            List<PohSkup> spojPrAPre = new(prijemky); //spojenie zoznamov
-            spojPrAPre.AddRange(prevodky);//spojenie zoznamov
-            spojPrAPre = spojPrAPre.OrderByDescending(x => x.Vznik).ToList(); //zoradenie podla datumu
-            foreach (var item in spojPrAPre)  //pridanie prevodiek do zoznamu
+        protected override async Task NacitajZoznamyAsync()
+        {
+            await Task.Run(() =>
             {
-                ZoznamPrijemok.Add(item);
-            }
-            NacitavaniePoloziek = false;
+                var prijemky = _db.Prijemky
+                    .Include(x => x.SkladX)
+                    .Include(x => x.DruhPohybuX)
+                    .Where(x => x.Obdobie >= Obdobie && x.Sklad == Sklad.ID)
+                    .ToList();     //zoznam prijemok
+                var prevodky = _db.Vydajky.Include(x => x.SkladX).Include(x => x.SkladDoX).Where(x => x.ObdobieDo >= Obdobie && x.SkladDo == Sklad.ID)
+                    .ToList();      //zoznam prevodiek urcene pre aktualny sklad, ignorujeme obdobie kedze mozu mat rozdielne obdobia
+
+                List<PohSkup> spojPrAPre = new(prijemky); //spojenie zoznamov
+                spojPrAPre.AddRange(prevodky);//spojenie zoznamov
+                ZoznamPoloziek = new(spojPrAPre.OrderByDescending(x => x.Vznik).ToList()); //zoradenie podla datumu
+
+               IsObdobieActual = SkladObdobie.IsObdobieActual(Sklad, Obdobie, in _db);
+
+                MoznoVymazatList = new();
+                foreach (var item in ZoznamPoloziek)
+                {
+                    MoznoVymazatList.Add((item, MoznoVymazat(item, DBLayer.Models.Prijemka.TOTAL_MAZANIE_PRIJEMOK.Contains(_userService.LoggedUserRole))));
+                }
+            });
         }
 
         /// <summary>
@@ -61,21 +72,33 @@ namespace SkladModul.ViewModels.Sklad
         /// </summary>
         /// <param name="poloz">vymazavana prijemka</param>
         /// <param name="povolenie">true - najvyššie povolenie</param>
-        public bool Vymaz(Pprijemka poloz, bool povolenie)
+        private bool MoznoVymazat(PohSkup polozka, bool povolenie)
         {
+            if (polozka is not Prijemka)
+            {
+                return false;
+            }
             if (!povolenie)
             {
-                if (_db.PrijemkyPolozky.Any(x => x.Skupina == poloz.ID))    //ak sa v prijemke nachadzaju polozky
+                if (_db.PrijemkyPolozky.Any(x => x.Skupina == polozka.ID))    //ak sa v prijemke nachadzaju polozky
                 {
                     return false;
                 }
             }
-
-            ZoznamPrijemok.Remove(poloz);
-            _db.Prijemky.Remove(poloz);
-            _db.SaveChanges();
-            DBLayer.Models.Objednavka.NastavStavZPrijemok(poloz, _db); //nastavenie stavu objednavky
             return true;
+        }
+
+        public override bool MoznoVymazat(PohSkup polozka)
+        {
+            return MoznoVymazatList.FirstOrDefault(x => x.Item1 == polozka).Item2;
+        }
+
+        public override void Vymazat(PohSkup poloz)
+        {
+            base.Vymazat(poloz);
+            _db.Prijemky.Remove((Prijemka)poloz);
+            _db.SaveChanges();
+            DBLayer.Models.Objednavka.NastavStavZPrijemok((Prijemka)poloz, _db); //nastavenie stavu objednavky
         }
 
         public string GetObdobie(PohSkup polozka)
@@ -88,11 +111,6 @@ namespace SkladModul.ViewModels.Sklad
             {
                 return Ssklad.ShortFromObdobie(((Vydajka)polozka).Obdobie);
             }
-        }
-
-        public bool IsObdobieActual()
-        {
-            return SkladObdobie.IsObdobieActual(Sklad, Obdobie, in _db);
         }
     }
 }

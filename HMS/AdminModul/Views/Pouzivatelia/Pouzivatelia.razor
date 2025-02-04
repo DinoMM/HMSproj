@@ -1,6 +1,6 @@
 ﻿@namespace AdminModul
 @page "/Pouzivatelia"
-@inject PouzivateliaViewModel ViewModel
+@inherits TransientHoldedComp<PouzivateliaViewModel>
 
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
@@ -12,20 +12,20 @@
            Text="Nemožno vymazať osobu lebo je to aktualne prihlásená osoba alebo má role.">
 </InfoModal>
 
-<div class="container">
+<div class="container maxwidth95">
 
     <div class="row pb-1">
 
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="9" TableID="tableid" PlaceHolder="Vyhľadaj uživateľa..."></SearchInput>
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj uživateľa..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
 
         <div class="col-9">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
-                <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/AddPouzivatel")))" type="button" class="btn btn-primary"><IconTextCreate></IconTextCreate></button>
-                <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                <button @onclick="@(() => {SetStartConditionOnVisit(); Navigator.NavigateTo(Navigator.AddNextUrl("/AddPouzivatel")); })" type="button" class="btn btn-primary"><IconTextCreate></IconTextCreate></button>
+                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
             </div>
         </div>
 
@@ -34,54 +34,20 @@
 
     <div class="row">
         <div class="col-1"></div>
-        <div class="col-12" style="max-height: 30rem;overflow: auto;">
-            <SimpleTable ID="tableid">
-                <THEAD>
-
-                <ThSort>Meno</ThSort>
-                <ThSort>Priezvisko</ThSort>
-                <ThSort>Username</ThSort>
-                <ThSort>Použivateľ</ThSort>
-                <ThSort>Email</ThSort>
-                <ThSort>Telefón</ThSort>
-                <ThSort>Profesia</ThSort>
-                <th></th>
-
-                </THEAD>
-                <TBODY>
-                    @if (ViewModel.NacitavaniePoloziek)
-                    {
-                        <div class="ms-1">
-                            <SpinnerLoading Size="2.0"></SpinnerLoading>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var item in ViewModel.ZoznamPouzivatelov)
-                        {
-
-                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
-                                <td class="col-resize">@item.Name</td>
-                                <td class="col-resize">@item.Surname</td>
-                                <td class="col-resize">@item.UserName</td>
-                                <td class="col-resize">
-                                    <SimpleCheckMark Checked="@(!string.IsNullOrEmpty(item.UserName))" Size="5"></SimpleCheckMark>
-                                </td>
-                                <td class="col-resize">@item.Email</td>
-                                <td class="col-resize">@item.PhoneNumber</td>
-                                <td class="col-resize">@ViewModel.GetRoleString(item)</td>
-                                <td>
-                                    @*<a @onclick="@(() => Delete(item))" style="@(!ViewModel.MoznoVymazat(item) ? "pointer-events: none;" : "") "><i href="#" class="bi bi-x-circle btn btn-danger @(!ViewModel.MoznoVymazat(item) ? "disabled" : "")"></i></a>*@
-                                    <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
-                                </td>
-
-                            </tr>
-                        }
-                    }
-                    <span id="observerTarget"></span>
-                </TBODY>
-
-            </SimpleTable>
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+            <ComplexTable @ref="ViewModel.ComplexTable"
+                          ID="complextable"
+                          T="IdentityUserOwn"
+                          Items="ViewModel.ZoznamPoloziek"
+                          LoadingItems="ViewModel.Nacitavanie"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.NacitajZoznamy"
+                          CollectionChanged="ViewModel.OnCollectionChanged"
+                          OnDbClick="(item) => Open(item)"
+                          SetTableSettings="@((true, tableSettings, null))">
+            </ComplexTable>
         </div>
         <div class="col-1"></div>
     </div>
@@ -97,11 +63,39 @@
 
 
 @code {
-    private IdentityUserOwn? marked;
+    private IdentityUserOwn? marked { get => ViewModel?.ComplexTable?.Marked; }
     private ApproveModal AprovMod = new();
     private InfoModal InfoModHasConneciton = new();
 
-    protected override void OnInitialized()
+    List<TableColumnTemplate<IdentityUserOwn>> tableSettings = new()
+{
+        new () { ID_Prop = nameof(IdentityUserOwn.Name), HeaderValue = "Meno", CellValue = (item) => item.Name },
+        new () { ID_Prop = nameof(IdentityUserOwn.Surname), HeaderValue = "Priezvisko", CellValue = (item) => item.Surname },
+        new () { ID_Prop = nameof(IdentityUserOwn.UserName), HeaderValue = "Username", CellValue = (item) => item.UserName ?? "" },
+        new () { ID_Prop = nameof(IdentityUserOwn.Email), HeaderValue = "Email", CellValue = (item) => item.Email ?? "" },
+        new () { ID_Prop = nameof(IdentityUserOwn.PhoneNumber), HeaderValue = "Telefón", CellValue = (item) => item.PhoneNumber ?? "" },
+
+    };
+
+    protected override void OnInitializedMustHave()
+    {
+        tableSettings.Insert(3, new() {
+            ID_Prop = "pouzivatel",
+            HeaderValue = "Používateľ",
+            CellComponent = (e) => new RenderFragmentTemplate(typeof(SimpleCheckMarkDiv), new RenderFragmentAttribute("Checked", !string.IsNullOrEmpty(e.UserName))),
+            CellConvert = ((item) => !string.IsNullOrEmpty(item.UserName), typeof(bool)),
+            Visible = false
+        });
+
+        tableSettings.Add(new() { ID_Prop = "profesia", HeaderValue = "Profesia", CellValue = (item) => ViewModel.GetRoleString(item), CellConvert = ((item) => ViewModel.GetRoleString(item), typeof(string)) });
+
+        tableSettings.Add(new()
+        {
+            Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))))
+        });
+    }
+
+    protected override void OnInitializedTransient()
     {
         if (!ViewModel.ValidateUser())
         {
@@ -110,7 +104,7 @@
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedTransientAsync()
     {
         await ViewModel.NacitajZoznamy();
     }
@@ -120,11 +114,11 @@
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
 
-    public void Open()
+    public async Task Open(IdentityUserOwn item)
     {
-        if (marked != null)
+        if (item != null)
         {
-            objectHolder.Add(marked);
+            objectHolder.Add(item);
             Navigator.NavigateTo(Navigator.AddNextUrl("/UpdatePouzivatela"));
         }
     }
@@ -135,7 +129,8 @@
         {
             if (await AprovMod.OpenModal(true))
             {
-                await ViewModel.Vymazat(user);
+                await ViewModel.VymazatAsync(user);
+                StateHasChanged();
             }
         }
         else

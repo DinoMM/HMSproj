@@ -1,7 +1,7 @@
 ﻿@namespace UniComponents
 @typeparam T
 
-<th class="@Class" scope="col" @ondblclick="() => SortMethod.Invoke(PropertyName, GetParam(), GetActualList.Invoke().ToList(), CellConvert.HasValue ? CellConvert.Value.Item1 : null)">
+<th class="@Class" scope="col" @ondblclick="SortThis">
     @ChildContent
 </th>
 
@@ -13,10 +13,16 @@
     public string PropertyName { get; set; } = string.Empty;
 
     [Parameter]
-    public Func<string, object, List<T>, Func<T, object?>?, Task> SortMethod { get; set; } = null!;
+    public Func<string, object, List<T>, Func<T, object?>?, Task<List<T>>> SortMethod { get; set; } = null!;
 
     [Parameter]
     public List<string>? SelectionList { get; set; } = null;
+
+    [Parameter]
+    public CompLoader? SortSelCompLoader { get; set; } = null;
+
+    [Parameter]
+    public SelectModal? SortSelectModal { get; set; } = null;
 
     [Parameter]
     [EditorRequired]
@@ -24,6 +30,18 @@
 
     [Parameter]
     public (Func<T, object?>, Type)? CellConvert { get; set; } = null;
+
+    /// <summary>
+    /// Ak je zoznam ObservableCollection tak treba sem vložiť metodu OnCollectionChange pre dočastné vypnutie spúšťania pri každej zmene zoznamu
+    /// </summary>
+    [Parameter]
+    public NotifyCollectionChangedEventHandler? CollectionChanged { get; set; }
+
+    /// <summary>
+    /// Slúži pre upade parenta, napr. keď sa zmení Marked/Markers tak aby sa parrent komponent updatol ak využíva Selection. Nahoď sem StateHasChanged, fajn pre @ref spojenia. Default EventCallback.Empty.
+    /// </summary>
+    [Parameter]
+    public EventCallback ParentStateHasChanged { get; set; } = EventCallback.Empty;
 
     /// <summary>
     /// Čo sa zobrazí v class, default: "nonselecttext"
@@ -43,6 +61,47 @@
         else
         {
             return sortDirection = !sortDirection;
+        }
+    }
+
+    private async Task SortOnDb()
+    {
+        var list = GetActualList.Invoke();
+
+        if (list is System.Collections.ObjectModel.ObservableCollection<T> oblist)
+        {
+            oblist.CollectionChanged -= CollectionChanged;
+        }
+
+        var res = await SortMethod.Invoke(PropertyName,
+            GetParam(),
+            list.ToList(),
+            CellConvert.HasValue ? CellConvert.Value.Item1 : null);
+
+        list.Clear();
+        res.ForEach(x => list.Add(x));
+
+        if (list is System.Collections.ObjectModel.ObservableCollection<T> oblist2)
+        {
+            oblist2.CollectionChanged += CollectionChanged;
+        }
+
+        await ParentStateHasChanged.InvokeAsync();
+    }
+
+    private async Task SortThis()
+    {
+        if (SortSelCompLoader != null)
+        {
+            await SortSelCompLoader.StartChildContent(async () =>
+            {
+                await SortOnDb();
+                await SortSelCompLoader.StopChildContent();
+            });
+        }
+        else
+        {
+            await SortOnDb();
         }
     }
 }

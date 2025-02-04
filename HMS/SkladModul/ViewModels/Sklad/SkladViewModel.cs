@@ -15,21 +15,22 @@ using DBLayer.Models;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using DBLayer.Migrations;
 using static System.Net.Mime.MediaTypeNames;
+using UniComponents;
 
 
 namespace SkladModul.ViewModels.Sklad
 {
-    public partial class SkladViewModel : ObservableObject
+    public class SkladViewModel : AObservableViewModel<PolozkaS>
     {
         public string Obdobie { get; set; }
-        public List<Ssklad> Sklady { get; set; }
-        public Ssklad Sklad { get; set; }
+        public List<Ssklad> Sklady { get; set; } = new();
+        public Ssklad Sklad { get; set; } = new();
         public bool NacitaneMnozstvo { get; set; } = false;
         public bool AktualneObdobie { get; set; } = false;
-        public bool NacitavaniePoloziek { get; private set; } = true;
+        //public bool NacitavaniePoloziek { get; private set; } = true;
 
-        [ObservableProperty]
-        ObservableCollection<PolozkaS> zoznamPoloziekSkladu = new();
+        //[ObservableProperty]
+        //ObservableCollection<PolozkaS> zoznamPoloziekSkladu = new();
 
         IdentityUserOwn? actualUser = null;
 
@@ -143,26 +144,20 @@ namespace SkladModul.ViewModels.Sklad
                     {
                         Obdobie = "AKTU";
                     }
-                    ZoznamPoloziekSkladu.Clear();
-                    await LoadPolozky();
-                    NacitaneMnozstvo = false;
+                    //ZoznamPoloziek.Clear();
+                    await NacitajZoznamy();
+                    OnCollectionChanged(this, new(System.Collections.Specialized.NotifyCollectionChangedAction.Reset));
                 }
             }
         }
-
-        public async Task LoadPolozky()
+        protected override async Task NacitajZoznamyAsync()
         {
-            if (ZoznamPoloziekSkladu.Count == 0)
-            {
+            //if (ZoznamPoloziek.Count == 0)
+            //{
 
                 if (Sklad.ID == "ALL")      //pri zobrazeni vsetkych poloziek pri mode ALL
                 {
-                    var zozn = _db.PolozkySkladu.ToList();
-                    foreach (var item in zozn)
-                    {
-                        ZoznamPoloziekSkladu.Add(item);
-                    }
-                    NacitavaniePoloziek = false;        //nacitanie poloziek skladu je dokoncene
+                    ZoznamPoloziek = new(_db.PolozkySkladu.ToList());
                     return;
                 }
 
@@ -171,32 +166,69 @@ namespace SkladModul.ViewModels.Sklad
                     .Include(x => x.SkladX)
                     .Where(x => x.Sklad == Sklad.ID).ToList();
                 //.ForEachAsync(x => ZoznamPoloziekSkladu.Add(x.PolozkaSkladuX));
+                ZoznamPoloziek = new();
                 foreach (var item in zoz)
                 {
-                    ZoznamPoloziekSkladu.Add(item.PolozkaSkladuX);
+                    ZoznamPoloziek.Add(item.PolozkaSkladuX);
                 }
                 await _sessionStorage.SetItemAsync("SkladPolozkyLoaded", true);
-                NacitavaniePoloziek = false;        //nacitanie poloziek skladu je dokoncene
-            }
-            else // ak zoznam obsahuje polozky
-            {
-                if (!(await _sessionStorage.GetItemAsync<bool>("SkladPolozkyLoaded")))   //ak je nastavene ze chceme aktualizovat polozky
-                {
-                    await AktualizujPolozky();
-                }
-            }
+            //}
+            //else // ak zoznam obsahuje polozky
+            //{
+            //    if (!(await _sessionStorage.GetItemAsync<bool>("SkladPolozkyLoaded")))   //ak je nastavene ze chceme aktualizovat polozky
+            //    {
+            //        await AktualizujPolozky();
+            //    }
+            //}
         }
+
+        //public async Task LoadPolozky()
+        //{
+        //    if (ZoznamPoloziekSkladu.Count == 0)
+        //    {
+
+        //        if (Sklad.ID == "ALL")      //pri zobrazeni vsetkych poloziek pri mode ALL
+        //        {
+        //            var zozn = _db.PolozkySkladu.ToList();
+        //            foreach (var item in zozn)
+        //            {
+        //                ZoznamPoloziekSkladu.Add(item);
+        //            }
+        //            NacitavaniePoloziek = false;        //nacitanie poloziek skladu je dokoncene
+        //            return;
+        //        }
+
+        //        //pridanie relevantnych poloziek skladu podla SKLADU
+        //        var zoz = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
+        //            .Include(x => x.SkladX)
+        //            .Where(x => x.Sklad == Sklad.ID).ToList();
+        //        //.ForEachAsync(x => ZoznamPoloziekSkladu.Add(x.PolozkaSkladuX));
+        //        foreach (var item in zoz)
+        //        {
+        //            ZoznamPoloziekSkladu.Add(item.PolozkaSkladuX);
+        //        }
+        //        await _sessionStorage.SetItemAsync("SkladPolozkyLoaded", true);
+        //        NacitavaniePoloziek = false;        //nacitanie poloziek skladu je dokoncene
+        //    }
+        //    else // ak zoznam obsahuje polozky
+        //    {
+        //        if (!(await _sessionStorage.GetItemAsync<bool>("SkladPolozkyLoaded")))   //ak je nastavene ze chceme aktualizovat polozky
+        //        {
+        //            await AktualizujPolozky();
+        //        }
+        //    }
+        //}
         public async Task AktualizujPolozky()
         {
-            NacitavaniePoloziek = true;
-            ZoznamPoloziekSkladu.Clear();
-            await LoadPolozky();
+            //NacitavaniePoloziek = true;
+            //ZoznamPoloziek.Clear();
+            await NacitajZoznamy();
         }
 
         public void VymazPolozku(PolozkaS poloz) //Natvrdo vymaze polozku zo skladu, pozor na integritu dat
         {
+            base.Vymazat(poloz);
             _db.PolozkySkladu.Remove(poloz);
-            ZoznamPoloziekSkladu.Remove(poloz);
             _db.SaveChanges();
         }
         /// <summary>
@@ -220,14 +252,15 @@ namespace SkladModul.ViewModels.Sklad
 
         public void LoadMnozstvo()
         {
-            if (ZoznamPoloziekSkladu.Count != 0)
+            if (ZoznamPoloziek.Count != 0)
             {
+                ZoznamPoloziek.CollectionChanged -= OnCollectionChanged;
                 ClearNumZoznam();
                 if (Sklad.ID != "ALL")  //pre urcity sklad nacita mnozstvo
                 {
                     if (CheckIsObdobieActual()) //ak je aktualne obdobie
                     {
-                        var nemozno = Ssklad.LoadMnozstvoPoloziek(ZoznamPoloziekSkladu, Sklad, in _db); //pre existujuci sklad
+                        var nemozno = Ssklad.LoadMnozstvoPoloziek(ZoznamPoloziek, Sklad, in _db); //pre existujuci sklad
                         if (nemozno.Count != 0)
                         {
                             Debug.WriteLine("Nemožno načítat množstvo niektorých položiek");
@@ -238,18 +271,18 @@ namespace SkladModul.ViewModels.Sklad
                         var obdSkladu = SkladObdobie.GetObdobiaPo(Sklad, Ssklad.DateFromShortForm(Obdobie), in _db);
 
                         List<PolozkaS> zoznamPoloziekObd = new();
-                        foreach (var item in ZoznamPoloziekSkladu)
+                        foreach (var item in ZoznamPoloziek)
                         {
                             zoznamPoloziekObd.Add(item.Clon());
                         }
 
                         obdSkladu.RemoveAt(0);  //vyhodíme aktuálne obdobie
-                        PolozkaSkladuMnozstvo.NastavZaciatocMnozstva(ZoznamPoloziekSkladu, Sklad, in _db);
+                        PolozkaSkladuMnozstvo.NastavZaciatocMnozstva(ZoznamPoloziek, Sklad, in _db);
                         foreach (var item in obdSkladu)
                         {
                             Ssklad.LoadMnozstvoZaObdobie(zoznamPoloziekObd, Sklad, item, in _db);
                             var prijem = Ssklad.GetPoctyZPrijemok(Sklad, item, in _db);
-                            PolozkaS.SpracListySpolu(ZoznamPoloziekSkladu, in zoznamPoloziekObd, (x, y) =>
+                            PolozkaS.SpracListySpolu(ZoznamPoloziek, in zoznamPoloziekObd, (x, y) =>
                             {
                                 x.Mnozstvo -= y.Mnozstvo;
                                 var prijPoloz = prijem.FirstOrDefault(z => z.ID == x.ID);
@@ -267,7 +300,7 @@ namespace SkladModul.ViewModels.Sklad
                     var skladyBezAll = Sklady.Where(x => x.ID != "ALL").ToList(); //odstranime sklad ALL z listu
 
                     List<PolozkaS> zoznamPoloziekObd = new();
-                    foreach (var item in ZoznamPoloziekSkladu)
+                    foreach (var item in ZoznamPoloziek)
                     {
                         zoznamPoloziekObd.Add(item.Clon());
                     }
@@ -280,7 +313,7 @@ namespace SkladModul.ViewModels.Sklad
                         foreach (var item in skladyBezAll)      //aktualne mnozstvo v skladoch
                         {
                             Ssklad.LoadMnozstvoPoloziek(zoznamPoloziekObd, item, in _db);
-                            PolozkaS.SpracListySpolu(ZoznamPoloziekSkladu, in zoznamPoloziekObd, (x, y) => x.Mnozstvo += y.Mnozstvo);
+                            PolozkaS.SpracListySpolu(ZoznamPoloziek, in zoznamPoloziekObd, (x, y) => x.Mnozstvo += y.Mnozstvo);
                             PolozkaS.ResetMnozstva(zoznamPoloziekObd);
                         }
                         foreach (var item in skladyBezAll)  //pre vsetky sklady prejdeme vsetky obdobia
@@ -289,7 +322,7 @@ namespace SkladModul.ViewModels.Sklad
                             {
 
                                 Ssklad.LoadMnozstvoZaObdobie(zoznamPoloziekObd, item, ytem, in _db);
-                                PolozkaS.SpracListySpolu(ZoznamPoloziekSkladu, in zoznamPoloziekObd, (x, y) => x.Mnozstvo -= y.Mnozstvo);
+                                PolozkaS.SpracListySpolu(ZoznamPoloziek, in zoznamPoloziekObd, (x, y) => x.Mnozstvo -= y.Mnozstvo);
                                 PolozkaS.ResetMnozstva(zoznamPoloziekObd);
                             }
                         }
@@ -299,11 +332,12 @@ namespace SkladModul.ViewModels.Sklad
                         foreach (var item in skladyBezAll)  //aktualne mnozstvo v skladoch
                         {
                             Ssklad.LoadMnozstvoPoloziek(zoznamPoloziekObd, item, in _db);
-                            PolozkaS.SpracListySpolu(ZoznamPoloziekSkladu, in zoznamPoloziekObd, (x, y) => x.Mnozstvo += y.Mnozstvo);
+                            PolozkaS.SpracListySpolu(ZoznamPoloziek, in zoznamPoloziekObd, (x, y) => x.Mnozstvo += y.Mnozstvo);
                             PolozkaS.ResetMnozstva(zoznamPoloziekObd);
                         }
                     }
                 }
+                ZoznamPoloziek.CollectionChanged += OnCollectionChanged;
                 NacitaneMnozstvo = true;
             }
         }
@@ -332,7 +366,7 @@ namespace SkladModul.ViewModels.Sklad
 
         public void ClearNumZoznam()
         {
-            foreach (var item in ZoznamPoloziekSkladu)
+            foreach (var item in ZoznamPoloziek)
             {
                 item.Mnozstvo = 0;
             }

@@ -46,7 +46,7 @@
                     {
                         if (item.Item3.Contains(UserService.LoggedUserRole))
                         {
-                            <a @onclick="@(() => Navigator.NavigateTo(item.Item2, saveThisUrl: true))" class="list-group-item list-group-item-action">@item.Item1</a>
+                            <a @onclick="@(() => Navigator.NavigateTo(item.Item2, saveThisUrl: true))" class="list-group-item list-group-item-action nonselecttext" style="cursor: pointer;">@item.Item1</a>
                         }
                     }
                 </div>

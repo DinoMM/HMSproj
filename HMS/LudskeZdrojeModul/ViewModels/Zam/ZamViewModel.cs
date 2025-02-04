@@ -2,18 +2,13 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DBLayer;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
+using UniComponents;
 
 namespace LudskeZdrojeModul.ViewModels.Zamestnanci
 {
-    public partial class ZamViewModel : ObservableObject
+    public class ZamViewModel : AObservableViewModel<IdentityUserOwn>
     {
-        [ObservableProperty]
-        ObservableCollection<IdentityUserOwn> zoznamZamestnancov = new();
-
-        [ObservableProperty]
-        ObservableCollection<(IdentityUserOwn, List<string>)> zoznamPouzivatelovRoli = new();
-
-        public bool NacitavaniePoloziek { get; private set; } = true;
+        ObservableCollection<(IdentityUserOwn, List<string>)> ZoznamPouzivatelovRoli = new();
 
         private readonly DBContext _db;
         private readonly UserService _userService;
@@ -34,17 +29,19 @@ namespace LudskeZdrojeModul.ViewModels.Zamestnanci
             return _userService.IsLoggedUserInRoles(IdentityUserOwn.ROLE_CRUD_ZAMESTNANCI);
         }
 
-        public async Task NacitajZoznamy()
+        protected override async Task NacitajZoznamyAsync()
         {
-            ZoznamZamestnancov = new(_db.Users.OrderBy(x => x.Surname).ToList());
-            foreach (var item in ZoznamZamestnancov)    //pridanie zoznamov roli
+            await Task.Run(async () =>
             {
-                ZoznamPouzivatelovRoli.Add((item, await _userService.GetRolesFromUser(item)));
-            }
-            NacitavaniePoloziek = false;
+                ZoznamPoloziek = new(_db.Users.OrderBy(x => x.Surname).ToList());
+                foreach (var item in ZoznamPoloziek)    //pridanie zoznamov roli
+                {
+                    ZoznamPouzivatelovRoli.Add((item, await _userService.GetRolesFromUser(item)));
+                }
+            });
         }
 
-        public bool MoznoVymazat(IdentityUserOwn user)
+        public override bool MoznoVymazat(IdentityUserOwn user)
         {
             if (user.UserName == _userService.LoggedUser.UserName) //isty ako prihlaseny nemoze
             {
@@ -59,10 +56,9 @@ namespace LudskeZdrojeModul.ViewModels.Zamestnanci
             return true;
         }
 
-        public async Task Vymazat(IdentityUserOwn user)
+        public async Task VymazatAsync(IdentityUserOwn user)
         {
-
-            ZoznamZamestnancov.Remove(user);
+            base.Vymazat(user);
             ZoznamPouzivatelovRoli.Remove(ZoznamPouzivatelovRoli.FirstOrDefault(x => x.Item1 == user));
             await _userService.DeleteUser(user);
         }

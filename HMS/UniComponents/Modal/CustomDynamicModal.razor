@@ -15,8 +15,8 @@
                         {
                             @if (!OneButtonOnly)
                             {
-                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(true))>@YesNoButtonText.Item1</button>
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>@YesNoButtonText.Item2</button>
+                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(true))>@YesNoButtonText.YesText</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>@YesNoButtonText.NoText</button>
                             }
                             else
                             {
@@ -33,8 +33,8 @@
                     {
                         @if (!OneButtonOnly)
                         {
-                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(true))>@YesNoButtonText.Item1</button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>@YesNoButtonText.Item2</button>
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(true))>@YesNoButtonText.YesText</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>@YesNoButtonText.NoText</button>
                         }
                         else
                         {
@@ -107,10 +107,10 @@
     public Func<KeyboardEventArgs, Task> HandleKeyDown { get; set; } = null!;
 
     /// <summary>
-    /// Zobrazuje text na dvoch tlačidlách, Default ("Áno", "Nie")
+    /// Zobrazuje text na dvoch tlačidlách, Default ("Áno", "Nie"). POZOR ked píšeš v .razor tak ZDVOJMI zátvorky takto YesNoButtonText="@(("Áno", "Nie"))" -> vyrieši to error: No overload for method 'TypeCheck' takes 2 arguments
     /// </summary>
     [Parameter]
-    public (string, string) YesNoButtonText { get; set; } = ("Áno", "Nie");
+    public (string YesText, string NoText) YesNoButtonText { get; set; } = ("Áno", "Nie");
 
     /// <summary>
     /// Otvorí vlastný modal, dynamicky (spustí sa až po rerenderovaní).
@@ -148,7 +148,7 @@
 
     }
 
-    private void CloseModal(bool ans)
+    protected void CloseModal(bool ans)
     {
         if (tstop)
         {

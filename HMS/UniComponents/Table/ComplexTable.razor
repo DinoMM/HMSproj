@@ -166,7 +166,10 @@
     </div>
 </CustomDynamicModal>
 
-
+<CompLoader @ref="SortSelCompLoader">
+    <SelectModal @ref="SortSelectModal"
+                 ID="@(ID + "selectmodal")" />
+</CompLoader>
 
 <SimpleTable2 ID="@ID" Sticky="@Sticky" NumHeaders="@TableNUM" WithToolbar="WithToolBar">
 
@@ -219,6 +222,8 @@
                         <IconText Icon="bi-funnel-fill"></IconText>
                     }
                 </button>
+                @AdditionToolbar
+
             </div>
             <div class="btn-group ms-auto" role="group">
                 @if (MultiSelect)
@@ -246,7 +251,14 @@
             }
             if (!string.IsNullOrEmpty(item.ID_Prop))
             {
-                <ThManualSort2 T="T" PropertyName="@item.ID_Prop" SortMethod="item.DB_Click_Sort ?? SortList" GetActualList="() => ActualList" CellConvert="item.CellConvert" Class="@("nonselecttext" + item.HeaderClass)">@item.HeaderValue</ThManualSort2>
+                if (item.SelectionList == null)
+                {
+                    <ThManualSort2 T="T" PropertyName="@item.ID_Prop" SortMethod="SortList" GetActualList="() => ActualList" CellConvert="item.CellConvert" CollectionChanged="CollectionChanged" ParentStateHasChanged="ParentStateHasChanged" Class="@("nonselecttext" + item.HeaderClass)">@item.HeaderValue</ThManualSort2>
+                }
+                else
+                {
+                    <ThManualSort2 T="T" PropertyName="@item.ID_Prop" SortMethod="SortList" SelectionList="item.SelectionList" SortSelCompLoader="SortSelCompLoader" SortSelectModal="SortSelectModal" GetActualList="() => ActualList" CellConvert="item.CellConvert" CollectionChanged="CollectionChanged" ParentStateHasChanged="ParentStateHasChanged" Class="@("nonselecttext" + item.HeaderClass)">@item.HeaderValue</ThManualSort2>
+                }
             }
             else
             {
@@ -267,12 +279,12 @@
                 <ItemContent Context="item">
                     <tr @key="item"
                         @onclick=@(() => ChangePick(item))
+                        @ondblclick="async () => { if (OnDbClick != null) await OnDbClick(item); }"
                         class="text-nowrap @(ClassForEach?.Invoke(item) ?? SimpleTable2.StrippedRow(ActualList.IndexOf(item))) @(Markers.Contains(item) ? $"table-active {MarkedClass}" : "")
                         @(NonSelectTextTD ? "nonselecttext " : "")
                         @Class"
                         style="@($"height: {ItemSize}px; " +
-                                 (cursorPointerTD ? "cursor: pointer;" : "")
-                                 )">
+                                 (cursorPointerTD ? "cursor: pointer;" : ""))">
 
                         @foreach (var ytem in TableSettings)
                         {
@@ -296,10 +308,12 @@
                             }
                             else
                             {
-                                if (ytem.Placeholder != null)
-                                {
-                                    @ytem.Placeholder.Invoke(item).GenerateRenderFragment()
-                                }
+                                <td class="@ytem.CellClass">
+                                    @if (ytem.Placeholder != null)
+                                    {
+                                        @ytem.Placeholder.Invoke(item).GenerateRenderFragment()
+                                    }
+                                </td>
                             }
 
                         }
@@ -416,14 +430,40 @@
     [Parameter]
     public EventCallback ParentStateHasChanged { get; set; } = EventCallback.Empty;
 
+    [IgnoreCopy]
+    [CascadingParameter]
+    public double ScrollPos { get => scrollPosition; set => scrollPosition = value; }
+
+    /// <summary>
+    /// Slúži pre upade parenta, napr. keď sa zmení Marked/Markers tak aby sa parrent komponent updatol ak využíva Selection. Nahoď sem StateHasChanged, fajn pre @ref spojenia. Default EventCallback.Empty.
+    /// </summary>
+    [IgnoreCopy]
+    [Parameter]
+    public NotifyCollectionChangedEventHandler? CollectionChanged { get; set; }
+
     /// <summary>
     /// Spustí sa vždy keď sa zmení Marked/Markers. Najlepšie v prípadoch, keď neni na tuto tabuľku @ref. Default null
     /// </summary>
     [Parameter]
     public Action<T?, List<T>>? MarkersStateChanged { get; set; }
 
+    /// <summary>
+    /// Pridá k tabuľke daľšie toolbary, pozri si implementáciu a podľa nej sa riaď
+    /// </summary>
+    [IgnoreCopy]
+    [Parameter]
+    public RenderFragment? AdditionToolbar { get; set; }
+
+    /// <summary>
+    /// Pridá akciu na dvojklik riadka tabuľky, default null
+    /// </summary>
+    [IgnoreCopy]
+    [Parameter]
+    public Func<T, Task> OnDbClick { get; set; }
+
     [Parameter]
     public (bool iniCheck, List<TableColumnTemplate<T>>? listTableSettings, List<(string name, Func<T, string>? cellValue, (Func<T, object?>, Type)? cellConvert)>? visibleColls)? SetTableSettings { get; set; } = null;
+
 
     /// <summary>
     /// Nastavenie šablóny pre generovanie hodnôt z jednotlivých sĺpcov tabuľky. Treba nastaviť v OnAfterRenderTransient po prvý krát renderovaní
@@ -525,6 +565,23 @@
                 if (SetTableSettings.Value.iniCheck && TableSettings.Count != 0)
                 {
                     doit = false;
+                    if (SetTableSettings.Value.listTableSettings != null)
+                    {
+                        if (TableSettings.Count == SetTableSettings.Value.listTableSettings.Count)
+                        {
+                            for (int i = 0; i < TableSettings.Count; ++i)
+                            {
+                                var tmp = TableSettings[i];
+                                TableSettings[i] = SetTableSettings.Value.listTableSettings[i];
+                                TableSettings[i].Visible = tmp.Visible;
+                            }
+                            await ParentStateHasChanged.InvokeAsync();
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"Table settings are not equal.{TableSettings.Count}/{SetTableSettings.Value.listTableSettings.Count}");
+                        }
+                    }
                 }
                 if (doit)
                 {
@@ -739,6 +796,7 @@
         }
         if (!filteredResultsSorted)
         {
+            filteredResultsSorted = true;
             await Task.Run(async () =>
             {
                 FilteredResults.Clear();
@@ -761,7 +819,7 @@
                         filteredMarkedCount += Markers.Contains(item) ? 1 : 0;
                     }
                 }
-                filteredResultsSorted = true;
+                //filteredResultsSorted = true;
                 if (FilteredResults.Count > 0 && !string.IsNullOrEmpty(filteredText))
                 {
                     await FilterResults((filteredText, true));       //neberie v dotaz minimalny pocet charakterov na filtrovanie
@@ -817,7 +875,7 @@
     /// Treba spustiť ak sa zmenil zoznam Items (pridanie/odobratie/zmena referencii). Zaručuje znovuaplikovanie filtrov po zmene zoznamu Items
     /// </summary>
     /// <returns></returns>
-    public async Task OnItemsChange()
+    public async Task OnItemsChange(NotifyCollectionChangedEventArgs e)
     {
         FilteredResults.Clear();
         FilteredSearchResults.Clear();
@@ -825,6 +883,18 @@
         if (!string.IsNullOrEmpty(filteredText) && !filterApplied)
         {
             await FilterResults((filteredText, true));
+        }
+
+        if (e.Action == NotifyCollectionChangedAction.Remove)
+        {
+            foreach (var item in e.OldItems ?? new List<T>())
+            {
+                Markers.Remove((T)item);
+                if (object.ReferenceEquals(Marked, item))
+                {
+                    Marked = default(T);
+                }
+            }
         }
     }
 
@@ -868,7 +938,20 @@
 
     public async ValueTask DisposeAsync()
     {
-        scrollPosition = await JSRuntime.InvokeAsync<double>("getScrollPosition", ID_scrollbar);    //pred odchodom sa zisi posledna pozicia scrollu
+        await LoadScrollPosition();   //pred odchodom sa zisi posledna pozicia scrollu
+    }
+
+    public async Task LoadScrollPosition(string id = "")
+    {
+        if (string.IsNullOrEmpty(id))
+        {
+            scrollPosition = await JSRuntime.InvokeAsync<double>("getScrollPosition", ID_scrollbar);
+        }
+        else
+        {
+            scrollPosition = await JSRuntime.InvokeAsync<double>("getScrollPosition", id);
+        }
+
     }
 
 

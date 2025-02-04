@@ -79,6 +79,10 @@ namespace DBLayer.Models
         [NotMapped]
         public PokladnicnyDoklad? PokladnicnyDokladZ { get; set; }
 
+        public string GetPohlavie()
+        {
+            return Sex ? "Žena" : "Muž";
+        }
         public object Clone()
         {
             var newHost = new Host()

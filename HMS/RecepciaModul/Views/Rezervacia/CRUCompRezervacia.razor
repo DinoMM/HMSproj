@@ -13,13 +13,26 @@
                  ChangeColor="true">
 
 </ItemFinderTable>
-<ItemFinderTable T="IdentityUserWebOwn" @ref="iftwebguest" ID="fndwebusrrez"
-                 ColNames="@(new() {"Meno", "Priezvisko", "Username", "Email", "Telefón" })"
-                 OnlyProtectedPersonalDataAttribute="true"
-                 SelectEmptyInstance="true"
-                 ColValues="ListWebGuest"
-                 ChangeColor="true">
-</ItemFinderTable>
+@*<ItemFinderTable T="IdentityUserWebOwn" @ref="iftwebguest" ID="fndwebusrrez"
+                     ColNames="@(new() {"Meno", "Priezvisko", "Username", "Email", "Telefón" })"
+                     OnlyProtectedPersonalDataAttribute="true"
+                     SelectEmptyInstance="true"
+                     ColValues="ListWebGuest"
+                     ChangeColor="true">
+    </ItemFinderTable>*@
+<ComplexItemFinderTable @ref="ciftguest"
+                        T="IdentityUserWebOwn"
+                        ID="fndwebusrrez"
+                        Header="Výber web účtu"
+                        SizeInRem="70"
+                        ParentStateHasChanged="StateHasChanged"
+                        SelectEmptyInstance="true"
+                        ChangeColor="true"
+                        YesNoButtonText="@(("Vybrať", "Zrušiť"))"
+                        SetTableSettings="@((true, guesttableSettings, null))">
+
+</ComplexItemFinderTable>
+
 
 <FastFormModal @ref="couponmodal"
                ID="coupmodalid"
@@ -61,14 +74,25 @@
 }
 
 
-<CustomModal @ref="cusmodHostcon" ID="cusmodshowhost" Header="Hostia rezervácie" OneButtonOnly="true" ChangeColor="true" SizeInRem="60" ZIndex="50">
+<CustomModal @ref="cusmodHostcon" ID="cusmodshowhost" Header="Hostia rezervácie" OneButtonOnly="true" ChangeColor="true" SizeInRem="75" ZIndex="50">
     <BODY>
-        <ItemFinderTable T="DBLayer.Models.Host" @ref="ifthost" ID="dnfhost"
-                         ColNames="@(new() {"Meno", "Priezvisko", "Adresa", "Rod. č.", "Č. pasu", "Č. občan.", "Pohlavie", "Národnosť" })"
-                         SearchedValue=""
-                         ColValues="ListHostia"
-                         CutOffTail="true">
-        </ItemFinderTable>
+        @*<ItemFinderTable T="DBLayer.Models.Host" @ref="ifthost" ID="dnfhost"
+                             ColNames="@(new() {"Meno", "Priezvisko", "Adresa", "Rod. č.", "Č. pasu", "Č. občan.", "Pohlavie", "Národnosť" })"
+                             SearchedValue=""
+                             ColValues="ListHostia"
+                             CutOffTail="true">
+            </ItemFinderTable>*@
+
+        <ComplexItemFinderTable @ref="cifthost"
+                                T="DBLayer.Models.Host"
+                                ID="dnfhost"
+                                Header="Výber hosťa"
+                                SizeInRem="70"
+                                ParentStateHasChanged="StateHasChanged"
+                                YesNoButtonText="@(("Vybrať", "Zrušiť"))"
+                                SetTableSettings="@((true, hosttableSettings, null))">
+
+        </ComplexItemFinderTable>
 
         <div class="col-12" style="max-height: 30rem;overflow: auto;">
             <SimpleTable ID="tablehostid">
@@ -82,6 +106,7 @@
                 <ThSort>Č. pasu</ThSort>
                 <ThSort>Pohlavie</ThSort>
                 <ThSort>Národnosť</ThSort>
+                <ThSort>Email</ThSort>
                 <th></th>
                 <th></th>
 
@@ -116,6 +141,7 @@
                             <td class="col-resize">@item.HostX.Passport</td>
                             <td class="col-resize">@(item.HostX.Sex ? "Žena" : "Muž")</td>
                             <td class="col-resize">@item.HostX.Nationality</td>
+                            <td class="col-resize">@(item.HostX.GuestZ?.Email ?? "")</td>
                             <td>
                                 <ButtonRemove Disabled="@(ValidateChangeability())" OnClick="@(() => DeleteHostCon(item))"></ButtonRemove>
                             </td>
@@ -338,9 +364,13 @@
     ApproveModal infomod = new();
     ItemFinderTable<DBLayer.Models.Room> iftroom = new();
     FastFormModal couponmodal = new();
-    private ItemFinderTable<IdentityUserWebOwn> iftwebguest = new();
+    //private ItemFinderTable<IdentityUserWebOwn> iftwebguest = new();
     CustomModal cusmodHostcon = new();
-    ItemFinderTable<DBLayer.Models.Host> ifthost = new();
+    //ItemFinderTable<DBLayer.Models.Host> ifthost = new();
+    ComplexItemFinderTable<DBLayer.Models.Host> cifthost;
+    ComplexItemFinderTable<IdentityUserWebOwn> ciftguest;
+
+
     CustomModal cuscreatehost = new();
     CustomModal cusopendoklad = new();
     CompVyberKasa compVybkasa = new();
@@ -356,6 +386,32 @@
     private List<DBLayer.Models.Kasa> ZoznamKas = new();
     private bool OnlyOneItemPD = true;  // v pokladnicnom bloku moze byt but len jeden alebo viacej poloziek
     private DBLayer.Models.Host? MarkedHost = null;
+
+    List<TableColumnTemplate<DBLayer.Models.Host>> hosttableSettings = new()
+{
+        new () { ID_Prop = nameof(DBLayer.Models.Host.Name), HeaderValue = "Meno", CellValue = (item) => item.Name },
+new () { ID_Prop = nameof(DBLayer.Models.Host.Surname), HeaderValue = "Priezvisko", CellValue = (item) => item.Surname },
+new () { ID_Prop = nameof(DBLayer.Models.Host.Nationality), HeaderValue = "Národnosť", CellValue = (item) => item.Nationality },
+new () { ID_Prop = nameof(DBLayer.Models.Host.Sex), HeaderValue = "Pohlavie", CellValue = (item) => item.GetPohlavie(), CellConvert = ((item) => item.Sex, typeof(bool)) },
+new () { ID_Prop = nameof(DBLayer.Models.Host.CitizenID), HeaderValue = "Občan.č.", CellValue = (item) => item.CitizenID },
+new () { ID_Prop = nameof(DBLayer.Models.Host.Passport), HeaderValue = "Pas", CellValue = (item) => item.Passport },
+new () { ID_Prop = nameof(DBLayer.Models.Host.Address), HeaderValue = "Adresa", CellValue = (item) => item.Address, Visible = false },
+new () { ID_Prop = nameof(DBLayer.Models.Host.BirthNumber), HeaderValue = "Rodné č.", CellValue = (item) => item.BirthNumber, Visible = false },
+new () { ID_Prop = nameof(DBLayer.Models.Host.BirthDate), HeaderValue = "Narodenie", CellValue = (item) => item.BirthDate.ToString("dd.MM.yyyy"), Visible = false },
+new () { ID_Prop = "email", HeaderValue = "Email", CellValue = (item) => item.GuestZ?.Email ?? "", CellConvert = ((item) => item.GuestZ?.Email, typeof(string))  },
+new () { ID_Prop = "phonenumber", HeaderValue = "Telefón", CellValue = (item) => item.GuestZ?.PhoneNumber ?? "", CellConvert = ((item) => item.GuestZ?.PhoneNumber, typeof(string)), Visible = false },
+new () { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", CellValue = (item) => item.Note, Visible = false },
+
+    };
+
+    List<TableColumnTemplate<IdentityUserWebOwn>> guesttableSettings = new()
+{
+         new () { ID_Prop = nameof(IdentityUserWebOwn.Name), HeaderValue = "Meno", CellValue = (item) => item.Name },
+         new () { ID_Prop = nameof(IdentityUserWebOwn.Surname), HeaderValue = "Priezvisko", CellValue = (item) => item.Surname },
+         new () { ID_Prop = nameof(IdentityUserWebOwn.UserName), HeaderValue = "Username", CellValue = (item) => item.UserName ?? "" },
+         new () { ID_Prop = nameof(IdentityUserWebOwn.Email), HeaderValue = "Email", CellValue = (item) => item.Email ?? "" },
+         new () { ID_Prop = nameof(IdentityUserWebOwn.PhoneNumber), HeaderValue = "Telefón", CellValue = (item) => item.PhoneNumber ?? "" },
+    };
 
 
     protected override void OnInitialized()
@@ -612,9 +668,10 @@
     }
     private async Task FindGuest()
     {
-        if (await iftwebguest.OpenModal(true))
+        ciftguest.SetItemsFromList(ListWebGuest);
+        await ciftguest.OpenModal(async (res) =>
         {
-            var selectedWebGuest = iftwebguest.OutSelection.FirstOrDefault();
+            var selectedWebGuest = ciftguest.ComplexTable.Marked;
 
             if (!string.IsNullOrEmpty(selectedWebGuest?.UserName))
             {
@@ -626,7 +683,23 @@
                 Marked.GuestId = null;
                 Marked.Guest = null;
             }
-        }
+        });
+
+        //if (await iftwebguest.OpenModal(true))
+        //{
+        //    var selectedWebGuest = iftwebguest.OutSelection.FirstOrDefault();
+
+        //    if (!string.IsNullOrEmpty(selectedWebGuest?.UserName))
+        //    {
+        //        Marked.GuestId = selectedWebGuest.Id;
+        //        Marked.Guest = selectedWebGuest;
+        //    }
+        //    else
+        //    {
+        //        Marked.GuestId = null;
+        //        Marked.Guest = null;
+        //    }
+        //}
     }
     private async Task FindRoom()
     {
@@ -802,7 +875,35 @@
             }
         }
 
-        if (await ifthost.OpenModal(true))
+        cifthost.SetItemsFromList(ListHostia);
+        await cifthost.OpenModal(async (res) =>
+        {
+
+            if (res)
+            {
+                var vybranyHost = cifthost.ComplexTable.Marked;
+                DBLayer.Models.HostConReservation newCon = new()
+                {
+                    Host = vybranyHost.ID,
+                    HostX = vybranyHost,
+                    Reservation = Marked.Id,
+                };
+                VyberHosti.Add(newCon);
+                added = true;
+            }
+            for (var i = 0; i < VyberHosti.Count; ++i)        //pridame naspat do zoznamu
+            {
+                if (added && i == VyberHosti.Count - 1) //ak sme pridali tak ho ignorujeme lebo tento musel byt v zozname hosti
+                {
+                    continue;
+                }
+                ListHostia.Add(VyberHosti[i].HostX);        //?
+            }
+            ListHostia.Sort((x, y) => x.Surname.CompareTo(y.Surname));
+            //StateHasChanged();
+        });
+
+        /*if (await ifthost.OpenModal(true))
         {
             var vybranyHost = ifthost.OutSelection.FirstOrDefault();
             DBLayer.Models.HostConReservation newCon = new()
@@ -823,7 +924,7 @@
             }
             ListHostia.Add(VyberHosti[i].HostX);        //?
         }
-        ListHostia.Sort((x, y) => x.Surname.CompareTo(y.Surname));
+        ListHostia.Sort((x, y) => x.Surname.CompareTo(y.Surname));*/
     }
 
     private async Task CreateHostTab()

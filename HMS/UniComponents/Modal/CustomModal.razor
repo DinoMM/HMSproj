@@ -137,9 +137,9 @@
         JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('hide');"); //(pomohol som si z internetu tutoriály/AI)
     }
 
-    public void CloseModalExtern()
+    public void CloseModalExtern(bool res = true)
     {
-        CloseModal(true);
+        CloseModal(res);
     }
 
     public void UpdateText(string newText)

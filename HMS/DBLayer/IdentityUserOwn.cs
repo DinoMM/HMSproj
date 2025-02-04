@@ -57,6 +57,11 @@ namespace DBLayer
         [Column(TypeName = "nvarchar(128)")]
         public string Nationality { get; set; } = "";
 
+        public string GetPohlavie()
+        {
+            return Sex ? "Žena" : "Muž";
+        }
+
 
 
         public object Clone()

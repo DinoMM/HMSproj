@@ -1,6 +1,6 @@
 ﻿@namespace SkladModul
 @page "/Sklady"
-@inject SkladyViewModel ViewModel
+@inherits TransientHoldedComp<SkladyViewModel>
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
               Text="Naozaj chcete odstrániť tento riadok?<br>POZOR môžu sa vymazať prvky, ktoré sú spojené s touto položkou!"
@@ -16,7 +16,7 @@
     <div class="row pb-1">
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="2" PlaceHolder="Vyhľadaj sklad..." TableID="tableid"></SearchInput>
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj sklad..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
 
         <div class="col-9">
@@ -25,51 +25,27 @@
                 <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary"><IconTextCreate></IconTextCreate> </button>
                 <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary"><IconTextOpen></IconTextOpen> </button>
             </div>
-        </div> 
+        </div>
 
         <div class="col-1"></div>
     </div>
 
     <div class="row">
         <div class="col-1"></div>
-        <div class="col-12" style="max-height: 30rem;overflow: auto;">
-            <SimpleTable ID="tableid">
-                <THEAD>
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+            <ComplexTable @ref="ViewModel.ComplexTable"
+                          ID="complextable"
+                          T="DBLayer.Models.Sklad"
+                          Items="ViewModel.ZoznamPoloziek"
+                          LoadingItems="ViewModel.Nacitavanie"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.NacitajZoznamy"
+                          CollectionChanged="ViewModel.OnCollectionChanged"
+                          SetTableSettings="@((true, tableSettings, null))">
 
-                <ThSort>Označenie</ThSort>
-                <ThSort>Názov</ThSort>
-                <th class="col-resize" scope="col"></th>
-
-                </THEAD>
-                <TBODY>
-                    @if (ViewModel.NacitavaniePoloziek)
-                    {
-                        <div class="ms-1">
-                            <SpinnerLoading Size="2.0"></SpinnerLoading>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var item in ViewModel.ZoznamSkladov)
-                        {
-
-                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
-                                <td class="col-resize">@item.ID</td>
-                                <td class="col-resize">@item.Nazov</td>
-                                <td>
-                                    @if (ViewModel.ValidateUserCRUD())
-                                    {
-                                        <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
-                                    }
-                                </td>
-
-                            </tr>
-                        }
-                    }
-                    <span id="observerTarget"></span>
-                </TBODY>
-
-            </SimpleTable>
+            </ComplexTable>
         </div>
         <div class="col-1"></div>
     </div>
@@ -81,11 +57,25 @@
 </div>
 
 @code {
-    private DBLayer.Models.Sklad? marked = null;
+    private DBLayer.Models.Sklad? marked { get => ViewModel?.ComplexTable?.Marked; }
     private ApproveModal AprovMod = new();
     private InfoModal InfoModHasConneciton = new();
 
-    protected override void OnInitialized()
+    List<TableColumnTemplate<DBLayer.Models.Sklad>> tableSettings = new()
+{
+        new () { ID_Prop = nameof(DBLayer.Models.Sklad.ID), HeaderValue = "ID", CellValue = (item) => item.ID },
+        new () { ID_Prop = nameof(DBLayer.Models.Sklad.Nazov), HeaderValue = "Názov", CellValue = (item) => item.Nazov },
+    };
+
+    protected override void OnInitializedMustHave()
+    {
+        tableSettings.Add(new()
+        {
+            Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))))
+        });
+    }
+
+    protected override void OnInitializedTransient()
     {
         if (!ViewModel.ValidateUser())
         {
@@ -94,7 +84,7 @@
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedTransientAsync()
     {
         if (!ViewModel.ValidateUser())
         {
@@ -127,6 +117,7 @@
             if (await AprovMod.OpenModal(true))
             {
                 ViewModel.Vymazat(sklad);
+                StateHasChanged();
             }
         }
         else
@@ -139,6 +130,7 @@
     {
         if (ViewModel.ValidateUserCRUD())
         {
+            SetStartConditionOnVisit();
             Navigator.NavigateTo(Navigator.AddNextUrl("/CRUSklad"));
         }
     }

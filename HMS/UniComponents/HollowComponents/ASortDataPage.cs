@@ -25,6 +25,8 @@ namespace UniComponents
         /// </summary>
         protected SelectModal SortSelectModal;
 
+        protected CompLoader? SortSelCompLoader;
+
         #region SortData process
         /// <summary>
         /// Vyhľadá v zozname ZoznamSort položku s názvom propertyName -> na základe nej sa utriedi zoznam podľa sortParameter
@@ -44,23 +46,24 @@ namespace UniComponents
             }
         }
 
-        public async Task SortList(string propertyName, object sortParameter, List<T> list, Func<T, object?>? cellConvert = null)
+        public async Task<List<T>> SortList(string propertyName, object sortParameter, List<T> list, Func<T, object?>? cellConvert = null)
         {
             if (sortParameter is bool sortDirection)
             {
                 if (cellConvert != null)
                 {
-                    await SortDataList(propertyName, sortDirection, list, cellConvert);
+                    return await SortDataList(propertyName, sortDirection, list, cellConvert);
                 }
                 else
                 {
-                    await SortDataList(propertyName, sortDirection, list);
+                    return await SortDataList(propertyName, sortDirection, list);
                 }
             }
             else if (sortParameter is List<string> selectionList)
             {
-                await SortDataList(propertyName, selectionList, list);
+                return await SortDataList(propertyName, selectionList, list);
             }
+            return new List<T>();
         }
         #endregion
         #region SortData solutions
@@ -158,7 +161,7 @@ namespace UniComponents
         /// <param name="sortDirection"></param>
         /// <param name="list"></param>
         /// <returns></returns>
-        protected async Task SortDataList(string propertyName, bool sortDirection, List<T> list)
+        protected async Task<List<T>> SortDataList(string propertyName, bool sortDirection, List<T> list)
         {
             var propertyInfo = typeof(T).GetProperty(propertyName);
             if (propertyInfo != null)
@@ -186,6 +189,7 @@ namespace UniComponents
                 });
                 StateHasChanged();
             }
+            return list;
         }
 
         /// <summary>
@@ -196,34 +200,35 @@ namespace UniComponents
         /// <param name="list"></param>
         /// <param name="cellValue"></param>
         /// <returns></returns>
-        protected async Task SortDataList(string propertyName, bool sortDirection, List<T> list, Func<T, object?> cellValue)
+        protected async Task<List<T>> SortDataList(string propertyName, bool sortDirection, List<T> list, Func<T, object?> cellValue)
         {
-            var propertyInfo = typeof(T).GetProperty(propertyName);
-            if (propertyInfo != null)
+            //var propertyInfo = typeof(T).GetProperty(propertyName);
+            //if (propertyInfo != null)
+            //{
+            await Task.Run(() =>
             {
-                await Task.Run(() =>
+                if (sortDirection) //ascending
                 {
-                    if (sortDirection) //ascending
+                    list.Sort((x, y) =>
                     {
-                        list.Sort((x, y) =>
-                        {
-                            var valueX = cellValue.Invoke(x);
-                            var valueY = cellValue.Invoke(y);
-                            return Comparer<object>.Default.Compare(valueX, valueY);
-                        });
-                    }
-                    else //descending
+                        var valueX = cellValue.Invoke(x);
+                        var valueY = cellValue.Invoke(y);
+                        return Comparer<object>.Default.Compare(valueX, valueY);
+                    });
+                }
+                else //descending
+                {
+                    list.Sort((x, y) =>
                     {
-                        list.Sort((x, y) =>
-                        {
-                            var valueX = cellValue.Invoke(x);
-                            var valueY = cellValue.Invoke(y);
-                            return Comparer<object>.Default.Compare(valueY, valueX);
-                        });
-                    }
-                });
-                StateHasChanged();
-            }
+                        var valueX = cellValue.Invoke(x);
+                        var valueY = cellValue.Invoke(y);
+                        return Comparer<object>.Default.Compare(valueY, valueX);
+                    });
+                }
+            });
+            StateHasChanged();
+            return list;
+            //}
         }
 
         /// <summary>
@@ -232,16 +237,15 @@ namespace UniComponents
         /// <param name="propertyName"></param>
         /// <param name="zoznamSelect"></param>
         /// <returns></returns>
-        protected async Task SortDataList(string propertyName, List<string> zoznamSelect, List<T> list)
+        protected async Task<List<T>> SortDataList(string propertyName, List<string> zoznamSelect, List<T> list)
         {
-            SortSelectModal.ID = propertyName + "selectmodal";
             SortSelectModal.SelectionList = zoznamSelect;
             if (await SortSelectModal.OpenModal(true))
             {
                 var selectedValue = SortSelectModal.Value;
                 if (string.IsNullOrEmpty(selectedValue))
                 {
-                    return;
+                    return list;
                 }
                 var propertyInfo = typeof(T).GetProperty(propertyName);
                 if (propertyInfo != null)
@@ -269,6 +273,8 @@ namespace UniComponents
                     StateHasChanged();
                 }
             }
+
+            return list;
         }
         #endregion
     }

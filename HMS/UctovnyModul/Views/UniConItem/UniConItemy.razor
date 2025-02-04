@@ -1,6 +1,6 @@
 ﻿@namespace UctovnyModul
 @page "/UniConItemy"
-@inject UniConItemyViewModel ViewModel
+@inherits TransientHoldedComp<UniConItemyViewModel>
 
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
@@ -18,19 +18,19 @@
                  Header="Filter podľa typu">
 </ItemFinderTable>
 
-<div class="container">
+<div class="container maxwidth95">
 
     <div class="row pb-1">
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="6" TableID="tableid" PlaceHolder="Vyhľadaj položku..."></SearchInput>
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj položku..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
 
         <div class="col-9">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
                 <button @onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRUD())" class="btn btn-primary"><IconTextCreate></IconTextCreate></button>
-                <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null && ViewModel.ValidateUserCRUD())" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
                 <button type="button" class="btn btn-info" @onclick="FindTyp">Typ:&nbsp;@ViewModel.GetTypNazov()</button>
 
             </div>
@@ -41,63 +41,20 @@
 
     <div class="row">
         <div class="col-1"></div>
-        <div class="col-12" style="max-height: 30rem;overflow: auto;">
-            <SimpleTable ID="tableid">
-                <THEAD>
-
-                    <ThSort>ID Spojenia</ThSort>
-                    <ThSort>ID</ThSort>
-                    <ThSort>Typ</ThSort>
-                    <ThSort>Názov</ThSort>
-                    <ThSort>@ViewModel.GetHeaderTable()</ThSort>
-                    <ThSort>Cena</ThSort>
-                <th class="col-resize" scope="col"></th>
-
-                </THEAD>
-                <TBODY>
-                    @if (ViewModel.NacitavaniePoloziek)
-                    {
-                        <div class="ms-1">
-                            <SpinnerLoading Size="2.0"></SpinnerLoading>
-                        </div>
-                    }
-                    else
-                    {
-                        <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items="ViewModel.ZoznamPoloziek" Context="item" SpacerElement="tr" ItemSize="50">
-                            <ItemContent>
-
-                                <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
-
-                                    <td class="col-resize">@item.ID</td>
-                                    <td class="col-resize">@item.GetID()</td>
-                                    <td class="col-resize">@item.GetTypeUni()</td>
-                                    <td class="col-resize">@item.GetNameUni()</td>
-                                    <td class="col-resize">@ViewModel.GetValTable(item)</td>
-                                    <td class="col-resize">@item.GetCenaUni()</td>
-                                    <td>
-                                        @if (ViewModel.ValidateUserCRUD())
-                                        {
-                                            <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))" TooltipMessage="Nemožno vymazať túto položku, lebo je spojená s dokladom."></ButtonRemove>
-                                        }
-                                    </td>
-
-                                </tr>
-                            </ItemContent>
-                            <EmptyContent>
-                                <tr>
-                                    <div class="h3 text-dark">Zoznam je prázdny</div>
-                                </tr>
-                            </EmptyContent>
-                            <Placeholder>
-                                <div class="ms-1">
-                                    <SpinnerLoading Size="2.0"></SpinnerLoading>
-                                </div>
-                            </Placeholder>
-                        </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
-                    }
-                </TBODY>
-
-            </SimpleTable>
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+            <ComplexTable @ref="ViewModel.ComplexTable"
+                          ID="complextable"
+                          T="DBLayer.Models.UniConItemPoklDokladu"
+                          Items="ViewModel.ZoznamPoloziek"
+                          LoadingItems="ViewModel.Nacitavanie"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.NacitajZoznamy"
+                          CollectionChanged="ViewModel.OnCollectionChanged"
+                          OnDbClick="(item) => Open(item)"
+                          SetTableSettings="@((true, tableSettings, null))">
+            </ComplexTable>
         </div>
 
     </div>
@@ -105,11 +62,32 @@
 
 @code {
 
-    private DBLayer.Models.UniConItemPoklDokladu? marked;
+    private DBLayer.Models.UniConItemPoklDokladu? marked { get => ViewModel?.ComplexTable?.Marked; }
     private ApproveModal AprovMod = new();
     private ItemFinderTable<string> ifttype = new();
 
-    protected override void OnInitialized()
+    List<TableColumnTemplate<DBLayer.Models.UniConItemPoklDokladu>> tableSettings = new()
+    {
+        new () { ID_Prop = nameof(DBLayer.Models.UniConItemPoklDokladu.ID), HeaderValue = "ID spojenia", CellValue = (item) => item.ID.ToString() },
+        new () { ID_Prop = "getid", HeaderValue = "ID", CellValue = (item) => item.GetID(), CellConvert = ((item) => item.GetID(), typeof(string)) },
+        new () { ID_Prop = "gettypeuni", HeaderValue = "Typ", CellValue = (item) => item.GetTypeUni(), CellConvert = ((item) => item.GetTypeUni(), typeof(string)), Visible = false },
+        new () { ID_Prop = "getnameuni", HeaderValue = "Názov", CellValue = (item) => item.GetNameUni(), CellConvert = ((item) => item.GetNameUni(), typeof(string)) },
+        new () { ID_Prop = "getcenauni", HeaderValue = "Cena", CellValue = (item) => Math.Round(item.GetCenaUni(), 2).ToString("F2", System.Globalization.CultureInfo.InvariantCulture), CellConvert = ((item) => Math.Round(item.GetCenaUni(), 2), typeof(decimal)) },
+    };
+
+    protected override void OnInitializedMustHave()
+    {
+        tableSettings.Insert(4, new() { ID_Prop = "tableheader", HeaderValue = ViewModel.GetHeaderTable(), CellValue = (item) => ViewModel.GetValTable(item), CellConvert = ((item) => ViewModel.GetValTable(item), typeof(string)) });
+
+        if (ViewModel.ValidateUserCRUD()) {
+            tableSettings.Add(new()
+            {
+                Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))), new RenderFragmentAttribute("TooltipMessage", "Nemožno vymazať túto položku, lebo je spojená s dokladom."))
+            });
+        }
+    }
+
+    protected override void OnInitializedTransient()
     {
         if (!ViewModel.ValidateUser())
         {
@@ -118,7 +96,7 @@
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedTransientAsync()
     {
         if (!ViewModel.ValidateUser())
         {
@@ -132,13 +110,13 @@
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
 
-    public void Open()
+    public async Task Open(DBLayer.Models.UniConItemPoklDokladu item)
     {
-        if (marked != null)
+        if (item != null)
         {
             if (ViewModel.ValidateUserCRUD())
             {
-                objectHolder.Add(marked);
+                objectHolder.Add(item);
                 Navigator.NavigateTo(Navigator.AddNextUrl("/CRUUniItem"));
             }
         }
@@ -148,6 +126,7 @@
     {
         if (ViewModel.ValidateUserCRUD())
         {
+            SetStartConditionOnVisit();
             Navigator.NavigateTo(Navigator.AddNextUrl("/CRUUniItem"));
         }
     }
@@ -159,6 +138,7 @@
             if (await AprovMod.OpenModal(true))
             {
                 ViewModel.Vymazat(item);
+                StateHasChanged();
             }
         }
     }
@@ -167,7 +147,8 @@
     {
         if (await ifttype.OpenModal(true))
         {
-            ViewModel.SpravujZmenuTypu(ifttype.OutSelection.FirstOrDefault());
+            await ViewModel.SpravujZmenuTypu(ifttype.OutSelection.FirstOrDefault());
+            ViewModel.ComplexTable.TableSettings.FirstOrDefault(x => x.ID_Prop == "tableheader").HeaderValue = ViewModel.GetHeaderTable();
         }
     }
 

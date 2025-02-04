@@ -3,17 +3,13 @@ using DBLayer;
 using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
+using UniComponents;
 using Ssklad = DBLayer.Models.Sklad;
 
 namespace SkladModul.ViewModels.Sklady
 {
-    public partial class SkladyViewModel : ObservableObject
+    public class SkladyViewModel : AObservableViewModel<Ssklad>
     {
-        [ObservableProperty]
-        ObservableCollection<Ssklad> zoznamSkladov = new();
-
-        public bool NacitavaniePoloziek { get; private set; } = true;
-
         private readonly DBContext _db;
         private readonly UserService _userService;
 
@@ -31,14 +27,12 @@ namespace SkladModul.ViewModels.Sklady
         {
             return _userService.IsLoggedUserInRoles(Ssklad.ROLE_CRUD_SKLAD);
         }
-
-        public async Task NacitajZoznamy()
+        protected override async Task NacitajZoznamyAsync()
         {
-            ZoznamSkladov = new(await _db.Sklady.OrderBy(x => x.ID).ToListAsync());
-            NacitavaniePoloziek = false;
+            ZoznamPoloziek = new(await _db.Sklady.OrderBy(x => x.ID).ToListAsync());
         }
 
-        public bool MoznoVymazat(Ssklad sklad)
+        public override bool MoznoVymazat(Ssklad sklad)
         {
             if (_db.PolozkaSkladuMnozstva.Any(x => x.Sklad == sklad.ID))
             {
@@ -63,9 +57,9 @@ namespace SkladModul.ViewModels.Sklady
             return true;
         }
 
-        public void Vymazat(Ssklad sklad)
+        public override void Vymazat(Ssklad sklad)
         {
-            ZoznamSkladov.Remove(sklad);
+            base.Vymazat(sklad);
             _db.Sklady.Remove(sklad);
             _db.SaveChanges();
         }

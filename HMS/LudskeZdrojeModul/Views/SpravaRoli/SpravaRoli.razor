@@ -1,7 +1,6 @@
 ﻿@namespace LudskeZdrojeModul
 @page "/SpravaRoli"
-@inject SpravaRoliViewModel ViewModel
-
+@inherits TransientHoldedComp<SpravaRoliViewModel>
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
               Text="Naozaj chcete odstrániť tento riadok?<br>POZOR môžu sa vymazať prvky, ktoré sú spojené s touto položkou!"
@@ -12,19 +11,19 @@
            Text="Nemožno vymazať profesiu lebo ju má niekto priradenú alebo patrí k základnym profesiam.">
 </InfoModal>
 
-<div class="container">
+<div class="container maxwidth95">
 
     <div class="row pb-1">
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="1" TableID="tableid" PlaceHolder="Vyhľadaj profesiu..."></SearchInput>
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj profesiu..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
 
         <div class="col-9">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary" @onclick="Close"> <IconTextClose></IconTextClose></button>
-                <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/AddRole")))" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></button>
-                <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                <button @onclick="@(() => { SetStartConditionOnVisit(); Navigator.NavigateTo(Navigator.AddNextUrl("/AddRole")); })" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></button>
+                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
             </div>
         </div>
 
@@ -33,44 +32,20 @@
 
     <div class="row">
         <div class="col-1"></div>
-        <div class="col-12" style="max-height: 30rem;overflow: auto;">
-            <SimpleTable ID="tableid">
-                <THEAD>
-
-                <ThSort>Profesia</ThSort>
-                <ThSort>Základná profesia</ThSort>
-                <th class="col-resize" scope="col"></th>
-
-                </THEAD>
-                <TBODY>
-                    @if (ViewModel.NacitavaniePoloziek)
-                    {
-                        <div class="ms-1">
-                            <SpinnerLoading Size="2.0"></SpinnerLoading>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var item in ViewModel.ZoznamRoli)
-                        {
-
-                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
-
-                                <td class="col-resize">@item.Name</td>
-                                <td class="col-resize">
-                                    <SimpleCheckMark Checked="@(ViewModel.IsDefaultRole(item))" Size="5"></SimpleCheckMark>
-                                </td>
-                                <td>
-                                    <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
-                                </td>
-
-                            </tr>
-                        }
-                    }
-                    <span id="observerTarget"></span>
-                </TBODY>
-
-            </SimpleTable>
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+            <ComplexTable @ref="ViewModel.ComplexTable"
+                          ID="complextable"
+                          T="Microsoft.AspNetCore.Identity.IdentityRole"
+                          Items="ViewModel.ZoznamPoloziek"
+                          LoadingItems="ViewModel.Nacitavanie"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.NacitajZoznamy"
+                          CollectionChanged="ViewModel.OnCollectionChanged"
+                          OnDbClick="(item) => Open(item)"
+                          SetTableSettings="@((true, tableSettings, null))">
+            </ComplexTable>
         </div>
         <div class="col-1"></div>
     </div>
@@ -83,14 +58,32 @@
 
 
 
-
-
 @code {
-    private Microsoft.AspNetCore.Identity.IdentityRole? marked;
+    private Microsoft.AspNetCore.Identity.IdentityRole? marked { get => ViewModel?.ComplexTable?.Marked; }
     private ApproveModal AprovMod = new();
     private InfoModal InfoModHasConneciton = new();
 
-    protected override void OnInitialized()
+    List<TableColumnTemplate<Microsoft.AspNetCore.Identity.IdentityRole>> tableSettings = new()
+{
+        new () { ID_Prop = nameof(Microsoft.AspNetCore.Identity.IdentityRole.Name), HeaderValue = "Profesia", CellValue = (item) => item.Name ?? "" },
+    };
+
+    protected override void OnInitializedMustHave()
+    {
+        tableSettings.Add(new()
+        {
+            ID_Prop = "defaultrole",
+            HeaderValue = "Základná rola",
+            CellComponent = (e) => new(typeof(SimpleCheckMarkDiv), new RenderFragmentAttribute("Checked", ViewModel.IsDefaultRole(e))),
+            CellConvert = ((item) => ViewModel.IsDefaultRole(item), typeof(bool))
+        });
+        tableSettings.Add(new()
+        {
+            Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))))
+        });
+    }
+
+    protected override void OnInitializedTransient()
     {
         if (!ViewModel.ValidateUser())
         {
@@ -99,7 +92,7 @@
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedTransientAsync()
     {
         await ViewModel.NacitajZoznamy();
     }
@@ -109,30 +102,21 @@
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
 
-    public void Open()
+    public async Task Open(Microsoft.AspNetCore.Identity.IdentityRole role)
     {
-        if (marked != null)
+        if (!ViewModel.IsDefaultRole(role))
         {
-            if (!ViewModel.IsDefaultRole(marked))
-            {
-                objectHolder.Add(marked);
-                Navigator.NavigateTo(Navigator.AddNextUrl("/ZmenaRole"));
-            }
+            objectHolder.Add(role);
+            Navigator.NavigateTo(Navigator.AddNextUrl("/ZmenaRole"));
         }
     }
 
     public async Task Delete(Microsoft.AspNetCore.Identity.IdentityRole role)
     {
-        if (ViewModel.MoznoVymazat(role))
+        if (await AprovMod.OpenModal(true))
         {
-            if (await AprovMod.OpenModal(true))
-            {
-                ViewModel.Vymazat(role);
-            }
-        }
-        else
-        {
-            await InfoModHasConneciton.OpenModal();
+            ViewModel.Vymazat(role);
+            StateHasChanged();
         }
     }
 

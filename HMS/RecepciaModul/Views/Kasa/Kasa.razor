@@ -1,7 +1,6 @@
 ﻿@namespace RecepciaModul
 @page "/Kasa"
-@inject KasaViewModel ViewModel
-@inherits ASortDataPage<DBLayer.Models.PokladnicnyDoklad>
+@inherits TransientHoldedComp<KasaViewModel>
 
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
@@ -19,7 +18,7 @@
                    AfterRender="OpenKasa">
 
     </CompVyberKasa>
-}
+  }
 
 <CustomModal @ref="uzavretiemod" ID="uzavretiemod" OneButtonOnly="true" Header="Kontrola&nbsp;obdobia" SizeInRem="80">
     <BODY>
@@ -32,20 +31,20 @@
 
 </CustomModal>
 
-<div class="container">
+<div class="container maxwidth95">
 
     <div class="row pb-1">
 
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="5" TableID="tableid" PlaceHolder="Vyhľadaj doklad..."></SearchInput>
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj doklad..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
 
         <div class="col-9">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
                 <button @onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRU())" class="btn btn-primary"><IconTextCreate></IconTextCreate></button>
-                <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
                 <button type="button" @onclick="ForceOpenKasa" disabled="@(!ViewModel.ValidateUserKasaR())" class="btn btn-info"><IconText Icon="">Pokladňa: @(ViewModel.AktlKasa?.ID ?? "-")</IconText></button>
                 <button type="button" @onclick="OpenUzavierka" class="btn btn-primary"><IconText Icon="bi-calendar3">Uzávierka</IconText></button>
                 @if (ViewModel.ValidateUserKasaCRUD())
@@ -60,64 +59,20 @@
 
     <div class="row">
         <div class="col-1"></div>
-        <div class="col-12" style="max-height: 30rem;overflow: auto;">
-            <SimpleTable ID="tableid">
-                <THEAD>
-
-                    <ThManualSort PropertyName="ID" SortMethod="Sort">ID</ThManualSort>
-                    <ThManualSort PropertyName="Vznik" SortMethod="Sort">Vznik</ThManualSort>
-                    <ThManualSort PropertyName="Spracovana" SortMethod="Sort">Zaplatený</ThManualSort>
-                    <ThManualSort PropertyName="Kasa" SortMethod="Sort">Pokladňa</ThManualSort>
-                    <ThManualSort PropertyName="TypPlatby" SortMethod="Sort">Typ&nbsp;platby</ThManualSort>
-                    <ThManualSort PropertyName="GetMenoHosta" SortMethod="Sort">Hosť</ThManualSort>
-                <th></th>
-
-                </THEAD>
-                <TBODY>
-                    @if (ViewModel.NacitavaniePoloziek)
-                    {
-                        <div class="ms-1">
-                            <SpinnerLoading Size="2.0"></SpinnerLoading>
-                        </div>
-                    }
-                    else
-                    {
-                        <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Items="ViewModel.ZoznamBlockov" Context="item" SpacerElement="tr" ItemSize="50">
-                            <ItemContent>
-                                <tr @key="item.ID" @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
-
-                                    <td class="col-resize">@item.ID</td>
-                                    <td class="col-resize">@item.Vznik.ToString("dd.MM.yyyy HH:mm:ss")</td>
-                                    <td class="col-resize">
-                                        <SimpleCheckMark Checked="item.Spracovana" Size="5"></SimpleCheckMark>
-                                    </td>
-                                    <td class="col-resize">@(item?.Kasa ?? "-")</td>
-                                    <td class="col-resize">@(item.TypPlatby ? "Hotovosť" : "Platobná karta")</td>
-                                    <td class="col-resize">@item.GetMenoHosta</td>
-                                    <td class="col-resize">
-                                        @if (ViewModel.ValidateUserD())
-                                        {
-                                            <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))" TooltipMessage="Nemožno vymazať tento doklad lebo je zaplatený."></ButtonRemove>
-                                        }
-                                    </td>
-
-                                </tr>
-                            </ItemContent>
-                            <EmptyContent>
-                                <tr>
-                                    <div class="h3 text-dark">Zoznam je prázdny</div>
-                                </tr>
-                            </EmptyContent>
-                            <Placeholder>
-                                <div class="ms-1">
-                                    <SpinnerLoading Size="2.0"></SpinnerLoading>
-                                </div>
-                            </Placeholder>
-                        </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
-                    }
-                </TBODY>
-
-            </SimpleTable>
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+            <ComplexTable @ref="ViewModel.ComplexTable"
+                          ID="complextable"
+                          T="DBLayer.Models.PokladnicnyDoklad"
+                          Items="ViewModel.ZoznamPoloziek"
+                          LoadingItems="ViewModel.Nacitavanie"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.NacitajZoznamy"
+                          CollectionChanged="ViewModel.OnCollectionChanged"
+                          OnDbClick="(item) => Open(item)"
+                          SetTableSettings="@((true, tableSettings, null))">
+            </ComplexTable>
         </div>
 
     </div>
@@ -126,20 +81,37 @@
 
 @code {
 
-    private DBLayer.Models.PokladnicnyDoklad? marked;
+    private DBLayer.Models.PokladnicnyDoklad? marked { get => ViewModel?.ComplexTable?.Marked; }
     private ApproveModal AprovMod = new();
     private CompVyberKasa vyberkasamod = new();
     private CustomModal uzavretiemod = new();
     private KontrolaUzavretia kontrolauzavretiacomp = new();
 
+    List<TableColumnTemplate<DBLayer.Models.PokladnicnyDoklad>> tableSettings = new()
+{
+        new () { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.ID), HeaderValue = "ID", CellValue = (item) => item.ID },
+        new () { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.Vznik), HeaderValue = "Vznik", CellValue = (item) => item.Vznik.ToString("dd.MM.yyyy HH:mm:ss") },
+        new () { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.Kasa), HeaderValue = "Pokladňa", CellValue = (item) => item.Kasa ?? "" },
+        new () { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.TypPlatby), HeaderValue = "Typ platby", CellValue = (item) => item.GetTypPlatby()  },
+        new () { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.GetMenoHostaBezPoml), HeaderValue = "Hosť", CellValue = (item) => item.GetMenoHostaBezPoml },
+        new () { ID_Prop = "obciansky", HeaderValue = "Občiansky hosťa", CellValue = (item) => item.HostX?.CitizenID ?? "", CellConvert = ((item) => item.HostX?.CitizenID, typeof(string)), Visible = false },
+        new () { ID_Prop = "pas", HeaderValue = "Pas hosťa", CellValue = (item) => item.HostX?.Passport ?? "", CellConvert = ((item) => item.HostX?.Passport, typeof(string)), Visible = false },
+        new () { ID_Prop = "rodnecislo", HeaderValue = "Rodné č. hosťa", CellValue = (item) => item.HostX?.BirthNumber ?? "", CellConvert = ((item) => item.HostX?.BirthNumber, typeof(string)), Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.Poznamka), HeaderValue = "Poznámka", CellValue = (item) => item.Poznamka ?? "", Visible = false },
+    };
+
     private bool forceask = false;
 
-    protected override void OnInitialized()
+    protected override void OnInitializedMustHave()
     {
-        if (!ViewModel.ValidateUser())
+        tableSettings.Insert(2,new() { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.Spracovana), HeaderValue = "Spracovaná", CellComponent = (e) => new RenderFragmentTemplate(typeof(SimpleCheckMarkDiv), new RenderFragmentAttribute("Checked", e.Spracovana)), CellConvert = ((item) => item.Spracovana, typeof(bool)) });
+
+        if (ViewModel.ValidateUserD())
         {
-            Navigator.NavigateTo(Navigator.RemoveLastUrl());
-            return;
+            tableSettings.Add(new()
+            {
+                Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))) ,new RenderFragmentAttribute("TooltipMessage", "Nemožno vymazať tento doklad lebo je zaplatený.") )
+            });
         }
 
         var foundedKasa = objectHolder.Find<DBLayer.Models.Kasa>();   //pokusi sa ziskat objekt z uloziska
@@ -151,27 +123,27 @@
         ViewModel.AktlKasa = foundedKasa;
     }
 
-    protected override void OnAfterRender(bool firstRender)
+    protected override void OnInitializedTransient()
     {
-        if (firstRender)
+        if (!ViewModel.ValidateUser())
         {
-            if (ViewModel.AktlKasa == null)
-            {
-                vyberkasamod.StartRender();
-                StateHasChanged();
-            }
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
         }
 
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedTransientAsync()
     {
         if (!ViewModel.ValidateUser())
         {
             return;
         }
         await ViewModel.NacitajZoznamy();
-        ZoznamSort = ViewModel.ZoznamBlockov;
+        if (ViewModel.AktlKasa == null)
+        {
+            vyberkasamod.StartRender();
+        }
     }
 
     public void Close()
@@ -179,13 +151,13 @@
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
 
-    public void Open()
+    public async Task Open(DBLayer.Models.PokladnicnyDoklad item)
     {
-        if (marked != null)
+        if (item != null)
         {
             if (ViewModel.ValidateUserCRU())
             {
-                objectHolder.Add(marked);
+                objectHolder.Add(item);
                 Navigator.NavigateTo(Navigator.AddNextUrl("/PokladnicnyDoklad"));
             }
         }
@@ -195,6 +167,7 @@
     {
         if (ViewModel.ValidateUserCRU())
         {
+            SetStartConditionOnVisit();
             Navigator.NavigateTo(Navigator.AddNextUrl("/PokladnicnyDoklad"));
         }
     }
@@ -206,6 +179,7 @@
             if (await AprovMod.OpenModal(true))
             {
                 ViewModel.Vymazat(item);
+                StateHasChanged();
             }
         }
     }

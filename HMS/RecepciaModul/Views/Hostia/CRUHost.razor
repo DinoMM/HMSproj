@@ -7,13 +7,25 @@
 
 
 <div style="z-index:52">
-    <ItemFinderTable T="IdentityUserWebOwn" @ref="itemFindUser" ID="fndwebusrho"
-                     ColNames="@(new() {"Meno", "Priezvisko", "Username", "Email", "Telefón" })"
-                     SearchedValue="@(ViewModel.HostInput.GuestZ?.Email ?? "")"
-                     OnlyProtectedPersonalDataAttribute="true"
-                     SelectEmptyInstance="true">
+    @*<ItemFinderTable T="IdentityUserWebOwn" @ref="itemFindUser" ID="fndwebusrho"
+                         ColNames="@(new() {"Meno", "Priezvisko", "Username", "Email", "Telefón" })"
+                         SearchedValue="@(ViewModel.HostInput.GuestZ?.Email ?? "")"
+                         OnlyProtectedPersonalDataAttribute="true"
+                         SelectEmptyInstance="true">
+        </ItemFinderTable>*@
+    <ComplexItemFinderTable @ref="ciftguest"
+                            T="IdentityUserWebOwn"
+                            ID="fndwebusrho"
+                            Header="Výber web účtu"
+                            SizeInRem="70"
+                            ParentStateHasChanged="StateHasChanged"
+                            SelectEmptyInstance="true"
+                            ChangeColor="true"
+                            YesNoButtonText="@(("Vybrať", "Zrušiť"))"
+                            SetTableSettings="@((true, guesttableSettings, null))">
 
-    </ItemFinderTable>
+    </ComplexItemFinderTable>
+
 
     <InfoModal @ref="InfoModSaved" ID="infosaveda"
                Text="Zmeny boli uložené" />
@@ -206,9 +218,19 @@
     public bool AsComponent { get; set; } = false;
 
     private InfoModal InfoModSaved = new();
-    private ItemFinderTable<IdentityUserWebOwn> itemFindUser = new();
+    //private ItemFinderTable<IdentityUserWebOwn> itemFindUser = new();
+    ComplexItemFinderTable<IdentityUserWebOwn> ciftguest;
     private ItemFinderTable<string> iftcountry = new();
     private HostConFlagy? HostConFlagyComp;
+
+    List<TableColumnTemplate<IdentityUserWebOwn>> guesttableSettings = new()
+{
+         new () { ID_Prop = nameof(IdentityUserWebOwn.Name), HeaderValue = "Meno", CellValue = (item) => item.Name },
+         new () { ID_Prop = nameof(IdentityUserWebOwn.Surname), HeaderValue = "Priezvisko", CellValue = (item) => item.Surname },
+         new () { ID_Prop = nameof(IdentityUserWebOwn.UserName), HeaderValue = "Username", CellValue = (item) => item.UserName ?? "" },
+         new () { ID_Prop = nameof(IdentityUserWebOwn.Email), HeaderValue = "Email", CellValue = (item) => item.Email ?? "" },
+         new () { ID_Prop = nameof(IdentityUserWebOwn.PhoneNumber), HeaderValue = "Telefón", CellValue = (item) => item.PhoneNumber ?? "" },
+    };
 
     private bool ReadOnly = false;
 
@@ -276,11 +298,12 @@
 
     public async Task FindWebUser()
     {
-        itemFindUser.ColValues = await ViewModel.GetListWebUsers();
-        if (await itemFindUser.OpenModal(true))
+        ciftguest.SetItemsFromList(await ViewModel.GetListWebUsers());
+        await ciftguest.OpenModal(async (res) =>
         {
-            ViewModel.SetNewWebUser(itemFindUser.OutSelection.FirstOrDefault());
-        }
+            ViewModel.SetNewWebUser(ciftguest.ComplexTable.Marked);
+        });
+
     }
 
     public async Task FindNationality()

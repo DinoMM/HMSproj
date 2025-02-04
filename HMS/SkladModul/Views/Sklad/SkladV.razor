@@ -1,7 +1,8 @@
 ﻿@namespace SkladModul
 @page "/Sklad"
 @using DBLayer.Models
-@inject SkladViewModel ViewModel
+@inherits TransientHoldedComp<SkladViewModel>
+@inject Blazored.SessionStorage.ISessionStorageService SessionStorage
 
 
 <SelectModal @ref="SelectModObd" ID="selectmodalobdobie"
@@ -20,7 +21,7 @@
 </InfoModal>
 @implements IDisposable
 
-<div class="container">
+<div class="container maxwidth95">
 
     <div class="row pb-1">
         <div class="col-2">
@@ -34,7 +35,7 @@
     <div class="row pb-1">
         @*<div class="col-1"></div>*@
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="2" TableID="tableid"></SearchInput>
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj položku..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
         <div class="col-8">
             <div class="btn-group" role="group">
@@ -69,54 +70,31 @@
 
     <div class="row">
         @*<div class="col-1"></div>*@
-        <div class="col-12" style="max-height: 50rem;overflow: auto;">
-            <SimpleTable ID="tableid">
-                <THEAD>
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 50rem;overflow: auto;">
+            <ComplexTable @ref="ViewModel.ComplexTable"
+                          ID="complextable"
+                          T="PolozkaSkladu"
+                          Items="ViewModel.ZoznamPoloziek"
+                          LoadingItems="ViewModel.Nacitavanie"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.AktualizujPolozky"
+                          CollectionChanged="ViewModel.OnCollectionChanged"
+                          OnDbClick="(item) => Open(item)"
+                          SetTableSettings="@((true, tableSettings, null))">
+                <AdditionToolbar>
+                    <button id="loadmnozstvo" type="button" class="btn btn-outline-dark p-1 border-0 border-start border-end"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            data-bs-title="Načítať množstvo položiek"
+                            disabled="@ViewModel.NacitaneMnozstvo"
+                            @onclick="@ViewModel.LoadMnozstvo">
+                        <IconText Icon="bi-clipboard-data-fill"></IconText>
+                    </button>
 
-                    <ThSort>ID</ThSort>
-                    <ThSort>Názov</ThSort>
-                    <ThSort>Merná jednotka</ThSort>
-                    <ThSort>Cena</ThSort>
-                    <ThSort>Cena s DPH</ThSort>
-                    <ThSort><button @onclick=@ViewModel.LoadMnozstvo disabled="@ViewModel.NacitaneMnozstvo" class="btn btn-sm @(ViewModel.NacitaneMnozstvo ? "btn-light" : "btn-dark")">Množstvo</button> </ThSort>
-                <th class="col-resize" scope="col"></th>
-
-                </THEAD>
-                <TBODY>
-                    @if (ViewModel.NacitavaniePoloziek)
-                    {
-                        <div class="ms-1">
-                            <SpinnerLoading Size="2.0"></SpinnerLoading>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var item in ViewModel.ZoznamPoloziekSkladu)
-                        {
-
-                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open(item))" style="cursor: pointer;">
-                                <td class="col-resize">@item.ID </td>
-                                <td class="col-resize">@item.Nazov </td>
-                                <td class="col-resize">@item.MernaJednotka </td>
-                                <td class="col-resize">@item.Cena.ToString("F3") </td>
-                                <td class="col-resize">@item.CenaDPH.ToString("F3") </td>
-                                <td class="col-resize">@(ViewModel.NacitaneMnozstvo ? item.Mnozstvo : "-")</td>
-                                @if (Sklad.ZMENAPOLOZIEKROLE.Contains(UserService.LoggedUserRole))
-                                {
-                                    <td><a @onclick=@(() => Delete(item))><i href="#" class="bi bi-x-circle btn btn-danger"></i></a></td>
-                                }
-                                else
-                                {
-                                    <td class="col-resize"> </td>
-                                }
-                            </tr>
-
-                        }
-                    }
-                    <span id="observerTarget"></span>
-                </TBODY>
-
-            </SimpleTable>
+                </AdditionToolbar>
+            </ComplexTable>
         </div>
         <div class="col-1"></div>
     </div>
@@ -140,37 +118,26 @@
     SelectModal SelectModSkl = new();
     ApproveModal AprovMod = new();
     InfoModal InfoModHasConneciton = new();
-    PolozkaSkladu? marked;
+    PolozkaSkladu? marked { get => ViewModel?.ComplexTable?.Marked; }
 
+    List<TableColumnTemplate<PolozkaSkladu>> tableSettings = new()
+{
+        new () { ID_Prop = nameof(PolozkaSkladu.ID), HeaderValue = "ID", CellValue = (item) => item.ID },
+        new () { ID_Prop = nameof(PolozkaSkladu.Nazov), HeaderValue = "Názov", CellValue = (item) => item.Nazov },
+        new () { ID_Prop = nameof(PolozkaSkladu.MernaJednotka), HeaderValue = "Merná jendotka", CellValue = (item) => item.MernaJednotka },
+        new () { ID_Prop = nameof(PolozkaSkladu.Cena), HeaderValue = "Cena", CellValue = (item) => item.Cena.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)},
+        new () { ID_Prop = nameof(PolozkaSkladu.DPH), HeaderValue = "DPH", CellValue = (item) => item.DPH.ToString(), Visible = false },
+        new () { ID_Prop = nameof(PolozkaSkladu.CenaDPH), HeaderValue = "Cena s DPH", CellValue = (item) => item.CenaDPH.ToString("F3", System.Globalization.CultureInfo.InvariantCulture), Visible = false },
+        new () { ID_Prop = nameof(PolozkaSkladu.Mnozstvo), HeaderValue = "Množstvo", CellValue = (item) => item.Mnozstvo.ToString("F3", System.Globalization.CultureInfo.InvariantCulture) },
+    };
 
-
-    private async Task ChangeObd()
+    protected override void OnInitializedMustHave()
     {
-        await SelectModObd.OpenModal(true);
-        ViewModel.Obdobie = SelectModObd.Value;
-
-        ViewModel.CheckIsObdobieActual();     //kontrola ci je obdobie aktualne
-        ViewModel.NacitaneMnozstvo = false;
-
-        await JSRuntime.InvokeVoidAsync("changeText", "uctobd", "Obdobie:" + ViewModel.Obdobie);
-    }
-    private async Task ChangeSkl()
-    {
-        await SelectModSkl.OpenModal(true);
-        await ViewModel.SetSklad(SelectModSkl.Value);
-        await JSRuntime.InvokeVoidAsync("changeText", "skldpick", "Sklad:" + ViewModel.Sklad.ID);
-        await JSRuntime.InvokeVoidAsync("changeText", "uctobd", "Obdobie:" + ViewModel.Obdobie);
-    }
-
-    protected override void OnInitialized()
-    {
-        ViewModel.NacitaneMnozstvo = false;
-        if (!UserService.IsLoggedUserInRoles(Sklad.ROLE_R_SKLAD))
+        tableSettings.Add(new()
         {
-            Navigator.NavigateTo(Navigator.RemoveLastUrl());
-            return;
-        }
-        ViewModel.NacitatDostupneSklady();
+            Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))))
+        });
+
         var founded1 = objectHolder.Remove<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska
         if (founded1 == null)
         {
@@ -181,16 +148,46 @@
         {
             ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
         }
-
     }
 
-    protected override async Task OnInitializedAsync()
+    private async Task ChangeObd()
+    {
+        await SelectModObd.OpenModal(true);
+        ViewModel.Obdobie = SelectModObd.Value;
+
+        ViewModel.CheckIsObdobieActual();     //kontrola ci je obdobie aktualne
+        ViewModel.NacitaneMnozstvo = false;
+
+        await JSRuntime.InvokeVoidAsync("changeText", "uctobd", "Obdobie:" + ViewModel.Obdobie);
+        //StateHasChanged();
+    }
+    private async Task ChangeSkl()
+    {
+        await SelectModSkl.OpenModal(true);
+        await ViewModel.SetSklad(SelectModSkl.Value);
+        await JSRuntime.InvokeVoidAsync("changeText", "skldpick", "Sklad:" + ViewModel.Sklad.ID);
+        await JSRuntime.InvokeVoidAsync("changeText", "uctobd", "Obdobie:" + ViewModel.Obdobie);
+        //StateHasChanged();
+    }
+
+    protected override void OnInitializedTransient()
+    {
+        ViewModel.NacitaneMnozstvo = false;
+        if (!UserService.IsLoggedUserInRoles(Sklad.ROLE_R_SKLAD))
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+        ViewModel.NacitatDostupneSklady();
+    }
+
+    protected override async Task OnInitializedTransientAsync()
     {
         if (!UserService.IsLoggedUserInRoles(Sklad.ROLE_R_SKLAD))
         {
             return;
         }
-        await ViewModel.LoadPolozky();
+        await ViewModel.NacitajZoznamy();
     }
 
     private async Task Delete(PolozkaSkladu poloz)
@@ -200,6 +197,7 @@
             if (await AprovMod.OpenModal(true))
             {
                 ViewModel.VymazPolozku(poloz);
+                StateHasChanged();
             }
         }
         else
@@ -208,12 +206,12 @@
         }
 
     }
-    private void Open(PolozkaSkladu poloz)
+    private async Task Open(PolozkaSkladu poloz)
     {
         if (Sklad.ZMENAPOLOZIEKROLE.Contains(UserService.LoggedUserRole))
         {
             objectHolder.Add(poloz);
-            ViewModel.ZoznamPoloziekSkladu.Clear();
+            //ViewModel.ZoznamPoloziekSkladu.Clear();
             Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad"));
         }
     }
@@ -241,12 +239,14 @@
     {
         var founded1 = objectHolder.Remove<DBLayer.Models.Sklad>();   //pokusi sa ziskat objekt z uloziska //asi netreba
         var founded2 = objectHolder.Remove<string>();   //pokusi sa ziskat objekt z uloziska //asi netreba
-        ViewModel.ZoznamPoloziekSkladu.Clear();
+                                                        //ViewModel.ZoznamPoloziekSkladu.Clear();
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         ViewModel.ClearNumZoznam();
+        base.Dispose();
+
     }
 }

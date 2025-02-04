@@ -13,33 +13,45 @@
                  SizeInRem="30"></ItemFinderTable>
 
 
-@if (iftpoloz.Rendered && !ViewModel.LoadingZoznam)
-{
-    <ItemFinderTable T="object"
-                     @ref="iftpoloz"
-                     ID="itfpoloz"
-                     ColNames="@ViewModel.GetColNames()"
-                     ColValues="ViewModel.Polozky"
-                     KeyAttributeToo="true"
-                     Header="Výber položky"
-                     SizeInRem="80"
-                     AfterRender="async () => {
-                                      if (await iftpoloz.OpenModal(true))
-                                      {
-                                          ViewModel.SpracujNovuPolozku(iftpoloz.OutSelection.FirstOrDefault());
-                                          switch (ViewModel.UniItemInput)
+@*@if (iftpoloz.Rendered && !ViewModel.LoadingZoznam)
+    {
+        <ItemFinderTable T="object"
+                         @ref="iftpoloz"
+                         ID="itfpoloz"
+                         ColNames="@ViewModel.GetColNames()"
+                         ColValues="ViewModel.Polozky"
+                         KeyAttributeToo="true"
+                         Header="Výber položky"
+                         SizeInRem="80"
+                         AfterRender="async () => {
+                                          if (await iftpoloz.OpenModal(true))
                                           {
-                                              case DBLayer.Models.PolozkaSkladuConItemPoklDokladu item:
-                                                  iftsklad.StartRender();
-                                                  break;
-                                              default: break;
+                                              ViewModel.SpracujNovuPolozku(iftpoloz.OutSelection.FirstOrDefault());
+                                              switch (ViewModel.UniItemInput)
+                                              {
+                                                  case DBLayer.Models.PolozkaSkladuConItemPoklDokladu item:
+                                                      iftsklad.StartRender();
+                                                      break;
+                                                  default: break;
+                                              }
                                           }
-                                      }
-                                      await iftpoloz.Dispose();
-                                      StateHasChanged();
-                                  }">
-    </ItemFinderTable>
-}
+                                          await iftpoloz.Dispose();
+                                          StateHasChanged();
+                                      }">
+        </ItemFinderTable>
+    }*@
+
+
+<ComplexItemFinderTable @ref="ciftpoloz"
+                        T="object"
+                        ID="itfpoloz"
+                        Header="Výber položky"
+                        SizeInRem="80"
+                        ParentStateHasChanged="StateHasChanged"
+                        YesNoButtonText="@(("Vybrať", "Zrušiť"))"
+                        SetTableSettings="@((true, ViewModel.TableSettings, null))">
+</ComplexItemFinderTable>
+
 
 @if (iftsklad.Rendered)
 {
@@ -160,7 +172,8 @@
     private InfoModal InfoMod = new();
 
     private ItemFinderTable<string> ifttype = new();
-    private ItemFinderTable<object> iftpoloz = new();
+    //private ItemFinderTable<object> iftpoloz = new();
+    private ComplexItemFinderTable<object> ciftpoloz = new();
     private ItemFinderTable<DBLayer.Models.Sklad> iftsklad = new();
 
     protected override void OnInitialized()
@@ -215,7 +228,22 @@
     public async Task FindCon()
     {
         await ViewModel.LoadPolozky();
-        iftpoloz.StartRender();
+        ViewModel.SetSettings();
+        ciftpoloz.SetItemsFromList(ViewModel.Polozky);
+        await ciftpoloz.OpenModal(async (res) =>
+        {
+            if (res)
+            {
+                ViewModel.SpracujNovuPolozku(ciftpoloz.ComplexTable.Marked);
+                switch (ViewModel.UniItemInput)
+                {
+                    case DBLayer.Models.PolozkaSkladuConItemPoklDokladu item:
+                        iftsklad.StartRender();
+                        break;
+                    default: break;
+                }
+            }
+        });
     }
 
     public void OnInputProcess(ChangeEventArgs e, System.Reflection.PropertyInfo property)

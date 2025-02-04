@@ -1,6 +1,6 @@
 ﻿@namespace RecepciaModul
 @page "/Hostia/HostFlagy"
-@inject HostFlagyViewModel ViewModel
+@inherits TransientHoldedComp<HostFlagyViewModel>
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
               Text="Naozaj chcete odstrániť tento riadok?<br>POZOR môžu sa vymazať prvky, ktoré sú spojené s touto položkou!"
@@ -9,8 +9,7 @@
 </ApproveModal>
 
 
-@*@if (cusmodcruhostflag.Rendered)
-    {*@
+
 <CustomModal @ref="cusmodcruhostflag"
              ID="cusmodcruhostflag"
              Header="Značenie hosťa"
@@ -75,17 +74,37 @@
 
     </BODY>
 </CustomModal>
-@*}*@
+
+<CustomDynamicModal @ref="cusmodzozhosti"
+                    ID="cusmodzozhosti"
+                    ChangeColor="true"
+                    Header="Zoznam použitia značky"
+                    SizeInRem="80"
+                    YesNoButtonText="@(("Uložiť", "Neuložiť"))">
+
+    <ComplexTable @ref="complexTableZozHost"
+                  ID="complexTableZozHosts"
+                  T="DBLayer.Models.Host"
+                  Items="ViewModel.ZoznamHostiFlagy"
+                  LoadingItems="false"
+                  Sticky="true"
+                  ParentStateHasChanged="StateHasChanged"
+                  ClassForEach="@((item) => ViewModel.OdstraniFlaguHostList.Contains(item) ? "table-danger" : "")"
+                  SetTableSettings="@((false, tableSettingsHostia, null))">
+    </ComplexTable>
+
+
+</CustomDynamicModal>
 
 <InfoModal @ref="InfoModSaved" ID="infosaveda"
            Text="Zmeny boli uložené" />
 
-<div class="container">
+<div class="container maxwidth95">
 
     <div class="row pb-1">
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="4" PlaceHolder="Vyhľadaj značenie..." TableID="tableid"></SearchInput>
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj značenie..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
 
         <div class="col-9">
@@ -93,57 +112,31 @@
                 <button type="button" class="btn btn-secondary" @onclick="Close">
                     <IconTextClose></IconTextClose>
                 </button>
-                <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUser())" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
                 <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCUD())" type="button" class="btn btn-primary">
                     <IconTextCreate></IconTextCreate>
                 </button>
-
+                <button type="button" @onclick="OpenZozHosti" disabled="@(marked == null)" class="btn btn-primary"><IconText Icon="bi-person-lines-fill">Zoznam hostí so značkou</IconText></button>
             </div>
         </div>
 
     </div>
 
     <div class="row">
-        <div class="col-12" style="max-height: 30rem;overflow: auto;">
-            <SimpleTable ID="tableid">
-                <THEAD>
-
-                    <ThSort>ID</ThSort>
-                    <ThSort>Popis</ThSort>
-                    <ThSort>Hodnota</ThSort>
-                    <ThSort>Dátum</ThSort>
-                <th></th>
-                </THEAD>
-                <TBODY>
-                    @if (ViewModel.NacitavaniePoloziek)
-                    {
-                        <div class="ms-1">
-                            <SpinnerLoading Size="2.0"></SpinnerLoading>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var item in ViewModel.ZoznamFlagov)
-                        {
-
-                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
-                                <td class="col-resize">@item.ID</td>
-                                <td class="col-resize">@(item.StringValue ?? "-")</td>
-                                <td class="col-resize">@(item.NumericValue?.ToString("F2") ?? "-")</td>
-                                <td class="col-resize">@(item.DateValue?.ToString("dd.MM.yyyy") ?? "-")</td>
-                                <td>
-                                    @if (ViewModel.ValidateUserCUD())
-                                    {
-                                        <ButtonRemove Disabled="@(ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))" TooltipMessage="Nemožno vymazať lebo značka je priradená k hosťom"></ButtonRemove>
-                                    }
-                                </td>
-
-                            </tr>
-                        }
-                    }
-                </TBODY>
-
-            </SimpleTable>
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+            <ComplexTable @ref="ViewModel.ComplexTable"
+                          ID="complextable"
+                          T="DBLayer.Models.HostFlag"
+                          Items="ViewModel.ZoznamPoloziek"
+                          LoadingItems="ViewModel.Nacitavanie"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.NacitajZoznamy"
+                          CollectionChanged="ViewModel.OnCollectionChanged"
+                          OnDbClick="(item) => Open(item)"
+                          SetTableSettings="@((true, tableSettings, null))">
+            </ComplexTable>
         </div>
     </div>
 
@@ -153,21 +146,63 @@
 
 @code {
 
-    private DBLayer.Models.HostFlag? marked = null;
+    private DBLayer.Models.HostFlag? marked { get => ViewModel?.ComplexTable?.Marked; }
     ApproveModal AprovMod;
     CustomModal cusmodcruhostflag;
     InfoModal InfoModSaved;
+    CustomDynamicModal cusmodzozhosti;
+    ComplexTable<DBLayer.Models.Host> complexTableZozHost;
 
-    protected override void OnInitialized()
+    List<TableColumnTemplate<DBLayer.Models.HostFlag>> tableSettings = new()
+{
+        new () { ID_Prop = nameof(DBLayer.Models.HostFlag.ID), HeaderValue = "ID", CellValue = (item) => item.ID },
+        new () { ID_Prop = nameof(DBLayer.Models.HostFlag.StringValue), HeaderValue = "Popis", CellValue = (item) => item.StringValue ?? "" },
+        new () { ID_Prop = nameof(DBLayer.Models.HostFlag.NumericValue), HeaderValue = "Hodnota", CellValue = (item) => item.NumericValue?.ToString("F2", System.Globalization.CultureInfo.InvariantCulture) ?? "" },
+        new () { ID_Prop = nameof(DBLayer.Models.HostFlag.DateValue), HeaderValue = "Dátum", CellValue = (item) => item.DateValue?.ToString("dd.MM.yyyy HH:mm:ss") ?? "" },
+    };
+
+    List<TableColumnTemplate<DBLayer.Models.Host>> tableSettingsHostia = new()
+{
+       new () { ID_Prop = nameof(DBLayer.Models.Host.Name), HeaderValue = "Meno", CellValue = (item) => item.Name },
+new () { ID_Prop = nameof(DBLayer.Models.Host.Surname), HeaderValue = "Priezvisko", CellValue = (item) => item.Surname },
+new () { ID_Prop = nameof(DBLayer.Models.Host.Nationality), HeaderValue = "Národnosť", CellValue = (item) => item.Nationality },
+new () { ID_Prop = nameof(DBLayer.Models.Host.Sex), HeaderValue = "Pohlavie", CellValue = (item) => item.GetPohlavie(), Visible = false },
+new () { ID_Prop = nameof(DBLayer.Models.Host.CitizenID), HeaderValue = "Občan.č.", CellValue = (item) => item.CitizenID },
+new () { ID_Prop = nameof(DBLayer.Models.Host.Passport), HeaderValue = "Pas", CellValue = (item) => item.Passport },
+new () { ID_Prop = nameof(DBLayer.Models.Host.Address), HeaderValue = "Adresa", CellValue = (item) => item.Address, Visible = false },
+new () { ID_Prop = nameof(DBLayer.Models.Host.BirthNumber), HeaderValue = "Rodné č.", CellValue = (item) => item.BirthNumber, Visible = false },
+new () { ID_Prop = nameof(DBLayer.Models.Host.BirthDate), HeaderValue = "Narodenie", CellValue = (item) => item.BirthDate.ToString("dd.MM.yyyy")},
+new() { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", CellValue = (item) => item.Note, Visible = false }
+    };
+
+    protected override void OnInitializedMustHave()
+    {
+
+        tableSettings.Add(new TableColumnTemplate<DBLayer.Models.HostFlag>()
+        {
+            Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))))
+        });
+
+        tableSettingsHostia.Insert(0, new TableColumnTemplate<DBLayer.Models.Host>()
+        {
+            HeaderValue = "Zaznačiť pre odstánenie",
+            CellClass = "width10perc",
+            Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await SetToRemoveHost(item)), new RenderFragmentAttribute("Disabled", false), new RenderFragmentAttribute("Disabled", false))
+        });
+    }
+
+
+    protected override void OnInitializedTransient()
     {
         if (!ViewModel.ValidateUser())
         {
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
+        //TransientHoldCondition("/Hostia");
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedTransientAsync()
     {
         if (!ViewModel.ValidateUser())
         {
@@ -181,14 +216,14 @@
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
 
-    public async Task Open()
+    public async Task Open(DBLayer.Models.HostFlag item)
     {
-        if (marked != null)
+        if (item != null)
         {
             if (ViewModel.ValidateUserCUD())
             {
                 ViewModel.Existuje = true;
-                ViewModel.EditFlag = marked.Clon();
+                ViewModel.EditFlag = item.Clon();
                 await OpenCusMod();
             }
         }
@@ -201,6 +236,7 @@
             if (await AprovMod.OpenModal(true))
             {
                 ViewModel.Vymazat(item);
+                StateHasChanged();
             }
         }
 
@@ -237,5 +273,34 @@
         ViewModel.EditFlag = new();
         ViewModel.Existuje = false;
         await cusmodcruhostflag.Dispose();
+    }
+
+    private async Task OpenZozHosti()
+    {
+        if (marked != null)
+        {
+            await ViewModel.LoadHostiaZFlagy(marked);
+            await cusmodzozhosti.OpenModal(async (res) =>
+            {
+                if (res)
+                {
+                    await ViewModel.OdstranHostiZFlagy();
+                }
+                else
+                {
+                    ViewModel.OdstraniFlaguHostList.Clear();
+                }
+
+            });
+        }
+    }
+
+    private async Task SetToRemoveHost(DBLayer.Models.Host item)
+    {
+        if (!ViewModel.OdstraniFlaguHostList.Remove(item))
+        {
+            ViewModel.OdstraniFlaguHostList.Add(item);
+            //StateHasChanged();
+        }
     }
 }

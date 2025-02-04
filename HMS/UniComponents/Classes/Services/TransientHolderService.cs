@@ -57,12 +57,17 @@ namespace UniComponents.Services
             }
         }
 
-        public async Task CheckStartConditionAsync()
+        public async Task<bool> CheckStartConditionAsync()
         {
+            bool res = false;
             foreach (var item in ZoznamTransients)
             {
-                await item.CheckStartConditionAsync();
+                if (await item.CheckStartConditionAsync())
+                {
+                    res = true;
+                }
             }
+            return res;
         }
 
         /// <summary>
@@ -112,7 +117,7 @@ namespace UniComponents.Services
         /// <exception cref="ArgumentNullException"></exception>
         public object GetTransient(Type typeTransient)
         {
-            return ZoznamTransients.FirstOrDefault(x => x.TransientObject.GetType() == typeTransient)?.TransientObject 
+            return ZoznamTransients.FirstOrDefault(x => x.TransientObject.GetType() == typeTransient)?.TransientObject
                 ?? throw new ArgumentNullException("TransientObject sa nenašiel, chýba prvotná inicializácia.");
         }
 
@@ -124,7 +129,7 @@ namespace UniComponents.Services
     /// Ak property má atribút [CopyProperties], tak sa kopúruje jeho "telo" rekurzívne <para/>
     /// Ak property má atribút [IgnoreCopy], tak sa nekopíruje <para/>
     /// </summary>
-    
+
 
     /*public interface ITransientHolderService
     {

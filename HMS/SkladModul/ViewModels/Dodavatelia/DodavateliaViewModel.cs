@@ -9,17 +9,12 @@ using Ddodavatel = DBLayer.Models.Dodavatel;
 
 namespace SkladModul.ViewModels.Dodavatelia
 {
-    public partial class DodavateliaViewModel
+    public partial class DodavateliaViewModel : AObservableViewModel<Ddodavatel>
     {
-        public ObservableCollection<Ddodavatel> ZoznamDodavatelov { get; set; } = new();
-
-        public bool NacitavaniePoloziek { get; set; } = true;
+        public ObservableCollection<Ddodavatel> ZoznamDodavatelov { get => ZoznamPoloziek; set => ZoznamPoloziek = value; } 
 
         private readonly DBContext _db;
         private readonly UserService _userService;
-
-        [CopyProperties]
-        public ComplexTable<DBLayer.Models.Dodavatel>? Complextable { get; set; }
 
         public DodavateliaViewModel(DBContext db, UserService userService)
         {
@@ -37,16 +32,12 @@ namespace SkladModul.ViewModels.Dodavatelia
             return _userService.IsLoggedUserInRoles(Ddodavatel.ROLE_CRUD_DODAVATELIA);
         }
 
-        public async Task NacitajZoznamy()
+        protected override async Task NacitajZoznamyAsync()
         {
-            NacitavaniePoloziek = true;
-            ZoznamDodavatelov.CollectionChanged -= OnCollectionChanged;
             ZoznamDodavatelov = new(await _db.Dodavatelia.OrderBy(x => x.Nazov).ToListAsync());
-            ZoznamDodavatelov.CollectionChanged += OnCollectionChanged;
-            NacitavaniePoloziek = false;
         }
 
-        public bool MoznoVymazat(Ddodavatel dod)
+        public override bool MoznoVymazat(Ddodavatel dod)
         {
             var found = _db.Objednavky.Any(x => x.Dodavatel == dod.ICO || x.Odberatel == dod.ICO);    //nesmie byt v objednavkach
             if (found)
@@ -56,19 +47,11 @@ namespace SkladModul.ViewModels.Dodavatelia
             return true;
         }
 
-        public async Task Vymazat(Ddodavatel dod)
+        public override void Vymazat(Ddodavatel dod)
         {
-            ZoznamDodavatelov.Remove(dod);
+            base.Vymazat(dod);
             _db.Dodavatelia.Remove(dod);
-            await _db.SaveChangesAsync();
-        }
-
-        private async void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (Complextable != null)
-            {
-                await Complextable.OnItemsChange();
-            }
+            _db.SaveChanges();
         }
     }
 }

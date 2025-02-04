@@ -2,8 +2,9 @@
 @page "/Rezervacia"
 @inject RezervaciaViewModel ViewModel
 @using UniComponents
+@using DBLayer.Models
 @using Microsoft.AspNetCore.Components.Forms
-@inherits ASortDataPage<DBLayer.Models.Rezervation>
+@*@inherits ASortDataPage<DBLayer.Models.Rezervation>*@
 <!-- časový diagram od https://codepen.io/ph1p/pen/JBBjNy?utm_source=bypeople -->
 
 
@@ -94,8 +95,8 @@
                 <li style="background-color: @ViewModel.HEX_GREEN ; grid-column: 1/16;">Prebiehajúca&nbsp;rezervácia</li>
                 <li style="background-color: @ViewModel.HEX_RED ; grid-column: 1/16;">Ukončená&nbsp;rezervácia</li>
                 <li style="background-color: @ViewModel.HEX_GRAY ; grid-column: 1/16;">Blokovaná&nbsp;izba</li>
-                <li style="background-color: @ViewModel.HEX_BLUE ; grid-column: 1/16;" class="stripes">Nezobrazuje &nbsp;sa&nbsp;celá&nbsp;rezervácia</li>
-                <li style="background-color: @ViewModel.HEX_BLUE ; grid-column: 1/16;" class="stripesstraight">Nezobrazuje &nbsp;sa&nbsp;celá&nbsp;rezervácia</li>
+                <li style="background-color: @ViewModel.HEX_BLUE ; grid-column: 1/16;" class="stripes">Nezobrazuje&nbsp;sa&nbsp;celá&nbsp;rezervácia</li>
+                <li style="background-color: @ViewModel.HEX_BLUE ; grid-column: 1/16;" class="stripesstraight">Nezobrazuje&nbsp;sa&nbsp;celá&nbsp;rezervácia</li>
                 <li style="background-color: @ViewModel.HEX_BLUE ; grid-column: 1/16;" class="blackBorderli">Označená&nbsp;rezervácia</li>
             </ul>
         }
@@ -107,83 +108,57 @@
 
 
 
-<CustomModal @ref="resaslistmod" ID="resaslist" Header="Zoznam rezervácií" OneButtonOnly="true" ButtonPosition="true" SizeInRem="80" >
+<CustomModal @ref="resaslistmod" ID="resaslist" Header="Zoznam rezervácií" OneButtonOnly="true" ButtonPosition="true" SizeInRem="80">
     <BODY>
 
 
-        @if (resaslistmod.Render)
-        {
-            <div class="row">
-                <div class="col-3 mb-2">
-                    <SearchInput ID="searchvirtual" NumCols="8" TableID="resaslisttableres" PlaceHolder="Vyhľadaj rezerváciu.."></SearchInput>
-                </div>
-                <div class="col-3 mb-2">
-                    <button type="button" class="btn btn-primary" data-toggle="tooltip" data-placement="right" title="Zmeniť smer načítavania rezervácií (minulosť/budúcnosť)" @onclick="() => ViewModel.ZmenSmerNacitavania()">
-                        @if (ViewModel.SmerNacitavaniaAll)
-                        {<i class="bi bi-arrow-right"></i>}
-                        else
-                        {
-                            <i class="bi bi-arrow-left"></i>
-                        }
-                    </button>
-                </div>
+        @*@if (resaslistmod.Render)
+            {*@
+        <div class="row">
+            <div class="col-3 mb-2">
+                @*<SearchInput ID="searchvirtual" NumCols="8" TableID="resaslisttableres" PlaceHolder="Vyhľadaj rezerváciu.."></SearchInput>*@
+                <SearchManualInput ID="srchinput" Header="Vyhľadaj rezerváciu..." OnFilterRequest="(e) => complexTableAllRes?.FilterResults(e) ?? Task.CompletedTask" />
             </div>
-
-            <div class="col-12" style="max-height: 30rem;overflow: auto;">
-                <SimpleTable ID="resaslisttableres">
-                    <THEAD>
-
-                        <ThManualSort PropertyName="ArrivalDate" SortMethod="Sort">Príchod</ThManualSort>
-                        <ThManualSort PropertyName="DepartureDate" SortMethod="Sort">Odchod</ThManualSort>
-                        <ThManualSort PropertyName="NumberGuest" SortMethod="Sort">Plánovaný počet</ThManualSort>
-                        <ThManualSort PropertyName="CelkovaSuma" SortMethod="Sort">Cena</ThManualSort>
-                        <ThManualSort PropertyName="RoomNumber" SortMethod="Sort">Izba</ThManualSort>
-                        <ThManualSort PropertyName="Guest.Email" SortMethod="Sort">Web&nbsp;používateľ</ThManualSort>
-                        <ThManualSort PropertyName="Status" SortMethod="Sort" SelectionList="Enum.GetNames(typeof(DBLayer.Models.ReservationStatus)).ToList()">Status</ThManualSort>
-                        <ThSort>Naposledy&nbsp;upravil</ThSort>
-                        @*<th class="col-resize" scope="col"></th>*@
-
-                    </THEAD>
-                    <TBODY>
-
-                        <Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize Context="item" Items="ViewModel.ZoznamVsetkychRezervacii" SpacerElement="tr">
-                            <ItemContent>
-                                <tr @key="item.Id" style="height: 30px;" @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(async () => { resaslistmod.CloseModalExtern(); await OpenRes(item); })">
-                                    <td class="col-resize">@item.ArrivalDate.ToString("dd.MM.yyyy")</td>
-                                    <td class="col-resize">@item.DepartureDate.ToString("dd.MM.yyyy")</td>
-                                    <td class="col-resize">@item.NumberGuest</td>
-                                    <td class="col-resize">@item.CelkovaSuma</td>
-                                    <td class="col-resize">@item.RoomNumber</td>
-                                    <td class="col-resize">@(item.Guest?.Email ?? "")</td>
-                                    <td class="col-resize">@item.Status</td>
-                                    <td class="col-resize">@item.GetRecentChangedUserName()</td>
-                                </tr>
-                            </ItemContent>
-                            <Placeholder>
-                                <SpinnerLoading Size="2"></SpinnerLoading>
-                            </Placeholder>
-                            <EmptyContent>
-                                <div class="d-flex align-items-center">Zoznam je prázdny</div>
-                            </EmptyContent>
-                        </Microsoft.AspNetCore.Components.Web.Virtualization.Virtualize>
-
-                    </TBODY>
-
-                </SimpleTable>
+            <div class="col-3 mb-2">
+                <button type="button" class="btn btn-primary" data-toggle="tooltip" data-placement="right" title="Zmeniť smer načítavania rezervácií (minulosť/budúcnosť)" @onclick="async () => { await ViewModel.ZmenSmerNacitavania(); await complexTableAllRes.OnItemsChange(new (System.Collections.Specialized.NotifyCollectionChangedAction.Reset)); }">
+                    @if (ViewModel.SmerNacitavaniaAll)
+                    {<i class="bi bi-arrow-right"></i>}
+                    else
+                    {
+                        <i class="bi bi-arrow-left"></i>
+                    }
+                </button>
             </div>
+        </div>
 
-        }
-        <SelectModal @ref="SortSelectModal"></SelectModal>
+        <div id="@complexTableAllRes?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+            <ComplexTable @ref="complexTableAllRes"
+                          ID="resaslisttableres"
+                          T="Rezervation"
+                          Items="ViewModel.ZoznamVsetkychRezervacii"
+                          LoadingItems="ViewModel.NacitavaniePoloziek"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          MarkersStateChanged="(e, y) => marked = e"
+                          OnDbClick="@( async (item) => { resaslistmod.CloseModalExtern(true); await OpenRes(item); })"
+                          SetTableSettings="@((true, tableSettingsAllRes, null))">
+
+            </ComplexTable>
+        </div>
+
+        @*}*@
+
+        @*<SelectModal @ref="SortSelectModal"></SelectModal>*@
     </BODY>
 </CustomModal>
 
 
 <ItemFinderTableProp T="DBLayer.Models.Rezervation"
-                     @ref="nespracRes" 
-                     ID="RawResPick" 
-                     ColNames="@(new(){("Príchod","ArrivalDate"),("Odchod","DepartureDate"), ("Plánovaný počet","NumberGuest"), ("Cena","CelkovaSuma"), ("Status","Status"), ("Izba","RoomNumber")})" 
-                     ColValues="ViewModel.ZoznamNespracRezervacii"
-                     ></ItemFinderTableProp>
+                     @ref="nespracRes"
+                     ID="RawResPick"
+                     ColNames="@(new(){("Príchod","ArrivalDate"),("Odchod","DepartureDate"), ("Plánovaný počet","NumberGuest"), ("Cena","CelkovaSuma"), ("Status","Status"), ("Izba","RoomNumber")})"
+                     ColValues="ViewModel.ZoznamNespracRezervacii"></ItemFinderTableProp>
 
 <InfoModal @ref="modsaved" Text="Zmeny boli uložené"></InfoModal>
 
@@ -192,12 +167,13 @@
     <div class="d-flex justify-content-center align-items-center vh-100">
         <SpinnerLoading Size="3" />
     </div>
+    @InvokeAsync(StateHasChanged);
     return;
 }
 
 
 <div class="gantt">
-    <div class="sticky1 ms-1">
+    <div class="sticky1 ms-1 autooverflowx">
         <div class="sticky1 d-flex" role="group">
             <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
             <button type="button" class="btn btn-primary" @onclick="Create"><IconTextCreate></IconTextCreate></button>
@@ -309,6 +285,19 @@
     ItemFinderTableProp<DBLayer.Models.Rezervation> nespracRes;
     CustomModal resaslistmod = new();
 
+    ComplexTable<DBLayer.Models.Rezervation> complexTableAllRes;
+
+    List<TableColumnTemplate<DBLayer.Models.Rezervation>> tableSettingsAllRes = new()
+{
+            new () { ID_Prop = nameof(DBLayer.Models.Rezervation.ArrivalDate), HeaderValue = "Príchod", CellValue = (item) => item.ArrivalDate.ToString("dd.MM.yyyy") },
+            new () { ID_Prop = nameof(DBLayer.Models.Rezervation.DepartureDate), HeaderValue = "Odchod", CellValue = (item) => item.DepartureDate.ToString("dd.MM.yyyy") },
+            new () { ID_Prop = nameof(DBLayer.Models.Rezervation.NumberGuest), HeaderValue = "Plánovaný počet", CellValue = (item) => item.NumberGuest.ToString() },
+            new () { ID_Prop = nameof(DBLayer.Models.Rezervation.CelkovaSuma), HeaderValue = "Cena", CellValue = (item) => item.CelkovaSuma.ToString() },
+            new () { ID_Prop = nameof(DBLayer.Models.Rezervation.RoomNumber), HeaderValue = "Izba", CellValue = (item) => item.RoomNumber },
+            new () { ID_Prop = "emailhostallres", HeaderValue = "Email", CellValue = (item) => item.Guest?.Email ?? "", CellConvert = ((item) => item.Guest?.Email, typeof(string)) },
+            new () { ID_Prop = nameof(DBLayer.Models.Rezervation.Status), HeaderValue = "Status", CellValue = (item) => item.Status, SelectionList = Enum.GetNames(typeof(DBLayer.Models.ReservationStatus)).ToList() },
+             new () { ID_Prop = "naposledyupravilallres", HeaderValue = "Naposledy upravil", CellValue = (item) => item.GetRecentChangedUserName(), CellConvert = ((item) => item.GetRecentChangedUserName(), typeof(string)) },
+        };
 
 
     protected override void OnInitialized()
@@ -329,7 +318,7 @@
         }
         await ViewModel.NacitajZoznamy();
         RoomsToShow = new(ViewModel.ZoznamIzieb.ToList());
-        ZoznamSort = ViewModel.ZoznamVsetkychRezervacii;
+        //ZoznamSort = ViewModel.ZoznamVsetkychRezervacii;
     }
 
     public void Close()
@@ -422,12 +411,16 @@
 
     private async Task ListAll()
     {
-        resaslistmod.Render = true;
+        //resaslistmod.Render = true;
         await ViewModel.NacitajZoznamRezervacieAll();
-        await resaslistmod.OpenModal(true);
-        resaslistmod.Render = false;
-        ViewModel.ClearChangesDB();
-        await ViewModel.SpracujZmeny();
+        await complexTableAllRes.OnItemsChange(new(System.Collections.Specialized.NotifyCollectionChangedAction.Reset));
+        if (!await resaslistmod.OpenModal(true))
+        {
+            ViewModel.ClearChangesDB();
+            await ViewModel.SpracujZmeny();
+        }
+        //resaslistmod.Render = false;
+
 
     }
 }

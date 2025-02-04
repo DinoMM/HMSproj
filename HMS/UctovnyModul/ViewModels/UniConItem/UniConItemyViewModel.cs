@@ -4,16 +4,15 @@ using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.ObjectModel;
+using UniComponents;
 
 namespace UctovnyModul.ViewModels
 {
-    public partial class UniConItemyViewModel : ObservableObject
+    public class UniConItemyViewModel : AObservableViewModel<UniConItemPoklDokladu>
     {
-        [ObservableProperty]
-        ObservableCollection<UniConItemPoklDokladu> zoznamPoloziek = new();
         List<UniConItemPoklDokladu> zoznamPoloziekAll = new();
 
-        public bool NacitavaniePoloziek { get; private set; } = true;
+        List<(UniConItemPoklDokladu, bool)> moznoVymazatList = new();
 
         Type typSpojenia = typeof(PolozkaSkladuConItemPoklDokladu);
 
@@ -37,48 +36,57 @@ namespace UctovnyModul.ViewModels
             return _userService.IsLoggedUserInRoles(UniConItemPoklDokladu.ROLE_CRUD_POLOZKY);
         }
 
-        public async Task NacitajZoznamy()
+        protected override async Task NacitajZoznamyAsync()
         {
-            zoznamPoloziekAll = new(await _db.UniConItemyPoklDokladu
-                .OrderByDescending(x => x.ID)
-                .Include(x => ((PolozkaSkladuConItemPoklDokladu)x).PolozkaSkladuMnozstvaX)
-                .ThenInclude(x => x.PolozkaSkladuX)
-                .ToListAsync());
-            var polozkyRes = zoznamPoloziekAll.Where(x => x is ReservationConItemPoklDokladu)
-                .Select(x => ((ReservationConItemPoklDokladu)x))
-                .ToList();
-            foreach (var item in polozkyRes)
+            await Task.Run(async () =>
             {
-                var found = await _dbw.Rezervations
-                    .Include(x => x.Room)
-                    .Include(x => x.Coupon)
-                    .Include(x => x.Guest)
-                    .FirstOrDefaultAsync(x => x.Id == item.Reservation);
-                if (found == null)
+                zoznamPoloziekAll = new(await _db.UniConItemyPoklDokladu
+                    .OrderByDescending(x => x.ID)
+                    .Include(x => ((PolozkaSkladuConItemPoklDokladu)x).PolozkaSkladuMnozstvaX)
+                    .ThenInclude(x => x.PolozkaSkladuX)
+                    .ToListAsync());
+                var polozkyRes = zoznamPoloziekAll.Where(x => x is ReservationConItemPoklDokladu)
+                    .Select(x => ((ReservationConItemPoklDokladu)x))
+                    .ToList();
+                foreach (var item in polozkyRes)
                 {
-                    continue;
+                    var found = await _dbw.Rezervations
+                        .Include(x => x.Room)
+                        .Include(x => x.Coupon)
+                        .Include(x => x.Guest)
+                        .FirstOrDefaultAsync(x => x.Id == item.Reservation);
+                    if (found == null)
+                    {
+                        continue;
+                    }
+                    item.ReservationZ = found;
                 }
-                item.ReservationZ = found;
-            }
-            ZoznamPoloziek.Clear();
-            foreach (var item in zoznamPoloziekAll)
-            {
-                if (item.GetType() == typSpojenia)
+                ZoznamPoloziek = new();
+                foreach (var item in zoznamPoloziekAll)
                 {
-                    ZoznamPoloziek.Add(item);
+                    if (item.GetType() == typSpojenia)
+                    {
+                        ZoznamPoloziek.Add(item);
+                    }
                 }
-            }
-            NacitavaniePoloziek = false;
+
+                foreach (var item in zoznamPoloziekAll)
+                {
+                    moznoVymazatList.Add((item, !_db.ItemyPokladDokladu.Any(x => x.UniConItemPoklDokladu == item.ID)));
+                }
+            });
         }
 
-        public bool MoznoVymazat(UniConItemPoklDokladu item)
+        public override bool MoznoVymazat(UniConItemPoklDokladu item)
         {
-            return false;
+            return moznoVymazatList.FirstOrDefault(x => x.Item1 == item).Item2;
         }
 
-        public void Vymazat(UniConItemPoklDokladu item)
+        public override void Vymazat(UniConItemPoklDokladu item)
         {
-
+            base.Vymazat(item);
+            _db.UniConItemyPoklDokladu.Remove(item);
+            _db.SaveChanges();
         }
 
         public List<string> TypyList()
@@ -98,7 +106,7 @@ namespace UctovnyModul.ViewModels
             return new PolozkaSkladuConItemPoklDokladu().GetTypeUni();
         }
 
-        public void SpravujZmenuTypu(string typ)
+        public async Task SpravujZmenuTypu(string typ)
         {
             if (!TypyList().Contains(typ))
             {
@@ -114,15 +122,21 @@ namespace UctovnyModul.ViewModels
                 typSpojenia = typeof(PolozkaSkladuConItemPoklDokladu);
             }
 
-            ZoznamPoloziek.Clear();
-            foreach (var item in zoznamPoloziekAll)
-            {
-                if (item.GetType() == typSpojenia)
+            ZoznamPoloziek.CollectionChanged -= OnCollectionChanged;
+            Nacitavanie = true;
+            await Task.Run(() => {
+                ZoznamPoloziek.Clear();
+                foreach (var item in zoznamPoloziekAll)
                 {
-                    ZoznamPoloziek.Add(item);
+                    if (item.GetType() == typSpojenia)
+                    {
+                        ZoznamPoloziek.Add(item);
+                    }
                 }
-            }
-
+                OnCollectionChanged(this, new(System.Collections.Specialized.NotifyCollectionChangedAction.Reset));
+            });
+            ZoznamPoloziek.CollectionChanged += OnCollectionChanged;
+            Nacitavanie = false;
         }
 
         public string GetHeaderTable()

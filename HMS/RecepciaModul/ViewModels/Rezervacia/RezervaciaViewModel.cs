@@ -16,7 +16,7 @@ namespace RecepciaModul.ViewModels
         [ObservableProperty]
         ObservableCollection<Room> zoznamIzieb = new();
         public List<Rezervation> ZoznamNespracRezervacii { get; set; } = new();
-        public List<Rezervation> ZoznamVsetkychRezervacii { get; set; } = new();
+        public ObservableCollection<Rezervation> ZoznamVsetkychRezervacii { get; set; } = new();
         public List<DateTime> ZoznamDatumovNaZobrazenie { get; private set; } = new();
 
         #region polia na vyplnenie
@@ -105,28 +105,33 @@ namespace RecepciaModul.ViewModels
                 if (SmerNacitavaniaAll)
                 {
                     var yesterday = DateTime.Today.AddDays(-1);
-                    ZoznamVsetkychRezervacii.AddRange(await _dbw.Rezervations
+                    (await _dbw.Rezervations
                             .Include(x => x.Guest)
                             .Include(x => x.Room)
                             .Include(x => x.Coupon)
                             .Where(x => x.ArrivalDate >= yesterday)
                             .OrderBy(x => x.ArrivalDate)
                             .ToListAsync()
-                            );  //naèítané rezervacie v rozmedzi datumov
+                            )
+                            .ForEach(x => ZoznamVsetkychRezervacii.Add(x));  //naèítané rezervacie v rozmedzi datumov
                 }
                 else
                 {
-                    ZoznamVsetkychRezervacii.AddRange(await _dbw.Rezervations
+                    (await _dbw.Rezervations
                             .Include(x => x.Guest)
                             .Include(x => x.Room)
                             .Include(x => x.Coupon)
                             .Where(x => x.ArrivalDate <= DateTime.Today)
                             .OrderByDescending(x => x.DepartureDate)
                             .ToListAsync()
-                            );  //naèítané rezervacie v rozmedzi datumov
+                            )
+                            .ForEach(x => ZoznamVsetkychRezervacii.Add(x));  //naèítané rezervacie v rozmedzi datumov
                 }
-
-                ZoznamVsetkychRezervacii.ForEach(x => x.RecentChangesUserZ = x.RecentChangesUserZ ?? Rezervation.GetRecentChangedUser(x, in _db)); //nacita recent userov
+                foreach (var item in ZoznamVsetkychRezervacii) //nacita recent userov
+                {
+                    item.RecentChangesUserZ = item.RecentChangesUserZ ?? Rezervation.GetRecentChangedUser(item, in _db); 
+                }
+                //ZoznamVsetkychRezervacii.ForEach(x => x.RecentChangesUserZ = x.RecentChangesUserZ ?? Rezervation.GetRecentChangedUser(x, in _db)); //nacita recent userov
             }
 
         }
@@ -323,6 +328,15 @@ namespace RecepciaModul.ViewModels
             if (ZoznamHosti.Count == 0)
             {
                 ZoznamHosti.AddRange(await _db.Hostia.OrderBy(x => x.Surname).ToListAsync());
+                await Task.Run(() => {
+                    foreach (var item in ZoznamHosti)   //nacita k hostom ich web ucty ak maju
+                    {
+                        if (!string.IsNullOrEmpty(item.Guest)) {
+                            item.GuestZ = ZoznamWebGuest.FirstOrDefault(x => x.Id == item.Guest);
+                        }
+                        //nenacitava pokladnicne bloky dalej
+                    }
+                });
             }
 
             NacitavaniePoloziek = false;

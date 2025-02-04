@@ -1,6 +1,6 @@
 ﻿@namespace LudskeZdrojeModul
 @page "/Zam"
-@inject ZamViewModel ViewModel
+@inherits TransientHoldedComp<ZamViewModel>
 
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
@@ -12,19 +12,19 @@
            Text="Nemožno vymazať osobu lebo je to aktualne prihlásená osoba alebo má role.">
 </InfoModal>
 
-<div class="container">
+<div class="container maxwidth95">
 
     <div class="row pb-1">
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="@(ViewModel.ValidateUserCRUD() ? 7 : 5)" PlaceHolder="Vyhľadaj zamestnanca..." TableID="tableid"></SearchInput>
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj zamestnanca..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
 
         <div class="col-9">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
                 <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary"><IconTextCreate></IconTextCreate></button>
-                <button type="button" @onclick="Open" disabled="@(marked == null || !UserService.IsLoggedUserInRoles(IdentityUserOwn.ROLE_CRUD_ZAMESTNANCI))" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null || !UserService.IsLoggedUserInRoles(IdentityUserOwn.ROLE_CRUD_ZAMESTNANCI))" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
             </div>
         </div>
 
@@ -33,62 +33,20 @@
 
     <div class="row">
         <div class="col-1"></div>
-        <div class="col-12" style="max-height: 30rem;overflow: auto;">
-            <SimpleTable ID="tableid">
-                <THEAD>
-
-                    <ThSort>Meno</ThSort>
-                    <ThSort>Priezvisko</ThSort>
-                    <ThSort>Email</ThSort>
-                    <ThSort>Telefón</ThSort>
-                    @if (ViewModel.ValidateUserCRUD())
-                    {
-                        <ThSort>IBAN</ThSort>
-                        <ThSort>Adresa</ThSort>
-                        <ThSort>Občiansky</ThSort>
-                    }
-                    <ThSort>Profesia</ThSort>
-                    <ThSort></ThSort>
-
-                </THEAD>
-                <TBODY>
-                    @if (ViewModel.NacitavaniePoloziek)
-                    {
-                        <div class="ms-1">
-                            <SpinnerLoading Size="2.0"></SpinnerLoading>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var item in ViewModel.ZoznamZamestnancov)
-                        {
-
-                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
-                                <td class="col-resize">@item.Name</td>
-                                <td class="col-resize">@item.Surname</td>
-                                <td class="col-resize">@item.Email</td>
-                                <td class="col-resize">@item.PhoneNumber</td>
-                                @if (ViewModel.ValidateUserCRUD())
-                                {
-                                    <td class="col-resize">@item.IBAN</td>
-                                    <td class="col-resize">@item.Adresa</td>
-                                    <td class="col-resize">@item.ObcianskyID</td>
-                                }
-                                <td class="col-resize">@ViewModel.GetRoleString(item)</td>
-                                <td>
-                                    @if (ViewModel.ValidateUserCRUD())
-                                    {
-                                        <ButtonRemove Disabled="@(!ViewModel.MoznoVymazat(item))" OnClick="@(() => Delete(item))"></ButtonRemove>
-                                    }
-                                </td>
-
-                            </tr>
-                        }
-                    }
-                    <span id="observerTarget"></span>
-                </TBODY>
-
-            </SimpleTable>
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+            <ComplexTable @ref="ViewModel.ComplexTable"
+                          ID="complextable"
+                          T="IdentityUserOwn"
+                          Items="ViewModel.ZoznamPoloziek"
+                          LoadingItems="ViewModel.Nacitavanie"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.NacitajZoznamy"
+                          CollectionChanged="ViewModel.OnCollectionChanged"
+                          OnDbClick="(item) => Open(item)"
+                          SetTableSettings="@((true, tableSettings, null))">
+            </ComplexTable>
         </div>
         <div class="col-1"></div>
     </div>
@@ -100,12 +58,42 @@
 </div>
 
 @code {
-    private IdentityUserOwn? marked;
+    private IdentityUserOwn? marked { get => ViewModel?.ComplexTable?.Marked; }
     private ApproveModal AprovMod = new();
     private InfoModal InfoModHasConneciton = new();
 
+    List<TableColumnTemplate<IdentityUserOwn>> tableSettings = new()
+{
+        new () { ID_Prop = nameof(IdentityUserOwn.Name), HeaderValue = "Meno", CellValue = (item) => item.Name },
+        new () { ID_Prop = nameof(IdentityUserOwn.Surname), HeaderValue = "Priezvisko", CellValue = (item) => item.Surname },
+        new () { ID_Prop = nameof(IdentityUserOwn.Email), HeaderValue = "Email", CellValue = (item) => item.Email ?? "" },
+        new () { ID_Prop = nameof(IdentityUserOwn.PhoneNumber), HeaderValue = "Telefón", CellValue = (item) => item.PhoneNumber ?? "" },
 
-    protected override void OnInitialized()
+    };
+
+    protected override void OnInitializedMustHave()
+    {
+        tableSettings.Add(new() { ID_Prop = "profesia", HeaderValue = "Profesia", CellValue = (item) => ViewModel.GetRoleString(item), CellConvert = ((item) => ViewModel.GetRoleString(item), typeof(string)) });
+        @if (ViewModel.ValidateUserCRUD())
+        {
+            tableSettings.Add(new() { ID_Prop = nameof(IdentityUserOwn.IBAN), HeaderValue = "IBAN", CellValue = (item) => item.IBAN ?? "" });
+            tableSettings.Add(new() { ID_Prop = nameof(IdentityUserOwn.Nationality), HeaderValue = "Národnosť", CellValue = (item) => item.Nationality });
+            tableSettings.Add(new() { ID_Prop = nameof(IdentityUserOwn.Adresa), HeaderValue = "Adresa", CellValue = (item) => item.Adresa ?? "" });
+            tableSettings.Add(new() { ID_Prop = nameof(IdentityUserOwn.ObcianskyID), HeaderValue = "Občianský", CellValue = (item) => item.ObcianskyID });
+            tableSettings.Add(new() { ID_Prop = nameof(IdentityUserOwn.RodneCislo), HeaderValue = "Rodné č.", CellValue = (item) => item.RodneCislo, Visible = false });
+            tableSettings.Add(new() { ID_Prop = nameof(IdentityUserOwn.Sex), HeaderValue = "Pohlavie", CellValue = (item) => item.GetPohlavie(), Visible = false });
+
+            tableSettings.Add(new()
+            {
+                Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))))
+            });
+        }
+
+        
+    }
+
+
+    protected override void OnInitializedTransient()
     {
         if (!ViewModel.ValidateUser())
         {
@@ -114,7 +102,7 @@
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedTransientAsync()
     {
         await ViewModel.NacitajZoznamy();
     }
@@ -124,13 +112,13 @@
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
 
-    public void Open()
+    public async Task Open(IdentityUserOwn item)
     {
-        if (marked != null)
+        if (item != null)
         {
             if (UserService.IsLoggedUserInRoles(IdentityUserOwn.ROLE_CRUD_ZAMESTNANCI))
             {
-                objectHolder.Add(marked);
+                objectHolder.Add(item);
                 Navigator.NavigateTo(Navigator.AddNextUrl("/Cruzam"));
             }
         }
@@ -142,7 +130,8 @@
         {
             if (await AprovMod.OpenModal(true))
             {
-                await ViewModel.Vymazat(user);
+                await ViewModel.VymazatAsync(user);
+                StateHasChanged();
             }
         }
         else
@@ -155,6 +144,7 @@
     {
         if (ViewModel.ValidateUserCRUD())
         {
+            SetStartConditionOnVisit();
             Navigator.NavigateTo(Navigator.AddNextUrl("/Cruzam"));
         }
     }

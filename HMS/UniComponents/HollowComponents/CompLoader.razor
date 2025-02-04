@@ -11,6 +11,8 @@
     [Parameter]
     public RenderFragment? ChildContent { get; set; }
 
+    //private TaskCompletionSource? tcs;
+
     /// <summary>
     /// Spustí zrenderovanie vnútra spolu s príslušným kódom
     /// </summary>
@@ -20,8 +22,10 @@
     {
         if (!Rendered)  //ak je jeho prve renderovanie tak pošleme act aby sa spustil po zrenderovani ChildContent
         {
+            //tcs = new TaskCompletionSource();
             StartRender();
-            AfterRender = () => StartChildContent(act);
+            AfterRender = async () => await StartChildContent(act);
+            StateHasChanged();
             return;
         }
         if (act != null)
@@ -32,7 +36,13 @@
 
     public async Task StopChildContent()
     {
+        //tcs.TrySetResult();
         await base.Dispose();
     }
+
+    //public async Task WaitThere()
+    //{
+    //    await tcs.Task;
+    //}
 
 }

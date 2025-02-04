@@ -147,7 +147,7 @@ namespace HMS
             builder.Services.AddScoped<PridPolozkyViewModel>();
             builder.Services.AddTransient<ObjednavkaViewModel>();
 
-            builder.Services.AddScoped<SkladViewModel>();
+            builder.Services.AddTransient<SkladViewModel>();
             builder.Services.AddTransient<ModifPolozSkladViewModel>();
             builder.Services.AddTransient<PrijemPolozViewModel>();
             builder.Services.AddScoped<ModifPrijemkaViewModel>();

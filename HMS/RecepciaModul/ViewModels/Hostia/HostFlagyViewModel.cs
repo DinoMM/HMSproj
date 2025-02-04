@@ -2,17 +2,18 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using DBLayer;
 using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using System.Collections.ObjectModel;
+using UniComponents;
 
 namespace RecepciaModul.ViewModels
 {
-    public partial class HostFlagyViewModel : ObservableObject
+    public class HostFlagyViewModel : AObservableViewModel<HostFlag>
     {
-        [ObservableProperty]
-        ObservableCollection<HostFlag> zoznamFlagov = new();
+        List<(HostFlag, bool)> moznoVymazatList = new();
 
-        public bool NacitavaniePoloziek { get; private set; } = true;
-
+        public ObservableCollection<Host> ZoznamHostiFlagy { get; set; } = new();
+        public List<Host> OdstraniFlaguHostList { get; set; } = new();
         public HostFlag EditFlag { get; set; } = new() { DateValue = DateTime.Now };
         public bool Existuje { get; set; } = false;
 
@@ -29,32 +30,37 @@ namespace RecepciaModul.ViewModels
         {
             return _userService.IsLoggedUserInRoles(Host.ROLE_R_HOSTIA);
         }
-
         public bool ValidateUserCUD()
         {
             return _userService.IsLoggedUserInRoles(Host.ROLE_D_HOSTIA);
         }
 
-        public async Task NacitajZoznamy()
+        protected override async Task NacitajZoznamyAsync()
         {
-            _db.HostFlags
-                .OrderBy(x => x.ID)
-                .ToList()
-                .ForEach(x => ZoznamFlagov.Add(x));
-            NacitavaniePoloziek = false;
+            await Task.Run(() =>
+            {
+                ZoznamPoloziek = new(_db.HostFlags
+                    .OrderBy(x => x.ID)
+                    .ToList());
+
+                foreach (var item in ZoznamPoloziek)
+                {
+                    moznoVymazatList.Add((item, !_db.HostConFlags.Any(x => x.HostFlag == item.ID)));
+                }
+            });
         }
 
-        public bool MoznoVymazat(HostFlag item)
+        public override bool MoznoVymazat(HostFlag item)
         {
-            return _db.HostConFlags.Any(x => x.HostFlag == item.ID);
+            return moznoVymazatList.FirstOrDefault(x => x.Item1 == item).Item2;
         }
 
-        public void Vymazat(HostFlag item)
+        public override void Vymazat(HostFlag item)
         {
             var found = _db.HostFlags.FirstOrDefault(x => x.ID == item.ID);
             if (found != null)
             {
-                ZoznamFlagov.Remove(item);
+                base.Vymazat(item);
                 _db.HostFlags.Remove(found);
                 _db.SaveChanges();
             }
@@ -67,7 +73,7 @@ namespace RecepciaModul.ViewModels
                 _db.HostFlags.Add(EditFlag);
                 Existuje = true;
 
-                ZoznamFlagov.Add(EditFlag);
+                ZoznamPoloziek.Add(EditFlag);
             }
             else
             {
@@ -79,7 +85,46 @@ namespace RecepciaModul.ViewModels
 
         public bool KontrolaExistencieID()
         {
-            return !Existuje && ZoznamFlagov.Any(x => x.ID == EditFlag.ID);
+            return !Existuje && ZoznamPoloziek.Any(x => x.ID == EditFlag.ID);
+        }
+
+        public async Task LoadHostiaZFlagy(HostFlag flaga)
+        {
+            Nacitavanie = true;
+            ZoznamHostiFlagy.Clear();
+            OdstraniFlaguHostList.Clear();
+            await Task.Run(() =>
+            {
+                _db.HostConFlags.Include(x => x.HostX)
+                .Where(x => x.HostFlag == flaga.ID)
+                .ForEachAsync(x => ZoznamHostiFlagy.Add(x.HostX));
+            });
+            Nacitavanie = false;
+        }
+
+        public async Task OdstranHostiZFlagy()
+        {
+            Nacitavanie = true;
+            await Task.Run(() =>
+            {
+                var canSave = false;
+                foreach (var item in OdstraniFlaguHostList)
+                {
+                    var found = _db.HostConFlags.FirstOrDefault(x => x.Host == item.ID);
+                    if (found != null)
+                    {
+                        _db.HostConFlags.Remove(found);
+                        canSave = true;
+                    }
+                }
+                if (canSave)
+                {
+                    _db.SaveChanges();
+                }
+                ZoznamHostiFlagy.Clear();
+                OdstraniFlaguHostList.Clear();
+            });
+            Nacitavanie = false;
         }
     }
 }

@@ -6,17 +6,19 @@ using System.Collections.ObjectModel;
 using currencyapi;
 using Azure;
 using System.Diagnostics;
+using UniComponents;
 
 namespace UctovnyModul.ViewModels
 {
-    public partial class ZmenarenViewModel : ObservableObject
+    public class ZmenarenViewModel : AObservableViewModel<ZmenaMeny>
     {
-        public bool NacitavaniePoloziek { get; private set; } = true;
+        //public bool NacitavaniePoloziek { get; private set; } = true;
         public bool ChybaPriNacitavani { get; private set; } = false;
 
         private Currencyapi currencyapi;
+        private bool curencyapiLoaded = false;
         public List<Currency>? ZoznamCurrencies { get; set; } = new();
-        public List<ZmenaMeny> ZoznamTransakcii { get; set; } = new();
+        //public List<ZmenaMeny> ZoznamTransakcii { get; set; } = new();
 
         public ZmenaMeny NovaTransakcia { get; set; } = new();
 
@@ -39,43 +41,45 @@ namespace UctovnyModul.ViewModels
             return _userService.IsLoggedUserInRoles(ZmenaMeny.ROLE_D_ZMENAREN);
         }
 
-        public async Task NacitajZoznamy()
+        protected override async Task NacitajZoznamyAsync()
         {
-            ZoznamTransakcii.AddRange(await _db.ZmenyMien
-                .OrderByDescending(x => x.ID)
-                .ToListAsync());
+            ZoznamPoloziek = new(await _db.ZmenyMien
+               .OrderByDescending(x => x.ID)
+               .ToListAsync());
 
-            try
+            if (!curencyapiLoaded)
             {
-                currencyapi = new Currencyapi(Environment.GetEnvironmentVariable("API_KEY_CURRENCYAPI") ?? ""); //nastavenie API kluca
-
-                ZoznamCurrencies = Currency.GetListOfCurrenciesFromJsonString(currencyapi.Currencies()); //ziskanie vsetkych mien
-                if (ZoznamCurrencies == null)
+                try
                 {
-                    throw new InvalidOperationException();
-                }
-            }
-            catch (Exception ex)
-            {
-                ChybaPriNacitavani = true;
-            }
+                    currencyapi = new Currencyapi(Environment.GetEnvironmentVariable("API_KEY_CURRENCYAPI") ?? ""); //nastavenie API kluca
 
-            NacitavaniePoloziek = false;
+                    ZoznamCurrencies = Currency.GetListOfCurrenciesFromJsonString(currencyapi.Currencies()); //ziskanie vsetkych mien
+                    if (ZoznamCurrencies == null)
+                    {
+                        throw new InvalidOperationException();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ChybaPriNacitavani = true;
+                }
+                curencyapiLoaded = true;
+            }
         }
 
-        public bool MoznoVymazat(ZmenaMeny item)
+        public override bool MoznoVymazat(ZmenaMeny item)
         {
             return true;
         }
 
-        public void Vymazat(ZmenaMeny item)
+        public override void Vymazat(ZmenaMeny item)
         {
             var found = _db.ZmenyMien.FirstOrDefault(x => x.ID == item.ID);
             if (found == null)
             {
                 return;
             }
-            ZoznamTransakcii.Remove(item);
+            base.Vymazat(item);
             _db.ZmenyMien.Remove(found);
             _db.SaveChanges();
         }
@@ -85,7 +89,7 @@ namespace UctovnyModul.ViewModels
             NovaTransakcia.Vznik = DateTime.Now;
             _db.ZmenyMien.Add(NovaTransakcia);
             _db.SaveChanges();
-            ZoznamTransakcii.Add(NovaTransakcia);
+            ZoznamPoloziek.Add(NovaTransakcia);
             NovaTransakcia = new();
             return true;
         }

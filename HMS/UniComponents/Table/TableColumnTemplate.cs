@@ -21,9 +21,9 @@ namespace UniComponents
         public string? ID_Prop { get; set; }
 
         /// <summary>
-        /// Použitá metóda na triedenie, default null pre klasický Sort pre objekty (asc-desc)
+        /// Pre filtrovanie, ak uzivatel da dvojklik tak sa zobrazi okno s moznostami na sortovanie v stlpci, Default null
         /// </summary>
-        public Func<string, object, List<T>, Func<T, object?>?, Task>? DB_Click_Sort { get; set; }
+        public List<string>? SelectionList { get; set; } = null;
 
         /// <summary>
         /// Zobrazený text v hlavičke stĺpca
@@ -73,7 +73,7 @@ namespace UniComponents
             return new TableColumnTemplate<T>
             {
                 ID_Prop = this.ID_Prop,
-                DB_Click_Sort = this.DB_Click_Sort,
+                SelectionList = this.SelectionList,
                 HeaderValue = this.HeaderValue,
                 HeaderClass = this.HeaderClass,
                 CellValue = this.CellValue,

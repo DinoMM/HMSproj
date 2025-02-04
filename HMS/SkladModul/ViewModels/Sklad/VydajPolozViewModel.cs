@@ -9,17 +9,17 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UniComponents;
 using Ssklad = DBLayer.Models.Sklad;
 using Vvydajka = DBLayer.Models.Vydajka;
 
 namespace SkladModul.ViewModels.Sklad
 {
-    public partial class VydajPolozViewModel : ObservableObject 
+    public class VydajPolozViewModel : AObservableViewModel<Vvydajka>
     {
-        [ObservableProperty]
-        ObservableCollection<Vvydajka> zoznamVydajok = new();
-        public DateTime Obdobie { get; set; }
-        public Ssklad Sklad { get; set; }
+        public DateTime Obdobie { get; set; } = new();
+        public Ssklad Sklad { get; set; } = new();
+        public bool IsObdobieActual { get; set; } = false;
 
         DBContext _db;
 
@@ -34,26 +34,31 @@ namespace SkladModul.ViewModels.Sklad
             Obdobie = Ssklad.DateFromShortForm(ob);
         }
 
-        public void LoadZoznam()
+        protected override async Task NacitajZoznamyAsync()
         {
-            ZoznamVydajok = new(_db.Vydajky
-                .Include(x => x.SkladX)
-                .Include(x => x.DruhPohybuX)
-                .Where(x => x.Obdobie >= Obdobie && x.Sklad == Sklad.ID)
-                .OrderByDescending(x => x.Vznik));
+            await Task.Run(() =>
+            {
+                ZoznamPoloziek = new(_db.Vydajky
+                    .Include(x => x.SkladX)
+                    .Include(x => x.DruhPohybuX)
+                    .Where(x => x.Obdobie >= Obdobie && x.Sklad == Sklad.ID)
+                    .OrderByDescending(x => x.Vznik)
+                    .ToList());
+
+                IsObdobieActual = SkladObdobie.IsObdobieActual(Sklad, Obdobie, in _db);
+            });
         }
 
-        [RelayCommand]
-        private void Vymaz(Vvydajka poloz)
+        public override bool MoznoVymazat(Vvydajka polozka)
         {
-            ZoznamVydajok.Remove(poloz);
+            return !polozka.Spracovana;
+        }
+
+        public override void Vymazat(Vvydajka poloz)
+        {
+            base.Vymazat(poloz);
             _db.Vydajky.Remove(poloz);
             _db.SaveChanges();
-        }
-
-        public bool IsObdobieActual()
-        {
-            return SkladObdobie.IsObdobieActual(Sklad, Obdobie, in _db);
         }
     }
 }

@@ -1,0 +1,125 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+@inherits CustomDynamicModal
+@typeparam T where T : class
+
+@if (Rendered)
+{
+    <div class="modal fade" id="@ID" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true" @onkeydown="HandleKeyDown">
+        <div class="modal-dialog modal-lg" style="@($"max-width:{(SizeInRem == 0 ? "30" : SizeInRem)}rem") ">
+            <div class="modal-content">
+                <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
+                    <div class="col-3 d-flex justify-content-bottom mb-1">
+                        @*<SearchInput @ref="srchinp" ID="@IDSearch" NumCols="@NumCols" PlaceHolder="Vyhľadaj..." TableID="@IDTable" SearchValue="@SearchedValue"></SearchInput>*@
+                        <SearchManualInput ID="@ID" Salt="srchinput" Header="Vyhľadaj..." OnFilterRequest="(e) => ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
+                    </div>
+                    <div class="modal-title h3 text-dark ms-4" id="staticBackdropLabel">
+                        @Header
+                    </div>
+                </div>
+                <div class="modal-body @(ChangeColor ? "custom-modal-body" : "")" id="modalATextxLabel">
+                    <div id="@ComplexTable?.ID_scrollbar" class="col-12" style="max-height: @(SizeInRem == 0 ? "30rem" : $"{SizeInRem}rem");overflow: auto;">
+                        <ComplexTable @ref="ComplexTable"
+                                      ID="@(ID + "ctable")"
+                                      T="T"
+                                      Items="Items"
+                                      LoadingItems="false"
+                                      Sticky="true"
+                                      Selectable="Selectable"
+                                      MultiSelect="MultiSelect"
+                                      SelectableNull="SelectEmptyInstance"
+                                      ParentStateHasChanged="ParentStateHasChanged"
+                                      SetTableSettings="@SetTableSettings">
+
+                        </ComplexTable>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer @(ChangeColor ? "custom-modal-footer" : "")">
+                    @if (SelectEmptyInstance)
+                    {
+                        <button type="button" class="btn btn-warning" data-bs-dismiss="modal" @onclick="EmptyInstance">Vyčistiť</button>
+                    }
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" disabled="@((ComplexTable?.Markers.Count ?? 0) == 0)" @onclick="CloseSucc">Vyber</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zruš</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+
+    [CopyProperties]
+    public ComplexTable<T>? ComplexTable { get; set; }
+
+    [Parameter]
+    public System.Collections.ObjectModel.ObservableCollection<T>? Items { get; set; }
+
+    /// <summary>
+    /// default true
+    /// </summary>
+    [Parameter]
+    public bool Selectable { get; set; } = true;
+
+    /// <summary>
+    /// default false
+    /// </summary>
+    [Parameter]
+    public bool MultiSelect { get; set; } = false;
+
+    /// <summary>
+    /// default false
+    /// </summary>
+    [Parameter]
+    public bool SelectEmptyInstance { get; set; } = false;
+
+    /// <summary>
+    /// Tovnako ako v ComplexTable
+    /// </summary>
+    [Parameter]
+    public (bool iniCheck, List<TableColumnTemplate<T>>? listTableSettings, List<(string name, Func<T, string>? cellValue, (Func<T, object?>, Type)? cellConvert)>? visibleColls)? SetTableSettings { get; set; } = null;
+
+    /// <summary>
+    /// Slúži pre update parenta, napr. keď sa zmení Marked/Markers tak aby sa parrent komponent updatol ak využíva Selection. Nahoď sem StateHasChanged, fajn pre @ref spojenia. Default EventCallback.Empty.
+    /// </summary>
+    [Parameter]
+    public EventCallback ParentStateHasChanged { get; set; } = EventCallback.Empty;
+
+    public async Task EmptyInstance()
+    {
+        ComplexTable.Marked = null;
+        ComplexTable.Markers.Clear();
+        CloseModal(true);
+        await ParentStateHasChanged.InvokeAsync();
+    }
+
+    public async Task CloseSucc()
+    {
+        if (ComplexTable.Markers.Count == 0)
+        {
+            CloseModal(false);
+        }
+        CloseModal(true);
+        await ParentStateHasChanged.InvokeAsync();
+    }
+
+    /// <summary>
+    /// Nastaví vnutrony zoznam podla listu
+    /// </summary>
+    /// <param name="list"></param>
+    public void SetItemsFromList(IList<T> list)
+    {
+        if (Items == null)
+        {
+            Items = new();
+        }
+        Items.Clear();
+        foreach (var item in list)
+        {
+            Items.Add(item);
+        }
+    }
+
+}

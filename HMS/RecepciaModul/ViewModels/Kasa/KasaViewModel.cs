@@ -8,12 +8,9 @@ using UniComponents;
 
 namespace RecepciaModul.ViewModels
 {
-    public partial class KasaViewModel : ObservableObject
+    public class KasaViewModel : AObservableViewModel<DBLayer.Models.PokladnicnyDoklad>
     {
-        public List<DBLayer.Models.PokladnicnyDoklad> ZoznamBlockov = new();
         public List<DBLayer.Models.Kasa> ZoznamKas = new();
-
-        public bool NacitavaniePoloziek { get; private set; } = true;
 
         public DBLayer.Models.Kasa? AktlKasa { get; set; } = null;
 
@@ -36,12 +33,10 @@ namespace RecepciaModul.ViewModels
         {
             return _userService.IsLoggedUserInRoles(DBLayer.Models.PokladnicnyDoklad.ROLE_CRU_POKLDOKL);
         }
-
         public bool ValidateUserD()
         {
             return _userService.IsLoggedUserInRoles(DBLayer.Models.PokladnicnyDoklad.ROLE_D_POKLDOKL);
         }
-
         public bool ValidateUserKasaR()
         {
             return _userService.IsLoggedUserInRoles(DBLayer.Models.Kasa.ROLE_R_KASA);
@@ -52,15 +47,17 @@ namespace RecepciaModul.ViewModels
             return _userService.IsLoggedUserInRoles(DBLayer.Models.Kasa.ROLE_CRUD_KASA);
         }
 
-        public async Task NacitajZoznamy()
+        protected override async Task NacitajZoznamyAsync()
         {
-            NacitajKasy();
-            ZoznamBlockov = new(_db.PokladnicneDoklady
-                .Include(x => x.KasaX)
-                .Include(x => x.HostX)
-                .OrderByDescending(x => x.Vznik)
-                .ToList());
-            NacitavaniePoloziek = false;
+            await Task.Run(() =>
+            {
+                NacitajKasy();
+                ZoznamPoloziek = new(_db.PokladnicneDoklady
+                    .Include(x => x.KasaX)
+                    .Include(x => x.HostX)
+                    .OrderByDescending(x => x.Vznik)
+                    .ToList());
+            });
         }
 
         public void NacitajKasy()
@@ -72,19 +69,19 @@ namespace RecepciaModul.ViewModels
                 .ToList());
         }
 
-        public bool MoznoVymazat(DBLayer.Models.PokladnicnyDoklad item)
+        public override bool MoznoVymazat(DBLayer.Models.PokladnicnyDoklad item)
         {
             return !item.Spracovana;
         }
 
-        public void Vymazat(DBLayer.Models.PokladnicnyDoklad item)
+        public override void Vymazat(DBLayer.Models.PokladnicnyDoklad item)
         {
             var itemy = _db.ItemyPokladDokladu.Where(x => x.Skupina == item.ID).ToList();
             foreach (var ytem in itemy)
             {
                 _db.ItemyPokladDokladu.Remove(ytem);
             }
-            ZoznamBlockov.Remove(item);
+            base.Vymazat(item);
             _db.PokladnicneDoklady.Remove(item);
             _db.SaveChanges();
         }

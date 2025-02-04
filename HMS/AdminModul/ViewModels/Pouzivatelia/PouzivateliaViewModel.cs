@@ -7,18 +7,13 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UniComponents;
 
 namespace AdminModul.ViewModels.Pouzivatelia
 {
-    public partial class PouzivateliaViewModel : ObservableObject
+    public class PouzivateliaViewModel : AObservableViewModel<IdentityUserOwn>
     {
-        [ObservableProperty]
-        ObservableCollection<IdentityUserOwn> zoznamPouzivatelov = new();
-
-        [ObservableProperty]
-        ObservableCollection<(IdentityUserOwn, List<string>)> zoznamPouzivatelovRoli = new();
-
-        public bool NacitavaniePoloziek = true;
+        ObservableCollection<(IdentityUserOwn, List<string>)> ZoznamPouzivatelovRoli = new();
 
         private readonly DBContext _db;
         readonly UserService _userService;
@@ -26,17 +21,17 @@ namespace AdminModul.ViewModels.Pouzivatelia
         {
             _db = db;
             _userService = userService;
-
         }
-
-        public async Task NacitajZoznamy()
+        protected override async Task NacitajZoznamyAsync()
         {
-            ZoznamPouzivatelov = new(_db.Users.OrderBy(x => x.Surname).ToList());
-            foreach (var item in ZoznamPouzivatelov)    //pridanie zoznamov roli
+            await Task.Run(async () =>
             {
-                ZoznamPouzivatelovRoli.Add((item, await _userService.GetRolesFromUser(item)));
-            }
-            NacitavaniePoloziek = false;
+                ZoznamPoloziek = new(_db.Users.OrderBy(x => x.Surname).ToList());
+                foreach (var item in ZoznamPoloziek)    //pridanie zoznamov roli
+                {
+                    ZoznamPouzivatelovRoli.Add((item, await _userService.GetRolesFromUser(item)));
+                }
+            });
         }
 
         public bool ValidateUser()
@@ -66,7 +61,7 @@ namespace AdminModul.ViewModels.Pouzivatelia
             return rolesStr;
         }
 
-        public bool MoznoVymazat(IdentityUserOwn user)
+        public override bool MoznoVymazat(IdentityUserOwn user)
         {
             if (user.UserName == _userService.LoggedUser.UserName) //isty ako prihlaseny nemoze
             {
@@ -81,9 +76,9 @@ namespace AdminModul.ViewModels.Pouzivatelia
             return true;
         }
 
-        public async Task Vymazat(IdentityUserOwn user)
+        public async Task VymazatAsync(IdentityUserOwn user)
         {
-            ZoznamPouzivatelov.Remove(user);
+            base.Vymazat(user);
             ZoznamPouzivatelovRoli.Remove(ZoznamPouzivatelovRoli.FirstOrDefault(x => x.Item1 == user));
             await _userService.DeleteUser(user);
         }

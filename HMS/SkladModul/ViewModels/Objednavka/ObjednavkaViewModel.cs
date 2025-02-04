@@ -22,74 +22,74 @@ using System.Collections.Specialized;
 
 namespace SkladModul.ViewModels.Objednavka
 {
-    public partial class ObjednavkaViewModel : ObservableObject
+    public class ObjednavkaViewModel : AObservableViewModel<OBJ>
     {
-        public ObservableCollection<OBJ> ZoznamObjednavok { get; set; } = new();
         private DateTime posledneNacitanyDatum = DateTime.Today;
 
         public bool PdfLoading { get; set; } = false;
 
-        public bool Loading { get; set; } = false;
-
-        [CopyProperties]
-        public ComplexTable<OBJ>? Complextable { get; set; }
-
+        public bool Loading { get => Nacitavanie; set => Nacitavanie = value; }
 
         private readonly DBContext _db;
+        private readonly UserService _userService;
 
 
-        public ObjednavkaViewModel(DBContext db)
+        public ObjednavkaViewModel(DBContext db, UserService userService)
         {
             _db = db;
+            _userService = userService;
         }
 
-        [RelayCommand]
-        private void NacitajDalsie() //nacita dalsi pocet kusov z databazy a prida ich na koniec sekvencie
+        //[RelayCommand]
+        //private void NacitajDalsie() //nacita dalsi pocet kusov z databazy a prida ich na koniec sekvencie
+        //{
+        //    var newDalsie = _db.Objednavky
+        //        .Include(x => x.DodavatelX)
+        //        .Include(x => x.OdberatelX)
+        //        .Include(x => x.TvorcaX)
+        //        .Where(x => posledneNacitanyDatum >= x.DatumVznik)
+        //        .OrderByDescending(x => x.DatumVznik)
+        //        .Take(10)
+        //        .ToList();
+
+        //    if (newDalsie.Any())
+        //    {
+        //        posledneNacitanyDatum = newDalsie.Last().DatumVznik;
+        //    }
+
+        //    foreach (var item in newDalsie)
+        //    {
+        //        if (!ZoznamObjednavok.Contains(item))
+        //        {
+        //            ZoznamObjednavok.Add(item);
+        //        }
+        //    }
+        //}
+        protected override async Task NacitajZoznamyAsync()
         {
-            var newDalsie = _db.Objednavky
-                .Include(x => x.DodavatelX)
-                .Include(x => x.OdberatelX)
-                .Include(x => x.TvorcaX)
-                .Where(x => posledneNacitanyDatum >= x.DatumVznik)
-                .OrderByDescending(x => x.DatumVznik)
-                .Take(10)
-                .ToList();
-
-            if (newDalsie.Any())
-            {
-                posledneNacitanyDatum = newDalsie.Last().DatumVznik;
-            }
-
-            foreach (var item in newDalsie)
-            {
-                if (!ZoznamObjednavok.Contains(item))
-                {
-                    ZoznamObjednavok.Add(item);
-                }
-            }
-        }
-
-        public async Task NacitajZoznam()
-        {
-            Loading = true;
-            ZoznamObjednavok.CollectionChanged -= OnCollectionChanged;
             await Task.Run(() =>
             {
-                ZoznamObjednavok = new(_db.Objednavky
+                ZoznamPoloziek = new(_db.Objednavky
                .Include(x => x.DodavatelX)
                .Include(x => x.OdberatelX)
                .Include(x => x.TvorcaX)
-               .OrderByDescending(x => x.DatumVznik)
+               .OrderByDescending(x => x.ID)
                .ToList());
             });
-            ZoznamObjednavok.CollectionChanged += OnCollectionChanged;
-            Loading = false;
+        }
+        public override bool MoznoVymazat(OBJ polozka)
+        {
+            return polozka.Stav == DBLayer.Models.StavOBJ.Vytvorena ||
+                   polozka.Stav == DBLayer.Models.StavOBJ.Neschvalena ||
+                   _userService.LoggedUserRole == DBLayer.RolesOwn.Admin ||
+                   _userService.LoggedUserRole == DBLayer.RolesOwn.Riaditel 
+                   &&
+                   polozka.Stav != DBLayer.Models.StavOBJ.Ukoncena;
         }
 
-        [RelayCommand]
-        private void Vymazat(OBJ poloz)
+        public override void Vymazat(OBJ poloz)
         {
-            ZoznamObjednavok.Remove(poloz);
+            base.Vymazat(poloz);
             _db.Objednavky.Remove(poloz);
             _db.SaveChanges();
         }
@@ -104,17 +104,9 @@ namespace SkladModul.ViewModels.Objednavka
             {
                 creator.GenerujPdf(poloz, poloz.DodavatelX, poloz.OdberatelX, polozkyZObjednavky);
                 creator.OpenPDF();
-                
-            }); 
-            PdfLoading = false;
-        }
 
-        private async void OnCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (Complextable != null)
-            {
-                await Complextable.OnItemsChange();
-            }
+            });
+            PdfLoading = false;
         }
 
     }

@@ -17,6 +17,8 @@ namespace RecepciaModul.ViewModels
         public Host Host { get; set; } = new();
         private bool existuje = false;
         private bool BolVarovany = false;
+
+        private List<IdentityUserWebOwn> AllGuests = new();
         public bool NacitavanieZoznamu { get; private set; } = false;
         public bool NacitavaniePoloziek { get; set; } = true;       //pre zistenie ze sme nacitali Host
 
@@ -91,15 +93,18 @@ namespace RecepciaModul.ViewModels
 
         public async Task<List<IdentityUserWebOwn>> GetListWebUsers()
         {
-            NacitavanieZoznamu = true;
-            var list = await _dbw.Users.ToListAsync();
-            NacitavanieZoznamu = false;
-            return list;
+            if (AllGuests.Count == 0)
+            {
+                NacitavanieZoznamu = true;
+                AllGuests = await _dbw.Users.ToListAsync();
+                NacitavanieZoznamu = false;
+            }
+            return AllGuests;
         }
 
-        public void SetNewWebUser(IdentityUserWebOwn user)
+        public void SetNewWebUser(IdentityUserWebOwn? user)
         {
-            if (!string.IsNullOrEmpty(user.UserName))
+            if (!string.IsNullOrEmpty(user?.UserName))
             {
                 HostInput.Guest = user.Id;
                 HostInput.GuestZ = user;

@@ -11,6 +11,22 @@ namespace UniComponents
 {
     public static class ObjectExtensions
     {
+        #region Fields/Properties
+        public static IEnumerable<FieldInfo> GetAllFields(Type type, BindingFlags flags)
+        {
+            if (type == null)
+                return Enumerable.Empty<FieldInfo>();
+
+            BindingFlags flagss = flags | BindingFlags.DeclaredOnly;
+            if (type.BaseType != null)
+            {
+                return type.GetFields(flagss).Concat(GetAllFields(type.BaseType, flags));
+            }
+            return type.GetFields(flagss);
+        }
+
+        #endregion
+
         #region CopyPropertiesFrom
         /// <summary>
         /// Copies all public properties from the source object to the target object.
@@ -88,8 +104,8 @@ namespace UniComponents
                     }
                 }
             }
-
-            var fields = typeof(T).GetFields(BindingFlags.Public | BindingFlags.Instance); //ziska vsetky public fields (ktore nemaju {get; set;})
+            
+            var fields = GetAllFields(typeof(T), BindingFlags.Public | BindingFlags.Instance); //ziska vsetky public fields (ktore nemaju {get; set;})
             foreach (var field in fields)
             {
                 var value = field.GetValue(source);
@@ -117,7 +133,7 @@ namespace UniComponents
 
             var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);  //ziska vsetky public properties
 
-            var fields = typeof(T).GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance); //ziska vsetky public + private fields
+            var fields = GetAllFields(typeof(T), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance); //ziska vsetky public + private fields
 
             var newlist = fields.ToList();  //odstrani property z fields lebo vo fields su vsetky jak public tak aj private fields
             foreach (var prop in properties)    //tie s atributom CopyPropertiesAttribute sa nekopiruju ale len ich vnutro
@@ -195,10 +211,9 @@ namespace UniComponents
             {
                 throw new ArgumentNullException(nameof(target));
             }
-
             var properties = typeof(T).GetProperties(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);  //ziska vsetky public properties
 
-            var fields = typeof(T).GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance); //ziska vsetky public + private fields
+            var fields = GetAllFields(typeof(T), BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance); //ziska vsetky public + private fields
 
             var newlist = fields.ToList();  //odstrani property z fields lebo vo fields su vsetky jak public tak aj private fields
             foreach (var prop in properties)    //tie s atributom CopyPropertiesAttribute sa nekopiruju ale len ich vnutro
@@ -258,7 +273,7 @@ namespace UniComponents
 
         #endregion
 
-        
+
     }
 
     public static class DateTimeExtensions
