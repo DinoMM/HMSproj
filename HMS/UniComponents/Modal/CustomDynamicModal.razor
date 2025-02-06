@@ -117,13 +117,17 @@
     /// </summary>
     /// <param name="act">Voliteľná akcia, ktorá sa vykoná po otvorení modalu(zrenderovaní). Prijíma bool parameter, ktorý indikuje, či bol modal zatvorený s pozitívnym výsledkom od uživateľa. Default nič</param>
     /// <param name="stop">Fyzicky čaká na pokračovanie. Default true.</param>
-    public async Task OpenModal(Func<bool, Task>? act = null, bool stop = true)
+    public virtual async Task OpenModal(Func<bool, Task>? act = null, bool stop = true, Func<Task>? actBefore = null)
     {
         if (!Rendered)
         {
             StartRender();
-            AfterRender = () => OpenModal(act, stop);
+            AfterRender = () => OpenModal(act, stop, actBefore);
             return;
+        }
+        if (actBefore != null)    //spustenie pred otvorenim modalu
+        {
+            await actBefore();
         }
         StateHasChanged();
         tstop = stop;

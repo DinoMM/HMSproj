@@ -24,6 +24,12 @@
     public int MinCharToFilter { get; set; } = 1;
 
     /// <summary>
+    /// Nastaví prvotnú hodnotu správne.
+    /// </summary>
+    [Parameter]
+    public string InitialValue { get; set; } = "";
+
+    /// <summary>
     /// Callback, ktorý sa zavolá pri zmene hodnoty inputu(event oninput).<para/>
     /// Value - text ktorý je v inpute<para/>
     /// CanFilter - true ak je možné filtrovať s aktuálnym textom, false ak nieje (kontrola null + minimal characters)
@@ -42,7 +48,13 @@
     {
         if (firstRender)
         {
+            if (!string.IsNullOrEmpty(InitialValue))
+            {
+                Value = InitialValue;
+                await InvokeAsync(StateHasChanged);
+            }
             await FindItems();
+
         }
     }
 

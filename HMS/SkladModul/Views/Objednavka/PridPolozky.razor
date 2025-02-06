@@ -22,23 +22,37 @@
            Text="Nepodarilo sa uložiť zmeny, skontrolujte objednávku">
 </InfoModal>
 
-<ItemFinderTable @ref="itmfindmodal"
-                 T="DBLayer.Models.PolozkaSkladu"
-                 ColNames="@(new List<string>() { "ID", "Názov", "MJ" })"
-                 ColValues="ViewModel.ZoznamPoloziek"
-                 MultiSelect="false"
-                 KeyAttributeToo="true"
-                 ID="itmfind"></ItemFinderTable>
+@*<ItemFinderTable @ref="itmfindmodal"
+    T="DBLayer.Models.PolozkaSkladu"
+    ColNames="@(new List<string>() { "ID", "Názov", "MJ" })"
+    ColValues="ViewModel.ZoznamPoloziek"
+    MultiSelect="false"
+    KeyAttributeToo="true"
+    ID="itmfind"></ItemFinderTable>*@
+
+<ComplexItemFinderTable @ref="ciftpolozky"
+                        T="DBLayer.Models.PolozkaSkladu"
+                        ID="itmfind"
+                        Header="Výber položky skladu"
+                        SizeInRem="75"
+                        ParentStateHasChanged="StateHasChanged"
+                        ChangeColor="true"
+                        YesNoButtonText="@(("Vybrať", "Zrušiť"))"
+                        SetTableSettings="@((true, polozkytableSettings, null))">
+
+</ComplexItemFinderTable>
+
+
 
 <div class="container">
     <div class="row p-1">Položky objednávky: @ViewModel.Objednavka.ID</div>
 
     <div class="row h-25">
         <div class="col col-1">
-            <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+            <button type="button" class="btn btn-secondary" @onclick="Close" tabindex="-1"><IconTextClose></IconTextClose></button>
         </div>
         <div class="col col-1 me-2">
-            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false)) disabled="@(ViewModel.Locked() || !ViewModel.Zmena)"><IconTextSave></IconTextSave></button>
+            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false)) disabled="@(ViewModel.Locked() || !ViewModel.Zmena)" tabindex="-1"><IconTextSave></IconTextSave></button>
         </div>
     </div>
 
@@ -46,14 +60,14 @@
         <div class="col" style="height: 30rem; overflow:auto;">
             <UniComponents.SimpleTable>
                 <THEAD>
-                <ThSort>ČísloID</ThSort>
-                <ThSort>Názov Položky</ThSort>
-                <ThSort>Množstvo</ThSort>
-                <ThSort>Merná jednotka</ThSort>
-                <ThSort>Cena</ThSort>
-                <ThSort>Cena s DPH</ThSort>
-                <ThSort>Celková Cena</ThSort>
-                <ThSort>Celková Cena s DPH</ThSort>
+                    <ThSort>ČísloID</ThSort>
+                    <ThSort>Názov Položky</ThSort>
+                    <ThSort>Množstvo</ThSort>
+                    <ThSort>Merná jednotka</ThSort>
+                    <ThSort>Cena</ThSort>
+                    <ThSort>Cena s DPH</ThSort>
+                    <ThSort>Celková Cena</ThSort>
+                    <ThSort>Celková Cena s DPH</ThSort>
                 <th></th>
                 </THEAD>
                 <TBODY>
@@ -79,11 +93,11 @@
                     @if (!ViewModel.Locked())
                     {
                         <tr style="position:sticky; bottom: 0;">
-                            <td class="col-resize"><input type="text" id="vyhlid" @onchange="ViewModel.VyhladajPolozkuCommand.Execute" @onfocus=@(() => ViewModel.Uprava = true) @onkeydown="HandleKeyDown" @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" /></td>
+                            <td class="col-resize"><input type="text" id="vyhlid" @onchange="ViewModel.VyhladajPolozkuCommand.Execute" @onfocus=@(() => ViewModel.Uprava = true) @onkeydown="HandleKeyDown" @onblur=@(() => ViewModel.Uprava = string.IsNullOrEmpty(ViewModel.NovaPoloz.Nazov)) size="8" placeholder="tab" autocomplete="off" tabindex="-1" /></td>
                             <td class="col-resize"><input type="text" readonly disabled="disabled" @bind="ViewModel.NovaPoloz.Nazov" /> </td>
                             <td class="col-resize">
                                 <div class="col col-2">
-                                    <button type="button" disabled="@(ViewModel.Uprava || ViewModel.Locked())" @onclick=@(async () => { ViewModel.PridatPolozkuCommand.Execute(null); await ClearInput(); }) class="btn btn-success"><IconText Icon="bi-plus-circle">Pridať položku</IconText></button>
+                                    <button type="button" disabled="@(ViewModel.Uprava || ViewModel.Locked())" @onclick=@(async () => { ViewModel.PridatPolozkuCommand.Execute(null); await ClearInput(); }) class="btn btn-success" tabindex="-1"><IconText Icon="bi-plus-circle">Pridať položku</IconText></button>
                                 </div>
                             </td>
                             <td class="col-resize">@ViewModel.NovaPoloz.PolozkaSkladuX?.MernaJednotka</td>
@@ -114,7 +128,18 @@
     InfoModal InfoMod = new();
     DBLayer.Models.PolozkaSkladuObjednavky marked;
 
-    ItemFinderTable<DBLayer.Models.PolozkaSkladu> itmfindmodal = new();
+    //ItemFinderTable<DBLayer.Models.PolozkaSkladu> itmfindmodal = new();
+    ComplexItemFinderTable<DBLayer.Models.PolozkaSkladu> ciftpolozky;
+
+    List<TableColumnTemplate<DBLayer.Models.PolozkaSkladu>> polozkytableSettings = new()
+{
+        new () { ID_Prop = nameof(DBLayer.Models.PolozkaSkladu.ID), HeaderValue = "ID", CellValue = (item) => item.ID },
+        new () { ID_Prop = nameof(DBLayer.Models.PolozkaSkladu.Nazov), HeaderValue = "Názov", CellValue = (item) => item.Nazov },
+        new () { ID_Prop = nameof(DBLayer.Models.PolozkaSkladu.MernaJednotka), HeaderValue = "Merná jendotka", CellValue = (item) => item.MernaJednotka },
+        new () { ID_Prop = nameof(DBLayer.Models.PolozkaSkladu.Cena), HeaderValue = "Cena", CellValue = (item) => item.Cena.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)},
+        new () { ID_Prop = nameof(DBLayer.Models.PolozkaSkladu.DPH), HeaderValue = "DPH", CellValue = (item) => item.DPH.ToString(), Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.PolozkaSkladu.CenaDPH), HeaderValue = "Cena s DPH", CellValue = (item) => item.CenaDPH.ToString("F3", System.Globalization.CultureInfo.InvariantCulture), Visible = false },
+    };
 
     protected override void OnInitialized()
     {
@@ -161,17 +186,17 @@
     {
         if (e.Key == "Tab")
         {
-            if (ViewModel.NovaPoloz.Nazov == null)
+            ciftpolozky.SetItemsFromList(ViewModel.ZoznamPoloziek, fillOnlyOnEmpty: true);
+            ciftpolozky.ValueInFilter = await JSRuntime.InvokeAsync<string>("getInputField", "vyhlid");
+            await ciftpolozky.OpenModal(async (res) =>
             {
-                await itmfindmodal.PassSearchText(await itmfindmodal.GetInputValue("vyhlid"));
-                await itmfindmodal.OpenModal(true);
-                if (itmfindmodal.OutSelection.Count != 0)
+                if (res)
                 {
-                    await itmfindmodal.SetInput("vyhlid", itmfindmodal.OutSelection.FirstOrDefault().ID);
-                    ViewModel.VyhladajPolozkuCommand.Execute(new ChangeEventArgs() { Value = itmfindmodal.OutSelection.FirstOrDefault().ID });
+                    await JSRuntime.InvokeVoidAsync("setInputField", "vyhlid", ciftpolozky.ComplexTable.Marked.ID);
+                    ViewModel.VyhladajPolozkuCommand.Execute(new ChangeEventArgs() { Value = ciftpolozky.ComplexTable.Marked.ID });
+                    StateHasChanged();
                 }
-
-            }
+            });
         }
     }
 

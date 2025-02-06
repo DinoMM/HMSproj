@@ -7,12 +7,6 @@
 
 
 <div style="z-index:52">
-    @*<ItemFinderTable T="IdentityUserWebOwn" @ref="itemFindUser" ID="fndwebusrho"
-                         ColNames="@(new() {"Meno", "Priezvisko", "Username", "Email", "Telefón" })"
-                         SearchedValue="@(ViewModel.HostInput.GuestZ?.Email ?? "")"
-                         OnlyProtectedPersonalDataAttribute="true"
-                         SelectEmptyInstance="true">
-        </ItemFinderTable>*@
     <ComplexItemFinderTable @ref="ciftguest"
                             T="IdentityUserWebOwn"
                             ID="fndwebusrho"
@@ -299,9 +293,13 @@
     public async Task FindWebUser()
     {
         ciftguest.SetItemsFromList(await ViewModel.GetListWebUsers());
+        ciftguest.ValueInFilter = ViewModel.HostInput.GuestZ?.Email ?? "";
         await ciftguest.OpenModal(async (res) =>
         {
-            ViewModel.SetNewWebUser(ciftguest.ComplexTable.Marked);
+            if (res)
+            {
+                ViewModel.SetNewWebUser(ciftguest.ComplexTable.Marked);
+            }
         });
 
     }

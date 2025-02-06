@@ -455,6 +455,13 @@
     public RenderFragment? AdditionToolbar { get; set; }
 
     /// <summary>
+    /// spusti sa v prvom renderi. Default nic
+    /// </summary>
+    [IgnoreCopy]
+    [Parameter]
+    public Func<Task>? AfterRender { get; set; } = null;
+
+    /// <summary>
     /// Pridá akciu na dvojklik riadka tabuľky, default null
     /// </summary>
     [IgnoreCopy]
@@ -603,6 +610,10 @@
                     {
                         MarkersStateChanged(Marked, Markers);
                     }
+                }
+                if (AfterRender != null)
+                {
+                    await AfterRender.Invoke();
                 }
             }
         }

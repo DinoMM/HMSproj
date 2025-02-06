@@ -99,6 +99,14 @@ function clearInputField(id) {
     document.getElementById(id).value = '';
 }
 
+function setInputField(id, newText) {
+    document.getElementById(id).value = newText;
+}
+
+function getInputField(inputId) {
+    return document.getElementById(inputId).value;
+}
+
 //focusne input field s daným id
 function focusInputField(id) {
     const element = document.getElementById(id);

@@ -10,8 +10,7 @@
             <div class="modal-content">
                 <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
                     <div class="col-3 d-flex justify-content-bottom mb-1">
-                        @*<SearchInput @ref="srchinp" ID="@IDSearch" NumCols="@NumCols" PlaceHolder="Vyhľadaj..." TableID="@IDTable" SearchValue="@SearchedValue"></SearchInput>*@
-                        <SearchManualInput ID="@ID" Salt="srchinput" Header="Vyhľadaj..." OnFilterRequest="(e) => ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
+                        <SearchManualInput ID="@ID" Salt="srchinput" Header="Vyhľadaj..." InitialValue="@ValueInFilter" OnFilterRequest="(e) => ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
                     </div>
                     <div class="modal-title h3 text-dark ms-4" id="staticBackdropLabel">
                         @Header
@@ -48,8 +47,7 @@
         </div>
     </div>
 }
-
-@code {
+@code{
 
     [CopyProperties]
     public ComplexTable<T>? ComplexTable { get; set; }
@@ -75,6 +73,13 @@
     [Parameter]
     public bool SelectEmptyInstance { get; set; } = false;
 
+
+    /// <summary>
+    /// Nastavi vstupnu hodnotu do filtra, treba spustit pred OpenModal. Default ""
+    /// </summary>
+    [Parameter]
+    public string ValueInFilter { get; set; } = "";
+
     /// <summary>
     /// Tovnako ako v ComplexTable
     /// </summary>
@@ -86,6 +91,41 @@
     /// </summary>
     [Parameter]
     public EventCallback ParentStateHasChanged { get; set; } = EventCallback.Empty;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (Rendered)
+        {
+            if (ComplexTable.AfterRender == null)
+            {
+                ComplexTable.AfterRender = async () =>
+                {
+                    await ComplexTable.FilterResults((ValueInFilter, true));
+                    StateHasChanged();
+                };
+            }
+
+            if (Selectable && !SelectEmptyInstance)
+            {
+                ComplexTable.OnDbClick = async (T item) =>
+                {
+                    await CloseSucc();
+                };
+            }
+
+            HandleKeyDown = async (KeyboardEventArgs e) =>
+            {
+                if (e.Key == "Tab" || e.Key == "Enter")
+                {
+                    await CloseSucc();
+                }
+                if (e.Key == "Escape")
+                {
+                    CloseModal(false);
+                }
+            };
+        }
+    }
 
     public async Task EmptyInstance()
     {
@@ -114,6 +154,28 @@
         if (Items == null)
         {
             Items = new();
+        }
+        Items.Clear();
+        foreach (var item in list)
+        {
+            Items.Add(item);
+        }
+    }
+
+    /// <summary>
+    /// Nastaví vnutrony zoznam podla listu
+    /// </summary>
+    /// <param name="list"></param>
+    /// <param name="fillOnlyOnEmpty">Naplni len ak je zoznam prazdny, ak obsahuje tak nenaplnuje Items. Default false. Pre nemenne zoznamy dát</param>
+    public void SetItemsFromList(IList<T> list, bool fillOnlyOnEmpty = false)
+    {
+        if (Items == null)
+        {
+            Items = new();
+        }
+        if (fillOnlyOnEmpty && Items.Count != 0)
+        {
+            return;
         }
         Items.Clear();
         foreach (var item in list)
