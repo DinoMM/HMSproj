@@ -1,4 +1,3 @@
-﻿.fixed-size-button {
-    width: 180px; /* Adjust as needed */
-    height: 55px; /* Adjust as needed */
+﻿.noflex {
+    flex: none;
 }

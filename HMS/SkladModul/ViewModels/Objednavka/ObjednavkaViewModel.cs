@@ -82,7 +82,7 @@ namespace SkladModul.ViewModels.Objednavka
             return polozka.Stav == DBLayer.Models.StavOBJ.Vytvorena ||
                    polozka.Stav == DBLayer.Models.StavOBJ.Neschvalena ||
                    _userService.LoggedUserRole == DBLayer.RolesOwn.Admin ||
-                   _userService.LoggedUserRole == DBLayer.RolesOwn.Riaditel 
+                   _userService.LoggedUserRole == DBLayer.RolesOwn.Riaditel
                    &&
                    polozka.Stav != DBLayer.Models.StavOBJ.Ukoncena;
         }
@@ -109,5 +109,52 @@ namespace SkladModul.ViewModels.Objednavka
             PdfLoading = false;
         }
 
+        /// <summary>
+        /// Duplikuje objednavku spolu s jej polozkami
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public async Task Duplicate(OBJ item)
+        {
+            Nacitavanie = true;
+            await Task.Run(async () =>
+            {
+                var found = _db.Objednavky.FirstOrDefault(x => x.ID == item.ID);    //kontrola existencie
+                if (found != null)
+                {
+                    var zozn = await _db.PolozkySkladuObjednavky    
+                    .Where(x => x.Objednavka == found.ID)
+                    .ToArrayAsync();    //ziska vsetky polozky objednavky
+
+                    var newOrder = new OBJ()    //vytvorenie novej objednavky
+                    {
+                        Dodavatel = found.Dodavatel,
+                        Odberatel = found.Odberatel,
+                        Stav = DBLayer.Models.StavOBJ.Vytvorena,
+                        Tvorca = _userService.LoggedUser.Id,
+                    };
+                    newOrder.ID = DBLayer.Models.Objednavka.DajNoveID(_db);
+                    _db.Objednavky.Add(newOrder);   //pridanie
+
+                    var newItems = new List<PolozkaSkladuObjednavky>(); //prejdenie zoznamu a pridavanie poloziek
+                    foreach (var item in zozn)
+                    {
+                        var newItem = new PolozkaSkladuObjednavky()
+                        {
+                            Objednavka = newOrder.ID,
+                            PolozkaSkladu = item.PolozkaSkladu,
+                            Mnozstvo = item.Mnozstvo,
+                            Cena = item.Cena,
+                            DPH = item.DPH,
+                            Nazov = item.Nazov,
+                        };
+                        _db.PolozkySkladuObjednavky.Add(newItem); //pridanie
+                    }
+                    _db.SaveChanges();
+                    ZoznamPoloziek.Insert(0, newOrder); //update zoznamu
+                }
+            });
+            Nacitavanie = false;
+        }
     }
 }

@@ -82,7 +82,8 @@ namespace SkladModul.ViewModels.Sklad
             ZoznamPoloziek.Clear();
             if (TypeOfPohSkupina == typeof(Pprijemka))
             {
-                ZoznamPoloziek.AddRange(_db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
+                ZoznamPoloziek.AddRange(_db.PolozkaSkladuMnozstva
+                    .Include(x => x.PolozkaSkladuX)
                 .Where(x => x.Sklad == ((Pprijemka)PohSkupina).Sklad)
                 .Select(x => x.PolozkaSkladuX)
                 .ToList());

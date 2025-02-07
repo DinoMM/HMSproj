@@ -37,7 +37,7 @@
         <div class="col-3 d-flex justify-content-bottom mb-2">
             <SearchManualInput ID="srchinput" Header="Vyhľadaj položku..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
-        <div class="col-8">
+        <div class="col-8 autooverflowx">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary" @onclick="Close">
                     <IconTextClose></IconTextClose>

@@ -13,28 +13,22 @@
 
 <div class="container maxwidth95">
     <div class="row pb-1">
-        <div class="col-3 d-flex justify-content-bottom mb-2">
+        <div class="col-3 mb-2">
             <SearchManualInput ID="srchinput" Header="Vyhľadaj objednávku..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
-        <div class="col-8">
+        <div class="col-9 autooverflowx">
             <div class="row">
                 <div class="btn-group" role="group">
-                    <button class="btn btn-secondary" type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">
+                    <button class="btn btn-secondary noflex" type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">
                         <IconTextClose></IconTextClose>
                     </button>
-                    <button class="btn btn-primary" type="button" @onclick="@(() => {SetStartConditionOnVisit(); Navigator.NavigateTo(Navigator.AddNextUrl("/AddObj")); })">
+                    <button class="btn btn-primary noflex" type="button" @onclick="@(() => {SetStartConditionOnVisit(); Navigator.NavigateTo(Navigator.AddNextUrl("/AddObj")); })">
                         <IconTextCreate></IconTextCreate>
                     </button>
-                    <button class="btn btn-primary" disabled=@(!IsChecked()) @onclick=@(() => OpenOBJ(marked)) type="button">
+                    <button class="btn btn-primary noflex" disabled=@(!IsChecked()) @onclick=@(() => OpenOBJ(marked)) type="button">
                         <IconTextOpen></IconTextOpen>
                     </button>
-                    <button class="btn btn-primary" @onclick="GeneratePDF" disabled=@(!IsChecked() || ViewModel.PdfLoading) type="button">
-                        <IconText Icon="bi-filetype-pdf">Otvoriť</IconText>
-                        @if (ViewModel.PdfLoading)
-                        {
-                            <SpinnerLoading ExtraSmall="false" />
-                        }
-                    </button>
+
                 </div>
             </div>
         </div>
@@ -56,7 +50,29 @@
                           OnDbClick="(item) => OpenOBJ(item)"
                           CollectionChanged="ViewModel.OnCollectionChanged"
                           SetTableSettings="@((true, tableSettings, null))">
+                <AdditionToolbar>
+                    <button id="openpdf" type="button" class="btn btn-outline-dark p-1 border-0 border-start border-end"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            data-bs-title="Otvoriť vybranú objednávku ako PDF"
+                            disabled="@(!IsChecked() || ViewModel.PdfLoading)"
+                            @onclick="@GeneratePDF">
+                        <IconText Icon="bi-filetype-pdf"></IconText>
+                        @if (ViewModel.PdfLoading)
+                        {
+                            <SpinnerLoading ExtraSmall="false" />
+                        }
+                    </button>
+                    <button id="copy" type="button" class="btn btn-outline-dark p-1 border-0 border-start border-end"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            data-bs-title="Duplikovať vybranú objednávku ako novú"
+                            disabled="@(!IsChecked() || ViewModel.Nacitavanie)"
+                            @onclick="() => ViewModel.Duplicate(marked)">
+                        <IconText Icon="bi-copy"></IconText>
+                    </button>
 
+                </AdditionToolbar>
             </ComplexTable>
         </div>
         <div class="col-1"></div>

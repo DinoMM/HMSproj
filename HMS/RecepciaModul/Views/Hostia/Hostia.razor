@@ -34,13 +34,12 @@
             <SearchManualInput ID="srchinput" Header="Vyhľadaj hosťa..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
 
-        <div class="col-9">
+        <div class="col-9 autooverflowx">
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
                 <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRU())" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></button>
                 <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
                 <button type="button" class="btn btn-primary" @onclick="OpenFlags"><IconText Icon="bi-flag-fill">Správa značiek</IconText></button>
-                <button type="button" class="btn btn-primary" @onclick="StartOpenPD" disabled="@(marked == null || marked.PokladnicnyDokladZ == null)"><IconText Icon="bi-receipt-cutoff">Otvoriť pokl. dokl.</IconText></button>
             </div>
         </div>
 
@@ -63,12 +62,20 @@
                           OnDbClick="(item) => Open(item)"
                           SetTableSettings="@((true, tableSettings, null))">
                 <AdditionToolbar>
-                    <button id="loadpokladdokl" type="button" class="btn btn-outline-dark p-1 border-0 border-start border-end"
+                    <button id="loadpokladdokl" type="button" class="btn btn-outline-primary p-1 border-0 border-start border-end"
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
                             data-bs-title="Aktualizovať aktívne pokladničné účty u hostí"
                             disabled="@ViewModel.Nacitavanie"
                             @onclick="@ViewModel.RefreshMaPokladnicnyBlok">
+                        <IconText Icon="bi-receipt-cutoff"></IconText>
+                    </button>
+                    <button id="openpokladdokl" type="button" class="btn btn-outline-dark p-1 border-0 border-start border-end"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            data-bs-title="Otvoriť aktívny pokladničný doklad u vybraného hosťa"
+                            disabled="@(ViewModel.Nacitavanie || marked == null || marked.PokladnicnyDokladZ == null)"
+                            @onclick="StartOpenPD">
                         <IconText Icon="bi-receipt-cutoff"></IconText>
                     </button>
                 </AdditionToolbar>
