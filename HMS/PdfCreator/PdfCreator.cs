@@ -114,5 +114,44 @@ namespace PdfCreator
             return (isFit, maxRows, leftOver);
         }
 
+        protected (double, (double, string)?) MaxLength<T>(IList<T> list, (string Header, Func<T, string> CellValue) setting, in PdfPageBuilder page, int fontSize, PdfPoint point, PdfDocumentBuilder.AddedFont fontR)
+        {
+            PdfPoint tmp = point.Translate(0, 0);
+            var velkostTextu = page.MeasureText(setting.Header, fontSize, tmp, fontR);
+            double maxHeader = velkostTextu?.LastOrDefault()?.EndBaseLine.X ?? 0.0;
+            maxHeader = maxHeader != 0.0 ? maxHeader - tmp.X : 0.0;
+            double max = 0.0;
+            foreach (var item in list)
+            {
+                var max2 = page.MeasureText(setting.CellValue(item), fontSize, tmp, fontR)?.LastOrDefault()?.EndBaseLine.X ?? 0.0;
+                max2 = max2 != 0.0 ? max2 - tmp.X : 0.0;
+                if (max2 > max)
+                {
+                    max = max2;
+                }
+                if (list.IndexOf(item) == list.Count - 1)
+                {
+                    max += fontSize;
+                }
+            }
+            if (maxHeader > max + 30)       //odchylka 30
+            {
+                var textNaRiadku = page.MeasureText(setting.Header, fontSize, tmp, fontR).TakeWhile(d => d.EndBaseLine.X <= tmp.X + max + 30);
+
+                StringBuilder stringBuilder = new StringBuilder();
+                foreach (var s in textNaRiadku)
+                {
+                    stringBuilder.Append(s.Value);
+                }
+                return (maxHeader, (max + 30, stringBuilder.ToString()));
+            }
+            else
+            {
+                return (max, null);
+            }
+
+
+        }
+
     }
 }

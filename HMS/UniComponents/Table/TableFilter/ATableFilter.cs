@@ -62,7 +62,7 @@ namespace UniComponents
         /// <returns></returns>
         public abstract bool CheckIfAppliable();
 
-        public static ATableFilter<T> CreateFilter<T>(string pID_Prop, Func<T, object?>? pCellValue)
+        public static ATableFilter<T> CreateFilter<T>(string pID_Prop, Func<T, object?>? pCellValue, List<string>? pSelectionList, bool pSelectionListAddEmpty)
         {
             ATableFilter<T> newFilter;
             var property = typeof(T).GetProperty(pID_Prop);
@@ -88,10 +88,20 @@ namespace UniComponents
             {
                 newFilter = new TableFilter<T>() { ID_Prop = pID_Prop, CellValue = pCellValue };
             }
+
+            if (pSelectionList != null && newFilter is TableFilter<T>)  //ak je tento typ filteru, tak ho nastavíme na selection. Idk ako to inak spravit
+            {
+                if (pSelectionListAddEmpty)
+                {
+                    pSelectionList.Insert(0, "");
+                }
+                newFilter = new TableFilterSelect<T>() { ID_Prop = pID_Prop, CellValue = pCellValue, Selections = pSelectionList };
+            }
+
             return newFilter;
         }
 
-        public static ATableFilter<T> CreateFilter<T>(string pID_Prop, Func<T, object?>? pCellValue, Type newType)
+        public static ATableFilter<T> CreateFilter<T>(string pID_Prop, Func<T, object?>? pCellValue, Type newType, List<string>? pSelectionList, bool pSelectionListAddEmpty)
         {
             ATableFilter<T> newFilter;
             if (newType == typeof(int) ||
@@ -115,6 +125,16 @@ namespace UniComponents
             {
                 newFilter = new TableFilter<T>() { ID_Prop = pID_Prop, CellValue = pCellValue };
             }
+
+            if (pSelectionList != null && newFilter is TableFilter<T>)  //ak je tento typ filteru, tak ho nastavíme na selection. Idk ako to inak spravit
+            {
+                if (pSelectionListAddEmpty)
+                {
+                    pSelectionList.Insert(0, "");
+                }
+                newFilter = new TableFilterSelect<T>() { ID_Prop = pID_Prop, CellValue = pCellValue, Selections = pSelectionList };
+            }
+
             return newFilter;
         }
     }

@@ -4,6 +4,7 @@ using DBLayer.Models;
 using DBLayer.Models.HSKModels;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using UniComponents;
 
 namespace HSKModul.ViewModels
@@ -37,5 +38,10 @@ namespace HSKModul.ViewModels
             return true;
         }
 
+        public override ValidationResult Save()
+        {
+            EntitySaver_RoomInfo.Input.LastUpdate = DateTime.Now;
+            return base.Save();
+        }
     }
 }

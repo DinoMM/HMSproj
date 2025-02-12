@@ -121,6 +121,16 @@
                                 </div>
                             </div>
                             break;
+                        case TableFilterSelect<T> filter:
+                            <FloatingSelect ID="@item.ID_Prop"
+                                           Items="filter.Selections"
+                                           Header="@item.HeaderValue"
+                                           Value="@filter.FilteredText"
+                                           ValueChanged="@(val => filter.FilteredText = val?.ToString() ?? "")"
+                                           ClassInput="@(filter.CheckIfAppliable() ? "fw-bold" : "")"
+                                           Disabled="@(!item.Visible)">
+                            </FloatingSelect>
+                            break;
                         default: break;
                     }
 
@@ -723,11 +733,11 @@
                 ATableFilter<T> newFilter;
                 if (item.CellConvert == null)
                 {
-                    newFilter = ATableFilter<T>.CreateFilter(item.ID_Prop, item.CellValue);
+                    newFilter = ATableFilter<T>.CreateFilter(item.ID_Prop, item.CellValue, item.SelectionList, true);
                 }
                 else
                 {
-                    newFilter = ATableFilter<T>.CreateFilter(item.ID_Prop, item.CellConvert.Value.Item1, item.CellConvert.Value.Item2);
+                    newFilter = ATableFilter<T>.CreateFilter(item.ID_Prop, item.CellConvert.Value.Item1, item.CellConvert.Value.Item2, item.SelectionList, true);
                 }
                 Filter.Add((newFilter, newFilter.Clon()));
             }
@@ -965,6 +975,27 @@
 
     }
 
+    /// <summary>
+    /// Napr pre generovanie pdfka
+    /// </summary>
+    /// <returns></returns>
+    public List<(string Header, Func<T, string> CellValue)> GetWriteableOnlySettings()
+    {
+        List<(string Header, Func<T, string> CellValue)> list = new();
+        foreach (var item in TableSettings)
+        {
+            if (!item.Visible)
+            {
+                continue;
+            }
+            if (item.CellValue == null)
+            {
+                continue;
+            }
+            list.Add((item.HeaderValue, item.CellValue));
+        }
+        return list;
+    }
 
 
 }

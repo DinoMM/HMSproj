@@ -1,6 +1,6 @@
 ﻿@namespace HSKModul
 @page "/Housekeeping"
-@inject HousekeepingViewModel ViewModel
+@inherits TransientHoldedComp<HousekeepingViewModel>
 
 <CustomDynamicModal @ref="custommodal"
                     ID="@("custommodal")"
@@ -8,74 +8,61 @@
                     ChangeColor="false"
                     Header=""
                     OneButtonOnly="true"
-                    SizeInRem="70"
-                    >
+                    SizeInRem="70">
 
     <CRURoomComp @ref="roomcomp"></CRURoomComp>
 
 </CustomDynamicModal>
 
 
-<div class="container">
+<div class="container maxwidth95">
 
     <div class="row pb-1">
 
-        <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchInput NumCols="6" PlaceHolder="Vyhľadaj..." TableID="tableid"></SearchInput>
+        <div class="col-3 mb-2">
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
 
-        <div class="col-9">
+        <div class="col-9 autooverflowx">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-secondary" @onclick="Close">
-                    <IconTextClose></IconTextClose>
-                </button>
-                <button type="button" @onclick="Open" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
-                @*<button @onclick="Create" disabled="@(!ViewModel.ValidateUserCUD())" type="button" class="btn btn-primary">
-                        <IconTextCreate></IconTextCreate>
-                    </button>*@
-
+                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                <button type="button" class="btn btn-info" @onclick="async() =>  await ViewModel.ZmenaZobrazenie()">Zobrazenie: @(ViewModel.Zobrazenie ? "Izby" : "Aktuálne")</button>
             </div>
         </div>
 
     </div>
 
     <div class="row">
-        <div class="col-12" style="max-height: 30rem;overflow: auto;">
-            <SimpleTable ID="tableid">
-                <THEAD>
-
-                    <ThSort>Izba</ThSort>
-                    <ThSort>Kategória</ThSort>
-                    <ThSort>Ubytovaní&nbsp;hostia</ThSort>
-                    <ThSort>Status</ThSort>
-                    <ThSort>Status&nbsp;čistoty</ThSort>
-                    <ThSort>Poznámka</ThSort>
-                </THEAD>
-                <TBODY>
-                    @if (ViewModel.NacitavaniePoloziek)
-                    {
-                        <div class="ms-1">
-                            <SpinnerLoading Size="2.0"></SpinnerLoading>
-                        </div>
-                    }
-                    else
-                    {
-                        @foreach (var item in ViewModel.RelevantRezervacie)
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+            <ComplexTable @ref="ViewModel.ComplexTable"
+                          ID="complextable"
+                          T="DBLayer.Models.Rezervation"
+                          Items="ViewModel.ZoznamPoloziek"
+                          LoadingItems="ViewModel.Nacitavanie"
+                          Sticky="true"
+                          Selectable="true"
+                          MultiSelect="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.NacitajZoznamy"
+                          OnDbClick="(item) => Open(item)"
+                          CollectionChanged="ViewModel.OnCollectionChanged"
+                          SetTableSettings="@((true, tableSettings, null))">
+                <AdditionToolbar>
+                    <button id="pdfzozn" type="button" class="btn @(ViewModel?.ComplexTable?.Markers.Any() ?? false ? "btn-outline-info" : "btn-outline-dark") p-1 border-0 border-start border-end"
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="bottom"
+                            data-bs-title="Zobraziť PDF aktuálne zobrazenej tabuľky (ak označíte jednotlivé riadky tak sa použijú len tieto riadky)"
+                            disabled="@ViewModel.NacitavaniePDF"
+                            @onclick="@ViewModel.NacitajPDF">
+                        <IconText Icon="bi-filetype-pdf"></IconText>
+                        @if (ViewModel.NacitavaniePDF)
                         {
-
-                            <tr @onclick=@(() => marked = item) class="@(marked == item ? "selected-row" : "")" @ondblclick="@(() => Open())" style="cursor: pointer;">
-                                <td class="col-resize">@item.RoomNumber</td>
-                                <td class="col-resize">@item.Room.RoomCategory</td>
-                                <td class="col-resize">@ViewModel.RelevantHostia.Where(x => x.Reservation == item.Id).Count()</td>
-                                <td class="col-resize">@item.GetHSKStatus(ViewModel.AktDen).GetDisplayName()</td>
-                                <td class="col-resize">@(item.Room.RoomInfo?.Status.GetDisplayName() ?? "")</td>
-                                <td class="col-resize">@(item.Room.RoomInfo?.Poznamka ?? "")</td>
-                            </tr>
+                            <SpinnerLoading ExtraSmall="false" />
                         }
-                    }
-                </TBODY>
-
-            </SimpleTable>
+                    </button>
+                </AdditionToolbar>
+            </ComplexTable>
         </div>
     </div>
 
@@ -83,22 +70,46 @@
 </div>
 
 @code {
-    DBLayer.Models.Rezervation? marked = null;
+    DBLayer.Models.Rezervation? marked { get => ViewModel?.ComplexTable?.Marked; }
     CustomDynamicModal custommodal;
     CRURoomComp? roomcomp;
 
-    protected override void OnInitialized()
+    List<TableColumnTemplate<DBLayer.Models.Rezervation>> tableSettings = new()
+{
+        new () { ID_Prop = nameof(DBLayer.Models.Rezervation.RoomNumber), HeaderValue = "Izba", CellValue = (item) => item.RoomNumber },
+        new () { ID_Prop = "kategoria", HeaderValue = "Kategória", CellValue = (item) => item.Room.RoomCategory, CellConvert = ((item) => item.Room.RoomCategory, typeof(string)) },
+        new () { ID_Prop = nameof(DBLayer.Models.Rezervation.ArrivalDate), HeaderValue = "Príchod", CellValue = (item) => item.ArrivalDate.ToString("dd.MM.yyyy"), Visible = false  },
+        new () { ID_Prop = nameof(DBLayer.Models.Rezervation.DepartureDate), HeaderValue = "Odchod", CellValue = (item) => item.DepartureDate.ToString("dd.MM.yyyy"), Visible = false  },
+        new () { ID_Prop = "pocetnoci", HeaderValue = "Aktuálny deň pobytu", CellValue = (item) => $"{(DateTime.Today - item.ArrivalDate).Days} z {(item.DepartureDate - item.ArrivalDate).Days}", CellConvert = ((item) => $"{(DateTime.Today - item.ArrivalDate).Days} z {(item.DepartureDate - item.ArrivalDate).Days}", typeof(string)), Visible = false  },
+        new () { ID_Prop = "maxnumhost", HeaderValue = "Max poč. hostí", CellValue = (item) => item.Room.MaxNumberOfGuest.ToString(), CellConvert = ((item) => item.Room.MaxNumberOfGuest, typeof(decimal)), Visible = false },
+    };
+
+    protected override void OnInitializedMustHave()
+    {
+        tableSettings.Add(new() { ID_Prop = "ubythost", HeaderValue = "Ubytovaní hostia", CellValue = (item) => ViewModel.RelevantHostia.Where(x => x.Reservation == item.Id).Count().ToString(), CellConvert = ((item) => ViewModel.RelevantHostia.Where(x => x.Reservation == item.Id).Count(), typeof(decimal)) });
+        tableSettings.Add(new() { ID_Prop = "status", HeaderValue = "Status", CellValue = (item) => item.GetHSKStatus(ViewModel.AktDen).GetDisplayName(), CellConvert = ((item) => item.GetHSKStatus(ViewModel.AktDen).GetDisplayName(), typeof(string)), SelectionList = Enum.GetValues(typeof(DBLayer.Models.HSKStatus)).Cast<DBLayer.Models.HSKStatus>().Select(x => x.GetDisplayName()).ToList() });
+        tableSettings.Add(new() { ID_Prop = "statuscistoty", HeaderValue = "Status čistoty", CellValue = (item) => item.Room.RoomInfo?.Status.GetDisplayName() ?? "", CellConvert = ((item) => item.Room.RoomInfo?.Status.GetDisplayName() ?? "", typeof(string)), SelectionList = Enum.GetValues(typeof(DBLayer.Models.HSKModels.RoomStatus)).Cast<DBLayer.Models.HSKModels.RoomStatus > ().Select(x => x.GetDisplayName()).ToList() });
+        tableSettings.Add(new() { ID_Prop = "lastchange", HeaderValue = "Posledné zmeny", CellValue = (item) => item.Room.RoomInfo?.LastUpdate.ToString("dd.MM.yyyy HH:mm:ss") ?? "", CellConvert = ((item) => item.Room.RoomInfo?.LastUpdate, typeof(DateTime)), Visible = false });
+        tableSettings.Add(new() { ID_Prop = "note", HeaderValue = "Poznámka", CellValue = (item) => item.Room.RoomInfo?.Poznamka ?? "", CellConvert = ((item) => item.Room.RoomInfo?.Poznamka, typeof(string)) });
+
+
+
+        //tableSettings.Add(new()
+        //{
+        //    Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))))
+        //});
+    }
+
+    protected override void OnInitializedTransient()
     {
         if (!ViewModel.ValidateUser())
         {
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
-
-
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnInitializedTransientAsync()
     {
         if (!ViewModel.ValidateUser())
         {
@@ -113,18 +124,13 @@
     }
 
 
-    public async Task Open()
+    public async Task Open(DBLayer.Models.Rezervation poloz)
     {
-        if (marked != null)
+        objectHolder.Add(poloz);
+        await custommodal.OpenModal(async (bool ans) =>
         {
-            objectHolder.Add(marked);
-            await custommodal.OpenModal(async (bool ans) =>
-            {
-                StateHasChanged();
-            });
-            
-        }
-
+            StateHasChanged();
+        });
     }
 
 

@@ -39,11 +39,16 @@ namespace UniComponents
         /// <returns></returns>
         public async Task NacitajZoznamy()
         {
-            Nacitavanie = true;
-            ZoznamPoloziek.CollectionChanged -= OnCollectionChanged;
-            await NacitajZoznamyAsync();
-            ZoznamPoloziek.CollectionChanged += OnCollectionChanged;
-            Nacitavanie = false;
+            await Nacitaj(
+                methodAsync: async () => await SilentCollection(
+                    methodAsync: async () => await NacitajZoznamyAsync()
+                    )
+                );
+            //Nacitavanie = true;
+            //ZoznamPoloziek.CollectionChanged -= OnCollectionChanged;
+            //await NacitajZoznamyAsync();
+            //ZoznamPoloziek.CollectionChanged += OnCollectionChanged;
+            //Nacitavanie = false;
         }
 
         /// <summary>
@@ -56,6 +61,18 @@ namespace UniComponents
             if (ComplexTable != null)
             {
                 await ComplexTable.OnItemsChange(e);
+            }
+        }
+
+        /// <summary>
+        /// Notifikuje manualne po spustení metódy o zmene v kolekcii (funkcionalita istá ako OnCollectionChanged len bez boilerplatu). Default NotifyCollectionChangedAction.Reset
+        /// </summary>
+        /// <returns></returns>
+        public virtual async Task ManualNotifyColection(NotifyCollectionChangedAction result = NotifyCollectionChangedAction.Reset)
+        {
+            if (ComplexTable != null)
+            {
+                await ComplexTable.OnItemsChange(new NotifyCollectionChangedEventArgs(result));
             }
         }
 
@@ -93,6 +110,47 @@ namespace UniComponents
         {
             ZoznamPoloziek.CollectionChanged -= OnCollectionChanged;
         }
+
+        /// <summary>
+        /// Zaobalí metódu/y do načítavania. Default sa nastaví Nacitavanie na true a po skončení 'method' sa potom nastaví na false
+        /// </summary>
+        /// <param name="methodAsync">ak nie je null tak sa spustí</param>
+        /// <param name="method">ak nie je null tak sa spustí</param>
+        /// <returns></returns>
+        public virtual async Task Nacitaj(Func<Task>? methodAsync = null, Action? method = null)
+        {
+            Nacitavanie = true;     //hlavna vec
+            if (methodAsync != null)
+            {
+                await methodAsync();
+            }
+            if (method != null)
+            {
+                method?.Invoke();
+            }
+            Nacitavanie = false; //hlavna vec
+        }
+
+        /// <summary>
+        /// Zaobalí metódu/y do načítavania. Default sa odstani event OnCollectionChanged z ObservableCollection a potom sa vráti späť
+        /// </summary>
+        /// <param name="methodAsync">ak nie je null tak sa spustí</param>
+        /// <param name="method">ak nie je null tak sa spustí</param>
+        /// <returns></returns>
+        public virtual async Task SilentCollection(Func<Task>? methodAsync = null, Action? method = null)
+        {
+            ZoznamPoloziek.CollectionChanged -= OnCollectionChanged; //hlavna vec
+            if (methodAsync != null)
+            {
+                await methodAsync();
+            }
+            if (method != null)
+            {
+                method?.Invoke();
+            }
+            ZoznamPoloziek.CollectionChanged += OnCollectionChanged; //hlavna vec
+        }
+
     }
 
     public interface IObservableViewModel
@@ -106,5 +164,72 @@ namespace UniComponents
         public void Initialization();
         //public bool MoznoVymazat(T polozka);
         //public void Vymazat(T polozka);
+    }
+
+    /// <summary>
+    /// Dedí z AObservableViewModel, podobna funkcionalita, cez konstruktor je moznost aj nastaviť metodu na nacitanie konkretneho zoznamu. Malo by to byt safe aj bez pouzitia ComplexTable<para/>
+    /// Treba potom spustit NacitajZoznamy() na nacitanie zoznamov a najlepsie po skonceni spustit Dispose() pred odidenim z kontextu
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class ObservableCollectionOwn<T> : AObservableViewModel<T>
+    {
+        /// <summary>
+        /// Ak existuje metodia v Nacitavani Zoznamov tak sa nastaví na true, inak false
+        /// </summary>
+        public bool CanBeLoaded { get; set; } = false;
+
+        /// <summary>
+        /// Pre potrebu zistenia, či je možné vymazať položku. Najlepšie nechať načítať v Nacitavani zoznamov
+        /// </summary>
+        public List<(T, bool)> MoznoVymazatList { get; set; } = new();
+
+        private readonly Func<Task>? _nacitajZoznamyAsync;
+        private readonly Func<T, bool>? _moznoVymazat;
+        private readonly Action<T>? _Vymazat;
+
+        /// <summary>
+        /// Konštruktor, ktorý umožňuje nastaviť metódu na načítanie zoznamov a metódu na zistenie, či je možné vymazať položku + metodu na vymazanie
+        /// </summary>
+        /// <param name="nacitajZoznamyAsync">Default nic</param>
+        /// <param name="moznoVymazat">Default true</param>
+        /// <param name="vymazat">Vždy sa volá base.Vymazat(T)</param>
+        public ObservableCollectionOwn(Func<Task>? nacitajZoznamyAsync = null, Func<T, bool>? moznoVymazat = null, Action<T>? vymazat = null)
+        {
+            _nacitajZoznamyAsync = nacitajZoznamyAsync;
+            _moznoVymazat = moznoVymazat;
+            _Vymazat = vymazat;
+
+            CanBeLoaded = _nacitajZoznamyAsync != null;
+        }
+
+        protected override async Task NacitajZoznamyAsync()
+        {
+            if (_nacitajZoznamyAsync != null)
+            {
+                await _nacitajZoznamyAsync();
+            }
+        }
+
+        public override bool MoznoVymazat(T polozka)
+        {
+            if (_moznoVymazat != null)
+            {
+                return _moznoVymazat(polozka);
+            }
+            return true;
+        }
+
+        public override void Vymazat(T polozka)
+        {
+            if (_Vymazat != null)
+            {
+                base.Vymazat(polozka);
+                _Vymazat(polozka);
+            }
+            else
+            {
+                base.Vymazat(polozka);
+            }
+        }
     }
 }
