@@ -28,6 +28,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using HSKModul.ViewModels;
 using System.Globalization;
+using AdminModul.ViewModels;
 
 namespace HMS
 {
@@ -163,6 +164,9 @@ namespace HMS
             builder.Services.AddTransient<PouzivateliaViewModel>();
             builder.Services.AddTransient<AddPouzivatelViewModel>();
             builder.Services.AddTransient<ZmenaPouzivatelaViewModel>();
+
+            builder.Services.AddTransient<RoomsViewModel>();
+            builder.Services.AddTransient<CRURoomViewModel>();
             #endregion
             #region HSKModul
             builder.Services.AddTransient<HousekeepingViewModel>();

@@ -69,26 +69,18 @@ namespace HSKModul.ViewModels
                 VsetkyIzby.AddRange(_dbw.HRooms
                     .ToList());
 
-                bool needsave = false;
                 VsetkyIzby.ForEach(x =>
                 {
                     var found = _db.RoomInfos.FirstOrDefault(y => y.ID_Room == x.RoomNumber);
-                    if (found != null)  //ak existuje tak pridame 99% sanca
+                    if (found != null)  //ak existuje tak pridame 99% sanca (musi existovat)
                     {
                         x.RoomInfo = found;
                     }
-                    else // ak neexistuje tak vytvorime, len pri nenaplnenej databaze izbami
+                    else
                     {
-                        var newRoomInfo = new RoomInfo() { ID_Room = x.RoomNumber };
-                        _db.RoomInfos.Add(newRoomInfo);
-                        x.RoomInfo = newRoomInfo;
-                        needsave = true;
+                        throw new ArgumentException("Room info neexistuje!");
                     }
                 });
-                if (needsave)
-                {
-                    await _db.SaveChangesAsync();
-                }
 
                 foreach (var item in VsetkyIzby)    //pre zobrazenie vsetkych izieb
                 {
@@ -138,7 +130,7 @@ namespace HSKModul.ViewModels
                         ZobrazenieHideList = tmp;
                     });
                 })
-            ); 
+            );
             await ManualNotifyColection();
         }
 

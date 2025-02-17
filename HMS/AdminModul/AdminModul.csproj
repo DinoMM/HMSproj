@@ -25,9 +25,4 @@
 	  <ProjectReference Include="..\UniComponents\UniComponents.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="ViewModels\RozsireneNastavenia\" />
-	  <Folder Include="Views\RozsireneNastavenia\" />
-	</ItemGroup>
-
 </Project>

@@ -41,6 +41,7 @@ namespace HMS.ViewModels
             modulesList.Add(("Položky dokladu", "/UniConItemy", UniConItemPoklDokladu.ROLE_R_POLOZKY));
             modulesList.Add(("Zmenáreň", "/Zmenaren", ZmenaMeny.ROLE_CR_ZMENAREN));
             modulesList.Add(("Housekeeping", "/Housekeeping", Rezervation.ROLE_R_HSK));
+            modulesList.Add(("Správa izieb", "/Rooms", new List<RolesOwn>() { RolesOwn.Admin }));
 
 
             if (!CompVyberKasa.checkWhenAppClose)        //zaistenie, ze uzivatel je odpojeny od kasy

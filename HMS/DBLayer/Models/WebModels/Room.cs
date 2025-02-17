@@ -7,7 +7,9 @@ namespace DBLayer.Models
 {
     public partial class Room : ICloneable
     {
+
         [Key]
+        [Required(ErrorMessage = "Nutné pole")]
         public string RoomNumber { get; set; }        //id miestnosti
         public string RoomCategory { get; set; }        //kategoria
 

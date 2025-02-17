@@ -1,0 +1,142 @@
+﻿@namespace AdminModul
+@page "/Rooms"
+@inherits TransientHoldedComp<RoomsViewModel>
+
+<ApproveModal @ref=AprovMod ID="deletemodal"
+              Text="Naozaj chcete odstrániť tento riadok?"
+              FuncOnSucc="EventCallback.Empty"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+
+<CustomDynamicModal @ref="custommodal"
+                    ID="@("custommodal")"
+                    NoButtons="false"
+                    ChangeColor="false"
+                    Header=""
+                    OneButtonOnly="true"
+                    SizeInRem="70">
+
+    <CRURoom CanEdit="@ViewModel.MoznoVymazat(marked)"></CRURoom>
+
+</CustomDynamicModal>
+
+<div class="container maxwidth95">
+
+    <div class="row pb-1">
+
+        <div class="col-3 d-flex justify-content-bottom mb-2">
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj izbu..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
+        </div>
+
+        <div class="col-9 autooverflowx">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+                <button @onclick="Create" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></button>
+                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+            </div>
+        </div>
+
+        <div class="col-1"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-1"></div>
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+            <ComplexTable @ref="ViewModel.ComplexTable"
+                          ID="complextable"
+                          T="DBLayer.Models.Room"
+                          Items="ViewModel.ZoznamPoloziek"
+                          LoadingItems="ViewModel.Nacitavanie"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.NacitajZoznamy"
+                          CollectionChanged="ViewModel.OnCollectionChanged"
+                          OnDbClick="(item) => Open(item)"
+                          SetTableSettings="@((true, tableSettings, null))">
+            </ComplexTable>
+        </div>
+        <div class="col-1"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-12"></div>
+    </div>
+
+</div>
+
+
+@code {
+    ApproveModal AprovMod;
+    Room? marked { get => ViewModel?.ComplexTable?.Marked; }
+    CustomDynamicModal custommodal;
+
+    List<TableColumnTemplate<Room>> tableSettings = new()
+{
+        new () { ID_Prop = nameof(Room.RoomNumber), HeaderValue = "Izba", CellValue = (item) => item.RoomNumber },
+        new () { ID_Prop = nameof(Room.RoomCategory), HeaderValue = "Kategória", CellValue = (item) => item.RoomCategory },
+        new () { ID_Prop = nameof(Room.MaxNumberOfGuest), HeaderValue = "Max. počet hostí", CellValue = (item) => item.MaxNumberOfGuest.ToString() },
+        new () { ID_Prop = nameof(Room.Cost), HeaderValue = "Cena za noc", CellValue = (item) => item.Cost.ToString(System.Globalization.CultureInfo.InvariantCulture) },
+
+    };
+    protected override void OnInitializedMustHave()
+    {
+        tableSettings.Add(new() { ID_Prop = "statuscistoty", HeaderValue = "Status čistoty", CellValue = (item) => item.RoomInfo?.Status.GetDisplayName() ?? "", CellConvert = ((item) => item.RoomInfo?.Status.GetDisplayName() ?? "", typeof(string)), SelectionList = Enum.GetValues(typeof(DBLayer.Models.HSKModels.RoomStatus)).Cast<DBLayer.Models.HSKModels.RoomStatus>().Select(x => x.GetDisplayName()).ToList(), Visible = false });
+        tableSettings.Add(new() { ID_Prop = "note", HeaderValue = "Poznámka", CellValue = (item) => item.RoomInfo?.Poznamka ?? "", CellConvert = ((item) => item.RoomInfo?.Poznamka, typeof(string)), Visible = false });
+        tableSettings.Add(new() { ID_Prop = "lastchange", HeaderValue = "Posledné zmeny", CellValue = (item) => item.RoomInfo?.LastUpdate.ToString("dd.MM.yyyy HH:mm:ss") ?? "", CellConvert = ((item) => item.RoomInfo?.LastUpdate, typeof(DateTime)), Visible = false });
+
+        tableSettings.Add(new()
+        {
+            Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))))
+        });
+    }
+
+    protected override void OnInitializedTransient()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+    }
+
+    protected override async Task OnInitializedTransientAsync()
+    {
+        await ViewModel.NacitajZoznamy();
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    private async Task Open(Room? item)
+    {
+        if (item != null)
+        {
+            objectHolder.Add(item);
+            await custommodal.OpenModal(async (bool ans) =>
+            {
+                StateHasChanged();
+            });
+        }
+    }
+
+    private async Task Delete(Room item)
+    {
+        if (await AprovMod.OpenModal(true))
+        {
+            ViewModel.Vymazat(item);
+            StateHasChanged();
+        }
+    }
+
+    async Task Create()
+    {
+        await custommodal.OpenModal(async (bool ans) =>
+        {
+            await ViewModel.ComplexTable.OnRefresh.InvokeAsync();
+            StateHasChanged();
+        });
+    }
+}
