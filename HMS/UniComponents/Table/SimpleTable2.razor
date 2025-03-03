@@ -2,7 +2,8 @@
 @inject IJSRuntime JSRuntime
 
 <table class="table table-hover" id="@ID">
-    <thead style="@(Sticky ? "position: sticky; top: 0;" : "")">
+    <thead style="@(Sticky ? "position: sticky; top: 0;" : "") z-index:1;">
+
         @if (Toolbar != null && WithToolbar)
         {
             <tr>

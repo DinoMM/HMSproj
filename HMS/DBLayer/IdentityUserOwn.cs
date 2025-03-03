@@ -116,7 +116,7 @@ namespace DBLayer
         /// povolene role pre zobrazenie zamestnancov v modulu LudskeZdroje
         /// </summary>
         [NotMapped]
-        public static List<RolesOwn> ROLE_R_ZAMESTNANCI { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Skladnik, RolesOwn.Recepcny, RolesOwn.Bezpecnostnik, RolesOwn.FBVeduci, RolesOwn.HKVeduci, RolesOwn.Nakupca, RolesOwn.Personalista, RolesOwn.Riaditel, RolesOwn.Uctovnik, RolesOwn.UdalostnyPlanovac, RolesOwn.Udrzbar };
+        public static List<RolesOwn> ROLE_R_ZAMESTNANCI { get; private set; } = new() { RolesOwn.Admin, RolesOwn.Skladnik, RolesOwn.Recepcny, RolesOwn.Bezpecnostnik, RolesOwn.FBVeduci, RolesOwn.HKVeduci, RolesOwn.Nakupca, RolesOwn.Personalista, RolesOwn.Riaditel, RolesOwn.Uctovnik, RolesOwn.UdalostnyPlanovac, RolesOwn.Udrzbar, RolesOwn.RCVeduci };
     }
 
     /// <summary>

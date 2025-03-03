@@ -1,4 +1,5 @@
 ﻿using DBLayer.Models;
+using System.Reflection;
 using System.Text;
 using UglyToad.PdfPig.Core;
 using UglyToad.PdfPig.Writer;
@@ -35,10 +36,11 @@ namespace PdfCreator
             System.IO.Directory.CreateDirectory(FolderPath); // vytvori adresar ak neexistuje
         }
         /// <summary>
-        /// Otvorí PDF súbor
+        /// Otvorí PDF súbor, funguje vo windows, nie v androide
         /// </summary>
         public void OpenPDF()
         {
+            //Funguje na windowse ale nie na androide
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
             {
                 FileName = FullPathPDF,
@@ -121,7 +123,8 @@ namespace PdfCreator
             double maxHeader = velkostTextu?.LastOrDefault()?.EndBaseLine.X ?? 0.0;
             maxHeader = maxHeader != 0.0 ? maxHeader - tmp.X : 0.0;
             double max = 0.0;
-            foreach (var item in list)
+
+            foreach (var item in list)      //pozor na '\n'
             {
                 var max2 = page.MeasureText(setting.CellValue(item), fontSize, tmp, fontR)?.LastOrDefault()?.EndBaseLine.X ?? 0.0;
                 max2 = max2 != 0.0 ? max2 - tmp.X : 0.0;
@@ -151,6 +154,30 @@ namespace PdfCreator
             }
 
 
+        }
+
+        protected byte[] GetFont(string fontName)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+
+            var resourceNames = assembly.GetManifestResourceNames();
+            foreach (var resourceName in resourceNames)
+            {
+                Console.WriteLine($"Resource: {resourceName}");
+            }
+
+            string fontResourceName = $"{nameof(PdfCreator)}.Fonts.{fontName}.ttf";
+
+            using (var stream = assembly.GetManifestResourceStream(fontResourceName))
+            {
+                if (stream == null)
+                {
+                    throw new Exception($"Resource '{fontResourceName}' not found.");
+                }
+                byte[] fontBytes = new byte[stream.Length];
+                stream.Read(fontBytes, 0, fontBytes.Length);
+                return fontBytes;
+            }
         }
 
     }

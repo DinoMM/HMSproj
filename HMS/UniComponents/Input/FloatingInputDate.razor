@@ -5,7 +5,7 @@
 <div class="input-group">
     <div class="form-floating overflow-hidden">
         <Microsoft.AspNetCore.Components.Forms.InputDate id="@ID"
-                      class="@("form-control mb-1 border-secondary-subtle " + ClassInput + (IsNull() ? " rounded-end " : ""))" Type="ShowedDateType"
+                      class="@("form-control mb-1 border-secondary-subtle " + ClassInput + (IsNull() || Disabled ? " rounded-end " : ""))" Type="ShowedDateType"
                       TValue="DateTime?"
                       ValueChanged="(e) => OnInputChange(new() { Value = e })"
                       Value="@Value"
@@ -20,8 +20,8 @@
             <label for="@ID" class="text-truncate">@Header</label>
         }
     </div>
-    <button class="btn btn-outline-secondary mb-1 border-secondary-subtle border-start-0 @(IsNull() ? "d-none" : "")"
-            id="@(ID + "addon")"
+    <button type="button" class="btn btn-outline-secondary mb-1 border-secondary-subtle border-start-0 @(IsNull() || Disabled ? "d-none" : "")"
+            id="@(ID + "addon")" tabindex="-1"
             @onclick="ClearInput">
         X
     </button>

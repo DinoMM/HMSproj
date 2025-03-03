@@ -1,6 +1,8 @@
 ﻿@namespace UniComponents
 
-<button id="@ID" type="@Type" class="@Class" disabled="@Disabled" @onclick="OnClick">
+
+<button id="@ID" type="@Type" class="@Class" disabled="@Disabled" 
+@onclick="OnClick">
     @switch (ZmenaStavuTextu ? ZmenaTextu.Item1 : ZmenaTextu.Item2)
     {
         case "Uložiť":

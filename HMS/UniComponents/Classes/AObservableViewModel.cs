@@ -151,6 +151,21 @@ namespace UniComponents
             ZoznamPoloziek.CollectionChanged += OnCollectionChanged; //hlavna vec
         }
 
+        /// <summary>
+        /// Kombinácia Nacitaj a SilentCollection v jednom pre zlepsenie builerplatu.
+        /// </summary>
+        /// <param name="methodAsync"></param>
+        /// <param name="method"></param>
+        /// <returns></returns>
+        public virtual async Task NacitajAndSilentCollection(Func<Task>? methodAsync = null, Action? method = null)
+        {
+            await Nacitaj(
+                methodAsync: async () => await SilentCollection(
+                    method: method,
+                    methodAsync: methodAsync
+                    ));
+
+        }
     }
 
     public interface IObservableViewModel

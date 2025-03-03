@@ -61,7 +61,14 @@ namespace UniComponents
             }
             else if (sortParameter is List<string> selectionList)
             {
-                return await SortDataList(propertyName, selectionList, list);
+                //if (cellConvert == null)
+                //{
+                    return await SortDataList(propertyName, selectionList, list);
+                //}
+                //else
+                //{
+                //    return await SortDataList(propertyName, selectionList, list, cellConvert);
+                //}
             }
             return new List<T>();
         }
@@ -272,6 +279,52 @@ namespace UniComponents
                     });
                     StateHasChanged();
                 }
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Triedenie podľa zovlenej hodnoty v SelectModalu pomocou cellConvert
+        /// </summary>
+        /// <param name="propertyName"></param>
+        /// <param name="zoznamSelect"></param>
+        /// <returns></returns>
+        protected async Task<List<T>> SortDataList(string propertyName, List<string> zoznamSelect, List<T> list, Func<T, object?> cellValue)
+        {
+            SortSelectModal.SelectionList = zoznamSelect;
+            if (await SortSelectModal.OpenModal(true))
+            {
+                var selectedValue = SortSelectModal.Value;
+                if (string.IsNullOrEmpty(selectedValue))
+                {
+                    return list;
+                }
+                //var propertyInfo = typeof(T).GetProperty(propertyName);
+                //if (propertyInfo != null)
+                //{
+                    await Task.Run(() =>
+                    {
+                        list.Sort((x, y) =>
+                        {
+                            var valueX = cellValue.Invoke(x);
+                            var valueY = cellValue.Invoke(y);
+                            if (valueX == selectedValue && valueY != selectedValue)
+                            {
+                                return -1; // valueX should come before valueY
+                            }
+                            else if (valueX != selectedValue && valueY == selectedValue)
+                            {
+                                return 1; // valueY should come before valueX
+                            }
+                            else
+                            {
+                                return 0; // No need to sort the rest
+                            }
+                        });
+                    });
+                    StateHasChanged();
+                //}
             }
 
             return list;

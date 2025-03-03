@@ -1,6 +1,7 @@
 ﻿@namespace UniComponents
 @inject IJSRuntime JSRuntime
-<div id="@ID" data-bs-toggle="tooltip" data-bs-placement="@Position" data-bs-title="@Text">
+@implements IAsyncDisposable
+<div id="@ID" class="@Class" data-bs-toggle="tooltip" data-bs-placement="@Position" data-bs-title="@Text" style="@Style">
     @ChildContent
 </div>
 
@@ -30,6 +31,20 @@
     [Parameter]
     public string Text { get; set; } = "tooltip";
 
+    /// <summary>
+    /// Nastavenie štýlu, default ""
+    /// </summary>
+    [Parameter]
+    public string Style { get; set; } = "";
+
+    /// <summary>
+    /// Nastavenie class, default "", Ak chceme vyplniť celý div tak použiť "innerdivfill" a parrent div nastaviť na "position-relative"
+    /// </summary>
+    [Parameter]
+    public string Class { get; set; } = "";
+
+
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -43,6 +58,11 @@
     {
         Text = newText;
         await JSRuntime.InvokeVoidAsync("updateTooltipOnHover", ID, newText);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await JSRuntime.InvokeVoidAsync("updateTooltipShow", ID, false);
     }
 
 }

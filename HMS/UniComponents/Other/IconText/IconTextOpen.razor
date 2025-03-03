@@ -1,3 +1,8 @@
 ﻿@namespace UniComponents
-    <IconText Icon="bi-caret-down-fill">Otvoriť</IconText>
+<IconText Icon="bi-caret-down-fill">@(NoText ? "" : "Otvoriť")</IconText>
+
+@code{
+    [Parameter]
+    public bool NoText { get; set; } = false;
+}
 

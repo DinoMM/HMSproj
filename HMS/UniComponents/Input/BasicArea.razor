@@ -1,0 +1,52 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+@inherits AInput<string>
+
+<div class="input-group">
+    <div class="overflow-hidden">
+        <textarea id="@ID"
+                  class="form-control mb-1 border-secondary-subtle @ClassInput @(IsNull() || Disabled ? "rounded-end " : "")"
+                  value="@GetValue()"
+                  @oninput="(e) => OnInputChange(e)"
+                  placeholder=""
+                  disabled="@(Disabled)"
+                  aria-label="."
+                  aria-describedby="@(ID + "addon")"
+                  autocomplete="off" 
+                  style="height: 35px;"/>
+    </div>
+    <button type="button" class="btn btn-outline-secondary mb-1 border-secondary-subtle border-start-0 @(IsNull() || Disabled ? "d-none" : "")"
+            id="@(ID + "addon")" tabindex="-1"
+            @onclick="ClearInput">
+        X
+    </button>
+</div>
+
+@code {
+
+    /// <summary>
+    /// Clears the input field
+    /// </summary>
+    protected async Task ClearInput()
+    {
+        await JSRuntime.InvokeVoidAsync("clearInputField", ID);
+        await JSRuntime.InvokeVoidAsync("focusInputField", ID);
+        Value = "";
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    protected bool IsNull()
+    {
+        return string.IsNullOrEmpty(Value?.ToString());
+    }
+
+    protected override async Task OnInputChange(ChangeEventArgs e)
+    {
+        await base.OnInputChange(e);
+    }
+
+    protected string GetValue()
+    {
+        return Value?.ToString() ?? "";
+    }
+}

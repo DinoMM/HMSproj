@@ -63,9 +63,14 @@ namespace RecepciaModul.ViewModels
         {
             return _userService.IsLoggedUserInRoles(Rezervation.ROLE_R_REZERVACIA);
         }
+        public bool ValidateUserC()
+        {
+            return _userService.IsLoggedUserInRoles(Rezervation.ROLE_CRUD_REZERVACIA);
+        }
+
         public bool ValidateUserCRU()
         {
-            throw new NotImplementedException();
+            return ValidateUserC();
         }
 
         public async Task NacitajZoznamy()

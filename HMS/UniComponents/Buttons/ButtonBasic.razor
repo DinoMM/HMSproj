@@ -1,0 +1,70 @@
+﻿@namespace UniComponents
+@inject IJSRuntime JSRuntime
+
+@if (!Tooltip.HasValue)
+{
+    <button id="@ID" type="@Type" class="@Class @AdditionalClass" disabled="@Disabled" @onclick="OnClick">
+        @ChildContent
+    </button>
+}
+else
+{
+    <button id="@ID" type="@Type" class="@Class position-relative @AdditionalClass" disabled="@Disabled" @onclick="ToolTipOnClick">
+        @ChildContent
+        <Tooltip ID="@(ID + "tooltip")" Position="@Tooltip.Value.position" Text="@Tooltip.Value.text" Class="innerdivfill"></Tooltip>
+    </button>
+}
+
+@code {
+    /// <summary>
+    /// Vypnutie tlačidla, Default false
+    /// </summary>
+    [Parameter]
+    public bool Disabled { get; set; } = false;
+
+    /// <summary>
+    /// Vnutro class, Default "btn btn-primary"
+    /// </summary>
+    [Parameter]
+    public string Class { get; set; } = "btn btn-primary";
+
+    /// <summary>
+    /// Vnutro type, Default "button"
+    /// </summary>
+    [Parameter]
+    public string Type { get; set; } = "button";
+
+    /// <summary>
+    /// Vnutro @onclick, Default EventCallback.Empty
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClick { get; set; } = EventCallback.Empty;
+
+    /// <summary>
+    /// ID tlačidla, Default "basicbutton", dobré nastaviť ak používame tooltip
+    /// </summary>
+    [Parameter]
+    public string ID { get; set; } = "basicbutton";
+
+    /// <summary>
+    /// Zobrazí tooltip. Dobré je nastaviť ID. default null.
+    /// </summary>
+    [Parameter]
+    public (string position, string text)? Tooltip { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Prídavný class, nutnost poslat cez cascading parameter
+    /// </summary>
+    [CascadingParameter(Name = "AdditionalClass")]
+    public string AdditionalClass { get; set; } = "";
+
+
+    private async Task ToolTipOnClick()
+    {
+        await JSRuntime.InvokeVoidAsync("updateTooltipShow", ID + "tooltip", false);    //fixne ak zostane tooltip vysieť
+        await OnClick.InvokeAsync();
+    }
+}
