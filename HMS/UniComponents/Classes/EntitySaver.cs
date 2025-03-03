@@ -128,6 +128,8 @@ namespace UniComponents
                 }
 
                 SavingTuple.Item1.SaveChanges();        //uloženie zmien do DB
+                //catch (DbUpdateException e)       //ak zacne padat program
+                
                 Modified = false;
                 Exist = true;
             }
@@ -205,6 +207,15 @@ namespace UniComponents
             {
                 Modified = true;
             }
+        }
+
+        /// <summary>
+        /// Nastaví, že entita bola zmenená. Napríklad ak meníme property, ktorá nie je [ObservableProperty] alebo keď meníme niečo čo je mimo EntityInputu ale má to vplyv na entitu
+        /// </summary>
+        /// <param name="modified"></param>
+        public void SetModified(bool modified = true)
+        {
+            Modified = modified;
         }
 
     }

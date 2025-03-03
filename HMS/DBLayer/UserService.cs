@@ -189,23 +189,23 @@ namespace DBLayer
         /// <returns></returns>
         public async Task<bool> UpdateUser(IdentityUserOwn user)
         {
-            //var found = await _userManager.FindByIdAsync(user.Id);
-            //if (found is null)
-            //{
-            //    return false;
-            //}
-            //found.UserName = user.UserName;
-            //found.Name = user.Name;
-            //found.Surname = user.Surname;
-            //found.Email = user.Email;
-            //found.PhoneNumber = user.PhoneNumber;
-            //found.IBAN = user.IBAN;
-            //found.Adresa = user.Adresa;
-            //found.RodneCislo = user.RodneCislo;
-            //found.ObcianskyID = user.ObcianskyID;
-            //found.Sex = user.Sex;
-            //found.Nationality = user.Nationality;
-            return (await _userManager.UpdateAsync(user)).Succeeded;
+            var found = await _userManager.FindByIdAsync(user.Id);
+            if (found is null)
+            {
+                return false;
+            }
+            found.UserName = user.UserName;
+            found.Name = user.Name;
+            found.Surname = user.Surname;
+            found.Email = user.Email;
+            found.PhoneNumber = user.PhoneNumber;
+            found.IBAN = user.IBAN;
+            found.Adresa = user.Adresa;
+            found.RodneCislo = user.RodneCislo;
+            found.ObcianskyID = user.ObcianskyID;
+            found.Sex = user.Sex;
+            found.Nationality = user.Nationality;
+            return (await _userManager.UpdateAsync(found)).Succeeded;
         }
 
         public async Task<bool> DeleteUser(IdentityUserOwn user)

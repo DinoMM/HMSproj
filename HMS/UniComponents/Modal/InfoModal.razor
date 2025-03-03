@@ -2,7 +2,7 @@
 @inject IJSRuntime JSRuntime
 @implements IModal
 <!-- Modal -->
-<div class="modal fade" id="@ID" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="@ID" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" style="@(ZIndex >= 0 ? $"z-index: {ZIndex};" : "")">
     <div class="modal-dialog" style="@(SizeInRem == 0 ? " max-width:auto; " : $"max-width:{SizeInRem}rem; ") ">
         <div class="modal-content">
             <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
@@ -46,6 +46,12 @@
     /// </summary>
     [Parameter]
     public bool ChangeColor { get; set; } = false;
+
+    /// <summary>
+    /// Nastaví ZIndex okna, default -1 -> auto
+    /// </summary>
+    [Parameter]
+    public int ZIndex { get; set; } = -1;
 
     private TaskCompletionSource<bool> tcs;
     private bool tstop = false;

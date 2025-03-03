@@ -76,8 +76,11 @@ namespace UniComponents
         }
         public string SwitchLast(string url) //odstrani posledne url za vlozi na koniec nove
         {
+            var prevsave = ActualPageUrl;
             RemoveLastUrl();
-            return AddNextUrl(url);
+            var ret = AddNextUrl(url);
+            PreviousPageUrl = prevsave;
+            return ret;
         }
 
         public string SetUrl(string wholeUrl, bool cut = true) //vymaze aktualnu url a posklada z vlozeneho
@@ -123,9 +126,6 @@ namespace UniComponents
             }
             _NavigationManager.NavigateTo(uri);
         }
-
-
-
 
     }
 

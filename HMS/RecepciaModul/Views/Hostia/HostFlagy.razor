@@ -112,7 +112,7 @@
                 <button type="button" class="btn btn-secondary" @onclick="Close">
                     <IconTextClose></IconTextClose>
                 </button>
-                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null || !ViewModel.ValidateUserCUD())" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
                 <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCUD())" type="button" class="btn btn-primary">
                     <IconTextCreate></IconTextCreate>
                 </button>

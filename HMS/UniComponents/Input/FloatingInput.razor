@@ -7,7 +7,7 @@
     <div class="form-floating overflow-hidden">
         <input id="@ID"
                type="@Type"
-               class="form-control mb-1 border-secondary-subtle @ClassInput @(IsNull() ? "rounded-end " : "")"
+               class="form-control mb-1 border-secondary-subtle @ClassInput @(IsNull() || Disabled ? "rounded-end " : "")"
                value="@GetValue()"
                @oninput="(e) => OnInputChange(e)"
                placeholder="."
@@ -22,8 +22,8 @@
             <label for="@ID" class="text-truncate">@Header</label>
         }
     </div>
-    <button class="btn btn-outline-secondary mb-1 border-secondary-subtle border-start-0 @(IsNull() ? "d-none" : "")"
-            id="@(ID + "addon")"
+    <button type="button" class="btn btn-outline-secondary mb-1 border-secondary-subtle border-start-0 @(IsNull() || Disabled ? "d-none" : "")"
+            id="@(ID + "addon")" tabindex="-1"
             @onclick="ClearInput">
         X
     </button>

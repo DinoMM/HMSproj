@@ -23,5 +23,32 @@ namespace UniComponents
 
             return displayName?.Name ?? enumValue.ToString();
         }
+
+        /// <summary>
+        /// Vráti list s hodnotami DisplayName pre daný enum.
+        /// </summary>
+        /// <typeparam name="TEnum"></typeparam>
+        /// <returns></returns>
+        public static List<string> GetDisplayNames<TEnum>() where TEnum : Enum
+        {
+            return Enum.GetValues(typeof(TEnum))
+                   .Cast<TEnum>()
+                   .Select(x => x.GetDisplayName())
+                   .ToList();
+        }
+
+        /// <summary>
+        /// Vráti enum hodnotu podľa DisplayName (alebo ak neni tak podla string reprezentacie)
+        /// </summary>
+        /// <typeparam name="TEnum"></typeparam>
+        /// <param name="value"></param>
+        /// <returns></returns>
+        public static TEnum GetEnumValue<TEnum>(string value) where TEnum : Enum
+        {
+            return Enum.GetValues(typeof(TEnum))
+                   .Cast<TEnum>()
+                   .First(x => x.GetDisplayName() == value);
+                   
+        }
     }
 }

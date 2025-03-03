@@ -1,3 +1,7 @@
 ﻿@namespace UniComponents
-<IconText Icon="bi-x-circle">Vymazať</IconText>
+<IconText Icon="bi-x-circle">@(NoText ? "" : "Vymazať")</IconText>
 
+@code{
+    [Parameter]
+    public bool NoText { get; set; } = false;
+}

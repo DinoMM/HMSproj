@@ -123,12 +123,12 @@
                             break;
                         case TableFilterSelect<T> filter:
                             <FloatingSelect ID="@item.ID_Prop"
-                                           Items="filter.Selections"
-                                           Header="@item.HeaderValue"
-                                           Value="@filter.FilteredText"
-                                           ValueChanged="@(val => filter.FilteredText = val?.ToString() ?? "")"
-                                           ClassInput="@(filter.CheckIfAppliable() ? "fw-bold" : "")"
-                                           Disabled="@(!item.Visible)">
+                                            Items="filter.Selections"
+                                            Header="@item.HeaderValue"
+                                            Value="@filter.FilteredText"
+                                            ValueChanged="@(val => filter.FilteredText = val?.ToString() ?? "")"
+                                            ClassInput="@(filter.CheckIfAppliable() ? "fw-bold" : "")"
+                                            Disabled="@(!item.Visible)">
                             </FloatingSelect>
                             break;
                         default: break;
@@ -169,8 +169,9 @@
             </div>
         }
         <div class="row">
-            <div class="col-2">
-                <button type="button" class="btn btn-secondary mt-4" @onclick="ResetFilter">Reset</button>
+            <div class="col-md-11 col-8"></div>
+            <div class="col-md-1 col-4">
+                <button type="button" class="btn btn-secondary mt-4 ms-start" @onclick="ResetFilter">Reset</button>
             </div>
         </div>
     </div>
@@ -178,77 +179,87 @@
 
 <CompLoader @ref="SortSelCompLoader">
     <SelectModal @ref="SortSelectModal"
-                 ID="@(ID + "selectmodal")" />
+                 ID="@(ID + "selectmodal")" Header="Nemusí fungovať dobre, použi klasický filter" />
 </CompLoader>
 
 <SimpleTable2 ID="@ID" Sticky="@Sticky" NumHeaders="@TableNUM" WithToolbar="WithToolBar">
 
     <Toolbar>
         <div class="btn-toolbar" role="toolbar">
-            <div class="btn-group" role="group">
-                @if (OnRefresh.HasDelegate)
-                {
-                    <button id="refreshtablebtn" type="button" class="btn btn-outline-primary p-1 border-0 border-start border-end"
+
+            <div class="responsive-max-width-toolbar-btn-group">
+                <div class="btn-group" style="height: 40px;" role="group">
+                    @if (OnRefresh.HasDelegate)
+                    {
+                        <button id="refreshtablebtn" type="button" class="btn btn-outline-primary widthToolbar p-1 border-0 border-start border-end"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                data-bs-title="Obnoviť"
+                                tabindex="-1"
+                                @onclick="RefreshData"
+                                disabled="@LoadingItems">
+                            <IconText Icon="bi-arrow-clockwise"></IconText>
+                        </button>
+                    }
+                    @if (MultiSelect)
+                    {
+                        <button id="selectallbtn" type="button" class="btn @(!filterApplied ? "btn-outline-secondary " : "btn-outline-info ") @(Markers.Count != 0 ? "btn-dark " : "") widthToolbar p-1 border-0 border-start border-end"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                data-bs-title="Označiť všetko"
+                                tabindex="-1"
+                                @onclick="SelectAll">
+                            <IconText Icon="bi-check-all"></IconText>
+                        </button>
+                    }
+                    @if (Selectable && (SelectableNull || MultiSelect))
+                    {
+                        <button id="clearallbtn" type="button" class="btn @(!filterApplied ? "btn-outline-secondary " : "btn-outline-info ") widthToolbar p-1 border-0 border-start border-end"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                data-bs-title="Odznačiť výber"
+                                tabindex="-1"
+                                disabled="@(Markers.Count == 0)"
+                                @onclick="ClearAll">
+                            <IconText Icon="bi-eraser"></IconText>
+                        </button>
+                    }
+                    <button id="filterbtn" type="button" class="btn btn-outline-info widthToolbar p-1 border-0 border-start border-end"
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
-                            data-bs-title="Obnoviť"
-                            @onclick="OnRefresh"
-                            disabled="@LoadingItems">
-                        <IconText Icon="bi-arrow-clockwise"></IconText>
+                            data-bs-title="Filtrovať"
+                            tabindex="-1"
+                            @onclick="ShowFilter">
+                        @if (!filterApplied)
+                        {
+                            <IconText Icon="bi-funnel"></IconText>
+                        }
+                        else
+                        {
+                            <IconText Icon="bi-funnel-fill"></IconText>
+                        }
                     </button>
-                }
+                    <CascadingValue TValue="string" Name="AdditionalClass" Value="@AdditionalClassForToolbar">
+                        @AdditionToolbar
+                    </CascadingValue>
+
+                </div>
+            </div>
+            <div class="d-flex justify-content-center align-items-center text-center ms-1" role="group">
                 @if (MultiSelect)
                 {
-                    <button id="selectallbtn" type="button" class="btn @(!filterApplied ? "btn-outline-secondary " : "btn-outline-info ") @(Markers.Count != 0 ? "btn-dark " : "") p-1 border-0 border-start border-end"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="bottom"
-                            data-bs-title="Označiť všetko"
-                            @onclick="SelectAll">
-                        <IconText Icon="bi-check-all"></IconText>
-                    </button>
-                }
-                @if (Selectable && (SelectableNull || MultiSelect))
-                {
-                    <button id="clearallbtn" type="button" class="btn @(!filterApplied ? "btn-outline-secondary " : "btn-outline-info ") p-1 border-0 border-start border-end"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="bottom"
-                            data-bs-title="Odznačiť výber"
-                            disabled="@(Markers.Count == 0)"
-                            @onclick="ClearAll">
-                        <IconText Icon="bi-eraser"></IconText>
-                    </button>
-                }
-                <button id="filterbtn" type="button" class="btn btn-outline-info p-1 border-0 border-start border-end"
-                        data-bs-toggle="tooltip"
-                        data-bs-placement="bottom"
-                        data-bs-title="Filtrovať"
-                        @onclick="ShowFilter">
-                    @if (!filterApplied)
-                    {
-                        <IconText Icon="bi-funnel"></IconText>
-                    }
-                    else
-                    {
-                        <IconText Icon="bi-funnel-fill"></IconText>
-                    }
-                </button>
-                @AdditionToolbar
-
-            </div>
-            <div class="btn-group ms-auto" role="group">
-                @if (MultiSelect)
-                {
-                    if (!filterApplied)
-                    {
-                        <IconText Icon="bi-cursor">@($"Označené {MarkedActualCount}/{MarkedActualMax}")</IconText>
-                    }
-                    else
-                    {
-                        <IconText Icon="bi-cursor-fill text-info">@($"Označené {MarkedActualCount}/{MarkedActualMax}")</IconText>
-                    }
+                    <Tooltip ID="@(ID + "oznttip")" Position="bottom" Text="Označené položky zo zoznamu">
+                        @if (!filterApplied)
+                        {
+                            <IconText Icon="bi-cursor">@($"{MarkedActualCount}/{MarkedActualMax}")</IconText>
+                        }
+                        else
+                        {
+                            <IconText Icon="bi-cursor-fill text-info">@($"{MarkedActualCount}/{MarkedActualMax}")</IconText>
+                        }
+                    </Tooltip>
                 }
             </div>
-
         </div>
     </Toolbar>
 
@@ -439,6 +450,12 @@
     /// </summary>
     [Parameter]
     public EventCallback ParentStateHasChanged { get; set; } = EventCallback.Empty;
+
+    /// <summary>
+    /// Prídavný class pre vsetky ButtonBasic v toolbare, default "widthToolbar" -> zmeni sirku tlacidiel <para/>(cascading parameter)
+    /// </summary>
+    [Parameter]
+    public string AdditionalClassForToolbar { get; set; } = "widthToolbar";
 
     [IgnoreCopy]
     [CascadingParameter]
@@ -648,10 +665,12 @@
             {
                 Markers.Add(item);
                 filteredMarkedCount += filterApplied && FilteredResults.Contains(item) ? 1 : 0;
+                Marked = item;  //posledne oznaceny bude marked
             }
             else
             {
                 filteredMarkedCount -= filterApplied && FilteredResults.Contains(item) ? 1 : 0;
+                Marked = Markers.LastOrDefault(); //posledne oznaceny bude marked
             }
         }
         else
@@ -673,7 +692,7 @@
         }
     }
 
-    private async Task SetMarkedNull()
+    public async Task SetMarkedNull()
     {
         if (Marked == null) return;
         Markers.Remove(Marked);
@@ -976,10 +995,10 @@
     }
 
     /// <summary>
-    /// Napr pre generovanie pdfka
+    /// Napr pre generovanie pdfka. filterLineBreaks nastavuje '\n' na ' ' lebo fonty nevedia tento znak generovať
     /// </summary>
     /// <returns></returns>
-    public List<(string Header, Func<T, string> CellValue)> GetWriteableOnlySettings()
+    public List<(string Header, Func<T, string> CellValue)> GetWriteableOnlySettings(bool filterLineBreaks = true)
     {
         List<(string Header, Func<T, string> CellValue)> list = new();
         foreach (var item in TableSettings)
@@ -988,14 +1007,33 @@
             {
                 continue;
             }
-            if (item.CellValue == null)
+            if (item.CellValue != null)
             {
+                Func<T, string> func1 = (x) => filterLineBreaks ? item.CellValue(x).Replace('\n', ' ') : item.CellValue(x);
+                list.Add((item.HeaderValue, item.CellValue));
                 continue;
             }
-            list.Add((item.HeaderValue, item.CellValue));
+            if (item.CellConvert.HasValue
+                && (item.CellConvert.Value.Item2 == typeof(string)
+                || item.CellConvert.Value.Item2 == typeof(int)
+                || item.CellConvert.Value.Item2 == typeof(decimal)
+                || item.CellConvert.Value.Item2 == typeof(bool)
+                || item.CellConvert.Value.Item2 == typeof(double)
+                || item.CellConvert.Value.Item2 == typeof(DateTime)
+                || item.CellConvert.Value.Item2 == typeof(DateOnly)))
+            {
+                Func<T, string> func = (y) => filterLineBreaks ? (item.CellConvert.Value.Item1(y)?.ToString() ?? "").Replace('\n', ' ') : item.CellConvert.Value.Item1(y)?.ToString() ?? "";
+                list.Add((item.HeaderValue, func));
+            }
+
         }
         return list;
     }
 
+    private async Task RefreshData()
+    {
+        await OnRefresh.InvokeAsync();
+        await OnItemsChange(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+    }
 
 }

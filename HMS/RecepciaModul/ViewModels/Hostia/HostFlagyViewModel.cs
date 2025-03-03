@@ -45,7 +45,7 @@ namespace RecepciaModul.ViewModels
 
                 foreach (var item in ZoznamPoloziek)
                 {
-                    moznoVymazatList.Add((item, !_db.HostConFlags.Any(x => x.HostFlag == item.ID)));
+                    moznoVymazatList.Add((item, ValidateUserCUD() && !_db.HostConFlags.Any(x => x.HostFlag == item.ID)));
                 }
             });
         }

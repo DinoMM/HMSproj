@@ -51,7 +51,7 @@ namespace RecepciaModul.ViewModels
 
                     item.PokladnicnyDokladZ = Host.GetActivePokladnicneDoklady(item, in _db).FirstOrDefault();  //ziskanie prveho aktivneho pokladnicneho dokladu
 
-                    moznoVymazatList.Add((item, !_db.HostConReservations.Any(x => x.Host == item.ID /*|| x.ReservationZ.DepartureDate <= DateTime.Today.AddDays(-360)*/)));
+                    moznoVymazatList.Add((item, ValidateUserD() && !_db.HostConReservations.Any(x => x.Host == item.ID /*|| x.ReservationZ.DepartureDate <= DateTime.Today.AddDays(-360)*/)));
                 }
 
                 ZoznamKas.Clear();

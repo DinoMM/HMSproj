@@ -93,7 +93,10 @@ namespace UniComponents
             {
                 if (pSelectionListAddEmpty)
                 {
-                    pSelectionList.Insert(0, "");
+                    if (!pSelectionList.Contains(""))
+                    {
+                        pSelectionList.Insert(0, "");
+                    }
                 }
                 newFilter = new TableFilterSelect<T>() { ID_Prop = pID_Prop, CellValue = pCellValue, Selections = pSelectionList };
             }
@@ -130,7 +133,10 @@ namespace UniComponents
             {
                 if (pSelectionListAddEmpty)
                 {
-                    pSelectionList.Insert(0, "");
+                    if (!pSelectionList.Contains(""))
+                    {
+                        pSelectionList.Insert(0, "");
+                    }
                 }
                 newFilter = new TableFilterSelect<T>() { ID_Prop = pID_Prop, CellValue = pCellValue, Selections = pSelectionList };
             }

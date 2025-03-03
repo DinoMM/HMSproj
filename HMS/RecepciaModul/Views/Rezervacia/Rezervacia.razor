@@ -176,7 +176,7 @@
     <div class="sticky1 ms-1 autooverflowx">
         <div class="sticky1 d-flex" role="group">
             <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
-            <button type="button" class="btn btn-primary" @onclick="Create"><IconTextCreate></IconTextCreate></button>
+            <button type="button" class="btn btn-primary" @onclick="Create" disabled="@(!ViewModel.ValidateUserC())"><IconTextCreate></IconTextCreate></button>
             <button type="button" class="btn btn-info" @onclick="OpenChangeDate">@ViewModel.ZoznamDatumovNaZobrazenie[0].ToString("dd.MM.-")@ViewModel.ZoznamDatumovNaZobrazenie.Last().ToString("dd.MM.")</button>
             <button type="button" class="btn btn-primary" @onclick="ListRawRes">⏳Zoznam nespracovaných</button>
             <button type="button" class="btn btn-primary" @onclick="ListAll">📆Zoznam rezervácií</button>
@@ -273,21 +273,21 @@
 
 @code {
 
-    CustomModal daatePcker = new();
-    CustomModal resViewer = new();
-    List<DBLayer.Models.Room> RoomsToShow = new();
-    DBLayer.Models.Rezervation? marked = null;
-    DBLayer.Models.Rezervation? selected = null;
+        CustomModal daatePcker = new();
+        CustomModal resViewer = new();
+        List<DBLayer.Models.Room> RoomsToShow = new();
+        DBLayer.Models.Rezervation? marked = null;
+        DBLayer.Models.Rezervation? selected = null;
 
-    InfoModal modsaved = new();
-    CRUCompRezervacia rezcom = new();
-    CustomModal legndmodal = new();
-    ItemFinderTableProp<DBLayer.Models.Rezervation> nespracRes;
-    CustomModal resaslistmod = new();
+        InfoModal modsaved = new();
+        CRUCompRezervacia rezcom = new();
+        CustomModal legndmodal = new();
+        ItemFinderTableProp<DBLayer.Models.Rezervation> nespracRes;
+        CustomModal resaslistmod = new();
 
-    ComplexTable<DBLayer.Models.Rezervation> complexTableAllRes;
+        ComplexTable<DBLayer.Models.Rezervation> complexTableAllRes;
 
-    List<TableColumnTemplate<DBLayer.Models.Rezervation>> tableSettingsAllRes = new()
+        List<TableColumnTemplate<DBLayer.Models.Rezervation>> tableSettingsAllRes = new()
 {
             new () { ID_Prop = nameof(DBLayer.Models.Rezervation.ArrivalDate), HeaderValue = "Príchod", CellValue = (item) => item.ArrivalDate.ToString("dd.MM.yyyy") },
             new () { ID_Prop = nameof(DBLayer.Models.Rezervation.DepartureDate), HeaderValue = "Odchod", CellValue = (item) => item.DepartureDate.ToString("dd.MM.yyyy") },
@@ -380,7 +380,10 @@
 
     private async Task Create()
     {
-        await OpenRes(new DBLayer.Models.Rezervation());
+        if (ViewModel.ValidateUserC())
+        {
+            await OpenRes(new DBLayer.Models.Rezervation());
+        }
     }
 
     private async Task LegendModal()

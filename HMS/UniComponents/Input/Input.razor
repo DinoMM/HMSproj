@@ -6,7 +6,7 @@
         <div class="input-group">
             <input id="@ID"
                    type="@Type"
-                   class="form-control mb-1 border-secondary-subtle @ClassInput @(IsNull() ? "rounded-end " : "rounded-start border-end-0")"
+                   class="form-control mb-1 border-secondary-subtle @ClassInput @(IsNull() || Disabled ? "rounded-end " : "rounded-start border-end-0")"
                    value="@GetValue()"
                    @oninput="(e) => OnInputChange(e)"
                    placeholder="@Header"
@@ -16,8 +16,8 @@
                    autocomplete="off"
                    step="0.0001">
 
-            <button class="btn btn-outline-secondary mb-1 border-secondary-subtle @(IsNull() ? "d-none" : "rounded-end")"
-                    id="@(ID + "addon")"
+            <button type="button" class="btn btn-outline-secondary mb-1 border-secondary-subtle @(IsNull() || Disabled ? "d-none" : "rounded-end")"
+                    id="@(ID + "addon")" tabindex="-1"
                     @onclick="ClearInput">
                 X
             </button>

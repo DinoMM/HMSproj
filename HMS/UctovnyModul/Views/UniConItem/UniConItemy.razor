@@ -30,7 +30,7 @@
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
                 <button @onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRUD())" class="btn btn-primary"><IconTextCreate></IconTextCreate></button>
-                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null && ViewModel.ValidateUserCRUD())" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
                 <button type="button" class="btn btn-info" @onclick="FindTyp">Typ:&nbsp;@ViewModel.GetTypNazov()</button>
 
             </div>
