@@ -1,0 +1,10 @@
+
+services:
+  hmsapi:
+    container_name: hms_api_container
+    build:
+      context: .
+      dockerfile: HMS_API/Dockerfile
+    ports:
+      - "8080:80"
+   

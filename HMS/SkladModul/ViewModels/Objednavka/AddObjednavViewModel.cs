@@ -2,12 +2,14 @@
 using CommunityToolkit.Mvvm.Input;
 using DBLayer;
 using DBLayer.Models;
+using HMSModels;
 using Microsoft.AspNetCore.Components;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using UniComponents;
@@ -44,6 +46,7 @@ namespace SkladModul.ViewModels.Objednavka
         private readonly ObjectHolder _objectHolder;
         private readonly DBContext _db;
         private readonly UserService _userService;
+        private readonly HttpClientService<OBJ> _httpClient;
 
         public bool CorrectDod { get; set; } = false;
         public bool CorrectOdo { get; set; } = false;
@@ -51,12 +54,13 @@ namespace SkladModul.ViewModels.Objednavka
         public OBJ objednavka { get; set; }
 
 
-        public AddObjednavViewModel(DBContext db, ObjectHolder objectHolder, UserService userService)
+        public AddObjednavViewModel(DBContext db, ObjectHolder objectHolder, UserService userService, HttpClientService<OBJ> httpClient)
         {
             _db = db;
             _userService = userService;
             _objectHolder = objectHolder;
             objednavka = new();
+            _httpClient = httpClient;
         }
 
         [RelayCommand]
@@ -103,8 +107,7 @@ namespace SkladModul.ViewModels.Objednavka
             objednavka.OdberatelX = najDod;
         }
 
-        [RelayCommand]
-        private void NastavObjednavku()
+        public async Task NastavObjednavku()
         {
             if (Locked())
             {
@@ -117,7 +120,13 @@ namespace SkladModul.ViewModels.Objednavka
             bool nova = false;
             if (string.IsNullOrEmpty(objednavka.ID))    //ak neni ID tak vygenerujeme
             {
-                objednavka.ID = OBJ.DajNoveID(_db);
+                //objednavka.ID = OBJ.DajNoveID(_db);
+                var res = (string?)(await _httpClient.GetNextID());
+                if (string.IsNullOrEmpty(res))
+                {
+                    throw new Exception("Nepodarilo sa získať nové ID objednávky");
+                }
+                objednavka.ID = res;
                 nova = true;
             }
 
@@ -137,17 +146,25 @@ namespace SkladModul.ViewModels.Objednavka
 
             if (nova)
             {
-                _db.Objednavky.Add(objednavka);
+                //_db.Objednavky.Add(objednavka);
+                if (await _httpClient.CreateAsync(objednavka) == null)
+                {
+                    throw new Exception("Nepodarilo sa vytvoriť objednávku");
+                }
             }
             else
             {
-                var obj = _db.Objednavky.FirstOrDefault(x => x.ID == objednavka.ID);
-                if (obj != null)
+                //var obj = _db.Objednavky.FirstOrDefault(x => x.ID == objednavka.ID);
+                //if (obj != null)
+                //{
+                //    obj.SetFromObjednavka(objednavka);
+                //}
+                if (!await _httpClient.UpdateAsync(objednavka.ID, objednavka))
                 {
-                    obj.SetFromObjednavka(objednavka);
+                    throw new Exception("Nepodarilo sa uložiť objednávku");
                 }
             }
-            _db.SaveChanges();
+            //_db.SaveChanges();
 
             _objectHolder.Add(objednavka);
         }
@@ -209,12 +226,13 @@ namespace SkladModul.ViewModels.Objednavka
                    objednavka.Stav != Stav;
             }
         }
-        [RelayCommand]
-        private void Uloz()
+
+        public async Task Uloz()
         {
             objednavka.Popis = Popis;
             objednavka.Stav = Stav;
-            _db.SaveChanges();
+            //_db.SaveChanges();
+            await _httpClient.UpdateAsync(objednavka.ID, objednavka);
         }
         [RelayCommand]
         private void Neuloz()
@@ -231,8 +249,9 @@ namespace SkladModul.ViewModels.Objednavka
         {
             if (!string.IsNullOrEmpty(objednavka.ID) && Prazdna)
             {
-                _db.Objednavky.Remove(objednavka);
-                _db.SaveChanges();
+                //_db.Objednavky.Remove(objednavka);
+                //_db.SaveChanges();
+                _httpClient.Delete(objednavka.ID);
             }
         }
 

@@ -60,7 +60,8 @@ namespace SkladModul.ViewModels.Objednavka
         {
             if (Existujuca)
             {
-                _db.Entry(Objednavka).State = EntityState.Unchanged; //oznacenie ze v objednavke nerobime ziadnu zmenu pre pripad nejakej nejastnosti
+                var found = _db.Objednavky.FirstOrDefault(x => x.ID == Objednavka.ID) ?? throw new Exception("Nenašla sa existujuca objednavka");
+                _db.Entry(found).State = EntityState.Unchanged; //oznacenie ze v objednavke nerobime ziadnu zmenu pre pripad nejakej nejastnosti
                 var list = _db.PolozkySkladuObjednavky.Include(x => x.PolozkaSkladuX).Where(x => x.Objednavka == Objednavka.ID).ToList();
                 foreach (var item in list)
                 {

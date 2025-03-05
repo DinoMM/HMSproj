@@ -1,10 +1,11 @@
 ﻿@namespace SkladModul
 @page "/Objednavka/AddObj"
 @inject AddObjednavViewModel ViewModel
+@inject HttpClientService<DBLayer.Models.Objednavka> HttpClient
 
 <ApproveModal @ref=AprovModSave ID="savemodal"
               Text="Chcete uložiť zmeny?"
-              FuncOnSucc="ViewModel.UlozCommand.Execute"
+              FuncOnSucc="ViewModel.Uloz"
               FuncOnDiss="ViewModel.NeulozCommand.Execute">
 </ApproveModal>
 <ApproveModal @ref=AprovModDel ID="delmodal"
@@ -163,14 +164,14 @@
         }
     }
 
-    private void GoNext()
+    private async Task GoNext()
     {
         if (ViewModel.PozriZmeny())
         {
-            ViewModel.UlozCommand.Execute(null);
+            await ViewModel.Uloz();
             return;
         }
-        ViewModel.NastavObjednavkuCommand.Execute(null);
+        await ViewModel.NastavObjednavku();
         Navigator.NavigateTo(Navigator.AddNextUrl("/PridatPolozky"));
     }
 

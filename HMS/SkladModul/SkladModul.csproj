@@ -45,6 +45,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DBLayer\DBLayer.csproj" />
+    <ProjectReference Include="..\HMSModels\HMSModels.csproj" />
     <ProjectReference Include="..\PdfCreator\PdfCreator.csproj" />
     <ProjectReference Include="..\UniComponents\UniComponents.csproj" />
   </ItemGroup>

@@ -4,7 +4,8 @@
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
       "serviceActions": {
-        "docker": "StartDebugging"
+        "docker": "StartDebugging",
+        "hms_api": "StartDebugging"
       }
     }
   }

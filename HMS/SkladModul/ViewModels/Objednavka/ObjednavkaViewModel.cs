@@ -19,6 +19,11 @@ using static System.Net.Mime.MediaTypeNames;
 using System.ComponentModel;
 using UniComponents;
 using System.Collections.Specialized;
+using Microsoft.Extensions.DependencyInjection;
+using HMSModels;
+using System.Net.Http;
+using HMSModels.Models;
+using PdfSharp.Pdf.Filters;
 
 namespace SkladModul.ViewModels.Objednavka
 {
@@ -32,12 +37,14 @@ namespace SkladModul.ViewModels.Objednavka
 
         private readonly DBContext _db;
         private readonly UserService _userService;
+        private readonly HttpClientService<OBJ> _httpClient;
 
 
-        public ObjednavkaViewModel(DBContext db, UserService userService)
+        public ObjednavkaViewModel(DBContext db, UserService userService, HttpClientService<OBJ> httpClient)
         {
             _db = db;
             _userService = userService;
+            _httpClient = httpClient;
         }
 
         //[RelayCommand]
@@ -67,14 +74,30 @@ namespace SkladModul.ViewModels.Objednavka
         //}
         protected override async Task NacitajZoznamyAsync()
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
-                ZoznamPoloziek = new(_db.Objednavky
-               .Include(x => x.DodavatelX)
-               .Include(x => x.OdberatelX)
-               .Include(x => x.TvorcaX)
-               .OrderByDescending(x => x.ID)
-               .ToList());
+                // ZoznamPoloziek = new(_db.Objednavky
+                //.Include(x => x.DodavatelX)
+                //.Include(x => x.OdberatelX)
+                //.Include(x => x.TvorcaX)
+                //.OrderByDescending(x => x.ID)
+                //.ToList());
+
+
+                //var filter = new FilterHtml<OBJ>();
+                //filter.AddCondition(nameof(OBJ.TvorcaX.Name), FilterOperation.Equals, "Admin");
+                //var item = await _httpClient.FirstOrDefaultAsync(filter, true);
+                //var item = await _httpClient.FirstOrDefaultAsync("0000004", true);
+
+                ZoznamPoloziek = new((await _httpClient.GetAllAsync(true)).OrderByDescending(x => x.ID).ToList());
+                //if (item != null)
+                //{
+                //    item.ID = item.ID + "X";
+                //    ZoznamPoloziek.Add(item);
+                //}
+
+
+
             });
         }
         public override bool MoznoVymazat(OBJ polozka)
@@ -90,8 +113,9 @@ namespace SkladModul.ViewModels.Objednavka
         public override void Vymazat(OBJ poloz)
         {
             base.Vymazat(poloz);
-            _db.Objednavky.Remove(poloz);
-            _db.SaveChanges();
+            _httpClient.Delete(poloz.ID);
+            //_db.Objednavky.Remove(poloz);
+            //_db.SaveChanges();
         }
 
         public async Task VytvorPDF(OBJ poloz) //vygeneruje a otvori objednavku v pdf v default nastavenom programe

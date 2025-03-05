@@ -29,6 +29,9 @@ using Microsoft.Extensions.Configuration;
 using HSKModul.ViewModels;
 using System.Globalization;
 using AdminModul.ViewModels;
+using CommunityToolkit.Maui;
+using HMSModels;
+using HMSModels.Services;
 
 namespace HMS
 {
@@ -41,6 +44,7 @@ namespace HMS
             var builder = MauiApp.CreateBuilder();
             builder
                 .UseMauiApp<App>()
+                .UseMauiCommunityToolkit()    
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -99,7 +103,7 @@ namespace HMS
                 }));               //(pomohol som si z internetu tutoriály/AI)
             }
             //pridanie service pre spravu usera a jeho role
-            builder.Services.AddIdentity<IdentityUserOwn, IdentityRole>(opt =>
+            builder.Services.AddIdentity<DBLayer.IdentityUserOwn, IdentityRole>(opt =>
             {
                 opt.Password.RequireDigit = true;
                 opt.Password.RequiredLength = 6;
@@ -111,14 +115,16 @@ namespace HMS
             }).AddEntityFrameworkStores<DBContext>()
                 .AddDefaultTokenProviders()
                 .AddRoles<IdentityRole>()
-                .AddUserValidator<CustomUserValidator<IdentityUserOwn>>();      //(pomohol som si z internetu tutoriály/AI)
+                .AddUserValidator<DBLayer. CustomUserValidator<DBLayer.IdentityUserOwn>>();      //(pomohol som si z internetu tutoriály/AI)
 
             builder.Services.AddDataProtection()
                 .PersistKeysToDbContext<DBContext>()
                 .SetDefaultKeyLifetime(TimeSpan.FromDays(7)) //TODO zmenit na vacsi pocet dni
                 .SetApplicationName("HMS_app"); //pridanie scopu na ochranu dat -> Microsoft.AspNetCore.DataProtection
 
-            DataEncryptor.Init(builder.Services.BuildServiceProvider().GetRequiredService<IDataProtectionProvider>()); //inicializacia DataEncryptor
+            DBLayer.DataEncryptor.Init(builder.Services.BuildServiceProvider().GetRequiredService<IDataProtectionProvider>()); //inicializacia DataEncryptor
+
+            HMSModels.DataEncryptor.Init(builder.Services.BuildServiceProvider().GetRequiredService<IDataProtectionProvider>()); //inicializacia DataEncryptor
 
             //builder.Services.AddBlazorWebView()
             // .AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUserOwn>>();
@@ -127,8 +133,19 @@ namespace HMS
             //builder.Services.AddAuthorizationCore();
             //builder.Services.TryAddScoped<AuthenticationStateProvider, CurrentThreadUserAuthenticationStateProvider>();
 
-            builder.Services.AddSingleton<UserService>();
-            builder.Services.AddSingleton<RoleService>();
+
+
+
+            builder.Services.AddHttpClient("DefaultClient", client =>
+            {
+                client.BaseAddress = new Uri("https://localhost:7028/");
+            });
+            builder.Services.AddTransient(typeof(HttpClientService<>));
+
+            builder.Services.AddSingleton<UserService>();   //toto vymzat
+            builder.Services.AddSingleton<RoleService>(); //toto vymazat
+
+            builder.Services.AddSingleton<UserServiceClient>();
             builder.Services.AddSingleton<DbInitializeService>();
             builder.Services.AddSingleton<Navigator>();
             builder.Services.AddSingleton<ObjectHolder>();

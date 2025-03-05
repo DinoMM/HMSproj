@@ -398,3 +398,4 @@ FodyWeavers.xsd
 *.sln.iml
 HMS/data/Entropy.bin
 HMS/HMS/.env
+HMS/HMS_API/.env

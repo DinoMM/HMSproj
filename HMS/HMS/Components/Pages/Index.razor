@@ -15,11 +15,12 @@
 @inject Routes.LayoutService layoutService
 @inject DbInitializeService initDB
 @inject UserService UserService
+@inject HMSModels.Services.UserServiceClient UserServiceClient
+@inject HMSModels.HttpClientService<object> HttpClientService
 @inject UniComponents.Services.IAppLifeCycleService AppLifecycleService
 @implements IDisposable
 
 @inject DBContext db
-
 @*<InfoModal @ref="ViewModel.CloseAppModal" Text="Chcete ukončiť aplikáciu?"></InfoModal>*@
 <ApproveModal @ref="LogOffModal" Header="" Text="Chcete sa odhlásiť?" FuncOnSucc="EventCallback.Empty" FuncOnDiss="EventCallback.Empty"></ApproveModal>
 <CustomModal @ref="ShowZmenymod" ID="showzmeny" Header="Nájdené zmeny" SizeInRem="80">
@@ -84,15 +85,7 @@ else
     {
         await initDB.TryMustHaveValues();
 
-#if DEBUG
-
-        if (UserService.LoggedUser == null)
-        {
-            await UserService.LogInUserAsync("admin", "Heslo123");
-        }
-
-#endif
-        if (UserService.LoggedUser == null)
+        if (!UserServiceClient.IsUserLogged())
         {
             Navigator.NavigateTo("/Login");
             return;
@@ -124,9 +117,13 @@ else
     {
         if (await LogOffModal.OpenModal(true))
         {
-            AppLifecycleService.NotifyLogOff();
-            UserService.LogOutUser();
-            Navigator.NavigateTo("/Login");
+            if (await HttpClientService.LogOutAsync())
+            {
+                AppLifecycleService.NotifyLogOff();
+                UserService.LogOutUser();
+                UserServiceClient.LogOutUser();
+                Navigator.NavigateTo("/Login");
+            }
         }
     }
 

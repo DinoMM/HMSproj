@@ -115,6 +115,7 @@
 		<PackageReference Include="Blazored.SessionStorage" Version="2.4.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
 		<PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="8.0.10" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.100" />
 		<PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.100" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.100" />
@@ -128,8 +129,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\..\EVSystem\MauiStorageManager\MauiStorageManager.csproj" />
 		<ProjectReference Include="..\AdminModul\AdminModul.csproj" />
 		<ProjectReference Include="..\DBLayer\DBLayer.csproj" />
+		<ProjectReference Include="..\HMSModels\HMSModels.csproj" />
 		<ProjectReference Include="..\HSKModul\HSKModul.csproj" />
 		<ProjectReference Include="..\LudskeZdrojeModul\LudskeZdrojeModul.csproj" />
 		<ProjectReference Include="..\RecepciaModul\RecepciaModul.csproj" />
