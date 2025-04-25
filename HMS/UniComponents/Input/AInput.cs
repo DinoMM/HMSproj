@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -47,11 +48,26 @@ namespace UniComponents
         public string ClassInput { get; set; } = "";
 
         /// <summary>
+        /// Nastavuje, že vstup moze byt null (možnosť kliknutia na X tlačidlo), default true
+        /// </summary>
+        [Parameter]
+        public bool CanBeNull { get; set; } = true;
+
+        /// <summary>
         /// Event callback aby sme zmenili hodnotu v parent komponente. Napr. <para/>
         /// ValueChanged="@(val => Property = val)"
         /// </summary>
         [Parameter]
         public EventCallback<T?> ValueChanged { get; set; }
+
+        /// <summary>
+        /// Určuje, že bude input disabled pomocou cascading parameter, default false
+        /// </summary>
+        [CascadingParameter(Name = "CascDisabled")]
+        public bool CascDisabled { get; set; } = false;
+
+        [Parameter]
+        public Func<KeyboardEventArgs, Task>? OnKeyDown { get; set; }
 
 
         /// <summary>

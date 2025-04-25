@@ -26,8 +26,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LudskeZdrojeModul", "Ludske
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PdfCreator", "PdfCreator\PdfCreator.csproj", "{7707715B-74BD-4626-B75D-11FC4EDD787C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BuildingTemplates", "BuildingTemplates\BuildingTemplates.csproj", "{05C0FF8F-CF54-4F1E-9229-CA41946F82D8}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RecepciaModul", "RecepciaModul\RecepciaModul.csproj", "{349AEBA5-2936-43C4-8AC1-5BD1175644FA}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HSKModul", "HSKModul\HSKModul.csproj", "{F777C587-6CC1-484E-ABAC-32AB49960E9F}"
@@ -72,10 +70,6 @@ Global
 		{7707715B-74BD-4626-B75D-11FC4EDD787C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7707715B-74BD-4626-B75D-11FC4EDD787C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7707715B-74BD-4626-B75D-11FC4EDD787C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{05C0FF8F-CF54-4F1E-9229-CA41946F82D8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{05C0FF8F-CF54-4F1E-9229-CA41946F82D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{05C0FF8F-CF54-4F1E-9229-CA41946F82D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{05C0FF8F-CF54-4F1E-9229-CA41946F82D8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{349AEBA5-2936-43C4-8AC1-5BD1175644FA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{349AEBA5-2936-43C4-8AC1-5BD1175644FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{349AEBA5-2936-43C4-8AC1-5BD1175644FA}.Release|Any CPU.ActiveCfg = Release|Any CPU

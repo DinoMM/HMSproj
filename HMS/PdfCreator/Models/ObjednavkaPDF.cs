@@ -144,12 +144,27 @@ namespace PdfCreator.Models
 
             globalRiadok = actRiadok = actual = globalRiadok.Translate(0, -Riad);        //skocenie o riadok cez Global
             globalRiadok = actRiadok = actual = globalRiadok.Translate(0, -Riad);        //skocenie o riadok cez Global
+
+            ////////////////////////////////////////
+            page.DrawRectangle(new PdfPoint(Sx + 3, Ey - 300 - Riad - 10), TEx - TSx + 2, 50 - 3);       //stvrty stvorcek
+            endp = page.AddText($"Vytvoril: ", fontSize + 1, actual, fontR);
+            actual = endp[^1].EndBaseLine;
+            endp = page.AddText($"{(objednavka.TvorcaX.Name.Length > 0 ? objednavka.TvorcaX.Name.FirstOrDefault() + "." : "")}{objednavka.TvorcaX.Surname}  ", fontSize + 1, actual, fontB);
+            actual = endp[^1].EndBaseLine;
+            endp = page.AddText($"Email: ", fontSize + 1, actual, fontR);
+            actual = endp[^1].EndBaseLine;
+            endp = page.AddText($"{objednavka.TvorcaX.Email}   ", fontSize + 1, actual, fontB);
+            actual = endp[^1].EndBaseLine;
+            endp = page.AddText($"Tel.: ", fontSize + 1, actual, fontR);
+            actual = endp[^1].EndBaseLine;
+            endp = page.AddText($"{objednavka.TvorcaX.PhoneNumber}", fontSize + 1, actual, fontB);
+            globalRiadok = actRiadok = actual = globalRiadok.Translate(0, -Riad);        //skocenie o riadok cez Global
             /////////////////////////////////
             endp = page.AddText($"Odberateľ si objednáva následovný tovar/služby:", fontSize, actual, fontR);
 
             globalRiadok = actRiadok = actual = globalRiadok.Translate(0, -Riad);        //skocenie o riadok cez Global
             /////////////////////////////////
-            page.DrawRectangle(new PdfPoint(Sx + 3, Ey - 250 - (3 * Riad) - Riad - 5), TEx - TSx + 2, 40 - 3); // stvrty stvorcek
+            page.DrawRectangle(new PdfPoint(Sx + 3, Ey - 250 - (4 * Riad) - Riad - 5), TEx - TSx + 2, 40 - 3); // piaty stvorcek
 
             string hlavicka = "                 Názov položky                      Množstvo      MJ      Cena za MJ     Celková cena    Celková cena s DPH";
 

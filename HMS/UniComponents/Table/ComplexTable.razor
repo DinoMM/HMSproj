@@ -319,7 +319,14 @@
                                 <td class="@ytem.CellClass">
                                     @if (ytem.CellValue != null)
                                     {
-                                        @RenderFragmentTemplate.GenerateRenderFragment(ytem.CellValue(item))
+                                        if (ytem.CellValue(item).Length <= 40) //pri texte nad 40 znakov sa zmeni zobrazenie na textareu
+                                        {
+                                            @RenderFragmentTemplate.GenerateRenderFragment(ytem.CellValue(item))
+                                        }
+                                        else
+                                        {
+                                            <BasicArea Disabled="true" Value="@ytem.CellValue(item)" ClassInput="resize-none" Style="@("min-width:7vw")"></BasicArea>
+                                        }
                                     }
                                     else
                                     {

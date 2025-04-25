@@ -13,12 +13,16 @@ namespace HMS
             //Routing.RegisterRoute("Objednavka", typeof(SkladModul.Objednavka.Main));
             _appLifeCycle = appLifeCycle;
             MainPage = new MainPage();
-            
         }
 
         protected override Window CreateWindow(IActivationState? activationState)
         {
             Window window = base.CreateWindow(activationState);
+
+            if (window != null)
+            {
+                window.Title = "HMS";   //nastavi nazov okna
+            }
 
             window.Destroying += (s, e) =>
             {
@@ -50,5 +54,6 @@ namespace HMS
 
             return window;
         }
+
     }
 }

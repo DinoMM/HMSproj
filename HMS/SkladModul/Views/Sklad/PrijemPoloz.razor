@@ -45,7 +45,7 @@
     </div>
 
     <div class="row">
-        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="height:30rem; overflow:auto">
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 78vh; max-width: 95vw; overflow: auto">
             <ComplexTable @ref="ViewModel.ComplexTable"
                           ID="complextable"
                           T="DBLayer.Models.PohSkup"
@@ -69,6 +69,7 @@
 @code {
     ApproveModal AprovMod = new();
     InfoModal InfoCantDelete = new();
+    bool fff = false;
     DBLayer.Models.PohSkup? marked { get => ViewModel?.ComplexTable?.Marked; }
 
     List<TableColumnTemplate<DBLayer.Models.PohSkup>> tableSettings = new()
@@ -122,8 +123,17 @@
 
     protected override async Task OnInitializedTransientAsync()
     {
-        //ViewModel.LoadZoznam();
-        await ViewModel.NacitajZoznamy();
+        //await ViewModel.NacitajZoznamy();
+
+    }
+
+    protected override async Task OnAfterRenderTransientAsync(bool first)
+    {
+        if (first)
+        {
+            await ViewModel.NacitajZoznamy();
+            StateHasChanged();
+        }
     }
 
     private async Task Open(DBLayer.Models.PohSkup poloz)

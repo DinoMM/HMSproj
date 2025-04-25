@@ -24,15 +24,16 @@ namespace DBLayer.Models
         public double Mnozstvo { get; set; }
         [Column(TypeName = "decimal(18, 3)")]
         public double Cena { get; set; }
-
+        [DecimalNonNegative(ErrorMessage = "Len kladné hodnoty.")]
+        public decimal DPH { get; set; } = 23;
         [NotMapped]
         public double CelkovaCena { get => (double)Mnozstvo * Cena; }
         [NotMapped]
         public double CenaDPH { get => (Cena * (double)(100 + DPH)) / 100; }
         [NotMapped]
         public double CelkovaCenaDPH { get => (double)Mnozstvo * CenaDPH; }
-        [NotMapped]
-        public decimal DPH { get; set; } = 20;
+        
+        
 
         public object Clone()       //deep copy
         {

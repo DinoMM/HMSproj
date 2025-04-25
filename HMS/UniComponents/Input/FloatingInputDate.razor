@@ -5,22 +5,22 @@
 <div class="input-group">
     <div class="form-floating overflow-hidden">
         <Microsoft.AspNetCore.Components.Forms.InputDate id="@ID"
-                      class="@("form-control mb-1 border-secondary-subtle " + ClassInput + (IsNull() || Disabled ? " rounded-end " : ""))" Type="ShowedDateType"
-                      TValue="DateTime?"
-                      ValueChanged="(e) => OnInputChange(new() { Value = e })"
-                      Value="@Value"
-                      ValueExpression="@(() => Value)"
-                      placeholder="."
-                      disabled="@(Disabled)"
-                      aria-label="."
-                      aria-describedby="@(ID + "addon")"
-                      autocomplete="off" />
+                                                         class="@("form-control mb-1 border-secondary-subtle " + ClassInput + (!CanBeNull ||IsNull() || Disabled || CascDisabled ? " rounded-end " : ""))" Type="ShowedDateType"
+                                                         TValue="DateTime?"
+                                                         ValueChanged="(e) => OnInputChange(new() { Value = e })"
+                                                         Value="@Value"
+                                                         ValueExpression="@(() => Value)"
+                                                         placeholder="."
+                                                         disabled="@(Disabled || CascDisabled)"
+                                                         aria-label="."
+                                                         aria-describedby="@(ID + "addon")"
+                                                         autocomplete="off" />
         @if (!string.IsNullOrEmpty(Header))
         {
             <label for="@ID" class="text-truncate">@Header</label>
         }
     </div>
-    <button type="button" class="btn btn-outline-secondary mb-1 border-secondary-subtle border-start-0 @(IsNull() || Disabled ? "d-none" : "")"
+    <button type="button" class="btn btn-outline-secondary mb-1 border-secondary-subtle border-start-0 @((!CanBeNull || IsNull() || Disabled || CascDisabled ? "d-none" : ""))"
             id="@(ID + "addon")" tabindex="-1"
             @onclick="ClearInput">
         X
@@ -56,4 +56,5 @@
     {
         return Value == null;
     }
+
 }

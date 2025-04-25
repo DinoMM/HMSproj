@@ -35,7 +35,7 @@ namespace AdminModul.ViewModels
 
         public override ValidationResult Save()
         {
-            EntitySaver_RoomInfo.Input.LastUpdate = DateTime.Now;
+            //EntitySaver_RoomInfo.Input.LastUpdate = DateTime.Now;
             if (!EntitySaver.Exist)
             {
                 EntitySaver_RoomInfo.Input.ID_Room = Entity.RoomNumber;

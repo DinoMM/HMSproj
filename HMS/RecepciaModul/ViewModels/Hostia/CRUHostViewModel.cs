@@ -80,6 +80,9 @@ namespace RecepciaModul.ViewModels
                 Host.BirthDate = HostInput.BirthDate;
                 Host.Guest = HostInput.Guest;
                 Host.GuestZ = HostInput.GuestZ;
+                Host.Nationality = HostInput.Nationality;
+                Host.Sex = HostInput.Sex;
+                Host.Note = HostInput.Note;
             }
             await _db.SaveChangesAsync();
             existuje = true;

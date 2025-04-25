@@ -22,7 +22,6 @@
 	</ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BuildingTemplates\BuildingTemplates.csproj" />
     <ProjectReference Include="..\DBLayer\DBLayer.csproj" />
     <ProjectReference Include="..\UniComponents\UniComponents.csproj" />
   </ItemGroup>

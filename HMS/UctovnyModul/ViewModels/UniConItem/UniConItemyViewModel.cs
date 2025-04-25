@@ -14,7 +14,7 @@ namespace UctovnyModul.ViewModels
 
         List<(UniConItemPoklDokladu, bool)> moznoVymazatList = new();
 
-        Type typSpojenia = typeof(PolozkaSkladuConItemPoklDokladu);
+        Type typSpojenia { get; set; } = typeof(PolozkaSkladuConItemPoklDokladu);
 
         private readonly DBContext _db;
         private readonly DataContext _dbw;

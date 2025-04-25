@@ -154,7 +154,7 @@ namespace SkladModul.ViewModels.Sklad
         {
             //if (ZoznamPoloziek.Count == 0)
             //{
-
+            
                 if (Sklad.ID == "ALL")      //pri zobrazeni vsetkych poloziek pri mode ALL
                 {
                     ZoznamPoloziek = new(_db.PolozkySkladu.ToList());
@@ -162,24 +162,28 @@ namespace SkladModul.ViewModels.Sklad
                 }
 
                 //pridanie relevantnych poloziek skladu podla SKLADU
-                var zoz = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
+                var zoz = _db.PolozkaSkladuMnozstva
+                    .Include(x => x.PolozkaSkladuX)
                     .Include(x => x.SkladX)
-                    .Where(x => x.Sklad == Sklad.ID).ToList();
+                    .Where(x => x.Sklad == Sklad.ID)
+                    .ToList();
                 //.ForEachAsync(x => ZoznamPoloziekSkladu.Add(x.PolozkaSkladuX));
                 ZoznamPoloziek = new();
                 foreach (var item in zoz)
                 {
+                    item.PolozkaSkladuX.ActiveNM = item.Active;
                     ZoznamPoloziek.Add(item.PolozkaSkladuX);
                 }
                 await _sessionStorage.SetItemAsync("SkladPolozkyLoaded", true);
-            //}
-            //else // ak zoznam obsahuje polozky
-            //{
-            //    if (!(await _sessionStorage.GetItemAsync<bool>("SkladPolozkyLoaded")))   //ak je nastavene ze chceme aktualizovat polozky
-            //    {
-            //        await AktualizujPolozky();
-            //    }
-            //}
+                //}
+                //else // ak zoznam obsahuje polozky
+                //{
+                //    if (!(await _sessionStorage.GetItemAsync<bool>("SkladPolozkyLoaded")))   //ak je nastavene ze chceme aktualizovat polozky
+                //    {
+                //        await AktualizujPolozky();
+                //    }
+                //}
+            
         }
 
         //public async Task LoadPolozky()
@@ -369,6 +373,16 @@ namespace SkladModul.ViewModels.Sklad
             foreach (var item in ZoznamPoloziek)
             {
                 item.Mnozstvo = 0;
+            }
+        }
+
+        public async Task AktualizujActive(PolozkaS poloz)
+        {
+            var found = _db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.PolozkaSkladu == poloz.ID && x.Sklad == Sklad.ID);
+            if (found != null)
+            {
+                found.Active = poloz.ActiveNM;
+                await _db.SaveChangesAsync();
             }
         }
     }

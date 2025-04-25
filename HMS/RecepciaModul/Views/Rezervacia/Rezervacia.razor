@@ -176,10 +176,12 @@
     <div class="sticky1 ms-1 autooverflowx">
         <div class="sticky1 d-flex" role="group">
             <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
-            <button type="button" class="btn btn-primary" @onclick="Create" disabled="@(!ViewModel.ValidateUserC())"><IconTextCreate></IconTextCreate></button>
-            <button type="button" class="btn btn-info" @onclick="OpenChangeDate">@ViewModel.ZoznamDatumovNaZobrazenie[0].ToString("dd.MM.-")@ViewModel.ZoznamDatumovNaZobrazenie.Last().ToString("dd.MM.")</button>
-            <button type="button" class="btn btn-primary" @onclick="ListRawRes">⏳Zoznam nespracovaných</button>
-            <button type="button" class="btn btn-primary" @onclick="ListAll">📆Zoznam rezervácií</button>
+            <ButtonBasic ID="addresbuttn" Class="btn btn-primary" Disabled="!ViewModel.ValidateUserC()" OnClick="Create" Tooltip="@(("bottom", "Vytvoriť novú rezerváciu"))"><IconTextCreate></IconTextCreate></ButtonBasic>
+            <ButtonBasic ID="setintervaldatebuttn" Class="btn btn-info" OnClick="OpenChangeDate" Tooltip="@(("bottom", "Nastaviť rozpätie dátumov"))"><IconText Icon="bi-calendar-range">@ViewModel.ZoznamDatumovNaZobrazenie[0].ToString("dd.MM.-")@ViewModel.ZoznamDatumovNaZobrazenie.Last().ToString("dd.MM.")</IconText></ButtonBasic>
+            <ButtonBasic ID="zoznespracbuttn" Class="btn btn-primary" OnClick="ListRawRes" Tooltip="@(("bottom", "Zobraziť zoznam nespracovaných rezervácií"))"><IconText Icon="bi-hourglass-split">Zoznam nespracovaných</IconText></ButtonBasic>
+            <ButtonBasic ID="zoznallbuttn" Class="btn btn-primary" OnClick="ListAll" Tooltip="@(("bottom", "Zobraziť zoznam všetkých rezervácií"))"><IconText Icon="bi-calendar3">Zoznam rezervácií</IconText></ButtonBasic>
+            <ButtonBasic ID="showactrualbuttn" Class="btn btn-info" OnClick="ChangeVisibilityRowActual" Tooltip="@(("bottom", "Skryť izby, ktoré nemajú dneska pohyb"))"><IconText Icon="bi-eye">@(showrecentrows ? "Všetky" : "Aktuálne")</IconText></ButtonBasic>
+
             <button type="button" class="btn btn-info ms-auto" @onclick="LegendModal">Legenda</button>
 
         </div>
@@ -273,21 +275,23 @@
 
 @code {
 
-        CustomModal daatePcker = new();
-        CustomModal resViewer = new();
-        List<DBLayer.Models.Room> RoomsToShow = new();
-        DBLayer.Models.Rezervation? marked = null;
-        DBLayer.Models.Rezervation? selected = null;
+    CustomModal daatePcker = new();
+    CustomModal resViewer = new();
+    List<DBLayer.Models.Room> RoomsToShow = new();
+    DBLayer.Models.Rezervation? marked = null;
+    DBLayer.Models.Rezervation? selected = null;
 
-        InfoModal modsaved = new();
-        CRUCompRezervacia rezcom = new();
-        CustomModal legndmodal = new();
-        ItemFinderTableProp<DBLayer.Models.Rezervation> nespracRes;
-        CustomModal resaslistmod = new();
+    InfoModal modsaved = new();
+    CRUCompRezervacia rezcom = new();
+    CustomModal legndmodal = new();
+    ItemFinderTableProp<DBLayer.Models.Rezervation> nespracRes;
+    CustomModal resaslistmod = new();
 
-        ComplexTable<DBLayer.Models.Rezervation> complexTableAllRes;
+    bool showrecentrows = false;
 
-        List<TableColumnTemplate<DBLayer.Models.Rezervation>> tableSettingsAllRes = new()
+    ComplexTable<DBLayer.Models.Rezervation> complexTableAllRes;
+
+    List<TableColumnTemplate<DBLayer.Models.Rezervation>> tableSettingsAllRes = new()
 {
             new () { ID_Prop = nameof(DBLayer.Models.Rezervation.ArrivalDate), HeaderValue = "Príchod", CellValue = (item) => item.ArrivalDate.ToString("dd.MM.yyyy") },
             new () { ID_Prop = nameof(DBLayer.Models.Rezervation.DepartureDate), HeaderValue = "Odchod", CellValue = (item) => item.DepartureDate.ToString("dd.MM.yyyy") },
@@ -337,18 +341,24 @@
         }
     }
 
-    private async Task HideRow(DBLayer.Models.Room room)
+    private async Task HideRow(DBLayer.Models.Room room, bool? show = null)
     {
         var index = ViewModel.ZoznamIzieb.IndexOf(room);
         if (RoomsToShow.Contains(room))
         {
-            RoomsToShow.Remove(room);
-            await JSRuntime.InvokeVoidAsync("hideRow", "" + index);
+            if (show == null || show.Value == false)
+            {
+                RoomsToShow.Remove(room);
+                await JSRuntime.InvokeVoidAsync("hideRow", "" + index);
+            }
         }
         else
         {
-            RoomsToShow.Add(room);
-            await JSRuntime.InvokeVoidAsync("showRow", "" + index);
+            if (show == null || show.Value == true)
+            {
+                RoomsToShow.Add(room);
+                await JSRuntime.InvokeVoidAsync("showRow", "" + index);
+            }
         }
 
     }
@@ -395,7 +405,9 @@
 
     private async Task ListRawRes()
     {
+        CascadingService.Disabled = true;
         await ViewModel.NacitajNespracovaneRezervacie(refresh: false);
+        CascadingService.Disabled = false;
         while (true)
         {
             if (await nespracRes.OpenModal(true))
@@ -415,15 +427,42 @@
     private async Task ListAll()
     {
         //resaslistmod.Render = true;
+        CascadingService.Disabled = true;
         await ViewModel.NacitajZoznamRezervacieAll();
         await complexTableAllRes.OnItemsChange(new(System.Collections.Specialized.NotifyCollectionChangedAction.Reset));
+        CascadingService.Disabled = false;
         if (!await resaslistmod.OpenModal(true))
         {
             ViewModel.ClearChangesDB();
             await ViewModel.SpracujZmeny();
         }
         //resaslistmod.Render = false;
+    }
 
-
+    private async Task ChangeVisibilityRowActual()
+    {
+        showrecentrows = !showrecentrows;
+        if (showrecentrows)
+        {
+            foreach (var item in ViewModel.ZoznamIzieb)
+            {
+                if (ViewModel.ZoznamRezervacii.Any(x => x.RoomNumber == item.RoomNumber && (x.ArrivalDate.Date == DateTime.Today || x.DepartureDate.Date == DateTime.Today)))
+                {
+                    await HideRow(item, true);
+                }
+                else
+                {
+                    await HideRow(item, false);
+                }
+            }
+        }
+        else
+        {
+            foreach (var item in ViewModel.ZoznamIzieb)
+            {
+                await HideRow(item, true);
+            }
+        }
+        StateHasChanged();
     }
 }

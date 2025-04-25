@@ -44,7 +44,7 @@ namespace DBLayer.Models
 
         [Column(TypeName = "decimal(9, 3)")]
         [DecimalNonNegative(ErrorMessage = "Len kladné hodnoty.")]
-        public decimal DPH { get; set; } = 20;
+        public decimal DPH { get; set; } = 23;
 
         [HideFromInput]
         public DateTime? Obdobie { get; set; } = default!;

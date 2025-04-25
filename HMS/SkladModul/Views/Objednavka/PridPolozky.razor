@@ -57,7 +57,7 @@
     </div>
 
     <div class="row">
-        <div class="col" style="height: 30rem; overflow:auto;">
+        <div class="col" style="max-height: 80vh; max-width: 95vw; overflow:auto;">
             <UniComponents.SimpleTable>
                 <THEAD>
                     <ThSort>ČísloID</ThSort>
@@ -65,6 +65,7 @@
                     <ThSort>Množstvo</ThSort>
                     <ThSort>Merná jednotka</ThSort>
                     <ThSort>Cena</ThSort>
+                    <ThSort>DPH</ThSort>
                     <ThSort>Cena s DPH</ThSort>
                     <ThSort>Celková Cena</ThSort>
                     <ThSort>Celková Cena s DPH</ThSort>
@@ -81,6 +82,7 @@
                             <td class="col-resize"><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.Mnozstvo" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" class="w-75" /></td>
                             <td class="col-resize">@item.PolozkaSkladuX.MernaJednotka</td>
                             <td class="col-resize"><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.Cena" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" class="w-100" /></td>
+                            <td class="col-resize"><input type="number" disabled="@ViewModel.Locked()" @bind-value="item.DPH" @bind-value:event="oninput" @onchange="@(() => ViewModel.Zmena = true)" step="0.001" class="w-100" /></td>
                             <td class="col-resize">@item.CenaDPH.ToString("F3")</td>
                             <td class="col-resize">@item.CelkovaCena.ToString("F3")</td>
                             <td class="col-resize">@item.CelkovaCenaDPH.ToString("F3")</td>
@@ -102,6 +104,7 @@
                             </td>
                             <td class="col-resize">@ViewModel.NovaPoloz.PolozkaSkladuX?.MernaJednotka</td>
                             <td class="col-resize">@ViewModel.NovaPoloz.Cena</td>
+                            <td class="col-resize"></td>
                             <td class="col-resize"></td>
                             <td class="col-resize"></td>
                             <td class="col-resize"></td>
@@ -202,7 +205,7 @@
 
 
     private async Task<bool>
-Save(bool askUser)  //vrati hodnotu na zaklade toho co uzivatel klikne(true - suhlasi, inak false)
+    Save(bool askUser)  //vrati hodnotu na zaklade toho co uzivatel klikne(true - suhlasi, inak false)
     {
         if (askUser)
         {

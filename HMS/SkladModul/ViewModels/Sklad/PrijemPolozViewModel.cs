@@ -43,6 +43,7 @@ namespace SkladModul.ViewModels.Sklad
 
         protected override async Task NacitajZoznamyAsync()
         {
+            
             await Task.Run(() =>
             {
                 var prijemky = _db.Prijemky

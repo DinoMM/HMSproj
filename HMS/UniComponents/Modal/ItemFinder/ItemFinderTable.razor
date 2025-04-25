@@ -10,7 +10,10 @@
         <div class="modal-content">
             <div class="modal-header @(ChangeColor ? "custom-modal-header" : "")">
                 <div class="col-3 d-flex justify-content-bottom mb-1">
+                    @if (ShowFindInput)
+                    {
                     <SearchInput @ref="srchinp" ID="@IDSearch" NumCols="@NumCols" PlaceHolder="Vyhľadaj..." TableID="@IDTable" SearchValue="@SearchedValue"></SearchInput>
+                    }
                 </div>
                 <div class="modal-title h3 text-dark ms-4" id="staticBackdropLabel">
                     @Header
@@ -24,398 +27,407 @@
 
                             @foreach (var item in ColNames)
                             {
-                            <ThSort>@item</ThSort>
-                        }
-                            </THEAD>
-                            <TBODY>
+                                <ThSort>@item</ThSort>
+                            }
+                        </THEAD>
+                        <TBODY>
 
-                                @foreach (var item in ColValues)
-                                {
-                                    int i = 0;
-                                    var zoznam = GetProperties(item);
-                                    <tr @onclick=@(() => SelectRow(item)) @ondblclick="@(() => SelectDbClick(item))" class="@(ContainsRow(item) ?   "selected-row" : "")" style="cursor: pointer;">
-                                        @foreach (var ytem in zoznam)
+                            @foreach (var item in ColValues)
+                            {
+                                int i = 0;
+                                var zoznam = GetProperties(item);
+                                <tr @onclick=@(() => SelectRow(item)) @ondblclick="@(() => SelectDbClick(item))" class="@(ContainsRow(item) ?   "selected-row" : "")" style="cursor: pointer;">
+                                    @foreach (var ytem in zoznam)
+                                    {
+                                        if (CutOffTail && i == NumCols)
                                         {
-                                            if (CutOffTail && i == NumCols)
-                                            {
-                                                break;
-                                            }
-                                            <td class="col-resize">@(ytem?.GetValue(item) ?? "")</td>
-                                            ++i;
+                                            break;
                                         }
-                                    </tr>
-                                }
+                                        <td class="col-resize">@(ytem?.GetValue(item) ?? "")</td>
+                                        ++i;
+                                    }
+                                </tr>
+                            }
 
-                                <span id="observerTarget"></span>
-                            </TBODY>
+                            <span id="observerTarget"></span>
+                        </TBODY>
 
-                        </SimpleTable>
-                    </div>
-
+                    </SimpleTable>
                 </div>
 
-                <div class="modal-footer @(ChangeColor ? "custom-modal-footer" : "")">
-                    @if (SelectEmptyInstance)
-                    {
-                        <button type="button" class="btn btn-warning" data-bs-dismiss="modal" @onclick="EmptyInstance">Vyčistiť</button>
-                    }
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal" disabled="@(OutSelection.Count == 0)" @onclick="CloseSucc">Vyber</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zruš</button>
-                </div>
+            </div>
+
+            <div class="modal-footer @(ChangeColor ? "custom-modal-footer" : "")">
+                @if (SelectEmptyInstance)
+                {
+                    <button type="button" class="btn btn-warning" data-bs-dismiss="modal" @onclick="EmptyInstance">Vyčistiť</button>
+                }
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" disabled="@(OutSelection.Count == 0)" @onclick="CloseSucc">Vybrať</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zrušiť</button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
+<script>
         window.setInput = function (inputId, invalue) {
             document.getElementById(inputId).value = invalue;
         }
     function getInputValue(inputId) {
     return document.getElementById(inputId).value;
 }
-    </script>
+</script>
 
-    @code {
-        private SearchInput srchinp = new();
+@code {
+    private SearchInput srchinp = new();
 
-        /// <summary>
-        /// Unikatne ID podla ktoreho vieme rozoznat medzi viacerymi modalmi
-        /// </summary>
-        [Parameter]
-        public string ID { get; set; } = "staticItemFinderTable";
+    /// <summary>
+    /// Unikatne ID podla ktoreho vieme rozoznat medzi viacerymi modalmi
+    /// </summary>
+    [Parameter]
+    public string ID { get; set; } = "staticItemFinderTable";
 
-        /// <summary>
-        /// Nastaví popisok okna, default ""
-        /// </summary>
-        [Parameter]
-        public string Header { get; set; } = "";
+    /// <summary>
+    /// Nastaví popisok okna, default ""
+    /// </summary>
+    [Parameter]
+    public string Header { get; set; } = "";
 
-        /// <summary>
-        /// Názvy stĺpcov tabuľky v poradí, v akom sa majú zobrazovať
-        /// </summary>
-        [Parameter]
-        public List<string> ColNames { get; set; } = new();
+    /// <summary>
+    /// Názvy stĺpcov tabuľky v poradí, v akom sa majú zobrazovať
+    /// </summary>
+    [Parameter]
+    public List<string> ColNames { get; set; } = new();
 
-        /// <summary>
-        /// Hodnoty stĺpcov tabuľky typu T, hodnoty idu podľa poradia a vynechávaju sa foreign keys
-        /// </summary>
-        [Parameter]
-        public List<T> ColValues { get; set; } = new();
+    /// <summary>
+    /// Hodnoty stĺpcov tabuľky typu T, hodnoty idu podľa poradia a vynechávaju sa foreign keys
+    /// </summary>
+    [Parameter]
+    public List<T> ColValues { get; set; } = new();
 
-        /// <summary>
-        /// Hodnota, ktorá sa má vyhľadávať v tabuľke
-        /// </summary>
-        [Parameter]
-        public string SearchedValue { get; set; } = "";
+    /// <summary>
+    /// Hodnota, ktorá sa má vyhľadávať v tabuľke
+    /// </summary>
+    [Parameter]
+    public string SearchedValue { get; set; } = "";
 
-        /// <summary>
-        ///Viac násobný výber z tabuľky, default false
-        /// </summary>
-        [Parameter]
-        public bool MultiSelect { get; set; } = false;
+    /// <summary>
+    ///Viac násobný výber z tabuľky, default false
+    /// </summary>
+    [Parameter]
+    public bool MultiSelect { get; set; } = false;
 
-        /// <summary>
-        /// Vybrané hodnoty z tabuľky, spracuj po tom čo sa zavrie modal
-        /// </summary>
-        [Parameter]
-        public List<T> OutSelection { get; set; } = new();
+    /// <summary>
+    /// Vybrané hodnoty z tabuľky, spracuj po tom čo sa zavrie modal
+    /// </summary>
+    [Parameter]
+    public List<T> OutSelection { get; set; } = new();
 
-        /// <summary>
-        /// Nastaví zmenu farby okna na predvolenú, default false
-        /// </summary>
-        [Parameter]
-        public bool ChangeColor { get; set; } = false;
+    /// <summary>
+    /// Nastaví zmenu farby okna na predvolenú, default false
+    /// </summary>
+    [Parameter]
+    public bool ChangeColor { get; set; } = false;
 
-        /// <summary>
-        /// Dlžka tabulky bude podľa počtu prvkov v hlavičke, default false
-        /// </summary>
-        [Parameter]
-        public bool CutOffTail { get; set; } = false;
+    /// <summary>
+    /// Dlžka tabulky bude podľa počtu prvkov v hlavičke, default false
+    /// </summary>
+    [Parameter]
+    public bool CutOffTail { get; set; } = false;
 
-        /// <summary>
-        /// Šírka tabulky v rem, default 100
-        /// </summary>
-        [Parameter]
-        public int SizeInRem { get; set; } = 100;
+    /// <summary>
+    /// Šírka tabulky v rem, default 100
+    /// </summary>
+    [Parameter]
+    public int SizeInRem { get; set; } = 100;
 
-        #region Attribute settings
-        /// <summary>
-        ///Pridať aj parametre s primárnými klúčmi, default false
-        /// </summary>
-        [Parameter]
-        public bool KeyAttributeToo { get; set; } = false;
+    #region Attribute settings
+    /// <summary>
+    ///Pridať aj parametre s primárnými klúčmi, default false
+    /// </summary>
+    [Parameter]
+    public bool KeyAttributeToo { get; set; } = false;
 
-        /// <summary>
-        ///Pridať aj parametre s cudzími klúčmi, default false
-        /// </summary>
-        [Parameter]
-        public bool ForeignAttributesToo { get; set; } = false;
+    /// <summary>
+    ///Pridať aj parametre s cudzími klúčmi, default false
+    /// </summary>
+    [Parameter]
+    public bool ForeignAttributesToo { get; set; } = false;
 
-        /// <summary>
-        ///Pridať aj parametre ktoré sú brané bez mapovania, default false
-        /// </summary>
-        [Parameter]
-        public bool NotMappedAttributesToo { get; set; } = false;
+    /// <summary>
+    ///Pridať aj parametre ktoré sú brané bez mapovania, default false
+    /// </summary>
+    [Parameter]
+    public bool NotMappedAttributesToo { get; set; } = false;
 
-        /// <summary>
-        ///Pridať len parametre, ktoré sú označené ProtectedPersonalData, default false
-        /// </summary>
-        [Parameter]
-        public bool OnlyProtectedPersonalDataAttribute { get; set; } = false;
-        #endregion
-        /// <summary>
-        ///Pridať možnosť vybranie prázneho výberu(vráti novu prazdnu inštancia (nie null)), default false
-        /// </summary>
-        [Parameter]
-        public bool SelectEmptyInstance { get; set; } = false;
+    /// <summary>
+    ///Pridať len parametre, ktoré sú označené ProtectedPersonalData, default false
+    /// </summary>
+    [Parameter]
+    public bool OnlyProtectedPersonalDataAttribute { get; set; } = false;
+    #endregion
+    /// <summary>
+    ///Pridať možnosť vybranie prázneho výberu(vráti novu prazdnu inštancia (nie null)), default false
+    /// </summary>
+    [Parameter]
+    public bool SelectEmptyInstance { get; set; } = false;
 
-        private string IDTable { get => "tableid" + ID; }
-        private string IDSearch { get => "searchinp" + ID; }
-        private int NumCols { get => ColNames.Count; }
+    /// <summary>
+    /// Zobrazi vyhladavacie pole, default true
+    /// </summary>
+    [Parameter]
+    public bool ShowFindInput { get; set; } = true;
 
-        private TaskCompletionSource<bool> tcs;
-        private bool tstop = false;
+    private string IDTable { get => "tableid" + ID; }
+    private string IDSearch { get => "searchinp" + ID; }
+    private int NumCols { get => ColNames.Count; }
 
-        /// <summary>
-        ///  Otvori modal pod ulozenym ID, vracia hodnotu podla toho, ci uzivatel klikol ano alebo nie
-        /// </summary>
-        /// <param name="stop"> Vrati true ak uzivatel prijal, inak false</param>
-        /// <returns></returns>
-        public async Task<bool> OpenModal(bool stop = false)
+    private TaskCompletionSource<bool> tcs;
+    private bool tstop = false;
+
+    /// <summary>
+    ///  Otvori modal pod ulozenym ID, vracia hodnotu podla toho, ci uzivatel klikol ano alebo nie
+    /// </summary>
+    /// <param name="stop"> Vrati true ak uzivatel prijal, inak false</param>
+    /// <returns></returns>
+    public async Task<bool> OpenModal(bool stop = false)
+    {
+        StateHasChanged();
+
+        if (ShowFindInput)
         {
-            StateHasChanged();
-
             await srchinp.Forcesearch();
-
-
-            tstop = stop;
-            if (stop)
-            {
-                tcs = new TaskCompletionSource<bool>();
-                await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
-                await tcs.Task;             //fyzické statie programu
-                return tcs.Task.Result;
-            }
-            else
-            {
-                await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
-                return true;
-            }
-
         }
 
-        public async Task<bool> OpenModal(bool stop = false, bool forcesearch = true)
-        {
-            StateHasChanged();
-            if (forcesearch)
-            {
-                await srchinp.Forcesearch();
-            }
 
-            tstop = stop;
-            if (stop)
-            {
-                tcs = new TaskCompletionSource<bool>();
-                await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
-                await tcs.Task;             //fyzické statie programu
-                return tcs.Task.Result;
-            }
-            else
-            {
-                await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
-                return true;
-            }
+        tstop = stop;
+        if (stop)
+        {
+            tcs = new TaskCompletionSource<bool>();
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            await tcs.Task;             //fyzické statie programu
+            return tcs.Task.Result;
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            return true;
         }
 
-        private void CloseModal(bool ans)
-        {
-            if (!ans)
-            {
-                OutSelection.Clear();
-            }
+    }
 
-            if (tstop)
-            {
-                tcs.SetResult(ans); //zastavi fyzické státie programu
-            }
-            JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('hide');"); //(pomohol som si z internetu tutoriály/AI)
+    public async Task<bool> OpenModal(bool stop = false, bool forcesearch = true)
+    {
+        StateHasChanged();
+        if (forcesearch && ShowFindInput)
+        {
+            await srchinp.Forcesearch();
         }
 
-        public void UpdateText(string newText) { }
-
-        private async Task HandleKeyDown(KeyboardEventArgs e)
+        tstop = stop;
+        if (stop)
         {
-            if (e.Key == "Enter")       //po stlaceni enteru sa vykona akcia Ano
-            {
-                if (OutSelection.Count != 0)
-                {
-                    CloseModal(true);
-                }
-            }
-            if (e.Key == "Escape")       //po stlaceni escape sa vykona akcia Nie
-            {
-                CloseModal(false);
-            }
+            tcs = new TaskCompletionSource<bool>();
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            await tcs.Task;             //fyzické statie programu
+            return tcs.Task.Result;
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('show');");  //(pomohol som si z internetu tutoriály/AI)
+            return true;
+        }
+    }
+
+    private void CloseModal(bool ans)
+    {
+        if (!ans)
+        {
+            OutSelection.Clear();
         }
 
-        public async Task PassSearchText(string text)
+        if (tstop)
         {
-            SearchedValue = text;
+            tcs.SetResult(ans); //zastavi fyzické státie programu
         }
+        JSRuntime.InvokeVoidAsync("eval", "$('#" + ID + "').modal('hide');"); //(pomohol som si z internetu tutoriály/AI)
+    }
 
-        private System.Reflection.PropertyInfo[] GetProperties(object obj)
+    public void UpdateText(string newText) { }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")       //po stlaceni enteru sa vykona akcia Ano
         {
-            var prop = obj.GetType().GetProperties();
-            var propRet = new List<System.Reflection.PropertyInfo>();
-
-            if (obj is string str)      //ak je T="string"
+            if (OutSelection.Count != 0)
             {
-                propRet.Add(new StringPropertyInfo("Value", str));      //vlastna trieda
-                return propRet.ToArray();
-            }
-
-            foreach (var item in prop)
-            {
-                if (!ForeignAttributesToo)
-                {
-                    if (item.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.Schema.ForeignKeyAttribute), false).FirstOrDefault() != null)
-                    {
-                        continue;
-                    }
-                }
-
-                if (!KeyAttributeToo)
-                {
-                    if (item.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.KeyAttribute), false).FirstOrDefault() != null)
-                    {
-                        continue;
-                    }
-                }
-
-                if (!NotMappedAttributesToo)
-                {
-                    if (item.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.Schema.NotMappedAttribute), false).FirstOrDefault() != null)
-                    {
-                        continue;
-                    }
-                }
-                if (OnlyProtectedPersonalDataAttribute)
-                {
-                    if (item.GetCustomAttributes(typeof(Microsoft.AspNetCore.Identity.ProtectedPersonalDataAttribute), false).FirstOrDefault() != null)
-                    {
-                        propRet.Add(item);
-                    }
-                    continue;
-                }
-
-                var propType = item.PropertyType;
-                if (propType == typeof(string) || propType == typeof(int) || propType == typeof(bool) || propType == typeof(double) || propType == typeof(DateTime) || propType == typeof(decimal) || propType == typeof(long) || propType.IsEnum || propType == typeof(DateTime?) || propType == typeof(double?))
-                {
-
-                    if (propType == typeof(bool))   // pre booleany s atributom
-                    {
-                        var attribute = item.GetCustomAttributes(typeof(DBLayer.BooleanStringValuesAttribute), false).FirstOrDefault() as DBLayer.BooleanStringValuesAttribute;
-                        if (attribute != null)
-                        {
-                            bool boolValue = (bool)item.GetValue(obj);
-                            string stringValue = boolValue ? attribute.TrueValue : attribute.FalseValue;
-                            propRet.Add(new StringPropertyInfo(item.Name, stringValue));
-                            continue;
-                        }
-                    }
-
-                    var attributeDisplay = item.GetCustomAttributes(typeof(DBLayer.DisplayAndValueAttribute<string, T>), false).FirstOrDefault() as DBLayer.DisplayAndValueAttribute<string, T>;
-                    if (attributeDisplay != null)
-                    {
-                        var res = attributeDisplay.GetValue((T)obj);
-                        if (res != null)
-                        {
-                            propRet.Add(new StringPropertyInfo(item.Name, res));
-                            continue;
-                        }
-                    }
-
-                    propRet.Add(item);
-                    continue;
-                }
-            }
-            return propRet.ToArray();
-        }
-
-        private void SelectRow(object item)
-        {
-            if (MultiSelect)
-            {
-                if (OutSelection.Contains(item))
-                {
-                    OutSelection.Remove((T)item);
-                }
-                else
-                {
-                    OutSelection.Add((T)item);
-                }
-            }
-            else
-            {
-                OutSelection.Clear();
-                OutSelection.Add((T)item);
-            }
-        }
-
-        private void SelectDbClick(object item)
-        {
-            if (!MultiSelect)
-            {
-                OutSelection.Clear();
-                OutSelection.Add((T)item);
                 CloseModal(true);
             }
         }
-
-        private bool ContainsRow(object item)
+        if (e.Key == "Escape")       //po stlaceni escape sa vykona akcia Nie
         {
-            return OutSelection.Contains((T)item);
+            CloseModal(false);
+        }
+    }
+
+    public async Task PassSearchText(string text)
+    {
+        SearchedValue = text;
+    }
+
+    private System.Reflection.PropertyInfo[] GetProperties(object obj)
+    {
+        var prop = obj.GetType().GetProperties();
+        var propRet = new List<System.Reflection.PropertyInfo>();
+
+        if (obj is string str)      //ak je T="string"
+        {
+            propRet.Add(new StringPropertyInfo("Value", str));      //vlastna trieda
+            return propRet.ToArray();
         }
 
-        /// <summary>
-        /// Vráti hodnotu z inputu podla jeho ID
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public async Task<string> GetInputValue(string id)
+        foreach (var item in prop)
         {
-            return await JSRuntime.InvokeAsync<string>("getInputValue", id);
-        }
+            if (!ForeignAttributesToo)
+            {
+                if (item.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.Schema.ForeignKeyAttribute), false).FirstOrDefault() != null)
+                {
+                    continue;
+                }
+            }
 
-        /// <summary>
-        /// Nastavi input na hodnotu podla jeho ID
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public async Task SetInput(string id, string text)
+            if (!KeyAttributeToo)
+            {
+                if (item.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.KeyAttribute), false).FirstOrDefault() != null)
+                {
+                    continue;
+                }
+            }
+
+            if (!NotMappedAttributesToo)
+            {
+                if (item.GetCustomAttributes(typeof(System.ComponentModel.DataAnnotations.Schema.NotMappedAttribute), false).FirstOrDefault() != null)
+                {
+                    continue;
+                }
+            }
+            if (OnlyProtectedPersonalDataAttribute)
+            {
+                if (item.GetCustomAttributes(typeof(Microsoft.AspNetCore.Identity.ProtectedPersonalDataAttribute), false).FirstOrDefault() != null)
+                {
+                    propRet.Add(item);
+                }
+                continue;
+            }
+
+            var propType = item.PropertyType;
+            if (propType == typeof(string) || propType == typeof(int) || propType == typeof(bool) || propType == typeof(double) || propType == typeof(DateTime) || propType == typeof(decimal) || propType == typeof(long) || propType.IsEnum || propType == typeof(DateTime?) || propType == typeof(double?))
+            {
+
+                if (propType == typeof(bool))   // pre booleany s atributom
+                {
+                    var attribute = item.GetCustomAttributes(typeof(DBLayer.BooleanStringValuesAttribute), false).FirstOrDefault() as DBLayer.BooleanStringValuesAttribute;
+                    if (attribute != null)
+                    {
+                        bool boolValue = (bool)item.GetValue(obj);
+                        string stringValue = boolValue ? attribute.TrueValue : attribute.FalseValue;
+                        propRet.Add(new StringPropertyInfo(item.Name, stringValue));
+                        continue;
+                    }
+                }
+
+                var attributeDisplay = item.GetCustomAttributes(typeof(DBLayer.DisplayAndValueAttribute<string, T>), false).FirstOrDefault() as DBLayer.DisplayAndValueAttribute<string, T>;
+                if (attributeDisplay != null)
+                {
+                    var res = attributeDisplay.GetValue((T)obj);
+                    if (res != null)
+                    {
+                        propRet.Add(new StringPropertyInfo(item.Name, res));
+                        continue;
+                    }
+                }
+
+                propRet.Add(item);
+                continue;
+            }
+        }
+        return propRet.ToArray();
+    }
+
+    private void SelectRow(object item)
+    {
+        if (MultiSelect)
         {
-            await JSRuntime.InvokeVoidAsync("setInput", id, text);
+            if (OutSelection.Contains(item))
+            {
+                OutSelection.Remove((T)item);
+            }
+            else
+            {
+                OutSelection.Add((T)item);
+            }
         }
-
-        public void EmptyInstance()
+        else
         {
             OutSelection.Clear();
-            OutSelection.Add(Activator.CreateInstance<T>());
-            CloseModal(true);
+            OutSelection.Add((T)item);
         }
+    }
 
-        public void SetListValues(List<T> values)
+    private void SelectDbClick(object item)
+    {
+        if (!MultiSelect)
         {
-            ColValues = new(values);
-            StateHasChanged();
-        }
-
-        public void CloseSucc()
-        {
-            if (OutSelection.Count == 0)
-            {
-                CloseModal(false);
-            }
+            OutSelection.Clear();
+            OutSelection.Add((T)item);
             CloseModal(true);
         }
     }
+
+    private bool ContainsRow(object item)
+    {
+        return OutSelection.Contains((T)item);
+    }
+
+    /// <summary>
+    /// Vráti hodnotu z inputu podla jeho ID
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public async Task<string> GetInputValue(string id)
+    {
+        return await JSRuntime.InvokeAsync<string>("getInputValue", id);
+    }
+
+    /// <summary>
+    /// Nastavi input na hodnotu podla jeho ID
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    public async Task SetInput(string id, string text)
+    {
+        await JSRuntime.InvokeVoidAsync("setInput", id, text);
+    }
+
+    public void EmptyInstance()
+    {
+        OutSelection.Clear();
+        OutSelection.Add(Activator.CreateInstance<T>());
+        CloseModal(true);
+    }
+
+    public void SetListValues(List<T> values)
+    {
+        ColValues = new(values);
+        StateHasChanged();
+    }
+
+    public void CloseSucc()
+    {
+        if (OutSelection.Count == 0)
+        {
+            CloseModal(false);
+        }
+        CloseModal(true);
+    }
+}

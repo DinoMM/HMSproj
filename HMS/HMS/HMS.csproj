@@ -105,7 +105,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include=".env" />
+		<MauiAsset Include=".env">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</MauiAsset>
 	</ItemGroup>
 
 

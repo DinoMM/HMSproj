@@ -10,7 +10,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 namespace DBLayer.Models.HSKModels
 {
     //[INotifyPropertyChanged]
-    public partial class RoomInfo : ObservableObject, ICloneable
+    public partial class RoomInfo : ObservableValidator, ICloneable
     {
         [Key]
         public string ID_Room { get; set; }
@@ -23,6 +23,19 @@ namespace DBLayer.Models.HSKModels
 
         [ObservableProperty]
         private string poznamka = "";
+
+        /// <summary>
+        /// Predajné DPH
+        /// </summary>
+        [ObservableProperty]
+        [property: Column(TypeName = "decimal(9, 3)")]
+        [DecimalNonNegative(ErrorMessage = "Len kladné hodnoty.")]
+        private decimal dPH = 23;
+
+        [ObservableProperty]
+        [property: Column(TypeName = "decimal(9, 3)")]
+        [DecimalNonNegative(ErrorMessage = "Len kladné hodnoty.")]
+        private decimal ubytovaciPoplatok = 0;
 
         [NotMapped]
         public Room? RoomZ { get; set; }
@@ -38,7 +51,9 @@ namespace DBLayer.Models.HSKModels
                 Status = Status,
                 LastUpdate = LastUpdate,
                 Poznamka = Poznamka,
-                RoomZ = RoomZ
+                RoomZ = RoomZ,
+                DPH = DPH,
+                UbytovaciPoplatok = UbytovaciPoplatok
             };
         }
     }

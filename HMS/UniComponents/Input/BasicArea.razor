@@ -13,7 +13,8 @@
                   aria-label="."
                   aria-describedby="@(ID + "addon")"
                   autocomplete="off" 
-                  style="height: 35px;"/>
+                  style="height: 35px;
+@Style"/>
     </div>
     <button type="button" class="btn btn-outline-secondary mb-1 border-secondary-subtle border-start-0 @(IsNull() || Disabled ? "d-none" : "")"
             id="@(ID + "addon")" tabindex="-1"
@@ -23,6 +24,11 @@
 </div>
 
 @code {
+    /// <summary>
+    /// Pridavny style (vsak uz je height: 35px), default ""
+    /// </summary>
+    [Parameter]
+    public string Style { get; set; } = "";
 
     /// <summary>
     /// Clears the input field

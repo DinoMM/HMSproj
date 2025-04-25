@@ -22,13 +22,15 @@ using SkladModul.ViewModels.Dodavatelia;
 using LudskeZdrojeModul.ViewModels.Zamestnanci;
 using SkladModul.ViewModels.Sklady;
 using UctovnyModul.ViewModels;
-using UctovnyModul.ViewModels.Faktury;
 using RecepciaModul.ViewModels;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Configuration;
 using HSKModul.ViewModels;
 using System.Globalization;
 using AdminModul.ViewModels;
+using Microsoft.VisualBasic;
+using Microsoft.VisualBasic.FileIO;
+using UniComponents.Classes.Services;
 
 namespace HMS
 {
@@ -46,7 +48,6 @@ namespace HMS
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
 
-
             builder.Services.AddMauiBlazorWebView();
 
 #if ANDROID
@@ -54,8 +55,10 @@ namespace HMS
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 #endif
 
-            #region pridanie vlastnych env premennych
-            var dotenv = Path.Combine(AppContext.BaseDirectory, ".env");
+#region pridanie vlastnych env premennych
+#if WINDOWS
+            var dotenv = Path.Combine(AppContext.BaseDirectory, ".env");  //windows
+            //var dotenv = Path.Combine(Microsoft.Maui.Storage.FileSystem.AppDataDirectory, ".env"); //endoid nefunguje 
             if (File.Exists(dotenv))
             {
                 foreach (var line in File.ReadAllLines(dotenv))
@@ -67,7 +70,9 @@ namespace HMS
                     }
                 }
             }
-            #endregion
+#endif
+
+#endregion
             //pridanie service pre pripojenie na databazu
             {
                 string usr;
@@ -75,28 +80,46 @@ namespace HMS
 #if DEBUG
                 usr = "sa";
                 tpswd = Environment.GetEnvironmentVariable("PASSWORD_DB_SA");
-#else
-                usr = "publicUser";
-                tpswd = Environment.GetEnvironmentVariable("PASSWORD_DB_PUBLICUSER");;
+#if ANDROID
+                 tpswd = SecureStorage.GetAsync("DB_PSWD").GetAwaiter().GetResult() ?? "heslo";
 #endif
-                builder.Services.AddDbContext<DBContext>(opt => opt.UseSqlServer($"Data Source=localhost,1433;Database=MyDatabase;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions =>
+#else
+                //usr = "publicUser";
+                usr = "sa";
+                //tpswd = Environment.GetEnvironmentVariable("PASSWORD_DB_PUBLICUSER");
+                tpswd = Environment.GetEnvironmentVariable("PASSWORD_DB_SA");
+#if ANDROID
+                tpswd = SecureStorage.GetAsync("DB_PSWD_PUBLIC").GetAwaiter().GetResult() ?? "heslo";
+#endif
+#endif
+                var dbsource = SecureStorage.GetAsync("DB_Source").GetAwaiter().GetResult() ?? "localhost";
+                var dbport = SecureStorage.GetAsync("DB_Port").GetAwaiter().GetResult() ?? "1433";
+
+                builder.Services.AddDbContext<DBContext>(opt => {
+                    opt.UseSqlServer($"Data Source={dbsource},{dbport};Database=MyDatabase;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions =>
                 {
                     sqlOptions.EnableRetryOnFailure(
-                        maxRetryCount: 3,
-                        maxRetryDelay: TimeSpan.FromSeconds(15),
+                        maxRetryCount: 2,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
                         errorNumbersToAdd: null
                         );
                 }
-                ));               //(pomohol som si z internetu tutoriály/AI)
 
-                builder.Services.AddDbContext<DataContext>(opt => opt.UseSqlServer($"Data Source=localhost,1433;Database=HlavnaDatabaza;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions =>
+                );
+                    opt.AddInterceptors(new DelayCommandInterceptor(TimeSpan.FromSeconds(1)));  //Testovacie
+                });               //(pomohol som si z internetu tutoriály/AI)
+
+                builder.Services.AddDbContext<DataContext>(opt => {
+                    opt.UseSqlServer($"Data Source=localhost,1433;Database=HlavnaDatabaza;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions =>
                 {
                     sqlOptions.EnableRetryOnFailure(
-                        maxRetryCount: 3,
-                        maxRetryDelay: TimeSpan.FromSeconds(15),
+                        maxRetryCount: 2,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
                         errorNumbersToAdd: null
                         );
-                }));               //(pomohol som si z internetu tutoriály/AI)
+                });
+                    opt.AddInterceptors(new DelayCommandInterceptor(TimeSpan.FromSeconds(1)));  //Testovacie
+                });               //(pomohol som si z internetu tutoriály/AI)
             }
             //pridanie service pre spravu usera a jeho role
             builder.Services.AddIdentity<IdentityUserOwn, IdentityRole>(opt =>
@@ -185,6 +208,7 @@ namespace HMS
             #endregion
             #region UctovnyModul
             builder.Services.AddTransient<FakturyViewModel>();
+            builder.Services.AddTransient<CRUFakturaViewModel>();
 
             builder.Services.AddTransient<UniConItemyViewModel>();
             builder.Services.AddTransient<CRUUniItemViewModel>();
@@ -210,14 +234,15 @@ namespace HMS
             #endregion
             #region Misc
             builder.Services.AddTransient(typeof(TransientPageHolder<>));   //pridavanie Transient objektov do/z TransientHolderService
+            builder.Services.AddSingleton(typeof(ICascadingService), typeof(CascadingService));
             #endregion
 
 
-#if DEBUG
+
 
             builder.Services.AddBlazorWebViewDeveloperTools();
             builder.Logging.AddDebug();
-#endif
+
 
             return builder.Build();
         }

@@ -3,14 +3,22 @@
 
 @if (!Tooltip.HasValue)
 {
-    <button id="@ID" type="@Type" class="@Class @AdditionalClass" disabled="@Disabled" @onclick="OnClick">
+    <button id="@ID" type="@Type" class="@Class @AdditionalClass" disabled="@(Disabled || Nacitavanie || CascDisabled || CascLoading)" @onclick="OnClick">
         @ChildContent
+        @if (Nacitavanie || CascLoading)
+        {
+            <SpinnerLoading ExtraSmall="true" />
+        }
     </button>
 }
 else
 {
-    <button id="@ID" type="@Type" class="@Class position-relative @AdditionalClass" disabled="@Disabled" @onclick="ToolTipOnClick">
+    <button id="@ID" type="@Type" class="@Class position-relative @AdditionalClass" disabled="@(Disabled || Nacitavanie || CascDisabled || CascLoading)" @onclick="ToolTipOnClick">
         @ChildContent
+        @if (Nacitavanie || CascLoading)
+        {
+            <SpinnerLoading ExtraSmall="true" />
+        }
         <Tooltip ID="@(ID + "tooltip")" Position="@Tooltip.Value.position" Text="@Tooltip.Value.text" Class="innerdivfill"></Tooltip>
     </button>
 }
@@ -56,10 +64,28 @@ else
     public RenderFragment? ChildContent { get; set; }
 
     /// <summary>
+    /// Určuje, že sa niečo načítava, dáva tlačino ako disabled a dá SpinnerLoading, default false
+    /// </summary>
+    [Parameter]
+    public bool Nacitavanie { get; set; } = false;
+
+    /// <summary>
     /// Prídavný class, nutnost poslat cez cascading parameter
     /// </summary>
     [CascadingParameter(Name = "AdditionalClass")]
     public string AdditionalClass { get; set; } = "";
+
+    /// <summary>
+    /// Určuje, že bude tlačilo disabled pomocou cascading parameter, default false
+    /// </summary>
+    [CascadingParameter(Name = "CascDisabled")]
+    public bool CascDisabled { get; set; } = false;
+
+    /// <summary>
+    /// Určuje, že bude tlačilo disabled a dá SpinnerLoading  pomocou cascading parameter, default false
+    /// </summary>
+    [CascadingParameter(Name = "CascLoading")]
+    public bool CascLoading { get; set; } = false;
 
 
     private async Task ToolTipOnClick()

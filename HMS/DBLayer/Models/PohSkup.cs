@@ -39,5 +39,9 @@ namespace DBLayer.Models
             return newID;
         }
 
+        public virtual string GetDisplayName()
+        {
+            return this.GetType().Name;
+        }
     }
 }

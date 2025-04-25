@@ -60,7 +60,7 @@ namespace DBLayer.Models
                     newItemPD.UniConItemPoklDokladu = item.ID;
                     newItemPD.UniConItemPoklDokladuX = item;
                     newItemPD.Nazov = item.GetNameUni();
-                    newItemPD.DPH = 20;
+                    newItemPD.DPH = item.ReservationZ.DPH;
                     break;
 
                 default: return null;

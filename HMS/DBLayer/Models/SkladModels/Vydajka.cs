@@ -23,5 +23,9 @@ namespace DBLayer.Models
         public string? DruhPohybu { get; set; } = default!;
         public DruhPohybu? DruhPohybuX { get; set; }
 
+        public override string GetDisplayName()
+        {
+            return "Výdajka";
+        }
     }
 }

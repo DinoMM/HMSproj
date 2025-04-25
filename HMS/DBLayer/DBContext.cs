@@ -14,6 +14,9 @@ using DBLayer.Models;
 using DBLayer.Models.RecepciaModels;
 using DBLayer.Models.HSKModels;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Data.Common;
+using Microsoft.EntityFrameworkCore.Diagnostics.Internal;
 
 
 
@@ -208,6 +211,14 @@ namespace DBLayer
             modelBuilder.Entity<PolozkaSkladuConItemPoklDokladu>()
             .HasIndex(e => e.PolozkaSkladuMnozstva)
             .IsUnique();
+
+            modelBuilder.Entity<Faktura>()
+            .HasKey(f => new { f.ID, f.Skupina });
+            modelBuilder.Entity<Faktura>()
+                .HasOne(f => f.SkupinaX)
+                .WithMany()
+                .HasForeignKey(f => f.Skupina)
+                .IsRequired(false);
         }
 
         public class YourDbContextFactory : IDesignTimeDbContextFactory<DBContext>    //Pre manazovanie migraci je potrebna tato trieda (pomohol som si z internetu tutoriály/AI)
@@ -219,6 +230,28 @@ namespace DBLayer
 
                 return new DBContext(optionsBuilder.Options);
             }
+        }
+
+
+    }
+
+    public class DelayCommandInterceptor : DbCommandInterceptor
+    {
+        private readonly TimeSpan _delay;
+
+        public DelayCommandInterceptor(TimeSpan delay)
+        {
+            _delay = delay;
+        }
+
+        public override async ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+         DbCommand command,
+         CommandEventData eventData,
+         InterceptionResult<DbDataReader> result,
+         CancellationToken cancellationToken = default)
+        {
+            await Task.Delay(_delay, cancellationToken);
+            return await base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
         }
 
 

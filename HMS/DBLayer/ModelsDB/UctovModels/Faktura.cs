@@ -24,7 +24,7 @@ namespace DBLayer.Models
         public static string DajNoveID(DbSet<Faktura> dbset)
         {
             int adder = 1;
-            string newID;
+            string newID = "";
             do
             {
                 int cislo;
@@ -36,7 +36,7 @@ namespace DBLayer.Models
                 {
                     cislo = 1;
                 }
-                newID = "FA";   //prefix
+                //newID = "FA";   //prefix // nepouzivat
                 newID = newID + cislo.ToString("D8");
                 ++adder;
 

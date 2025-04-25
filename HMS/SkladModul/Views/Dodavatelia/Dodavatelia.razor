@@ -27,7 +27,7 @@
                 <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">
                     <IconTextCreate></IconTextCreate>
                 </button>
-                <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary">
+                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary">
                     <IconTextOpen></IconTextOpen>
                 </button>
             </div>
@@ -38,7 +38,7 @@
 
     <div class="row">
         <div class="col-1"></div>
-        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 38rem; overflow: auto;">
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 80vh; overflow: auto; max-width: 95vw;">
             <ComplexTable @ref="ViewModel.ComplexTable"
                           ID="complextable"
                           T="DBLayer.Models.Dodavatel"
@@ -46,6 +46,7 @@
                           LoadingItems="ViewModel.Nacitavanie"
                           Sticky="true"
                           Selectable="true"
+                          OnDbClick="async (item) => { await Open(item); }"
                           ParentStateHasChanged="StateHasChanged"
                           OnRefresh="ViewModel.NacitajZoznamy"
                           SetTableSettings="@((true, tableSettings, null))">
@@ -108,13 +109,13 @@
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
     }
 
-    public void Open()
+    public async Task Open(DBLayer.Models.Dodavatel? item)
     {
-        if (marked != null)
+        if (item != null)
         {
             if (ViewModel.ValidateUserCRUD())
             {
-                objectHolder.Add(marked);
+                objectHolder.Add(item);
                 Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDodavatel"));
             }
         }

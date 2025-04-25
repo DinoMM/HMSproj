@@ -4,20 +4,14 @@ using DBLayer;
 using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
+using UniComponents;
 
-namespace UctovnyModul.ViewModels.Faktury
+namespace UctovnyModul.ViewModels
 {
-    public partial class FakturyViewModel : ObservableObject, I_ValidationVM, I_RD_TableVM<Faktura>
+    public partial class FakturyViewModel : AObservableViewModel<Faktura>
     {
-        [ObservableProperty]
-        ObservableCollection<Faktura> zoznamFaktur = new();
-
-        public bool NacitavaniePoloziek { get; private set; } = true;
-
         private readonly DBContext _db;
         private readonly UserService _userService;
-
-        
 
         public FakturyViewModel(DBContext db, UserService userService)
         {
@@ -35,25 +29,25 @@ namespace UctovnyModul.ViewModels.Faktury
             return _userService.IsLoggedUserInRoles(Faktura.ROLE_CRUD_FAKTURY);
         }
 
-        public async Task NacitajZoznamy()
+        protected override async Task NacitajZoznamyAsync()
         {
-            ZoznamFaktur = new(await _db.Faktury
+            ZoznamPoloziek = new(await _db.Faktury
                 .Include(x => x.SkupinaX)
                 .Include(x => x.OdKohoX)
-                .OrderBy(x => x.Vystavenie)
+                .OrderByDescending(x => x.Vystavenie)
                 .ToListAsync());
-            NacitavaniePoloziek = false;
         }
 
-        public bool MoznoVymazat(Faktura item)
+        public override bool MoznoVymazat(Faktura item)
         {
-            return false;
+            return item.Spracovana == null;
         }
 
-        public void Vymazat(Faktura item)
+        public override void Vymazat(Faktura item)
         {
-
-
+            base.Vymazat(item);
+            _db.Faktury.Remove(item);
+            _db.SaveChanges();
         }
 
         

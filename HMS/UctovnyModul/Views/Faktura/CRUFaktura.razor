@@ -1,0 +1,491 @@
+﻿@namespace UctovnyModul
+@page "/Faktury/CRUFaktura"
+@inject CRUFakturaViewModel ViewModel
+@inject UniComponents.Services.TransientHolderService TranService
+@using Microsoft.AspNetCore.Components.Forms
+
+<InfoModal @ref="infoMod"
+           ID="infomodcruroom"
+           FuncAction="EventCallback.Empty"
+           Text="">
+</InfoModal>
+
+<ComplexItemFinderTable @ref="ciftSkup"
+                        ID="itftskup"
+                        T="DBLayer.Models.PohSkup"
+                        Selectable="true"
+                        SelectEmptyInstance="false"
+                        ParentStateHasChanged="StateHasChanged"
+                        ButtonPosition="true"
+                        Header="Výber dokladu"
+                        SizeInRem="90"
+                        YesNoButtonText="@(("Vybrať", "Zrušiť"))"
+                        SetTableSettings="@((true, tableSettingsSkup, null))">
+
+</ComplexItemFinderTable>
+
+<ComplexItemFinderTable @ref="ciftDod"
+                        ID="itftdod"
+                        T="DBLayer.Models.Dodavatel"
+                        Selectable="true"
+                        SelectEmptyInstance="emptyInstance"
+                        ParentStateHasChanged="StateHasChanged"
+                        ButtonPosition="true"
+                        Header="Výber organizácie"
+                        SizeInRem="90"
+                        YesNoButtonText="@(("Vybrať", "Zrušiť"))"
+                        SetTableSettings="@((true, tableSettingsDod, null))">
+
+</ComplexItemFinderTable>
+
+<ComplexItemFinderTable @ref="ciftfak"
+                        ID="itftfak"
+                        T="string"
+                        Selectable="true"
+                        ParentStateHasChanged="StateHasChanged"
+                        ButtonPosition="true"
+                        Header="Spojenie s faktúrou"
+                        SizeInRem="90"
+                        YesNoButtonText="@(("Spojiť", "Zrušiť"))"
+                        SetTableSettings="@((true, tableSettingsFak, null))">
+
+</ComplexItemFinderTable>
+
+@*-------------------------------------------------------------------------------------------------------------------------------------------------------------*@
+@*-------------------------------------------------------------------------------------------------------------------------------------------------------------*@
+@*-------------------------------------------------------------------------------------------------------------------------------------------------------------*@
+
+<EditForm Model="@ViewModel.Entity" OnValidSubmit="@Save" OnInvalidSubmit="OnInvalid">
+    <DataAnnotationsValidator />
+    <div class="container maxwidth95">
+        <div class="row pb-2">
+            <div class="col-5"></div>
+            <div class="col-7 h2">Faktúra</div>
+
+        </div>
+        <div class="row">
+
+            <div class="col-md-5 col-12 autooverflowx" style="max-height: 80vh">
+                <div class="row">
+                    <div class="col-mb-9 col-10">
+                        <FloatingInput ID="fid" Header="ID" Value="@(ViewModel.Entity.ID)" Disabled="true"></FloatingInput>
+                        <ValidationMessage For="@(() => ViewModel.Entity.ID)" />
+                    </div>
+                    <div class="col-mb-3 col-2 mt-2 text-start">
+                        <ButtonBasic Class="btn btn-secondary" ID="fidfind" Disabled="ViewModel.EntitySaver.Exist" Tooltip="@(("bottom","Vyhľadať spojovaciu fakturu (možné len pri vytváraní tejto faktúry)"))" Onclick="FindFak"><IconText Icon="bi-box-arrow-in-down"></IconText> </ButtonBasic>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-mb-9 col-10">
+                        <FloatingInput ID="fskup" Header="Doklad" Value="@(ViewModel.Entity.Skupina)" Disabled="true"></FloatingInput>
+                        <ValidationMessage For="@(() => ViewModel.Entity.Skupina)" />
+                    </div>
+                    <div class="col-mb-3 col-2 mt-2 text-start">
+                        <ButtonBasic Class="btn btn-secondary" ID="fskupfind" Disabled="ViewModel.EntitySaver.Exist" Tooltip="@(("bottom","Vyhľadať doklad (možné len pri vytváraní tejto faktúry)"))" Onclick="FindDoklad"><IconText Icon="bi-box-arrow-in-down"></IconText> </ButtonBasic>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <FloatingInputDate ID="fvystavenie" Header="Vystavenie" Value="@(ViewModel.Entity.Vystavenie)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.Vystavenie = e.Value"></FloatingInputDate>
+                        <ValidationMessage For="@(() => ViewModel.Entity.Vystavenie)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <FloatingInputDate ID="fdodanie" Header="Dodanie" Value="@(ViewModel.Entity.Dodanie)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.Dodanie = e.Value"></FloatingInputDate>
+                        <ValidationMessage For="@(() => ViewModel.Entity.Dodanie)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <FloatingInputDate ID="fsplatnost" Header="Splatnosť" Value="@(ViewModel.Entity.Splatnost)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.Splatnost = e.Value"></FloatingInputDate>
+                        <ValidationMessage For="@(() => ViewModel.Entity.Splatnost)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <FloatingSelect ID="fstav" Header="Stav" ClassInput="mb-1" Value="@(ViewModel.Entity.StavSpracovania())" ValueChanged="(e) => { ViewModel.Entity.Spracovana = ViewModel.Entity.GetBoolStavSpracovania(e); }" Items="ViewModel.Entity.GetListStavSpracovania()"></FloatingSelect>
+                        <ValidationMessage For="@(() => ViewModel.Entity.Spracovana)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <FloatingInput T="decimal" Type="number" ID="fsuma" Header="Suma bez DPH" Value="@(Math.Round(ViewModel.Entity.CenaBezDPH, 2))" Disabled="true" ></FloatingInput>
+                        <ValidationMessage For="@(() => ViewModel.Entity.CenaBezDPH)" />
+                    </div>
+                    <div class="col-6">
+                        <FloatingInput T="decimal" Type="number" ID="fsumaz" Header="Zoznam" Value="@(Math.Round(ViewModel.Cenaz,2))" Disabled="true" ></FloatingInput>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <FloatingInput Type="number" ID="fdph" Header="DPH" Value="@(Math.Round(ViewModel.Entity.DPH, 2))" Disabled="true"></FloatingInput>
+                        <ValidationMessage For="@(() => ViewModel.Entity.DPH)" />
+                    </div>
+                    <div class="col-6">
+                        <FloatingInput T="decimal" Type="number" ID="fdphz" Header="Zoznam" Value="@(Math.Round(ViewModel.Dphz,2))" Disabled="true"></FloatingInput>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <FloatingInput T="decimal" Type="number" ID="fsumadph" Header="Suma s DPH" Value="@(Math.Round(ViewModel.Entity.CenaSDPH,2))" Disabled="true" ></FloatingInput>
+                        <ValidationMessage For="@(() => ViewModel.Entity.CenaSDPH)" />
+                    </div>
+                    <div class="col-6">
+                        <FloatingInput T="decimal" Type="number" ID="fsumadphz" Header="Zoznam" Value="@(Math.Round(ViewModel.Cenadphz,2))" Disabled="true" ></FloatingInput>
+                    </div>
+                </div>
+                @if (ViewModel.TotalFak > 1)
+                {
+                    <hr />
+                    <div class="row">
+                        <div class="col-12">
+                            <FloatingInput Type="number" ID="fsumaall" ClassInput="bg-info-subtle" Header="Suma bez DPH (spojenie spracovaných faktúr)" Value="@(Math.Round(ViewModel.CenaAll,2))" Disabled="true"></FloatingInput>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <FloatingInput Type="number" ID="fdphall" ClassInput="bg-info-subtle" Header="DPH (spojenie spracovaných faktúr)" Value="@(Math.Round(ViewModel.DphAll,2))" Disabled="true"></FloatingInput>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <FloatingInput Type="number" ID="fsumadphall" ClassInput="bg-info-subtle" Header="Suma s DPH (spojenie spracovaných faktúr)" Value="@(Math.Round(ViewModel.CenadphAll,2))" Disabled="true"></FloatingInput>
+                        </div>
+                    </div>
+                }
+                <hr />
+                <div>
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#paneldodav">Dodávateľ</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#panelodob">Odberateľ</a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div class="tab-pane fade show active" id="paneldodav">
+                            <div class="row">
+                                <div class="col-mb-9 col-10">
+                                    <FloatingInput ID="fdodavatel" Header="Dodávateľ" Value="@(ViewModel.Entity?.OdKohoX?.Nazov ?? "")" Disabled="true"></FloatingInput>
+                                    <ValidationMessage For="@(() => ViewModel.Entity.OdKoho)" />
+                                </div>
+                                <div class="col-mb-3 col-2 mt-2 text-start">
+                                    <ButtonBasic Class="btn btn-secondary" ID="fdodavatelfind" Disabled="ViewModel.NotEditable" Tooltip="@(("bottom","Vyhľadať dodávateľa"))" OnClick="@(() => FindDod(ViewModel.Entity.OdKoho, false, (x) => { SetDod(x); }))"><IconText Icon="bi-box-arrow-in-down"></IconText> </ButtonBasic>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <FloatingInput ID="ficododavatel" Header="IČO" Value="@(ViewModel.Entity?.OdKoho ?? "")" Disabled="true"></FloatingInput>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="panelodob">
+                            <div class="row">
+                                <div class="col-mb-9 col-10">
+                                    <FloatingInput ID="fodberatel" Header="Odberateľ" Value="@(ViewModel.Entity?.Odberatel?.Nazov ?? "")" Disabled="true"></FloatingInput>
+                                    <ValidationMessage For="@(() => ViewModel.Entity.ICO)" />
+                                </div>
+                                <div class="col-mb-3 col-2 mt-2 text-start">
+                                    <ButtonBasic Class="btn btn-secondary" ID="fodberatelfind" Disabled="ViewModel.NotEditable" Tooltip="@(("bottom","Vyhľadať odberateľa"))" OnClick="@(() => FindDod(ViewModel.Entity.ICO, true, (x) => { SetOdb(x); }))"><IconText Icon="bi-box-arrow-in-down"></IconText> </ButtonBasic>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <FloatingInput ID="ficoodberatel" Header="IČO" Value="@(ViewModel.Entity?.ICO ?? "")" Disabled="true"></FloatingInput>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <FloatingInput T="string" ID="fodnazov" Header="Názov" Value="@(ViewModel.Entity.Nazov)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.Nazov = e"></FloatingInput>
+                                    <ValidationMessage For="@(() => ViewModel.Entity.Nazov)" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <FloatingInput T="string" ID="foddic" Header="DIČ" Value="@(ViewModel.Entity.DIC)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.DIC = e"></FloatingInput>
+                                    <ValidationMessage For="@(() => ViewModel.Entity.DIC)" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <FloatingInput T="string" ID="fodicdph" Header="IČ DPH" Value="@(ViewModel.Entity.IC_DPH)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.IC_DPH = e"></FloatingInput>
+                                    <ValidationMessage For="@(() => ViewModel.Entity.IC_DPH)" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <FloatingArea ID="fodadresa" Header="Celá adresa" Value="@(ViewModel.Entity.Adresa)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.Adresa = e"></FloatingArea>
+                                    <ValidationMessage For="@(() => ViewModel.Entity.Adresa)" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <FloatingInput T="string" ID="fodemail" Header="Email" Value="@(ViewModel.Entity.Email)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.Email = e"></FloatingInput>
+                                    <ValidationMessage For="@(() => ViewModel.Entity.Email)" />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <FloatingInput T="string" ID="fodtelef" Header="Telefón" Value="@(ViewModel.Entity.Telefon)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.Telefon = e"></FloatingInput>
+                                    <ValidationMessage For="@(() => ViewModel.Entity.Telefon)" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+                <div class="row">
+                    <div class="col-12">
+                        <FloatingSelect ID="fformuhr" Header="Forma úhrady" ClassInput="mb-1" Value="@(ViewModel.Entity.FormaUhrady.GetDisplayName())" ValueChanged="(e) => { ViewModel.Entity.FormaUhrady = EnumExtensions.GetEnumValue<DBLayer.Models.FormaUhrady>(e); }" Items="EnumExtensions.GetDisplayNames<DBLayer.Models.FormaUhrady>()"></FloatingSelect>
+                        <ValidationMessage For="@(() => ViewModel.Entity.Spracovana)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <FloatingInput T="string" ID="fiban" Header="IBAN" Value="@(ViewModel.Entity.IBAN)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.IBAN = e"></FloatingInput>
+                        <ValidationMessage For="@(() => ViewModel.Entity.IBAN)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <FloatingInput T="string" ID="fvarsym" Header="Variabilný symbol" Value="@(ViewModel.Entity.VariabilnySymbol)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.VariabilnySymbol = e"></FloatingInput>
+                        <ValidationMessage For="@(() => ViewModel.Entity.VariabilnySymbol)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <FloatingInput T="string" ID="fkonssym" Header="Konštantný symbol" Value="@(ViewModel.Entity.KonstantnySymbol)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.KonstantnySymbol = e"></FloatingInput>
+                        <ValidationMessage For="@(() => ViewModel.Entity.KonstantnySymbol)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <FloatingInput T="string" ID="fspecsym" Header="Špecifický symbol" Value="@(ViewModel.Entity.SpecifickySymbol)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.SpecifickySymbol = e"></FloatingInput>
+                        <ValidationMessage For="@(() => ViewModel.Entity.SpecifickySymbol)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <FloatingInput T="string" ID="fobjed" Header="Objednávka" Value="@(ViewModel.Entity.CisloObjednavky)" Disabled="ViewModel.NotEditable" ValueChanged="(e) => ViewModel.Entity.CisloObjednavky = e"></FloatingInput>
+                        <ValidationMessage For="@(() => ViewModel.Entity.CisloObjednavky)" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-7 col-12 autooverflowy" style="max-height: 38rem;">
+                <ComplexTable @ref="ViewModel.OwnObservedCollectionPohJ.ComplexTable"
+                              ID="complextable"
+                              T="DBLayer.Models.PohJednotka"
+                              Items="ViewModel.OwnObservedCollectionPohJ.ZoznamPoloziek"
+                              LoadingItems="ViewModel.OwnObservedCollectionPohJ.Nacitavanie"
+                              Sticky="true"
+                              ParentStateHasChanged="StateHasChanged"
+                              OnRefresh="ViewModel.OwnObservedCollectionPohJ.NacitajZoznamy"
+                              CollectionChanged="ViewModel.OwnObservedCollectionPohJ.OnCollectionChanged"
+                              SetTableSettings="@((true, tableSettings, null))">
+                    <AdditionToolbar>
+                        <ButtonBasic ID="loadfromall"
+                                     Class="btn btn-outline-dark p-1 border-0 border-start border-end"
+                                     OnClick="() => ViewModel.LoadFromAll()"
+                                     Disabled="ViewModel.OwnObservedCollectionPohJ.Nacitavanie || !ViewModel.EntitySaver.Exist"
+                                     Tooltip="@(("bottom", "Načítať všetky položky z faktúr, ktoré majú rovnaké ID faktúry"))">
+                            <IconText Icon="bi-bookmark-x"></IconText>
+                        </ButtonBasic>
+
+                    </AdditionToolbar>
+                </ComplexTable>
+
+            </div>
+        </div>
+        @*XXXXXXXXXXXXX*@
+
+        <div class="row pt-2 sticky-bottom mainbgcolor" style="z-index:2;">
+            <div class="col-1"></div>
+            <div class="col-5 text-end">
+                <SimpleButton ID="sbmitbttn" Type="submit" Disabled="!ViewModel.AnyModify()" ZmenaStavuTextu="@(!ViewModel.EntitySaver.Exist)" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
+            </div>
+            <div class="col-5 text-start">
+                <button type="button" class="btn btn-secondary" @onclick="OnClose">Zrušiť</button>
+            </div>
+            <div class="col-1"></div>
+        </div>
+    </div>
+
+
+</EditForm>
+
+@code {
+
+    private InfoModal infoMod;
+    private ComplexItemFinderTable<DBLayer.Models.PohSkup> ciftSkup;
+    private ComplexItemFinderTable<DBLayer.Models.Dodavatel> ciftDod;
+    private ComplexItemFinderTable<string> ciftfak;
+    private FakturyViewModel? fakturyViewModel;
+    private bool emptyInstance = false;
+    List<TableColumnTemplate<DBLayer.Models.PohJednotka>> tableSettings = new()
+{
+        new () { ID_Prop = nameof(DBLayer.Models.PohJednotka.Nazov), HeaderValue = "Názov", CellValue = (item) => item.Nazov ?? "" },
+        new () { ID_Prop = nameof(DBLayer.Models.PohJednotka.Mnozstvo), HeaderValue = "Množstvo", CellValue = (item) => item.Mnozstvo.ToString("F2",System.Globalization.CultureInfo.InvariantCulture) },
+        new () { ID_Prop = nameof(DBLayer.Models.PohJednotka.Cena), HeaderValue = "Cena bez DPH", CellValue = (item) => item.Cena.ToString("F2",System.Globalization.CultureInfo.InvariantCulture) },
+        new () { ID_Prop = nameof(DBLayer.Models.PohJednotka.DPH), HeaderValue = "DPH", CellValue = (item) => item.DPH.ToString("F2",System.Globalization.CultureInfo.InvariantCulture) },
+        new () { ID_Prop = nameof(DBLayer.Models.PohJednotka.CenaDPH), HeaderValue = "Cena s DPH", CellValue = (item) => item.CenaDPH.ToString("F2",System.Globalization.CultureInfo.InvariantCulture) },
+        new () { ID_Prop = nameof(DBLayer.Models.PohJednotka.CelkovaCena), HeaderValue = "Celková suma bez DPH", CellValue = (item) => item.CelkovaCena.ToString("F2",System.Globalization.CultureInfo.InvariantCulture), Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.PohJednotka.CelkovaCenaDPH), HeaderValue = "Celková suma s DPH", CellValue = (item) => item.CelkovaCenaDPH.ToString("F2",System.Globalization.CultureInfo.InvariantCulture) },
+        new () { ID_Prop = nameof(DBLayer.Models.PohJednotka.Skupina), HeaderValue = "Doklad", CellValue = (item) => item.Skupina, Visible = false },
+        //new () { ID_Prop = nameof(DBLayer.Models.PohJednotka.ID), HeaderValue = "ID", CellValue = (item) => item.ID.ToString(System.Globalization.CultureInfo.InvariantCulture), Visible = false }
+    };
+
+    List<TableColumnTemplate<DBLayer.Models.PohSkup>> tableSettingsSkup = new() {
+        new () { ID_Prop = nameof(DBLayer.Models.PohSkup.ID), HeaderValue = "ID", CellValue = (item) => item.ID },
+        new () { ID_Prop = "typskup", HeaderValue = "Typ", CellValue = (item) => item.GetDisplayName(), CellConvert = ((item) => item.GetDisplayName(), typeof(string))  },
+        new () { ID_Prop = nameof(DBLayer.Models.PohSkup.Vznik), HeaderValue = "Vznik", CellValue = (item) => item.Vznik.ToString("dd.MM.yyyy") },
+        new () { ID_Prop = nameof(DBLayer.Models.PohSkup.Poznamka), HeaderValue = "Poznámka", CellValue = (item) => item.Poznamka ?? "", Visible = false },
+
+    };
+
+    List<TableColumnTemplate<DBLayer.Models.Dodavatel>> tableSettingsDod = new()
+{
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.ICO), HeaderValue = "IČO", CellValue = (item) => item.ICO },
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Nazov), HeaderValue = "Názov", CellValue = (item) => item.Nazov },
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Obec), HeaderValue = "Obec", CellValue = (item) => item.Obec },
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Adresa), HeaderValue = "Adresa", CellValue = (item) => item.Adresa },
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Iban), HeaderValue = "Iban", CellValue = (item) => item.Iban },
+
+    };
+
+    List<TableColumnTemplate<string>> tableSettingsFak = new() {
+     new() { ID_Prop = "id", HeaderValue = "ID faktúry", CellValue = (item) => item, CellConvert = ((item) => item, typeof(string)) },
+
+    };
+
+    protected override void OnInitialized()
+    {
+
+        if (!ViewModel.EntitySaver.CanSetEntity(objectHolder.Remove<DBLayer.Models.Faktura>())) //pokusi sa ziskat objekt z uloziska
+        {
+        }
+        tableSettingsSkup.Insert(1, new()
+        {
+            ID_Prop = nameof(DBLayer.Models.PohSkup.Spracovana),
+            HeaderValue = "Spracovaný",
+            CellComponent = (item) => SimpleCheckMarkDiv.GetRenderComponent(item.Spracovana),
+            CellConvert = ((item) => item.Spracovana, typeof(bool)),
+            Visible = false
+        });
+
+        fakturyViewModel = (FakturyViewModel)TranService.GetTransient(typeof(FakturyViewModel)); //prehodenie settingov
+        if (ViewModel.EntitySaver.Exist)
+        {
+            var list = fakturyViewModel.ZoznamPoloziek.Where(x => x.ID == ViewModel.Entity.ID);
+            ViewModel.TotalFak = list.Count();
+            ViewModel.CenaAll = list.Where(x => x.Spracovana == true).Sum(x => x.CenaBezDPH);
+            ViewModel.CenadphAll = list.Where(x => x.Spracovana == true).Sum(x => x.CenaSDPH);
+            ViewModel.DphAll = ViewModel.CenaAll != 0 ? ((ViewModel.CenadphAll * 100) / ViewModel.CenaAll) - 100 : 0;
+
+        }
+
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await ViewModel.OwnObservedCollectionPohJ.NacitajZoznamy();
+    }
+
+    private void OnClose()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    private async Task Save()
+    {
+        await ViewModel.Save();
+        StateHasChanged();
+    }
+
+    private async Task OnInvalid()
+    {
+        await JSRuntime.InvokeVoidAsync("addWarningPopOverUntilClick", "sbmitbttn", "Niektoré polia sú nesprávne", "top");
+        await JSRuntime.InvokeVoidAsync("addStyleClassUntilClick", "sbmitbttn", "btn-warning");
+    }
+
+    private async Task FindDoklad()
+    {
+        ciftSkup.SetItemsFromList(await ViewModel.GetSkupiny());
+        ciftSkup.ValueInFilter = ViewModel.Entity.Skupina ?? "";
+        await ciftSkup.OpenModal(async (res) =>
+        {
+            if (res)
+            {
+                if (ViewModel.Entity.Skupina != (ciftSkup.ComplexTable.Marked?.ID ?? ""))
+                {
+                    ViewModel.Entity.Skupina = ciftSkup.ComplexTable.Marked?.ID ?? "";
+                    ViewModel.Entity.SkupinaX = ciftSkup.ComplexTable.Marked;
+                    var vznik = ciftSkup.ComplexTable.Marked?.Vznik;
+                    ViewModel.Entity.Vystavenie = vznik.HasValue ? vznik.Value : ViewModel.Entity.Vystavenie;
+                    ViewModel.Entity.Dodanie = ViewModel.Entity.Vystavenie;
+                    ViewModel.Entity.Splatnost = ViewModel.Entity.Vystavenie;
+
+                    await ViewModel.OwnObservedCollectionPohJ.NacitajZoznamy();
+                    ViewModel.EntitySaver.SetModified();
+                }
+            }
+            StateHasChanged();
+        });
+    }
+
+    private async Task FindDod(string? filter, bool pickemptyinst, Action<DBLayer.Models.Dodavatel?> method)
+    {
+        ciftDod.SetItemsFromList(await ViewModel.GetDod());
+        ciftDod.ValueInFilter = filter ?? "";
+        emptyInstance = pickemptyinst;
+        await ciftDod.OpenModal(async (res) =>
+        {
+            if (res)
+            {
+                method(ciftDod.ComplexTable.Marked);
+            }
+            StateHasChanged();
+        });
+    }
+
+    private void SetDod(DBLayer.Models.Dodavatel? dodav)
+    {
+        if (dodav != null)
+        {
+            ViewModel.Entity.OdKoho = dodav?.ICO ?? "";
+            ViewModel.Entity.OdKohoX = dodav;
+            ViewModel.Entity.IBAN = ViewModel.Entity.OdKohoX.Iban;
+        }
+    }
+
+    private void SetOdb(DBLayer.Models.Dodavatel? dodav)
+    {
+        //if (dodav != null)
+        //{
+        ViewModel.Entity.Odberatel = dodav;
+        ViewModel.Entity.ICO = ViewModel.Entity.Odberatel?.ICO ?? "";
+        ViewModel.Entity.Adresa = dodav != null ? ViewModel.Entity.Odberatel.Adresa + ", " + ViewModel.Entity.Odberatel.Obec : "";
+        ViewModel.Entity.Nazov = ViewModel.Entity.Odberatel?.Nazov ?? "";
+        //}
+    }
+
+    private async Task FindFak()
+    {
+        if (ciftfak.Items == null || ciftfak.Items.Count == 0)
+        {
+            ciftfak.SetItemsFromList(fakturyViewModel.ComplexTable.Items.Select(x => x.ID).Distinct().ToList());
+        }
+        await ciftfak.OpenModal(async (res) =>
+        {
+            if (res)
+            {
+                ViewModel.Entity.ID = ciftfak.ComplexTable.Marked;
+            }
+            StateHasChanged();
+        });
+    }
+}

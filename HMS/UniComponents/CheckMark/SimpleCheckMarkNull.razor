@@ -1,0 +1,84 @@
+﻿@namespace UniComponents
+
+
+@if (Checked == null)
+{
+    <i class="bi bi-dash-circle-fill text-secondary @(FixedSizePx == 0 ? ("fs-" + Size) : "") position-relative" style="font-size: @(FixedSizePx + "px");" aria-label="ep">
+        @if (!string.IsNullOrEmpty(Tooltips.NullTooltip))
+        {
+            <Tooltip ID="@(ID + "n")" Position="bottom" Text="@Tooltips.NullTooltip" Class="innerdivfill"></Tooltip>
+        }
+    </i>
+    return;
+}
+@if (Checked == true)
+{
+    <i class="bi bi-check-circle-fill text-success @(FixedSizePx == 0 ? ("fs-" + Size) : "") position-relative" style="font-size: @(FixedSizePx + "px");" aria-label="yas">
+        @if (!string.IsNullOrEmpty(Tooltips.TrueTooltip))
+        {
+            <Tooltip ID="@(ID + "t")" Position="bottom" Text="@Tooltips.TrueTooltip" Class="innerdivfill"></Tooltip>
+        }
+    </i>
+}
+else
+{
+    <i class="bi bi-x-circle-fill text-danger @(FixedSizePx == 0 ? ("fs-" + Size) : "") position-relative" style="font-size: @(FixedSizePx + "px");" aria-label="n">
+        @if (!string.IsNullOrEmpty(Tooltips.FalseTooltip))
+        {
+            <Tooltip ID="@(ID + "f")" Position="bottom" Text="@Tooltips.FalseTooltip" Class="innerdivfill"></Tooltip>
+        }
+    </i>
+}
+
+@code {
+    /// <summary>
+    /// Bool, default false
+    /// </summary>
+    [Parameter]
+    public bool? Checked { get; set; } = false;
+
+    /// <summary>
+    /// ID, default simplecheckmarknull
+    /// </summary>
+    [Parameter]
+    public string ID { get; set; } = "simplecheckmarknull";
+
+    /// <summary>
+    /// Velkost ikony, hodnoty od 1 - 6, default 5
+    /// </summary>
+    [Parameter]
+    public int Size { get; set; } = 5;
+
+    /// <summary>
+    /// Velkost ikony fix, vypína Size ak nastavená, default 0
+    /// </summary>
+    [Parameter]
+    public int FixedSizePx { get; set; } = 0;
+
+    /// <summary>
+    /// Vypísaný text v tooltipoch (nutnost nastavit unikatne ID v pripade pouzitia), default (null, null, null)
+    /// </summary>
+    [Parameter]
+    public (string? NullTooltip, string? TrueTooltip, string? FalseTooltip) Tooltips { get; set; } = (null, null, null);
+
+    /// <summary>
+    /// Funkcia na získanie renderovacieho komponentu pre ComplexTable
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="CheckedFunc"></param>
+    /// <param name="Id"></param>
+    /// <param name="tooltips"></param>
+    /// <returns></returns>
+    public static RenderFragmentTemplate GetRenderComponent<T>(bool? Checkedp, string Id, (string? NullTooltip, string? TrueTooltip, string? FalseTooltip) tooltips)
+    {
+        //Func<T, bool?> CheckedFunc
+
+        return new RenderFragmentTemplate(typeof(SimpleCheckMarkNull),
+            new RenderFragmentAttribute("Checked", Checkedp, true),
+            new RenderFragmentAttribute("ID", Id),
+            new RenderFragmentAttribute("Tooltips", tooltips)
+            );
+
+
+    }
+}

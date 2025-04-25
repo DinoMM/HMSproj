@@ -125,11 +125,26 @@ namespace UniComponents
                         return new ValidationResult($"Nebola nájdená entita: {Input.GetType().Name}");
                     }
                     founded.CopyPropertiesFrom(Input);      //prekopiruje vsetky hodnoty z Input do founded
+                    //if (AfterCopyProperties != null)
+                    //{
+                    //    AfterCopyProperties.Invoke(founded);
+                    //    AfterCopyProperties = null;
+                    //}
                 }
-
-                SavingTuple.Item1.SaveChanges();        //uloženie zmien do DB
+                //try       //ak zacne padat program
+                //{
+                    SavingTuple.Item1.SaveChanges();        //uloženie zmien do DB
+                //}
                 //catch (DbUpdateException e)       //ak zacne padat program
-                
+                //{
+                //    return new ValidationResult(e.InnerException?.Message ?? e.Message);
+                //}
+                //catch (Exception ex)
+                //{
+                //    return new ValidationResult(ex.InnerException?.Message ?? ex.Message);
+                //}
+
+
                 Modified = false;
                 Exist = true;
             }

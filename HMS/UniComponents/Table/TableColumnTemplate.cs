@@ -136,7 +136,7 @@ namespace UniComponents
                 builder.OpenComponent(0, Type);
                 for (int i = 1; i <= Attributes.Count; ++i)
                 {
-                    if (Attributes[i - 1].Value != null)
+                    if (Attributes[i - 1].Value != null || Attributes[i - 1].IsNullable)
                     {
                         builder.AddAttribute(i, Attributes[i - 1].Name, Attributes[i - 1].Value);
                     }
@@ -191,10 +191,16 @@ namespace UniComponents
 
         public Func<Task> Func { get; set; } = () => Task.CompletedTask;
 
-        public RenderFragmentAttribute(string name, object? value)
+        /// <summary>
+        /// Ak true tak mozno vlozit null objekty, default false
+        /// </summary>
+        public bool IsNullable { get; set; } = false;
+
+        public RenderFragmentAttribute(string name, object? value, bool nullable = false)
         {
             Name = name;
             Value = value;
+            IsNullable = nullable;
         }
 
         public RenderFragmentAttribute(string name, Func<Task> func)

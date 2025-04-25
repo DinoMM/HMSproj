@@ -21,6 +21,7 @@
             @(ZmenaStavuTextu ? ZmenaTextu.Item1: ZmenaTextu.Item2)
             break;
     }
+    @ChildContent
 </button>
 
 @code {
@@ -65,4 +66,7 @@
     /// </summary>
     [Parameter]
     public string ID { get; set; } = "simplebutton";
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; } = null;
 }

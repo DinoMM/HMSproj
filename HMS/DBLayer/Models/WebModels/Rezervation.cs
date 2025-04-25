@@ -49,7 +49,14 @@ namespace DBLayer.Models
         [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty.")]
         public double UbytovaciPoplatok { get; set; } = 0.0;
         [NotMapped]
-        public double CelkovaSumaDPH { get => (double)CelkovaSuma * 1.2; }
+        public double CelkovaSumaDPH { get => (double)(CelkovaSuma * (100 + DPH)) / 100; }
+
+        /// <summary>
+        /// [NotMapped]
+        /// </summary>
+        [NotMapped]
+        [DecimalNonNegative(ErrorMessage = "Len kladné hodnoty.")]
+        public decimal DPH { get; set; } = 23;
 
 
         public void setFromReservation(Rezervation res)
@@ -68,6 +75,8 @@ namespace DBLayer.Models
             Coupon = res.Coupon;
             RecentChangesUser = res.RecentChangesUser;
             RecentChangesUserZ = res.RecentChangesUserZ;
+            DPH = res.DPH;
+            UbytovaciPoplatok = res.UbytovaciPoplatok;
         }
 
         public object Clone()
@@ -87,6 +96,8 @@ namespace DBLayer.Models
             clone.Status = this.Status;
             clone.RecentChangesUser = this.RecentChangesUser;
             clone.RecentChangesUserZ = this.RecentChangesUserZ;
+            clone.DPH = this.DPH;
+            clone.UbytovaciPoplatok = this.UbytovaciPoplatok;
             return clone;
         }
         public Rezervation Clon()

@@ -123,7 +123,7 @@
     </div>
 
     <div class="row">
-        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 80vh; max-width: 95vw; overflow: auto;">
             <ComplexTable @ref="ViewModel.ComplexTable"
                           ID="complextable"
                           T="DBLayer.Models.HostFlag"
@@ -170,7 +170,7 @@ new () { ID_Prop = nameof(DBLayer.Models.Host.Sex), HeaderValue = "Pohlavie", Ce
 new () { ID_Prop = nameof(DBLayer.Models.Host.CitizenID), HeaderValue = "Občan.č.", CellValue = (item) => item.CitizenID },
 new () { ID_Prop = nameof(DBLayer.Models.Host.Passport), HeaderValue = "Pas", CellValue = (item) => item.Passport },
 new () { ID_Prop = nameof(DBLayer.Models.Host.Address), HeaderValue = "Adresa", CellValue = (item) => item.Address, Visible = false },
-new () { ID_Prop = nameof(DBLayer.Models.Host.BirthNumber), HeaderValue = "Rodné č.", CellValue = (item) => item.BirthNumber, Visible = false },
+//new () { ID_Prop = nameof(DBLayer.Models.Host.BirthNumber), HeaderValue = "Rodné č.", CellValue = (item) => item.BirthNumber, Visible = false },
 new () { ID_Prop = nameof(DBLayer.Models.Host.BirthDate), HeaderValue = "Narodenie", CellValue = (item) => item.BirthDate.ToString("dd.MM.yyyy")},
 new() { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", CellValue = (item) => item.Note, Visible = false }
     };

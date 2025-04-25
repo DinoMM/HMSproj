@@ -17,9 +17,9 @@
 @inject UserService UserService
 @inject UniComponents.Services.IAppLifeCycleService AppLifecycleService
 @implements IDisposable
+@implements IAsyncDisposable
 
 @inject DBContext db
-
 @*<InfoModal @ref="ViewModel.CloseAppModal" Text="Chcete ukončiť aplikáciu?"></InfoModal>*@
 <ApproveModal @ref="LogOffModal" Header="" Text="Chcete sa odhlásiť?" FuncOnSucc="EventCallback.Empty" FuncOnDiss="EventCallback.Empty"></ApproveModal>
 <CustomModal @ref="ShowZmenymod" ID="showzmeny" Header="Nájdené zmeny" SizeInRem="80">
@@ -27,6 +27,15 @@
         <textarea class="form-control w-100">@string.Join("", pendingChanges.Select(s => s + "|||\n"))</textarea>
     </BODY>
 </CustomModal>
+
+<CustomDynamicModal @ref="cdmNoDbCon" ID="cdmNoDbCon" YesNoButtonText="@(("Uložiť", "Zrušiť"))" Header="Nastavenie pripojenia na databázu" SizeInRem="40">
+    <FloatingInput ID="cdmNoDbConInput" T="string" Header="*Pripojovacia adresa" Value="@cdmNoDbConInput" ValueChanged="(e => cdmNoDbConInput = e)"></FloatingInput>
+    <FloatingInput ID="cdmNoDbConInputPort" T="string" Header="*Pripojovací port" Value="@cdmNoDbConInputPort" ValueChanged="(e => cdmNoDbConInputPort = e)"></FloatingInput>
+    <hr>
+    <FloatingInput ID="cdmNoDbConInputPort" T="string" Header="Pripojovacie heslo (* len pre android)" Value="@cdmNoDbConInputPasw" ValueChanged="(e => cdmNoDbConInputPasw = e)"></FloatingInput>
+    <FloatingInput ID="cdmNoDbConInputPort" T="string" Header="Pripojovacie heslo public (* len pre android)" Value="@cdmNoDbConInputPaswPub" ValueChanged="(e => cdmNoDbConInputPaswPub = e)"></FloatingInput>
+
+</CustomDynamicModal>
 
 @if (UserService.LoggedUser != null)
 {
@@ -39,17 +48,27 @@
 
 
         <div class="d-flex justify-content-center align-items-start vh-100">
-            <div class="p-3 w-50 h-100" style="max-height: 87vh;">
-                <div class="list-group text-center border border-2 border-black" style="max-height: 100%; overflow-y: auto;">
+            <div id="idflexwrap" class="pt-3 w-50 d-flex flex-wrap autooverflowy" style="max-height: 87vh; max-width:40rem">
 
-                    @foreach (var item in ViewModel.ModulesList)
+                @foreach (var item in ViewModel.ModulesList.OrderBy(x => x.Item4.bgcoloricon))
+                {
+                    if (item.Item3.Contains(UserService.LoggedUserRole))
                     {
-                        if (item.Item3.Contains(UserService.LoggedUserRole))
-                        {
-                            <a @onclick="@(() => Navigator.NavigateTo(item.Item2, saveThisUrl: true))" class="list-group-item list-group-item-action nonselecttext" style="cursor: pointer;">@item.Item1</a>
-                        }
+                        <button @onclick="@(() => { Navigator.NavigateTo(item.Item2, saveThisUrl: true); })"
+                                class="text-wrap btn btn-light border-secondary-subtle " style=" cursor: pointer; max-width: 9rem; min-width: 9rem; max-height: 9rem; min-height: 9rem; margin: 0px 2px 2px 0px; font-size: 1.15rem;">
+                            <div class="container d-flex flex-column align-items-center">
+                                <div class="row">
+                                    <IconText Size="1" Icon="@item.Item4.biicon"
+                                              Style="@($"color: {item.Item4.bgcoloricon};")"></IconText>
+                                </div>
+                                <div class="row text-center">
+                                    @item.Item1
+                                </div>
+                            </div>
+                        </button>
                     }
-                </div>
+                }
+
             </div>
 
             @*<button @onclick="EXCT">Spusti</button>*@
@@ -80,12 +99,38 @@ else
     private List<string> pendingChanges = new();
     private CustomModal ShowZmenymod;
 
+    private bool dbNotFound = false;
+    private CustomDynamicModal cdmNoDbCon;
+    private string cdmNoDbConInput = "";
+    private string cdmNoDbConInputPort = "";
+    private string cdmNoDbConInputPasw = "";
+    private string cdmNoDbConInputPaswPub = "";
+
+
     protected override async Task OnInitializedAsync()
     {
-        await initDB.TryMustHaveValues();
+
+        if (!ViewModel.IsConnectionChecked && !(await db.Database.CanConnectAsync())) //kontrola ci sa da pripojit na databazu, ak sa neda tak vyhodi okno kde sa zada source pre db a zavrie aplikaciu
+        {
+            dbNotFound = true;
+            await Task.Delay(15);
+            await cdmNoDbCon.OpenModal(async (res) =>
+            {
+                if (res)
+                {
+                    await SecureStorage.SetAsync("DB_Source", cdmNoDbConInput);
+                    await SecureStorage.SetAsync("DB_Port", cdmNoDbConInputPort);
+                    await SecureStorage.SetAsync("DB_PSWD", cdmNoDbConInputPasw);
+                    await SecureStorage.SetAsync("DB_PSWD_PUBLIC", cdmNoDbConInputPaswPub);
+                }
+                Microsoft.Maui.Controls.Application.Current.Quit();
+            });
+            return;
+        }
+        ViewModel.IsConnectionChecked = true;
 
 #if DEBUG
-
+        await initDB.TryMustHaveValues();
         if (UserService.LoggedUser == null)
         {
             await UserService.LogInUserAsync("admin", "Heslo123");
@@ -97,22 +142,32 @@ else
             Navigator.NavigateTo("/Login");
             return;
         }
+
+#if DEBUG
+
+        pendingChanges = db.ClearPendingChangesDebug();
+        StateHasChanged();
+
+#endif
     }
 
-    protected override void OnAfterRender(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-#if DEBUG
-            pendingChanges = db.ClearPendingChangesDebug();
-            StateHasChanged();
-#endif
+            await Task.Delay(25);       //koli najdeniu scrollbaru
+            await ViewModel.SetScroll("idflexwrap");
         }
     }
 
     private async Task ShowZmeny()
     {
         await ShowZmenymod.OpenModal(true);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await ViewModel.GetScroll("idflexwrap");
     }
 
     public void Dispose()

@@ -128,8 +128,8 @@ namespace RecepciaModul.ViewModels
                 DPH = 0;
             }
             Pocet = dokladySchvalene.Count;
-            VyslednaSumaHotovost = (decimal)itemySchvalene.Where(x => ((PpDoklad)x.SkupinaX).Spracovana == true).Sum(x => x.CelkovaCenaDPH);
-            VyslednaSumaKarta = (decimal)itemySchvalene.Where(x => ((PpDoklad)x.SkupinaX).Spracovana == false).Sum(x => x.CelkovaCenaDPH);
+            VyslednaSumaHotovost = (decimal)itemySchvalene.Where(x => ((PpDoklad)x.SkupinaX).TypPlatby == true).Sum(x => x.CelkovaCenaDPH);
+            VyslednaSumaKarta = (decimal)itemySchvalene.Where(x => ((PpDoklad)x.SkupinaX).TypPlatby == false).Sum(x => x.CelkovaCenaDPH);
 
             VyslednaSumaNesprac = (decimal)itemyNeSchvalene.Sum(x => x.CelkovaCena);
             VyslednaSumaDPHNesprac = (decimal)itemyNeSchvalene.Sum(x => x.CelkovaCenaDPH);

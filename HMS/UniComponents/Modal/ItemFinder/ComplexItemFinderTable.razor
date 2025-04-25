@@ -17,7 +17,7 @@
                     </div>
                 </div>
                 <div class="modal-body @(ChangeColor ? "custom-modal-body" : "")" id="modalATextxLabel">
-                    <div id="@ComplexTable?.ID_scrollbar" class="col-12" style="max-height: @(SizeInRem == 0 ? "30rem" : $"{SizeInRem}rem");overflow: auto;">
+                    <div id="@ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 63vh;overflow: auto;">
                         <ComplexTable @ref="ComplexTable"
                                       ID="@(ID + "ctable")"
                                       T="T"
@@ -81,7 +81,7 @@
     public string ValueInFilter { get; set; } = "";
 
     /// <summary>
-    /// Tovnako ako v ComplexTable
+    /// Rovnako ako v ComplexTable
     /// </summary>
     [Parameter]
     public (bool iniCheck, List<TableColumnTemplate<T>>? listTableSettings, List<(string name, Func<T, string>? cellValue, (Func<T, object?>, Type)? cellConvert)>? visibleColls)? SetTableSettings { get; set; } = null;

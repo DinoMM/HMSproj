@@ -1,4 +1,5 @@
 ﻿using DBLayer.Migrations;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using System;
 using System.Collections.Generic;
@@ -14,27 +15,51 @@ namespace DBLayer.Models
     {
         [Key]
         public string ID { get; set; } = default!;
-        [Required]
+        [Required(ErrorMessage = "Nutné pole")]
         [StringLength(128, MinimumLength = 3, ErrorMessage = "Nazov musi byť v rozmedzi 3 - 128 znakov")]
         public string Nazov { get; set; } = default!;
-        [Required]
+        [Required(ErrorMessage = "Nutné pole")]
         [StringLength(32, MinimumLength = 1, ErrorMessage = "Merná jednotka musi byť v rozmedzi 1 - 32 znakov")]
         public string MernaJednotka { get; set; } = default!;
+
+        /// <summary>
+        /// Sluzi ako predloha dph, nemala by sa vyuzivat pri vypoctoch
+        /// </summary>
+        [Column(TypeName = "decimal(9, 3)")]
+        [DecimalNonNegative(ErrorMessage = "Len kladné hodnoty.")]
+        public decimal DPH_mask { get; set; } = 23;
+       
         [NotMapped]
         public double Mnozstvo { get; set; } = 0;
 
         [NotMapped]
         [Range(0.0, double.MaxValue, ErrorMessage = "Len kladné hodnoty")]
         public double Cena { get; set; } = 0;
-
+        
         [NotMapped]
         public double CelkovaCena { get => (double)Mnozstvo * Cena; }
+        /// <summary>
+        /// Pouzita je DPH nie DPH_mask
+        /// </summary>
         [NotMapped]
         public double CenaDPH { get => (Cena * (double)(100 + DPH)) / 100; }
+        /// <summary>
+        /// Pouzita je DPH nie DPH_mask
+        /// </summary>
         [NotMapped]
         public double CelkovaCenaDPH { get => (double)Mnozstvo * CenaDPH; }
+        /// <summary>
+        /// DPH v percentach, [NotMapped], ulozene dph je v DPH_mask
+        /// </summary>
         [NotMapped]
-        public decimal DPH { get; set; } = 20;
+        [DecimalNonNegative(ErrorMessage = "Len kladné hodnoty.")]
+        public decimal DPH { get; set; } = 23;
+
+        /// <summary>
+        /// [NotMapped]
+        /// </summary>
+        [NotMapped]
+        public bool ActiveNM { get; set; } = true;
 
         public object Clone()       //deep copy
         {
@@ -45,6 +70,7 @@ namespace DBLayer.Models
             clone.Mnozstvo = Mnozstvo;
             clone.Cena = Cena;
             clone.DPH = DPH;
+            clone.DPH_mask = DPH_mask;
 
             return clone;
         }
@@ -53,6 +79,13 @@ namespace DBLayer.Models
             return (PolozkaSkladu)Clone();
         }
 
+        /// <summary>
+        /// Nastavi DPH na hodnotu z DPH_mask
+        /// </summary>
+        public void SetDPHFromMask()
+        {
+            DPH = DPH_mask;
+        }
         public static List<PolozkaSkladu> ZosumarizujListPoloziek(in List<PolozkaSkladuObjednavky> polozky)
         {
             return polozky.GroupBy(x =>
@@ -169,5 +202,7 @@ namespace DBLayer.Models
                 item.Mnozstvo = 0;
             }
         }
+
+
     }
 }

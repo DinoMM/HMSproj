@@ -103,7 +103,7 @@
                 <div class="row">
                     <div class="col col-5">
                         <label>Názov</label>
-                        <InputText @bind-Value="@ViewModel.ItemPokladDokladuInput.Nazov" disabled="@ReadOnly" placeholder="Názov položky" class="form-control" />
+                        <InputText @bind-Value="@ViewModel.ItemPokladDokladuInput.Nazov" disabled placeholder="Názov položky" class="form-control" />
                         <ValidationMessage For="@(() => ViewModel.ItemPokladDokladuInput.Nazov)" />
                     </div>
                 </div>

@@ -81,7 +81,7 @@ namespace AdminModul.ViewModels.Pouzivatelia
             PhoneNumber = user.PhoneNumber ?? "";
             IBAN = user.IBAN ?? "";
             Adresa = user.Adresa ?? "";
-            
+
 
             RoleVsetky = Enum.GetValues(typeof(RolesOwn)).Cast<RolesOwn>().ToList();
             var first = RoleVsetky.FirstOrDefault();
@@ -220,6 +220,50 @@ namespace AdminModul.ViewModels.Pouzivatelia
         public DBContext GetDB()
         {
             return _db;
+        }
+
+        public async Task<string?> ZmenitHeslo(string heslo, string hesloZnova)
+        {
+            string errString = "";
+            {
+                var viewModel = new AddPouzivatelViewModel(null, null)      //dalej postup na kontrolu hesiel, beriem si instanciu z AddPouzivatelViewModel kde to otestujem programovo, pomoc od AI
+                {
+                    Heslo = heslo,
+                    HesloRovnake = hesloZnova
+                };
+
+                var validationResults = new List<ValidationResult>();
+                var validationContext = new ValidationContext(viewModel);
+
+                bool isValid = Validator.TryValidateObject(viewModel, validationContext, validationResults, true);
+
+                if (!isValid)
+                {
+
+                    foreach (var validationResult in validationResults)
+                    {
+                        if (validationResult.MemberNames.Contains("Heslo") || validationResult.MemberNames.Contains("HesloRovnake"))     //kontrolujeme len hesla, kedze ostatne fieldy budu davat errory
+                            errString += validationResult.ErrorMessage + "<br>";
+                    }
+
+                }
+            }
+            if (string.IsNullOrEmpty(errString))    //ak sme nedostali ziadne error spr·vy tak nemenim text v modali, ukladame usera
+            {
+                if (string.IsNullOrEmpty(User.UserName))
+                {
+                    errString += "username neni priradenÈ.";
+                    return errString;
+                }
+                if (!await _userService.ChangePassword(User.Id, heslo, User.UserName))
+                {
+                    errString += "Nepodarilo sa zmeniù heslo.";
+                }
+
+                await _db.Entry(User).ReloadAsync();
+            }
+
+            return errString;
         }
 
     }

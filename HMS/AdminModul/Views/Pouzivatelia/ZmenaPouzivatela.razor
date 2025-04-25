@@ -10,6 +10,12 @@
                FuncOnSucc="EventCallback.Empty"
                Inputs="@(new List<(string, string)>() { ("UserName", "string"), ("Heslo", "string"), ("Heslo znova", "string")})">
 </FastFormModal>
+<FastFormModal @ref="zmheslamod"
+               ID="zmheslamod"
+               Header="Zmena hesla"
+               FuncOnSucc="EventCallback.Empty"
+               Inputs="@(new List<(string, string)>() { ("Nové heslo", "string"), ("Nové heslo znova", "string")})">
+</FastFormModal>
 <InfoModal @ref="InfoModPouzivatelAns" ID="infopouzans"
            Text="" />
 <InfoModal @ref="InfoModSaved" ID="infosaved"
@@ -36,7 +42,14 @@
                     <div class="col col-6">
                         <label class="col-form-label">UserName</label>
                         <input type="text" value="@ViewModel.UserName" class="form-control mb-2" disabled="disabled" />
-                        <button type="button" class="btn btn-primary" disabled="@(!string.IsNullOrEmpty(ViewModel.UserName))" @onclick="PromoteToPouzivatel">Vytvoriť použivateľa</button>
+                        @if (string.IsNullOrEmpty(ViewModel.UserName))
+                        {
+                            <button type="button" class="btn btn-primary" @onclick="PromoteToPouzivatel">Vytvoriť použivateľa</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-primary" @onclick="ZmenaHesla">Zmeniť heslo</button>
+                        }
                     </div>
                 </div>
             </div>
@@ -187,6 +200,7 @@
 @code {
 
     private FastFormModal ffucModal = new();
+    private FastFormModal zmheslamod;
     private InfoModal InfoModPouzivatelAns = new();
     private InfoModal InfoModSaved = new();
 
@@ -265,6 +279,21 @@
         {
             ViewModel.CheckLock = hodnota;
             StateHasChanged();
+        }
+    }
+
+    private async Task ZmenaHesla()
+    {
+        if (await zmheslamod.OpenModal(true))
+        {
+            var res = await ViewModel.ZmenitHeslo((string)zmheslamod.Outputs[0], (string)zmheslamod.Outputs[1]);
+            if (!string.IsNullOrEmpty(res))
+            {
+                InfoModPouzivatelAns.UpdateText(res);
+                await InfoModPouzivatelAns.OpenModal(true);
+                return;
+            }
+            await InfoModSaved.OpenModal(true);
         }
     }
 

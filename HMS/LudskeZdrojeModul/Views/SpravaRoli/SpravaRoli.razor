@@ -23,7 +23,7 @@
             <div class="btn-group" role="group">
                 <button type="button" class="btn btn-secondary" @onclick="Close"> <IconTextClose></IconTextClose></button>
                 <button @onclick="@(() => { SetStartConditionOnVisit(); Navigator.NavigateTo(Navigator.AddNextUrl("/AddRole")); })" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></button>
-                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null || ViewModel.IsDefaultRole(marked) )" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
             </div>
         </div>
 
@@ -32,7 +32,7 @@
 
     <div class="row">
         <div class="col-1"></div>
-        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 80vh; max-width: 95vw; overflow: auto;">
             <ComplexTable @ref="ViewModel.ComplexTable"
                           ID="complextable"
                           T="Microsoft.AspNetCore.Identity.IdentityRole"

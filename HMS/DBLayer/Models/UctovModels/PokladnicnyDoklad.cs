@@ -55,5 +55,9 @@ namespace DBLayer.Models
             return (PokladnicnyDoklad)this.Clone();
         }
 
+        public override string GetDisplayName()
+        {
+            return "Poklad. doklad";
+        }
     }
 }

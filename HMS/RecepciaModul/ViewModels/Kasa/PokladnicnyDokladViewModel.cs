@@ -148,6 +148,7 @@ namespace RecepciaModul.ViewModels
                 }
                 #endregion
             }
+
             //ak existuje zo zakladu, tak sa ignoruje vstup Unicon
         }
 
@@ -265,6 +266,33 @@ namespace RecepciaModul.ViewModels
                 foundedPd.Vznik = DateTime.Now;
                 _db.SaveChanges();
                 _dbw.SaveChanges();
+                #region kontrola priradenia datumu lebo niekedy nefunguje ked sa mnozstva aktualne == odoberanie (ked pred tym sa nezhodovali pocty a aktualizuju sa na dobre, tak vtedy nastavuje null.)
+                foreach (var item in ZoznamPoloziek)
+                {
+                    if (item.UniConItemPoklDokladuX is PolozkaSkladuConItemPoklDokladu)
+                    {
+                        var founchknull = _db.ItemyPokladDokladu
+                            .FirstOrDefault(x => x.ID == item.ID);
+                        if (founchknull == null)
+                        {
+                            throw new Exception("pokladnicny item sa nenasiel pri predaji.");
+                        }
+                        if (founchknull.Obdobie == null)
+                        {
+                            var fndd = _db.PolozkySkladuConItemPoklDokladu
+                                .Include(x => x.PolozkaSkladuMnozstvaX)
+                                .ThenInclude(x => x.SkladX)
+                                .FirstOrDefault(x => x.ID == founchknull.UniConItemPoklDokladu);
+                            if (fndd == null)
+                            {
+                                throw new Exception("PolozkySkladuConItemPoklDokladu sa nenasiel pri predaji.");
+                            }
+                            founchknull.Obdobie = SkladObdobie.GetActualObdobieFromSklad(fndd.PolozkaSkladuMnozstvaX.SkladX, in _db);
+                            _db.SaveChanges();
+                        }
+                    }
+                }
+                #endregion
                 if (asComponent)
                 {
                     await _sessionStorage.SetItemAsync("PDSold", true);
@@ -343,5 +371,9 @@ namespace RecepciaModul.ViewModels
             return ZoznamPoloziek.Sum(x => x.CelkovaCenaDPH);
         }
 
+        public bool Mapolozky()
+        {
+            return ZoznamPoloziek.Count != 0;
+        }
     }
 }

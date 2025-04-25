@@ -41,7 +41,7 @@
 
     <div class="row">
         <div class="col-1"></div>
-        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 80vh; max-width: 95vw; overflow: auto; ">
             <ComplexTable @ref="ViewModel.ComplexTable"
                           ID="complextable"
                           T="DBLayer.Models.UniConItemPoklDokladu"
@@ -67,7 +67,7 @@
     private ItemFinderTable<string> ifttype = new();
 
     List<TableColumnTemplate<DBLayer.Models.UniConItemPoklDokladu>> tableSettings = new()
-    {
+{
         new () { ID_Prop = nameof(DBLayer.Models.UniConItemPoklDokladu.ID), HeaderValue = "ID spojenia", CellValue = (item) => item.ID.ToString() },
         new () { ID_Prop = "getid", HeaderValue = "ID", CellValue = (item) => item.GetID(), CellConvert = ((item) => item.GetID(), typeof(string)) },
         new () { ID_Prop = "gettypeuni", HeaderValue = "Typ", CellValue = (item) => item.GetTypeUni(), CellConvert = ((item) => item.GetTypeUni(), typeof(string)), Visible = false },
@@ -79,7 +79,8 @@
     {
         tableSettings.Insert(4, new() { ID_Prop = "tableheader", HeaderValue = ViewModel.GetHeaderTable(), CellValue = (item) => ViewModel.GetValTable(item), CellConvert = ((item) => ViewModel.GetValTable(item), typeof(string)) });
 
-        if (ViewModel.ValidateUserCRUD()) {
+        if (ViewModel.ValidateUserCRUD())
+        {
             tableSettings.Add(new()
             {
                 Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))), new RenderFragmentAttribute("TooltipMessage", "Nemožno vymazať túto položku, lebo je spojená s dokladom."))
@@ -103,6 +104,20 @@
             return;
         }
         await ViewModel.NacitajZoznamy();
+    }
+
+    protected override void OnAfterRenderTransient(bool firstRender)
+    {
+        if (firstRender)
+        {
+            //var tabc = ViewModel.ComplexTable?.TableSettings?.FirstOrDefault(x => x.ID_Prop == "tableheader");
+            var tabc = tableSettings.FirstOrDefault(x => x.ID_Prop == "tableheader");
+            if (tabc != null)
+            {
+                tabc.HeaderValue = ViewModel.GetHeaderTable();
+                StateHasChanged();
+            }
+        }
     }
 
     public void Close()
@@ -148,6 +163,7 @@
         if (await ifttype.OpenModal(true))
         {
             await ViewModel.SpravujZmenuTypu(ifttype.OutSelection.FirstOrDefault());
+            ViewModel.ComplexTable.SetMarkedNull();
             ViewModel.ComplexTable.TableSettings.FirstOrDefault(x => x.ID_Prop == "tableheader").HeaderValue = ViewModel.GetHeaderTable();
         }
     }

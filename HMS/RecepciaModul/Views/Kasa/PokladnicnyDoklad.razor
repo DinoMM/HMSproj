@@ -79,7 +79,7 @@
 
     <div class="container maxwidth95">
 
-        <div class="row g-3 p-3">
+        <div class="row">
 
             <div class="d-flex justify-content-between">
                 <button type="button" class="btn btn-secondary">Pokladňa: @(ViewModel.AktKasa?.ID ?? "-")</button>
@@ -87,126 +87,141 @@
                 <div></div>
 
             </div>
-            <div class="col">
+            <div class="row">
+                <div class="col-md-5 col-12 autooverflowx" style="max-height: 68vh">
 
-                <div class="row">
-                    <div class="col col-8">
-                        <label>ID</label>
-                        <input type="text" value="@ViewModel.PoklDokladInput.ID" disabled class="form-control" />
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col col-8">
-                        <label>Kasa</label>
-                        <input type="text" value="@ViewModel.PoklDokladInput.Kasa" disabled class="form-control" />
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-8">
-                        <label>Typ Platby</label>
-                        <InputSelect @bind-Value="@ViewModel.PoklDokladInput.TypPlatby" disabled="@ReadOnly" class="form-select">
-                            <option value="false">Platobná karta</option>
-                            <option value="true">Hotovosť</option>
-                        </InputSelect>
-                        <ValidationMessage For="@(() => ViewModel.PoklDokladInput.TypPlatby)" />
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col col-8">
-                        <label>Vznik</label>
-                        <input type="datetime" value="@ViewModel.PoklDokladInput.Vznik" disabled class="form-control" />
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col col-5 ">
-                        <label class="me-2">Zaplatený:</label>
-                        <SimpleCheckMark Size="3" Checked="ViewModel.PoklDokladInput.Spracovana"></SimpleCheckMark>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col col-4">
-                        <label>Celková&nbsp;suma</label>
-                        <input type="text" value="@ViewModel.GetSum().ToString("F2")" disabled class="form-control" />
-                    </div>
-                    @if (ViewModel.PoklDokladInput.TypPlatby)
-                    {
-                        <div class="col col-4">
-                            <label>Vložená&nbsp;hotovosť</label>
-                            <input type="number" step="0.01" @bind-value="ViewModel.PlatbaOdHostaInput" @bind-value:event="oninput" class="form-control" />
+                    <div class="row">
+                        <div class="col col-12">
+                            <label>ID</label>
+                            <input type="text" value="@ViewModel.PoklDokladInput.ID" disabled class="form-control" />
                         </div>
-                        <div class="col col-4">
-                            <label>Zostatok</label>
-                            <input type="text" value="@((ViewModel.GetSum() - ViewModel.PlatbaOdHostaInput).ToString("F2"))" disabled class="form-control @((ViewModel.GetSum() - ViewModel.PlatbaOdHostaInput) > 0 ? "text-danger" : "text-success")" />
+                    </div>
+                    <div class="row">
+                        <div class="col col-12">
+                            <label>Kasa</label>
+                            <input type="text" value="@ViewModel.PoklDokladInput.Kasa" disabled class="form-control" />
                         </div>
-                    }
-                </div>
-                <div class="row">
-                    <div class="col col-8">
-                        <label>Hosť</label>
-                        <input type="text" value="@ViewModel.PoklDokladInput.GetMenoHosta" disabled class="form-control" />
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col col-8">
-                        <label>Poznámka</label>
-                        <InputTextArea @bind-Value="@ViewModel.PoklDokladInput.Poznamka" disabled="@ReadOnly" class="form-control" placeholder="Poznámka k dokladu.." />
-                        <ValidationMessage For="@(() => ViewModel.PoklDokladInput.Poznamka)" />
+
+                    <div class="row">
+                        <div class="col-12">
+                            <label>Typ Platby</label>
+                            <InputSelect @bind-Value="@ViewModel.PoklDokladInput.TypPlatby" disabled="@ReadOnly" class="form-select">
+                                <option value="false">Platobná karta</option>
+                                <option value="true">Hotovosť</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => ViewModel.PoklDokladInput.TypPlatby)" />
+                        </div>
                     </div>
-                </div>
-
-
-            </div>
-
-
-
-
-            <div class="vr p-0"></div>
-            <div class="col">
-                <h2 class="text-center">Položky</h2>
-                <div class="w-50 d-flex">
-                    <SearchInput ID="@(ID + "searchitems")" PlaceHolder="Vyhľadaj položku.." TableID="@(ID + "tableitems")" NumCols="4"></SearchInput>
-                    <div class="ms-2">
-                        <ButtonAdd OnClick="AddItem" Disabled="@(ReadOnly || OnlyOneItem || !ViewModel.ValidateUserCRU() || !ViewModel.Existuje())"></ButtonAdd>
+                    <div class="row">
+                        <div class="col col-12">
+                            <label>Vznik</label>
+                            <input type="datetime" value="@ViewModel.PoklDokladInput.Vznik" disabled class="form-control" />
+                        </div>
                     </div>
+                    <div class="row">
+                        <div class="col col-12 ">
+                            <label class="me-2">Zaplatený:</label>
+                            <SimpleCheckMark Size="3" Checked="ViewModel.PoklDokladInput.Spracovana"></SimpleCheckMark>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-md-4 col-12">
+                            <label>Celková&nbsp;suma</label>
+                            <input type="text" value="@ViewModel.GetSum().ToString("F2")" disabled class="form-control" />
+                        </div>
+                        @if (ViewModel.PoklDokladInput.TypPlatby)
+                        {
+                            <div class="col col-md-4 col-12">
+                                <label>Vložená&nbsp;hotovosť</label>
+                                <input type="number" step="0.01" @bind-value="ViewModel.PlatbaOdHostaInput" @bind-value:event="oninput" class="form-control" />
+                            </div>
+                            <div class="col col-md-4 col-12">
+                                <label>Zostatok</label>
+                                <input type="text" value="@((ViewModel.GetSum() - ViewModel.PlatbaOdHostaInput).ToString("F2"))" disabled class="form-control @((ViewModel.GetSum() - ViewModel.PlatbaOdHostaInput) > 0 ? "text-danger" : "text-success")" />
+                            </div>
+                        }
+                    </div>
+                    <div class="row">
+                        <div class="col col-12">
+                            <label>Hosť</label>
+                            <input type="text" value="@ViewModel.PoklDokladInput.GetMenoHosta" disabled class="form-control" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col col-12">
+                            <label>Poznámka</label>
+                            <InputTextArea @bind-Value="@ViewModel.PoklDokladInput.Poznamka" disabled="@ReadOnly" class="form-control" placeholder="Poznámka k dokladu.." />
+                            <ValidationMessage For="@(() => ViewModel.PoklDokladInput.Poznamka)" />
+                        </div>
+                    </div>
+
+
                 </div>
-                <div class="col-12 mt-2" style="max-height: 30rem;overflow: auto;">
-                    <SimpleTable ID="@(ID + "tableitems")">
-                        <THEAD>
 
 
-                            <ThSort>Názov</ThSort>
-                            <ThSort>Množstvo</ThSort>
-                            <ThSort>Cena</ThSort>
-                            <ThSort>DPH</ThSort>
-                            <ThSort>Cena&nbsp;DPH</ThSort>
-                            <ThSort>Celková&nbsp;suma</ThSort>
-                            <ThSort>Celková&nbsp;suma&nbsp;DPH</ThSort>
-                        <th></th>
 
-                        </THEAD>
-                        <TBODY>
 
-                            @foreach (var item in ViewModel.ZoznamPoloziek)
-                            {
-                                <tr @ondblclick="() =>OpenItem(item)" @onclick="() => marked = item" class="@(marked == item ? "selected-row" : "")" style="cursor: pointer;">
-                                    <td class="col-resize">@item.Nazov</td>
-                                    <td class="col-resize">@item.Mnozstvo.ToString("F3")</td>
-                                    <td class="col-resize">@item.Cena.ToString("F3")</td>
-                                    <td class="col-resize">@item.DPH.ToString("F3")</td>
-                                    <td class="col-resize">@item.CenaDPH.ToString("F3")</td>
-                                    <td class="col-resize">@item.CelkovaCena.ToString("F3")</td>
-                                    <td class="col-resize">@item.CelkovaCenaDPH.ToString("F3")</td>
-                                    <td>
-                                        <ButtonRemove Disabled="@(!ViewModel.ValidateUserD() || ReadOnly || OnlyOneItem)" OnClick="@(() => DeleteItem(item))">
-                                        </ButtonRemove>
-                                    </td>
-                                </tr>
-                            }
-                        </TBODY>
-                    </SimpleTable>
+                <div class="vr d-none d-md-block p-0"></div>
+                <div class="col-md-6 col-12">
+                    <div class="row d-md-none">
+                        <div class="col-12">
+                            <hr class="" />
+                        </div>
+                    </div>
+                    <div class="w-50 d-flex">
+                        <SearchInput ID="@(ID + "searchitems")" PlaceHolder="Vyhľadaj položku.." TableID="@(ID + "tableitems")" NumCols="4"></SearchInput>
+                        <div class="ms-2">
+                            <ButtonAdd OnClick="AddItem" Disabled="@(ReadOnly || OnlyOneItem || !ViewModel.ValidateUserCRU() || !ViewModel.Existuje())"></ButtonAdd>
+                        </div>
+                    </div>
+                    <div class="autooverflowx" style="max-height: 68vh; max-width: 80vw; overflow: auto;">
+                        <SimpleTable ID="@(ID + "tableitems")">
+                            <THEAD>
+
+
+                                <ThSort>Názov</ThSort>
+                                <ThSort>Množstvo</ThSort>
+                                <ThSort>Cena</ThSort>
+                                <ThSort>DPH</ThSort>
+                                <ThSort>Cena&nbsp;DPH</ThSort>
+                                <ThSort>Celková&nbsp;suma</ThSort>
+                                <ThSort>Celková&nbsp;suma&nbsp;DPH</ThSort>
+                            <th></th>
+
+                            </THEAD>
+                            <TBODY>
+
+                                @foreach (var item in ViewModel.ZoznamPoloziek)
+                                {
+                                    <tr @ondblclick="() =>OpenItem(item)" @onclick="() => marked = item" class="@(marked == item ? "selected-row" : "")" style="cursor: pointer;">
+                                        <td class="col-resize">
+                                            @if ((item.Nazov?.Length ?? 0) <= 40) //pri texte nad 40 znakov sa zmeni zobrazenie na textareu
+                                            {
+                                                @item.Nazov
+                                            }
+                                            else
+                                            {
+                                                <BasicArea Disabled="true" Value="@item.Nazov" ClassInput="resize-none" Style="@("min-width:7vw")"></BasicArea>
+                                            }
+                                        </td>
+                                        <td class="col-resize">@item.Mnozstvo.ToString("F3")</td>
+                                        <td class="col-resize">@item.Cena.ToString("F3")</td>
+                                        <td class="col-resize">@item.DPH.ToString("F3")</td>
+                                        <td class="col-resize">@item.CenaDPH.ToString("F3")</td>
+                                        <td class="col-resize">@item.CelkovaCena.ToString("F3")</td>
+                                        <td class="col-resize">@item.CelkovaCenaDPH.ToString("F3")</td>
+                                        <td>
+                                            <ButtonRemove Disabled="@(!ViewModel.ValidateUserD() || ReadOnly || OnlyOneItem)" OnClick="@(() => DeleteItem(item))">
+                                            </ButtonRemove>
+                                        </td>
+                                    </tr>
+                                }
+                            </TBODY>
+                        </SimpleTable>
+                    </div>
+
                 </div>
-
             </div>
 
         </div>
@@ -221,7 +236,7 @@
                         <button type="button" @onclick="Close" class="btn btn-secondary "><IconTextClose></IconTextClose></button>
                     }
                     <SimpleButton ID="ulozbuttonid" Type="submit" disabled="@ReadOnly" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
-                    <SimpleButton ID="zaplatbuttnid" Type="button" disabled="@(ReadOnly || !ViewModel.Existuje() || !ViewModel.JeNastavenaKasa())" OnClick="Buy" ZmenaStavuTextu="ViewModel.JeNastavenaKasa()" ZmenaTextu="@(("Zaplatiť", "Nastavte kasu"))"></SimpleButton>
+                    <SimpleButton ID="zaplatbuttnid" Type="button" disabled="@(ReadOnly || !ViewModel.Existuje() || !ViewModel.JeNastavenaKasa() || !ViewModel.Mapolozky())" OnClick="Buy" ZmenaStavuTextu="ViewModel.JeNastavenaKasa()" ZmenaTextu="@(("Zaplatiť", "Nastavte kasu"))"></SimpleButton>
                     <button type="button" disabled="@(ViewModel.PDFLoading || !ViewModel.Existuje() || !ViewModel.PoklDokladInput.Spracovana)" class="btn btn-info" @onclick="() => ViewModel.CreatePdf()">
                         <i class="bi bi-filetype-pdf"></i>
                         @if (ViewModel.PDFLoading)
@@ -326,6 +341,11 @@
                 StateHasChanged();
                 return;
             }
+
+        }
+        if (ViewModel.PoklDokladInput.Spracovana)
+        {
+            ReadOnly = true;
         }
     }
 
@@ -368,7 +388,7 @@
     {
         if (await approvmod.OpenModal(true))
         {
-            var result = await ViewModel.Predat();
+            var result = await ViewModel.Predat(AsComponent);
             if (result == System.ComponentModel.DataAnnotations.ValidationResult.Success)
             {
                 infomodal.UpdateText("Doklad bol zaplatený");

@@ -49,7 +49,7 @@ namespace UniComponents
 
             foreach (var property in typeof(T).GetProperties(BindingFlags.Public | BindingFlags.Instance))
             {
-                if (property.CanRead && property.CanWrite)
+                if (property.CanRead && property.CanWrite /*&& !(property.Name == "Skupina" || property.Name == "SkupinaX")*/)
                 {
                     var value = property.GetValue(source);
                     property.SetValue(target, value);

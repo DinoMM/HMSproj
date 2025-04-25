@@ -33,8 +33,13 @@
             </div>
             <div class="col">
                 <label>Merná jednotka</label>
-                <input type="text" @bind-value=@ViewModel.Polozka.MernaJednotka @bind-value:event="oninput" @onchange="() => ViewModel.Saved = false" class="form-control w-75" placeholder="Zatajte mernú jednotku">
+                <input type="text" @bind-value=@ViewModel.Polozka.MernaJednotka @bind-value:event="oninput" @onchange="() => ViewModel.Saved = false" class="form-control w-75" placeholder="Zadajte mernú jednotku">
                 <ValidationMessage For="@(() => ViewModel.Polozka.MernaJednotka)" />
+            </div>
+            <div class="col">
+                <label>DPH</label>
+                <input type="number" @bind-value=@ViewModel.Polozka.DPH_mask @bind-value:event="oninput" @onchange="() => ViewModel.Saved = false" class="form-control w-75" placeholder="Zadajte predlohu DPH" step="0.001">
+                <ValidationMessage For="@(() => ViewModel.Polozka.DPH_mask)" />
             </div>
 
         </div>
@@ -69,7 +74,18 @@
                 <div class="list-group w-75" style="height: 8rem; overflow-y: auto">
                     @foreach (var item in ViewModel.ZoznamSkladov)
                     {
-                        <a @onclick="@(() => { ViewModel.VyberSklad(item); ViewModel.Saved = false; })" class="list-group-item list-group-item-action @(ViewModel.ZoznamOnacenych.Contains(item) ? "active" : "")" style="cursor:pointer">@item.ID - @item.Nazov</a>
+                        var moznvym = ViewModel.MoznoZmenitActive.First(x => x.Sklad.ID == item.ID);
+                        
+                            <div class="list-group-item d-flex justify-content-between align-items-center @(ViewModel.ZoznamOnacenych.Contains(item) ? "active " : "") " style="cursor:pointer">
+                                <span class="w-100 @(!moznvym.MoznoZmenit ? "disabled" : "")" @onclick="@(() => { ViewModel.VyberSklad(item); if(moznvym.MoznoZmenit)ViewModel.Saved = false; })">
+                                    @item.ID - @item.Nazov
+                                </span>
+                                <Tooltip ID="@(item.ID + "chcksettoolp")" Text="Určuje zobrazenie tejto položky pri vyhľadávaniach" Position="bottom">
+                                    <input class="form-check-input" style="background-color: gray;" @onclick="() => { ViewModel.Saved = false; }" type="checkbox" @bind="@moznvym.Active" />
+                                </Tooltip>
+                            </div>
+                        
+
                     }
 
                 </div>

@@ -51,8 +51,8 @@
                 {
                     <button type="button" class="btn btn-warning" data-bs-dismiss="modal" @onclick="EmptyInstance">Vyčistiť</button>
                 }
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" disabled="@(OutSelection.Count == 0)" @onclick="CloseSucc">Vyber</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zruš</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" disabled="@(OutSelection.Count == 0)" @onclick="CloseSucc">Vybrať</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @onclick=@(() => CloseModal(false))>Zrušiť</button>
             </div>
         </div>
     </div>

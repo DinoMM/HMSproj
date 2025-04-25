@@ -1,0 +1,169 @@
+﻿@namespace UctovnyModul
+@page "/Faktury"
+@inherits TransientHoldedComp<FakturyViewModel>
+
+<ApproveModal @ref=AprovMod ID="deletemodal"
+              Text="Naozaj chcete odstrániť tento riadok?<br>POZOR môžu sa vymazať prvky, ktoré sú spojené s touto položkou!"
+              FuncOnSucc="EventCallback.Empty"
+              FuncOnDiss="EventCallback.Empty">
+</ApproveModal>
+
+
+<div class="container maxwidth95">
+    
+    <div class="row pb-1">
+
+        <div class="col-3 d-flex justify-content-bottom mb-2">
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj faktúru..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
+        </div>
+
+        <div class="col-9 autooverflowx">
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRU())" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></button>
+                <button type="button" @onclick="(() => Open(marked))" disabled="@(marked == null || !ViewModel.ValidateUserCRU())" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                
+            </div>
+        </div>
+
+        <div class="col-1"></div>
+    </div>
+
+    <div class="row">
+        @*<div class="col-1"></div>*@
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 80vh; overflow: auto;">
+            <ComplexTable @ref="ViewModel.ComplexTable"
+                          ID="complextable"
+                          T="DBLayer.Models.Faktura"
+                          Items="ViewModel.ZoznamPoloziek"
+                          LoadingItems="ViewModel.Nacitavanie"
+                          Sticky="true"
+                          Selectable="true"
+                          ParentStateHasChanged="StateHasChanged"
+                          OnRefresh="ViewModel.NacitajZoznamy"
+                          OnDbClick="@((item) => Open(item))"
+                          CollectionChanged="ViewModel.OnCollectionChanged"
+                          SetTableSettings="@((true, tableSettings, null))">
+                <AdditionToolbar>
+                    @*<button id="openpdf" type="button" class="btn btn-outline-dark p-1 border-0 border-start border-end"
+                                data-bs-toggle="tooltip"
+                                data-bs-placement="bottom"
+                                data-bs-title="Otvoriť vybranú objednávku ako PDF"
+                                disabled="@(!IsChecked() || ViewModel.PdfLoading)"
+                                @onclick="@GeneratePDF">
+                            <IconText Icon="bi-filetype-pdf"></IconText>
+                            @if (ViewModel.PdfLoading)
+                            {
+                                <SpinnerLoading ExtraSmall="false" />
+                            }
+                        </button>*@
+                </AdditionToolbar>
+            </ComplexTable>
+        </div>
+        <div class="col-1"></div>
+    </div>
+
+    <div class="row">
+        <div class="col-12"></div>
+    </div>
+
+</div>
+
+
+
+@code {
+    private DBLayer.Models.Faktura? marked { get => ViewModel?.ComplexTable?.Marked; }
+    private ApproveModal AprovMod = new();
+    private InfoModal InfoModHasConneciton = new();
+
+    List<TableColumnTemplate<DBLayer.Models.Faktura>> tableSettings = new()
+{
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.ID), HeaderValue = "ID", CellValue = (item) => item.ID },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.Skupina), HeaderValue = "Doklad", CellValue = (item) => item.Skupina ?? "" },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.Vystavenie), HeaderValue = "Vystavenie", CellValue = (item) => item.Vystavenie.ToString("dd.MM.yyyy HH:mm") },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.Dodanie), HeaderValue = "Dodanie", CellValue = (item) => item.Dodanie.ToString("dd.MM.yyyy"), Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.Splatnost), HeaderValue = "Splatnosť", CellValue = (item) => item.Splatnost.ToString("dd.MM.yyyy") },
+
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.OdKoho), HeaderValue = "Dodávatel", CellValue = (item) => item.OdKoho, Visible = false },
+        new () { ID_Prop = "nazovdod", HeaderValue = "Názov Dodávatela", CellValue = (item) => item.OdKohoX.Nazov, CellConvert = ((item) => item.OdKohoX.Nazov, typeof(string)) },
+
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.Spracovana), HeaderValue = "Stav", CellComponent = (item) => SimpleCheckMarkNull.GetRenderComponent<DBLayer.Models.Faktura>(item.Spracovana == null ? false : item.Spracovana == false ? null : true, "scmn", ("Stornovaná", "Spracovaná", "Nespracovaná")), CellConvert = ((item) => item.Spracovana == null ? false : item.Spracovana == false ? null : true, typeof(bool)) },
+
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.CenaBezDPH), HeaderValue = "Suma", CellValue = (item) => Math.Round(item.CenaBezDPH, 2).ToString("F2"), CellConvert = ((item) => Math.Round(item.CenaBezDPH, 2), typeof(decimal)) },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.CenaSDPH), HeaderValue = "Suma s DPH", CellValue = (item) => Math.Round(item.CenaSDPH, 2).ToString("F2"), CellConvert = ((item) => Math.Round(item.CenaSDPH, 2), typeof(decimal)) },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.DPH), HeaderValue = "DPH", CellValue = (item) => Math.Round(item.DPH, 2).ToString("F2"), CellConvert = ((item) => Math.Round(item.DPH, 2), typeof(decimal)), Visible = false },
+
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.ICO), HeaderValue = "Odberateľ", CellValue = (item) => item.ICO, Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.Nazov), HeaderValue = "Názov Odberateľa", CellValue = (item) => item.Nazov },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.DIC), HeaderValue = "Odberateľ DIČ", CellValue = (item) => item.DIC, Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.IC_DPH), HeaderValue = "Odberateľ IČ_DPH", CellValue = (item) => item.IC_DPH, Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.Adresa), HeaderValue = "Odberateľ Adresa", CellValue = (item) => item.Adresa, Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.Email), HeaderValue = "Odberateľ Email", CellValue = (item) => item.Email, Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.Telefon), HeaderValue = "Odberateľ Telefón", CellValue = (item) => item.Telefon, Visible = false },
+
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.FormaUhrady), HeaderValue = "Úhrada", CellValue = (item) => item.FormaUhrady.GetDisplayName(), SelectionList = EnumExtensions.GetDisplayNames<DBLayer.Models.FormaUhrady>(), Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.IBAN), HeaderValue = "IBAN", CellValue = (item) => item.IBAN, Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.VariabilnySymbol), HeaderValue = "Var_Symbol", CellValue = (item) => item.VariabilnySymbol, Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.KonstantnySymbol), HeaderValue = "Konst_Symbol", CellValue = (item) => item.KonstantnySymbol, Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.SpecifickySymbol), HeaderValue = "Spec_Symbol", CellValue = (item) => item.SpecifickySymbol, Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.Faktura.CisloObjednavky), HeaderValue = "Externá objednavka", CellValue = (item) => item.CisloObjednavky, Visible = false },
+    };
+
+    protected override void OnInitializedMustHave()
+    {
+        if (!ViewModel.ValidateUser())
+        {
+            Navigator.NavigateTo(Navigator.RemoveLastUrl());
+            return;
+        }
+
+        if (ViewModel.ValidateUserCRU())
+        {
+            tableSettings.Add(new()
+            {
+                Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))))
+            });
+        }
+    }
+
+    protected override async Task OnInitializedTransientAsync()
+    {
+        await ViewModel.NacitajZoznamy();
+    }
+
+    public void Close()
+    {
+        Navigator.NavigateTo(Navigator.RemoveLastUrl());
+    }
+
+    public void Create()
+    {
+        if (ViewModel.ValidateUserCRU())
+        {
+            SetStartConditionOnVisit();
+            Navigator.NavigateTo(Navigator.AddNextUrl("/CRUFaktura"));
+        }
+    }
+
+    private async Task Open(DBLayer.Models.Faktura? item)
+    {
+        if (item != null)
+        {
+            if (ViewModel.ValidateUserCRU())
+            {
+                objectHolder.Add(item);
+                Navigator.NavigateTo(Navigator.AddNextUrl("/CRUFaktura"));
+            }
+        }
+    }
+
+    private async Task Delete(DBLayer.Models.Faktura item)
+    {
+        if (await AprovMod.OpenModal(true))
+        {
+            ViewModel.Vymazat(item);
+            StateHasChanged();
+        }
+    }
+
+}

@@ -1,0 +1,33 @@
+﻿@namespace UniComponents
+@switch (ZmenaStavuTextu ? ZmenaTextu.Item1 : ZmenaTextu.Item2)
+{
+    case "Uložiť":
+        <IconTextSave></IconTextSave>
+        break;
+    case "Vytvoriť":
+        <IconTextCreate></IconTextCreate>
+        break;
+    case "Otvoriť":
+        <IconTextOpen></IconTextOpen>
+        break;
+    case "Vymazať":
+        <IconTextDelete></IconTextDelete>
+        break;
+    default:
+        @(ZmenaStavuTextu ? ZmenaTextu.Item1: ZmenaTextu.Item2)
+        break;
+}
+
+@code {
+    /// <summary>
+    /// Zmenenie textu tlačidla, Default false
+    /// </summary>
+    [Parameter]
+    public bool ZmenaStavuTextu { get; set; } = false;
+
+    /// <summary>
+    /// Možnosti textu tlačidla, Default ("Uložiť", "Vytvoriť") - true, false
+    /// </summary>
+    [Parameter]
+    public (string, string) ZmenaTextu { get; set; } = ("Uložiť", "Vytvoriť");
+}

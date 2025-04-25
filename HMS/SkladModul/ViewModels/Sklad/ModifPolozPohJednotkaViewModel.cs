@@ -84,14 +84,16 @@ namespace SkladModul.ViewModels.Sklad
             {
                 ZoznamPoloziek.AddRange(_db.PolozkaSkladuMnozstva
                     .Include(x => x.PolozkaSkladuX)
-                .Where(x => x.Sklad == ((Pprijemka)PohSkupina).Sklad)
+                .Where(x => x.Active && x.Sklad == ((Pprijemka)PohSkupina).Sklad)
                 .Select(x => x.PolozkaSkladuX)
+                .OrderBy(x => x.Nazov)
                 .ToList());
             }
             else
             {
-                var zoz = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
-                .Where(x => x.Sklad == ((Vvydajka)PohSkupina).Sklad)
+                var zoz = _db.PolozkaSkladuMnozstva
+                    .Include(x => x.PolozkaSkladuX)
+                .Where(x => x.Active && x.Sklad == ((Vvydajka)PohSkupina).Sklad)
                 .ToList();
                 zoz.ForEach(x =>
                 {
@@ -100,7 +102,7 @@ namespace SkladModul.ViewModels.Sklad
                 });
                 ZoznamPoloziek.AddRange(zoz.Select(x => x.PolozkaSkladuX));
             }
-            ZoznamPoloziek = ZoznamPoloziek.DistinctBy(x => x.ID).OrderBy(x => x.ID).ToList();
+            ZoznamPoloziek = ZoznamPoloziek.DistinctBy(x => x.ID).OrderBy(x => x.Nazov).ToList();
 
             //var zoznamPrijateho = Ssklad.GetPoctyZPrijemok(sklad, Obdobie, in _db);
             //Ssklad.LoadMnozstvoPoloziek(ZoznamPoloziek, sklad, in _db);
@@ -115,14 +117,16 @@ namespace SkladModul.ViewModels.Sklad
                 if (TypeOfPohSkupina == typeof(Pprijemka))
                 {
                     najd = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
-                       .FirstOrDefault(x => x.PolozkaSkladu == (string)param.Value &&
-                       x.Sklad == ((Pprijemka)PohSkupina).Sklad);
+                       .FirstOrDefault(x => x.Active && x.PolozkaSkladu == (string)param.Value &&
+                       x.Sklad == ((Pprijemka)PohSkupina).Sklad
+                       );
                 }
                 else //vydajka
                 {
                     najd = _db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
-                       .FirstOrDefault(x => x.PolozkaSkladu == (string)param.Value &&
-                       x.Sklad == ((Vvydajka)PohSkupina).Sklad);
+                       .FirstOrDefault(x => x.Active && x.PolozkaSkladu == (string)param.Value &&
+                       x.Sklad == ((Vvydajka)PohSkupina).Sklad
+                       );
                 }
 
                 if (najd == null) // ak sa neneasla polozka
@@ -133,12 +137,17 @@ namespace SkladModul.ViewModels.Sklad
                 }
 
                 najd = najd.Clon(); //klonovanie aby sa nezmenila hodnota ceny v databaze
+                najd.PolozkaSkladuX.SetDPHFromMask();
 
                 if (TypeOfPohSkupina == typeof(Vvydajka))
                 {
                     if (!string.IsNullOrEmpty(((Vvydajka)PohSkupina).SkladDo))  //ak je vydajka nastavena ako prevodka, musi to byt platny SkladDo
                     {
-                        if (_db.PolozkaSkladuMnozstva.FirstOrDefault(x => x.Sklad == ((Vvydajka)PohSkupina).SkladDo && x.PolozkaSkladu == najd.PolozkaSkladu) == null)
+                        if (_db.PolozkaSkladuMnozstva.FirstOrDefault(x =>
+                        x.Active &&
+                        x.Sklad == ((Vvydajka)PohSkupina).SkladDo &&
+                        x.PolozkaSkladu == najd.PolozkaSkladu) 
+                            == null)
                         { //ak mozno priradit polozku do zoznamu
                             NovaPoloz = (PohJednotka)Activator.CreateInstance(TypeOfPohJednotka);
                             Uprava = true;
@@ -220,6 +229,11 @@ namespace SkladModul.ViewModels.Sklad
                     item.Mnozstvo = 0;
                     trebaCheck = true;
                 }
+                if (item.DPH < 0)
+                {
+                    item.DPH = 0;
+                    trebaCheck = true;
+                }
             }
             if (TypeOfPohSkupina == typeof(Vvydajka))
             {     //kontrola mnozstva
@@ -248,16 +262,18 @@ namespace SkladModul.ViewModels.Sklad
                 PrijemkaPolozka? poloz;
                 if (TypeOfPohSkupina == typeof(Pprijemka))
                 {
-                    poloz = _db.PrijemkyPolozky.FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
+                    poloz = _db.PrijemkyPolozky.Include(x => x.PolozkaSkladuX).FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
                 }
                 else  //vydajka
                 {
-                    poloz = _db.VydajkyPolozky.FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
+                    poloz = _db.VydajkyPolozky.Include(x => x.PolozkaSkladuX).FirstOrDefault(x => x.ID == item.ID); //ak exituje item v databaze
                 }
                 if (poloz != null) //ak existuje tak ho nahradime, inak len pridáme
                 {
                     PolozkaSkladu doc = ((PrijemkaPolozka)item).PolozkaSkladuX;
                     doc.Mnozstvo = item.Mnozstvo;
+                    doc.Cena = item.Cena;
+                    doc.DPH = item.DPH;
                     poloz.SetZPolozSkladuMnozstva(doc);
                 }
                 else

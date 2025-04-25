@@ -41,7 +41,7 @@
 
     <div class="row">
         <div class="col-1"></div>
-        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 80vh; max-width: 95vw; overflow: auto;">
             <ComplexTable @ref="ViewModel.ComplexTable"
                           ID="complextable"
                           T="DBLayer.Models.Room"
@@ -114,7 +114,7 @@
     {
         if (item != null)
         {
-            objectHolder.Add(item);
+            objectHolder.AddOnlyOne(item);
             await custommodal.OpenModal(async (bool ans) =>
             {
                 StateHasChanged();
@@ -133,10 +133,11 @@
 
     async Task Create()
     {
+        objectHolder.Remove<Room>();        //pre istotu
         await custommodal.OpenModal(async (bool ans) =>
         {
             await ViewModel.ComplexTable.OnRefresh.InvokeAsync();
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
         });
     }
 }

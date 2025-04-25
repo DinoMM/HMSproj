@@ -4,13 +4,38 @@
 @inject ObjectHolder Holder
 
 @using OBJ = DBLayer.Models.Objednavka
+<style>
+    .button-fixed-width {
+        max-width: 120px;
+    }
+</style>
 
 <ApproveModal @ref=AprovMod ID="deletemodal"
               Text="Naozaj chcete odstrániť tento riadok?"
               FuncOnSucc="EventCallback.Empty"
               FuncOnDiss="EventCallback.Empty">
 </ApproveModal>
-
+<ComplexItemFinderTable @ref="iftcpoloz"
+                        ID="iftcpoloz"
+                        T="DBLayer.Models.PolozkaSkladu"
+                        ButtonPosition="true"
+                        Header="Výber položky skladu"
+                        SizeInRem="75"
+                        ParentStateHasChanged="StateHasChanged"
+                        YesNoButtonText="@(("Vybrať", "Zrušiť"))"
+                        SetTableSettings="@((true, polozkytableSettings, null))">
+</ComplexItemFinderTable>
+<ComplexItemFinderTable @ref="iftcobj"
+                        ID="iftcobj"
+                        T="DBLayer.Models.Objednavka"
+                        ButtonPosition="true"
+                        Header="Nájdené objednávky"
+                        SizeInRem="75"
+                        OneButtonOnly="true"
+                        ParentStateHasChanged="StateHasChanged"
+                        Selectable="false"
+                        SetTableSettings="@((true, tableSettings.Take(tableSettings.Count - 1).ToList(), null))">
+</ComplexItemFinderTable>
 <div class="container maxwidth95">
     <div class="row pb-1">
         <div class="col-3 mb-2">
@@ -28,6 +53,8 @@
                     <button class="btn btn-primary noflex" disabled=@(!IsChecked()) @onclick=@(() => OpenOBJ(marked)) type="button">
                         <IconTextOpen></IconTextOpen>
                     </button>
+                    <ButtonBasic ID="findobjbttn" Class="btn btn-primary button-fixed-width" Disabled="ViewModel.Nacitavanie" OnClick="FindObjByItem" Tooltip="@(("bottom", "Vyhľadať objednávky podľa položky"))"><IconText Icon="bi-search">Vyhľadať</IconText></ButtonBasic>
+                    
 
                 </div>
             </div>
@@ -37,7 +64,7 @@
 
     <div class="row">
         @*<div class="col-1"></div>*@
-        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 80vh; max-width: 95vw; overflow: auto; ">
             <ComplexTable @ref="ViewModel.ComplexTable"
                           ID="complextable"
                           T="OBJ"
@@ -51,7 +78,7 @@
                           CollectionChanged="ViewModel.OnCollectionChanged"
                           SetTableSettings="@((true, tableSettings, null))">
                 <AdditionToolbar>
-                    <button id="openpdf" type="button" class="btn btn-outline-dark p-1 border-0 border-start border-end"
+                    <button id="openpdf" type="button" class="btn btn-outline-dark p-1 border-0 border-start border-end widthToolbar"
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
                             data-bs-title="Otvoriť vybranú objednávku ako PDF"
@@ -63,7 +90,7 @@
                             <SpinnerLoading ExtraSmall="false" />
                         }
                     </button>
-                    <button id="copy" type="button" class="btn btn-outline-dark p-1 border-0 border-start border-end"
+                    <button id="copy" type="button" class="btn btn-outline-dark p-1 border-0 border-start border-end widthToolbar"
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
                             data-bs-title="Duplikovať vybranú objednávku ako novú"
@@ -90,6 +117,8 @@
 
     ApproveModal AprovMod = new();
     OBJ? marked { get => ViewModel?.ComplexTable?.Marked; }
+    ComplexItemFinderTable<DBLayer.Models.PolozkaSkladu> iftcpoloz;
+    ComplexItemFinderTable<DBLayer.Models.Objednavka> iftcobj;
 
     List<TableColumnTemplate<OBJ>> tableSettings = new()
 {
@@ -103,11 +132,21 @@
 
     };
 
+    List<TableColumnTemplate<DBLayer.Models.PolozkaSkladu>> polozkytableSettings = new()
+{
+        new () { ID_Prop = nameof(DBLayer.Models.PolozkaSkladu.ID), HeaderValue = "ID", CellValue = (item) => item.ID },
+        new () { ID_Prop = nameof(DBLayer.Models.PolozkaSkladu.Nazov), HeaderValue = "Názov", CellValue = (item) => item.Nazov },
+        new () { ID_Prop = nameof(DBLayer.Models.PolozkaSkladu.MernaJednotka), HeaderValue = "Merná jendotka", CellValue = (item) => item.MernaJednotka },
+        new () { ID_Prop = nameof(DBLayer.Models.PolozkaSkladu.Cena), HeaderValue = "Cena", CellValue = (item) => item.Cena.ToString("F3", System.Globalization.CultureInfo.InvariantCulture)},
+        new () { ID_Prop = nameof(DBLayer.Models.PolozkaSkladu.DPH), HeaderValue = "DPH", CellValue = (item) => item.DPH.ToString(), Visible = false },
+        new () { ID_Prop = nameof(DBLayer.Models.PolozkaSkladu.CenaDPH), HeaderValue = "Cena s DPH", CellValue = (item) => item.CenaDPH.ToString("F3", System.Globalization.CultureInfo.InvariantCulture), Visible = false },
+    };
+
     protected override void OnInitializedMustHave()
     {
         tableSettings.Add(new()
         {
-            Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick",async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))))
+            Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))))
         });
     }
 
@@ -118,7 +157,6 @@
 
     private async Task Delete(OBJ item)
     {
-
         if (await AprovMod.OpenModal(true))
         {
             ViewModel.Vymazat(item);
@@ -147,6 +185,21 @@
         {
             await ViewModel.VytvorPDF(marked);
         }
+    }
+
+    private async Task FindObjByItem()
+    {
+        iftcpoloz.SetItemsFromList(await ViewModel.GetPolozkaItems());
+        await iftcpoloz.OpenModal(async (ans) =>
+        {
+            if (ans)
+            {
+                iftcobj.SetItemsFromList(await ViewModel.GetObjednavkaItems(iftcpoloz.ComplexTable.Marked));
+                await iftcobj.OpenModal(async (ans) => { });
+                StateHasChanged();
+            }
+        });
+
     }
 
 }

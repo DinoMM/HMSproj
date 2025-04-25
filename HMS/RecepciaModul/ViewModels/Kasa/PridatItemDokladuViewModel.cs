@@ -34,7 +34,7 @@ namespace RecepciaModul.ViewModels
 
         public bool Existuje()
         {
-            return ItemPokladDokladuInput.ID != 0;
+            return !string.IsNullOrEmpty(ItemPokladDokladuInput.UniConItemPoklDokladuX?.GetID());
         }
 
         public void SetItem(ItemPokladDokladu item)

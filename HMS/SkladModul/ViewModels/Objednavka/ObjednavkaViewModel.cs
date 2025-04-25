@@ -25,7 +25,7 @@ namespace SkladModul.ViewModels.Objednavka
     public class ObjednavkaViewModel : AObservableViewModel<OBJ>
     {
         private DateTime posledneNacitanyDatum = DateTime.Today;
-
+        private List<PolozkaSkladu> polozkySkladov = new();
         public bool PdfLoading { get; set; } = false;
 
         public bool Loading { get => Nacitavanie; set => Nacitavanie = value; }
@@ -122,7 +122,7 @@ namespace SkladModul.ViewModels.Objednavka
                 var found = _db.Objednavky.FirstOrDefault(x => x.ID == item.ID);    //kontrola existencie
                 if (found != null)
                 {
-                    var zozn = await _db.PolozkySkladuObjednavky    
+                    var zozn = await _db.PolozkySkladuObjednavky
                     .Where(x => x.Objednavka == found.ID)
                     .ToArrayAsync();    //ziska vsetky polozky objednavky
 
@@ -155,6 +155,41 @@ namespace SkladModul.ViewModels.Objednavka
                 }
             });
             Nacitavanie = false;
+        }
+
+        public async Task<List<PolozkaSkladu>> GetPolozkaItems()
+        {
+            if (polozkySkladov.Count == 0)
+            {
+                await Nacitaj(methodAsync: async () =>
+                {
+                    polozkySkladov = await _db.PolozkySkladu
+                    .OrderBy(x => x.ID)
+                    .ToListAsync();
+                });
+            }
+            return polozkySkladov;
+        }
+
+        public async Task<List<OBJ>> GetObjednavkaItems(PolozkaSkladu polozka)
+        {
+            var objednavky = new List<OBJ>();
+            await Nacitaj(methodAsync: async () =>
+                {
+                    objednavky = await _db.PolozkySkladuObjednavky
+                    .Include(x => x.ObjednavkaX)
+                    .ThenInclude(x => x.TvorcaX)
+                    .Include(x => x.ObjednavkaX)
+                    .ThenInclude(x => x.DodavatelX)
+                    .Include(x => x.ObjednavkaX)
+                    .ThenInclude(x => x.OdberatelX)
+                    .Where(x => x.PolozkaSkladu == polozka.ID)
+                    .Select(x => x.ObjednavkaX)
+                    .Distinct()
+                    .OrderByDescending(x => x.ID)
+                    .ToListAsync();
+                });
+            return objednavky;
         }
     }
 }

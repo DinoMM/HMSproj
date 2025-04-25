@@ -7,22 +7,22 @@
     <div class="form-floating overflow-hidden">
         <input id="@ID"
                type="@Type"
-               class="form-control mb-1 border-secondary-subtle @ClassInput @(IsNull() || Disabled ? "rounded-end " : "")"
+               class="form-control mb-1 border-secondary-subtle @ClassInput @(!CanBeNull ||IsNull() || Disabled || CascDisabled ? "rounded-end " : "")"
                value="@GetValue()"
                @oninput="(e) => OnInputChange(e)"
+               @onkeydown="(e) => HandleKeyDown(e)"
                placeholder="."
-               disabled="@(Disabled)"
+               disabled="@(Disabled || CascDisabled)"
                aria-label="."
                aria-describedby="@(ID + "addon")"
                autocomplete="off"
-               step="0.0001"
-               >
+               step="@Step">
         @if (!string.IsNullOrEmpty(Header))
         {
             <label for="@ID" class="text-truncate">@Header</label>
         }
     </div>
-    <button type="button" class="btn btn-outline-secondary mb-1 border-secondary-subtle border-start-0 @(IsNull() || Disabled ? "d-none" : "")"
+    <button type="button" class="btn btn-outline-secondary mb-1 border-secondary-subtle border-start-0 @(!CanBeNull ||IsNull() || Disabled || CascDisabled ? "d-none" : "")"
             id="@(ID + "addon")" tabindex="-1"
             @onclick="ClearInput">
         X
@@ -36,6 +36,12 @@
     /// </summary>
     [Parameter]
     public string Type { get; set; } = "text";
+
+    /// <summary>
+    /// Step v inpute (step="0.0001"). Default "0.0001"
+    /// </summary>
+    [Parameter]
+    public string Step { get; set; } = "0.0001";
 
     /// <summary>
     /// Clears the input field
@@ -103,5 +109,13 @@
             return Convert.ToString(Value, System.Globalization.CultureInfo.InvariantCulture) ?? "";
         }
         return Value?.ToString() ?? "";
+    }
+
+    protected async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (OnKeyDown is not null)
+        {
+            await OnKeyDown(e);
+        }
     }
 }

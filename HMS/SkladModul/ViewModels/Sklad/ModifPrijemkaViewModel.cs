@@ -31,6 +31,7 @@ namespace SkladModul.ViewModels.Sklad
         public Ssklad Sklad { get; set; }
         public bool Saved { get; set; } = true;
         public double CelkovaSuma { get; set; } = 0;
+        public double CelkovaSumaDPH { get; set; } = 0;
 
         public bool AktualneObdobie { get; set; } = true;       //true - mozno vytvorit novu prijemku
         public List<DruhPohybu> DruhyPohybov { get; set; } = new();
@@ -69,7 +70,7 @@ namespace SkladModul.ViewModels.Sklad
             if (DruhyPohybov.Count == 0)
             {
                 DruhyPohybov.AddRange(_db.DruhyPohybov
-                    .Where(x => x.MD.StartsWith("1") && x.MD.Length <= 3)
+                    .Where(x => (x.MD.StartsWith("1") || x.MD.StartsWith("3")) && x.MD.Length <= 3)
                     .ToList());     //vybratie podla MD zacinajuceho na 1**
                 if (string.IsNullOrEmpty(Polozka.DruhPohybu))
                 {
@@ -109,6 +110,7 @@ namespace SkladModul.ViewModels.Sklad
             Sklad = new();
             Obdobie = default!;
             CelkovaSuma = 0;
+            CelkovaSumaDPH = 0;
             DruhyPohybov.Clear();
         }
 
@@ -143,20 +145,22 @@ namespace SkladModul.ViewModels.Sklad
 
             }
         }
-        public double CelkovaCenaCalc()
+        public void CelkovaCenaCalc()
         {
 
             if (string.IsNullOrEmpty(Polozka.ID))
             {
-                return CelkovaSuma;
+                return;
             }
             var listPoloziek = _db.PrijemkyPolozky.Where(x => x.Skupina == Polozka.ID);
             CelkovaSuma = 0.0;
+            CelkovaSumaDPH = 0.0;
             foreach (var item in listPoloziek)
             {
                 CelkovaSuma += item.CelkovaCena;
+                CelkovaSumaDPH += item.CelkovaCenaDPH;
             }
-            return CelkovaSuma;
+            return;
         }
 
         public async Task NacitajZObjednavky(IModal succmodal, IModal notfoundModal, IModal someExcluded)

@@ -1,6 +1,6 @@
 ﻿@namespace UniComponents
 <span style="white-space: nowrap;">
-    <i class="bi @Icon @Color @(Size != null ? $"fs-{Size}": "") me-1"></i>@ChildContent
+    <i class="bi @Icon @Color @(Size != null ? $"fs-{Size}": "") me-1" style="@Style"></i>@ChildContent
 </span>
 @code {
     /// <summary>
@@ -16,7 +16,7 @@
     public RenderFragment? ChildContent { get; set; }
 
     /// <summary>
-    /// Farba Icony, defaultne nativna
+    /// Farba Icony v class, defaultne nativna
     /// </summary>
     [Parameter]
     public string Color { get; set; } = "";
@@ -26,5 +26,11 @@
     /// </summary>
     [Parameter]
     public int? Size { get; set; }
+
+    /// <summary>
+    /// Style pre ikonu, defaultne nic
+    /// </summary>
+    [Parameter]
+    public string Style { get; set; } = "";
 
 }

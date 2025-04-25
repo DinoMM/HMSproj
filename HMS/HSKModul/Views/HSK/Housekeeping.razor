@@ -34,7 +34,7 @@
     </div>
 
     <div class="row">
-        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 80vh; max-width: 95vw; overflow: auto;">
             <ComplexTable @ref="ViewModel.ComplexTable"
                           ID="complextable"
                           T="DBLayer.Models.Rezervation"
@@ -49,7 +49,7 @@
                           CollectionChanged="ViewModel.OnCollectionChanged"
                           SetTableSettings="@((true, tableSettings, null))">
                 <AdditionToolbar>
-                    <button id="pdfzozn" type="button" class="btn @(ViewModel?.ComplexTable?.Markers.Any() ?? false ? "btn-outline-info" : "btn-outline-dark") p-1 border-0 border-start border-end"
+                    <button id="pdfzozn" type="button" class="btn @(ViewModel?.ComplexTable?.Markers.Any() ?? false ? "btn-outline-info" : "btn-outline-dark") p-1 border-0 border-start border-end widthToolbar"
                             data-bs-toggle="tooltip"
                             data-bs-placement="bottom"
                             data-bs-title="Zobraziť PDF aktuálne zobrazenej tabuľky (ak označíte jednotlivé riadky tak sa použijú len tieto riadky)"

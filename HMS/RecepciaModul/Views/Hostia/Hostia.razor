@@ -48,7 +48,7 @@
 
     <div class="row">
         <div class="col-1"></div>
-        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 80vh; max-width: 95vw; overflow: auto; ">
             <ComplexTable @ref="ViewModel.ComplexTable"
                           ID="complextable"
                           T="DBLayer.Models.Host"
@@ -62,22 +62,20 @@
                           OnDbClick="(item) => Open(item)"
                           SetTableSettings="@((true, tableSettings, null))">
                 <AdditionToolbar>
-                    <button id="loadpokladdokl" type="button" class="btn btn-outline-primary p-1 border-0 border-start border-end"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="bottom"
-                            data-bs-title="Aktualizovať aktívne pokladničné účty u hostí"
-                            disabled="@ViewModel.Nacitavanie"
-                            @onclick="@ViewModel.RefreshMaPokladnicnyBlok">
+                    <ButtonBasic ID="loadpokladdokl"
+                                 Class="btn btn-outline-primary p-1 border-0 border-start border-end"
+                                 OnClick="@ViewModel.RefreshMaPokladnicnyBlok"
+                                 Disabled="@ViewModel.Nacitavanie"
+                                 Tooltip="@(("bottom", "Aktualizovať aktívne pokladničné účty u hostí"))">
                         <IconText Icon="bi-receipt-cutoff"></IconText>
-                    </button>
-                    <button id="openpokladdokl" type="button" class="btn btn-outline-dark p-1 border-0 border-start border-end"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="bottom"
-                            data-bs-title="Otvoriť aktívny pokladničný doklad u vybraného hosťa"
-                            disabled="@(ViewModel.Nacitavanie || marked == null || marked.PokladnicnyDokladZ == null)"
-                            @onclick="StartOpenPD">
+                    </ButtonBasic>
+                    <ButtonBasic ID="openpokladdokl"
+                                 Class="btn btn-outline-dark p-1 border-0 border-start border-end"
+                                 OnClick="@StartOpenPD"
+                                 Disabled="@(ViewModel.Nacitavanie || marked == null || marked.PokladnicnyDokladZ == null)"
+                                 Tooltip="@(("bottom", "Otvoriť aktívny pokladničný doklad u vybraného hosťa"))">
                         <IconText Icon="bi-receipt-cutoff"></IconText>
-                    </button>
+                    </ButtonBasic>
                 </AdditionToolbar>
             </ComplexTable>
         </div>
@@ -107,7 +105,7 @@
         new () { ID_Prop = nameof(DBLayer.Models.Host.CitizenID), HeaderValue = "Občan.č.", CellValue = (item) => item.CitizenID },
         new () { ID_Prop = nameof(DBLayer.Models.Host.Passport), HeaderValue = "Pas", CellValue = (item) => item.Passport },
         new () { ID_Prop = nameof(DBLayer.Models.Host.Address), HeaderValue = "Adresa", CellValue = (item) => item.Address, Visible = false },
-        new () { ID_Prop = nameof(DBLayer.Models.Host.BirthNumber), HeaderValue = "Rodné č.", CellValue = (item) => item.BirthNumber, Visible = false },
+        //new () { ID_Prop = nameof(DBLayer.Models.Host.BirthNumber), HeaderValue = "Rodné č.", CellValue = (item) => item.BirthNumber, Visible = false },
         new () { ID_Prop = nameof(DBLayer.Models.Host.BirthDate), HeaderValue = "Narodenie", CellValue = (item) => item.BirthDate.ToString("dd.MM.yyyy"), Visible = false },
         new () { ID_Prop = "email", HeaderValue = "Email", CellValue = (item) => item.GuestZ?.Email ?? "", CellConvert = ((item) => item.GuestZ?.Email, typeof(string))  },
         new () { ID_Prop = "phonenumber", HeaderValue = "Telefón", CellValue = (item) => item.GuestZ?.PhoneNumber ?? "", CellConvert = ((item) => item.GuestZ?.PhoneNumber, typeof(string)), Visible = false },

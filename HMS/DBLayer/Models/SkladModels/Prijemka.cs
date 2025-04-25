@@ -19,9 +19,13 @@ namespace DBLayer.Models
 
         [ForeignKey("DruhPohybuX")]
         public string? DruhPohybu { get; set; } = default!;
-        public DruhPohybu? DruhPohybuX { get; set; } 
+        public DruhPohybu? DruhPohybuX { get; set; }
 
 
+        public override string GetDisplayName()
+        {
+            return "Príjemka";
+        }
     }
     
 }

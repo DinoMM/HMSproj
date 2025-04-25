@@ -18,7 +18,7 @@
 
 
         <div class="col-3 d-flex justify-content-bottom mb-2">
-            <SearchManualInput ID="srchinput" Header="Vyhľadaj uživateľa..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
+            <SearchManualInput ID="srchinput" Header="Vyhľadaj užívateľa..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
 
         <div class="col-9">
@@ -34,7 +34,7 @@
 
     <div class="row">
         <div class="col-1"></div>
-        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 30rem;overflow: auto;">
+        <div id="@ViewModel.ComplexTable?.ID_scrollbar" class="col-12" style="max-height: 80vh; max-width: 95vw; overflow: auto; ">
             <ComplexTable @ref="ViewModel.ComplexTable"
                           ID="complextable"
                           T="IdentityUserOwn"
@@ -81,10 +81,10 @@
     {
         tableSettings.Insert(3, new() {
             ID_Prop = "pouzivatel",
-            HeaderValue = "Používateľ",
+            HeaderValue = "JePoužívateľ",
             CellComponent = (e) => new RenderFragmentTemplate(typeof(SimpleCheckMarkDiv), new RenderFragmentAttribute("Checked", !string.IsNullOrEmpty(e.UserName))),
             CellConvert = ((item) => !string.IsNullOrEmpty(item.UserName), typeof(bool)),
-            Visible = false
+            Visible = true
         });
 
         tableSettings.Add(new() { ID_Prop = "profesia", HeaderValue = "Profesia", CellValue = (item) => ViewModel.GetRoleString(item), CellConvert = ((item) => ViewModel.GetRoleString(item), typeof(string)) });

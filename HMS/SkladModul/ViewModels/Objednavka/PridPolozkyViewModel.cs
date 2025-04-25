@@ -78,25 +78,34 @@ namespace SkladModul.ViewModels.Objednavka
             ZoznamPoloziek.Clear();
             if (_userService.IsLoggedUserInRoles(DBLayer.Models.Sklad.ZMENAPOLOZIEKROLE))
             {
-                ZoznamPoloziek = new(await _db.PolozkySkladu.OrderBy(x => x.ID).ToListAsync());
+                ZoznamPoloziek = new(await _db.PolozkaSkladuMnozstva
+                    .Include(x => x.PolozkaSkladuX)
+                    .Where(x => x.Active)
+                    .Select(x => x.PolozkaSkladuX)
+                    .OrderBy(x => x.Nazov)
+                    .DistinctBy(x => x.ID)
+                    .ToListAsync());
                 return;
             }
             var skluz = _db.SkladUzivatelia.Where(x => x.Uzivatel == _userService.LoggedUser.Id).ToList();
             foreach (var item in skluz)
             {
-                ZoznamPoloziek.AddRange(_db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX)
-                    .Where(x => x.Sklad == item.Sklad)
+                ZoznamPoloziek.AddRange(_db.PolozkaSkladuMnozstva
+                    .Include(x => x.PolozkaSkladuX)
+                    .Where(x => x.Active && x.Sklad == item.Sklad)
                     .Select(x => x.PolozkaSkladuX)
                     .ToList());
             }
-            ZoznamPoloziek = ZoznamPoloziek.DistinctBy(x => x.ID).OrderBy(x => x.ID).ToList();
+            ZoznamPoloziek = ZoznamPoloziek
+                .DistinctBy(x => x.ID)
+                .OrderBy(x => x.Nazov)
+                .ToList();
         }
 
         [RelayCommand]
         private void VyhladajPolozku(ChangeEventArgs param)     //vyhlada polozku na zaklade inputu a ked najde, nastavuje novupolozku
         {
-
-            var res = _db.PolozkySkladu.FirstOrDefault(x => x.ID == (string)param.Value);
+            var res = ZoznamPoloziek.FirstOrDefault(x => x.ID == (string)param.Value);
             if (res == null)
             {
                 NovaPoloz = new();
@@ -158,6 +167,11 @@ namespace SkladModul.ViewModels.Objednavka
                 if (item.Mnozstvo <= 0)
                 {
                     item.Mnozstvo = 0;
+                    trebaCheck = true;
+                }
+                if (item.DPH < 0)
+                {
+                    item.DPH = 0;
                     trebaCheck = true;
                 }
             }

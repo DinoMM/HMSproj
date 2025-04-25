@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -8,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace DBLayer.Models
 {
+    [Index(nameof(Active), Name = "INDX_PolozkaSkladuMnozstva_Active")]
     public partial class PolozkaSkladuMnozstvo : ICloneable
     {
         [Key]
@@ -29,6 +31,11 @@ namespace DBLayer.Models
         [Column(TypeName = "decimal(18, 3)")]
         public double Cena { get; set; } = 0;
 
+        /// <summary>
+        /// Urcuje, ci sa ma polozka zobrazovat pri vyhladavani
+        /// </summary>
+        public bool Active { get; set; } = true;
+
         public object Clone()
         {
             return new PolozkaSkladuMnozstvo { 
@@ -38,7 +45,8 @@ namespace DBLayer.Models
              Sklad = this.Sklad,
              SkladX = this.SkladX,
              Mnozstvo = this.Mnozstvo,
-             Cena = this.Cena
+             Cena = this.Cena,
+             Active = this.Active
             };
         }
         public PolozkaSkladuMnozstvo Clon()

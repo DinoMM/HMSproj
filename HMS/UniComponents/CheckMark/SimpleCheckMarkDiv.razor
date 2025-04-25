@@ -31,5 +31,16 @@ else
     [Parameter]
     public int FixedSizePx { get; set; } = 0;
 
-
+    /// <summary>
+    /// Funkcia na získanie renderovacieho komponentu pre ComplexTable
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="Checked"></param>
+    /// <returns></returns>
+    public static RenderFragmentTemplate GetRenderComponent(bool Checked)
+    {
+        return new RenderFragmentTemplate(typeof(SimpleCheckMarkNull),
+            new RenderFragmentAttribute("Checked", Checked)
+            );
+    }
 }

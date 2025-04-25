@@ -20,17 +20,31 @@ namespace DBLayer.Models
         public string? Nazov { get; set; }
         public double Mnozstvo { get; set; }
         public double Cena { get; set; }
+        public decimal DPH { get; set; }
         [NotMapped]
         public double CelkovaCena { get => (double)Mnozstvo * Cena; }
         [NotMapped]
-        public double CenaDPH { get => (Cena * 120) / 100; }
+        public double CenaDPH { get => (Cena * (double)(100 + DPH)) / 100; }
         [NotMapped]
         public double CelkovaCenaDPH { get => (double)Mnozstvo * CenaDPH; }
 
         public object Clone();
-        
 
 
+        public static IQueryable<PohJednotka> GetDbSet(Type typ, in DBContext db)
+        {
+            switch (typ)
+            {
+                case Type t when t == typeof(Prijemka):
+                    return db.PrijemkyPolozky.Cast<PohJednotka>();
+                case Type t when t == typeof(Vydajka):
+                    return db.VydajkyPolozky.Cast<PohJednotka>();
+                case Type t when t == typeof(PokladnicnyDoklad):
+                    return db.ItemyPokladDokladu.Cast<PohJednotka>();
+                default:
+                    throw new ArgumentException("Neznama trieda PohJednotky");
+            }
+        }
 
         //public static string DajNoveID(DbSet<PohJednotka> dbset)
         //{

@@ -97,6 +97,10 @@ namespace RecepciaModul.ViewModels
             foreach (var item in ZoznamRezervacii)
             {
                 item.RecentChangesUserZ = item.RecentChangesUserZ ?? Rezervation.GetRecentChangedUser(item, in _db); //nacita recent userov
+                item.Room.RoomInfo = item.Room.RoomInfo ?? _db.RoomInfos.FirstOrDefault(x => x.ID_Room == item.RoomNumber);   //priradi roominfo k izbe, pre ziskanie DPH, ubytpopl hlavne
+                item.DPH = item.Room.RoomInfo?.DPH ?? item.DPH;
+                decimal? val = item.Room.RoomInfo?.UbytovaciPoplatok;
+                item.UbytovaciPoplatok = val.HasValue ? (double)val.Value : item.UbytovaciPoplatok;
             }
         }
         public async Task NacitajZoznamRezervacieAll(bool refresh = false)
@@ -134,7 +138,11 @@ namespace RecepciaModul.ViewModels
                 }
                 foreach (var item in ZoznamVsetkychRezervacii) //nacita recent userov
                 {
-                    item.RecentChangesUserZ = item.RecentChangesUserZ ?? Rezervation.GetRecentChangedUser(item, in _db); 
+                    item.RecentChangesUserZ = item.RecentChangesUserZ ?? Rezervation.GetRecentChangedUser(item, in _db);
+                    item.Room.RoomInfo = item.Room.RoomInfo ?? _db.RoomInfos.FirstOrDefault(x => x.ID_Room == item.RoomNumber);   //priradi roominfo k izbe, pre ziskanie DPH hlavne
+                    item.DPH = item.Room.RoomInfo?.DPH ?? item.DPH;
+                    decimal? val = item.Room.RoomInfo?.UbytovaciPoplatok;
+                    item.UbytovaciPoplatok = val.HasValue ? (double)val.Value : item.UbytovaciPoplatok;
                 }
                 //ZoznamVsetkychRezervacii.ForEach(x => x.RecentChangesUserZ = x.RecentChangesUserZ ?? Rezervation.GetRecentChangedUser(x, in _db)); //nacita recent userov
             }
@@ -143,6 +151,13 @@ namespace RecepciaModul.ViewModels
         private async Task NacitajIzbyRezervacie()
         {
             ZoznamIzieb = new(await _dbw.HRooms.ToListAsync());  //naèítanie všetkých izieb
+            foreach (var item in ZoznamIzieb)
+            {
+                if (item.RoomInfo == null)
+                {
+                    item.RoomInfo = _db.RoomInfos.FirstOrDefault(x => x.ID_Room == item.RoomNumber);
+                }
+            }
             ZoznamIziebList = new(ZoznamIzieb.ToList());
         }
 
@@ -333,10 +348,12 @@ namespace RecepciaModul.ViewModels
             if (ZoznamHosti.Count == 0)
             {
                 ZoznamHosti.AddRange(await _db.Hostia.OrderBy(x => x.Surname).ToListAsync());
-                await Task.Run(() => {
+                await Task.Run(() =>
+                {
                     foreach (var item in ZoznamHosti)   //nacita k hostom ich web ucty ak maju
                     {
-                        if (!string.IsNullOrEmpty(item.Guest)) {
+                        if (!string.IsNullOrEmpty(item.Guest))
+                        {
                             item.GuestZ = ZoznamWebGuest.FirstOrDefault(x => x.Id == item.Guest);
                         }
                         //nenacitava pokladnicne bloky dalej

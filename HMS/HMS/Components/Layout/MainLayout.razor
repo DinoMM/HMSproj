@@ -1,11 +1,28 @@
 ﻿
 @inherits LayoutComponentBase
+@inject UniComponents.Services.ICascadingService CascadingService
+@implements IDisposable
+@using System.ComponentModel 
 
-
-<div class="page p-1 fullscreen nooverflowx" >
-    
-    <main >
-        @Body
-    </main>
+<div class="page p-1 fullscreen nooverflowx">
+    <CascadingValue Name="CascDisabled" Value="CascadingService.Disabled">
+        <CascadingValue Name="CascLoading" Value="CascadingService.Nacitavanie">
+            <main>
+                @Body
+            </main>
+        </CascadingValue>
+    </CascadingValue>
 </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        ((INotifyPropertyChanged)CascadingService).PropertyChanged += (sender, e) => StateHasChanged(); //ak sa zmeni nejaka prop tak sa refreshne UI
+    }
+
+    public void Dispose()
+    {
+        ((INotifyPropertyChanged)CascadingService).PropertyChanged -= (sender, e) => StateHasChanged();
+    }
+}
 
