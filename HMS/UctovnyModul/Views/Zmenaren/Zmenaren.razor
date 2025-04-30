@@ -67,8 +67,8 @@
                         <div class="col-4"></div>
                         <div class="col-8">
                             <div class="btn-group" role="group">
-                                <button type="button" class="btn btn-primary" disabled="@(!ViewModel.CheckIfOk())" @onclick="FindRate">Nájsť&nbsp;kurz</button>
-                                <button type="button" class="btn btn-primary" disabled="@(!ViewModel.CheckIfOk() || ViewModel.NovaTransakcia.Kurz == 0)" @onclick="ProcessTransaction"><IconTextCreate></IconTextCreate></button>
+                                <ButtonBasic type="button" class="btn btn-primary" disabled="@(!ViewModel.CheckIfOk())" onclick="FindRate">Nájsť&nbsp;kurz</ButtonBasic>
+                                <ButtonBasic type="button" class="btn btn-primary" disabled="@(!ViewModel.CheckIfOk() || ViewModel.NovaTransakcia.Kurz == 0)" onclick="ProcessTransaction"><IconTextCreate></IconTextCreate></ButtonBasic>
                             </div>
                         </div>
                     </div>
@@ -112,8 +112,8 @@
 
             <div class="col-9">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
-                    <button @onclick="Create" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></button>
+                    <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"><IconTextClose></IconTextClose></ButtonBasic>
+                    <ButtonBasic onclick="Create" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></ButtonBasic>
                 </div>
             </div>
 
@@ -191,8 +191,10 @@
 
     public async Task Create()
     {
+        CascadingService.Nacitavanie = true;
         SetStartConditionOnVisit();
         await cuscreatetrans.OpenModal(true);
+        CascadingService.Nacitavanie = false;
     }
 
     public async Task Delete(DBLayer.Models.ZmenaMeny item)
@@ -222,16 +224,18 @@
 
     public async Task ProcessTransaction()
     {
+        CascadingService.Nacitavanie = true;
         if (ViewModel.SpracujNovuTransakciu())
         {
             await InfoModSaved.OpenModal(true);
             cuscreatetrans.CloseModalExtern();
         }
-
+        CascadingService.Nacitavanie = false;
     }
 
     public void FindRate()
     {
+        CascadingService.Nacitavanie = true;
         var result = ViewModel.GetCurrencyApiResponse();
         if (result != null)
         {
@@ -243,6 +247,7 @@
                 }
             }
         }
+        CascadingService.Nacitavanie = false;
     }
 
 }

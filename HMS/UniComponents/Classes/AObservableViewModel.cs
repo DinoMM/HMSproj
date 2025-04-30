@@ -27,6 +27,8 @@ namespace UniComponents
         [CopyProperties]
         public ComplexTable<T>? ComplexTable { get; set; }
 
+        public CancellationTokenSource CancellationTokenSource { get; set; } = new();
+
         /// <summary>
         /// Sem treba dať načítanie zoznamov. Na volanie pre načítanie zoznamov sa použije metóda NacitajZoznamy
         /// </summary>
@@ -34,14 +36,24 @@ namespace UniComponents
         protected abstract Task NacitajZoznamyAsync();
 
         /// <summary>
-        /// Spustí načítanie zoznamov.
+        /// Spustí načítanie zoznamov. Možnosť cez CancellationTokenSource pristupiť na token a využiť pri práci s Async metódami. (var token = CancellationTokenSource.Token;)
         /// </summary>
         /// <returns></returns>
         public async Task NacitajZoznamy()
         {
+            CancellationTokenSource?.Dispose();
+            CancellationTokenSource = new CancellationTokenSource();
+
             await Nacitaj(
                 methodAsync: async () => await SilentCollection(
-                    methodAsync: async () => await NacitajZoznamyAsync()
+                    methodAsync: async () =>
+                    {
+                        try
+                        {
+                            await NacitajZoznamyAsync();
+                        }
+                        catch (OperationCanceledException ex) { }
+                    }
                     )
                 );
             //Nacitavanie = true;
@@ -109,6 +121,12 @@ namespace UniComponents
         public virtual void Dispose()
         {
             ZoznamPoloziek.CollectionChanged -= OnCollectionChanged;
+            try
+            {
+                CancellationTokenSource?.Cancel();
+            }
+            catch (ObjectDisposedException ex) { }
+            CancellationTokenSource?.Dispose();
         }
 
         /// <summary>
@@ -177,6 +195,8 @@ namespace UniComponents
         public Task NacitajZoznamy();
         public void Dispose();
         public void Initialization();
+
+        public CancellationTokenSource CancellationTokenSource { get; set; }
         //public bool MoznoVymazat(T polozka);
         //public void Vymazat(T polozka);
     }

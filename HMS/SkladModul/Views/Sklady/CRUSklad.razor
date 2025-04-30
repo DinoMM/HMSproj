@@ -12,7 +12,7 @@
     <div class="container px-5">
         <div class="row">
             <div class="col">
-                <h1 class="text-center">Informácie o organizácií</h1>
+                <h1 class="text-center">Informácie o sklade</h1>
             </div>
         </div>
 
@@ -41,7 +41,7 @@
         <div class="row pt-2">
             <div class="col text-center">
                 <div class="btn-group" role="group">
-                    <button type="button" @onclick="Close" class="btn btn-secondary"><IconTextClose></IconTextClose></button>
+                    <ButtonBasic type="button" @onclick="Close" class="btn btn-secondary"><IconTextClose></IconTextClose></ButtonBasic>
                     <SimpleButton Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
                 </div>
             </div>
@@ -76,10 +76,12 @@
 
     public async Task Save()
     {
+        CascadingService.Nacitavanie = true;
         if (await ViewModel.Uloz())
         {
             await InfoModSaved.OpenModal(true);
         }
+        CascadingService.Nacitavanie = false;
     }
 
     public async Task OnIvalid(EditContext editContext)

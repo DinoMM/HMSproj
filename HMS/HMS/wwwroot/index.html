@@ -52,6 +52,21 @@
             }
         };
 
+        window.loadingCursor = function (isLoading) {
+            var appElement = document.getElementById("app");
+            if (isLoading) {
+                document.body.classList.add("loadingcursor1");
+                if (appElement) {
+                    appElement.classList.add("pointereventsnone");
+                }
+                
+            } else {
+                document.body.classList.remove("loadingcursor1");
+                if (appElement) {
+                    appElement.classList.remove("pointereventsnone");
+                }
+            }
+        }
     </script>
 
 </body>

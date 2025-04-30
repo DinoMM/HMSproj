@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using DBLayer;
+using DBLayer.Migrations;
 using DBLayer.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.ObjectModel;
@@ -10,6 +11,8 @@ namespace SkladModul.ViewModels.Sklady
 {
     public class SkladyViewModel : AObservableViewModel<Ssklad>
     {
+        private List<(Ssklad, bool)> moznoVymazat = new();
+
         private readonly DBContext _db;
         private readonly UserService _userService;
 
@@ -29,32 +32,24 @@ namespace SkladModul.ViewModels.Sklady
         }
         protected override async Task NacitajZoznamyAsync()
         {
-            ZoznamPoloziek = new(await _db.Sklady.OrderBy(x => x.ID).ToListAsync());
+            var token = CancellationTokenSource.Token;
+            ZoznamPoloziek = new(await _db.Sklady.OrderBy(x => x.ID).ToListAsync(token));
+            foreach (var sklad in ZoznamPoloziek)
+            {
+                var res =
+                    await _db.PolozkaSkladuMnozstva.AnyAsync(x => x.Sklad == sklad.ID, token)
+                    || await _db.SkladUzivatelia.AnyAsync(x => x.Sklad == sklad.ID, token)
+                    || await _db.SkladObdobi.AnyAsync(x => x.Sklad == sklad.ID, token)
+                    || await _db.Vydajky.AnyAsync(x => x.Sklad == sklad.ID || x.SkladDo == sklad.ID, token)
+                    || await _db.Prijemky.AnyAsync(x => x.Sklad == sklad.ID, token);
+
+                moznoVymazat.Add((sklad, !res));
+            }
         }
 
         public override bool MoznoVymazat(Ssklad sklad)
         {
-            if (_db.PolozkaSkladuMnozstva.Any(x => x.Sklad == sklad.ID))
-            {
-                return false;
-            }
-            if (_db.SkladUzivatelia.Any(x => x.Sklad == sklad.ID))
-            {
-                return false;
-            }
-            if (_db.SkladObdobi.Any(x => x.Sklad == sklad.ID))
-            {
-                return false;
-            }
-            if (_db.Vydajky.Any(x => x.Sklad == sklad.ID || x.SkladDo == sklad.ID))
-            {
-                return false;
-            }
-            if (_db.Prijemky.Any(x => x.Sklad == sklad.ID))
-            {
-                return false;
-            }
-            return true;
+            return moznoVymazat.FirstOrDefault(x => x.Item1.ID == sklad.ID).Item2;
         }
 
         public override void Vymazat(Ssklad sklad)

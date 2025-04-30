@@ -42,9 +42,6 @@
                     </div>
                 </div>
 
-            </div>
-
-            <div class="col">
                 <div class="row">
                     <div class="col-9">
                         <label>Adresa*</label>
@@ -52,6 +49,11 @@
                         <ValidationMessage For="@(() => ViewModel.Adresa)" />
                     </div>
                 </div>
+
+            </div>
+
+            <div class="col">
+
                 <div class="row">
                     <div class="col-9">
                         <label>IBAN</label>
@@ -59,6 +61,28 @@
                         <ValidationMessage For="@(() => ViewModel.IBAN)" />
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-9">
+                        <label>DIC</label>
+                        <InputText @bind-Value="@ViewModel.DIC" class="form-control" placeholder="DIC" />
+                        <ValidationMessage For="@(() => ViewModel.DIC)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-9">
+                        <label>IČ_DPH</label>
+                        <InputText @bind-Value="@ViewModel.IC_DPH" class="form-control" placeholder="IČ_DPH" />
+                        <ValidationMessage For="@(() => ViewModel.IC_DPH)" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-9">
+                        <label>Poznámka</label>
+                        <InputTextArea @bind-Value="@ViewModel.Poznamka" class="form-control" placeholder="Poznámka alebo kontaktné údaje" />
+                        <ValidationMessage For="@(() => ViewModel.Poznamka)" />
+                    </div>
+                </div>
+
             </div>
 
         </div>
@@ -66,9 +90,9 @@
         <div class="row pt-2">
             <div class="col text-center">
                 <div class="btn-group" role="group">
-                    <button type="button" @onclick="Close" class="btn btn-secondary">
+                    <ButtonBasic type="button" onclick="Close" class="btn btn-secondary">
                         <IconTextClose></IconTextClose>
-                    </button>
+                    </ButtonBasic>
                     <SimpleButton Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
                 </div>
             </div>
@@ -104,10 +128,12 @@
 
     public async Task Save()
     {
+        CascadingService.Nacitavanie = true;
         if (await ViewModel.Uloz())
         {
             await InfoModSaved.OpenModal(true);
         }
+        CascadingService.Nacitavanie = false;
     }
 
     public async Task OnIvalid(EditContext editContext)

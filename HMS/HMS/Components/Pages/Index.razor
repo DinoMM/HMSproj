@@ -18,6 +18,7 @@
 @inject UniComponents.Services.IAppLifeCycleService AppLifecycleService
 @implements IDisposable
 @implements IAsyncDisposable
+@inject UniComponents.Services.ICascadingService CascadingService
 
 @inject DBContext db
 @*<InfoModal @ref="ViewModel.CloseAppModal" Text="Chcete ukončiť aplikáciu?"></InfoModal>*@
@@ -54,8 +55,12 @@
                 {
                     if (item.Item3.Contains(UserService.LoggedUserRole))
                     {
-                        <button @onclick="@(() => { Navigator.NavigateTo(item.Item2, saveThisUrl: true); })"
-                                class="text-wrap btn btn-light border-secondary-subtle " style=" cursor: pointer; max-width: 9rem; min-width: 9rem; max-height: 9rem; min-height: 9rem; margin: 0px 2px 2px 0px; font-size: 1.15rem;">
+                        <ButtonBasic Disabled="CascadingService.Nacitavanie" onclick="@(async () => {
+                                                                                            CascadingService.Nacitavanie = true;
+                                                                                            Navigator.NavigateTo(item.Item2, saveThisUrl: true);
+                                                                                            CascadingService.Nacitavanie = false;
+                                                                                        })"
+                                     class="text-wrap btn btn-light border-secondary-subtle" style="cursor: pointer; max-width: 9rem; min-width: 9rem; max-height: 9rem; min-height: 9rem; margin: 0px 2px 2px 0px; font-size: 1.15rem;">
                             <div class="container d-flex flex-column align-items-center">
                                 <div class="row">
                                     <IconText Size="1" Icon="@item.Item4.biicon"
@@ -65,13 +70,13 @@
                                     @item.Item1
                                 </div>
                             </div>
-                        </button>
+                        </ButtonBasic>
                     }
                 }
 
             </div>
 
-            @*<button @onclick="EXCT">Spusti</button>*@
+            @*<button @onclick="async () => { CascadingService.Nacitavanie = !CascadingService.Nacitavanie; await Task.Delay(5000); CascadingService.Nacitavanie = !CascadingService.Nacitavanie; }" class="btn btn-primary">Spusti</button>*@
         </div>
     </div>
 }
@@ -120,8 +125,14 @@ else
                 {
                     await SecureStorage.SetAsync("DB_Source", cdmNoDbConInput);
                     await SecureStorage.SetAsync("DB_Port", cdmNoDbConInputPort);
-                    await SecureStorage.SetAsync("DB_PSWD", cdmNoDbConInputPasw);
-                    await SecureStorage.SetAsync("DB_PSWD_PUBLIC", cdmNoDbConInputPaswPub);
+                    if (!string.IsNullOrEmpty(cdmNoDbConInputPasw))
+                    {
+                        await SecureStorage.SetAsync("DB_PSWD", cdmNoDbConInputPasw);
+                    }
+                    if (!string.IsNullOrEmpty(cdmNoDbConInputPaswPub))
+                    {
+                        await SecureStorage.SetAsync("DB_PSWD_PUBLIC", cdmNoDbConInputPaswPub);
+                    }
                 }
                 Microsoft.Maui.Controls.Application.Current.Quit();
             });
@@ -190,7 +201,5 @@ else
         var version = Microsoft.Maui.ApplicationModel.AppInfo.VersionString;
         return version != null ? version.ToString() : "Unknown";
     }
-
-
 
 }

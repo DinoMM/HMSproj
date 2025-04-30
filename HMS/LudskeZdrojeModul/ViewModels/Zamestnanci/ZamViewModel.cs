@@ -33,9 +33,12 @@ namespace LudskeZdrojeModul.ViewModels.Zamestnanci
         {
             await Task.Run(async () =>
             {
-                ZoznamPoloziek = new(_db.Users.OrderBy(x => x.Surname).ToList());
+                var token = CancellationTokenSource.Token;
+
+                ZoznamPoloziek = new(await _db.Users.OrderBy(x => x.Surname).ToListAsync(token));
                 foreach (var item in ZoznamPoloziek)    //pridanie zoznamov roli
                 {
+                    token.ThrowIfCancellationRequested();
                     ZoznamPouzivatelovRoli.Add((item, await _userService.GetRolesFromUser(item)));
                 }
             });

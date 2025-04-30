@@ -60,7 +60,8 @@ namespace UniComponents.Services
         public async Task<bool> CheckStartConditionAsync()
         {
             bool res = false;
-            foreach (var item in ZoznamTransients)
+            var transientCopy = ZoznamTransients.ToList();
+            foreach (var item in transientCopy)
             {
                 if (await item.CheckStartConditionAsync())
                 {

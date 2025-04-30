@@ -6,7 +6,7 @@
 @implements IDisposable
 
 <SelectModal @ref="SelectModObd" ID="selectmodalobdobie"
-             SelectionList="@ViewModel.GetObdobiaDes()"
+             SelectionList="@ViewModel.ListObdDes"
              Value="@ViewModel.Obdobie"></SelectModal>
 <SelectModal @ref="SelectModSkl" ID="selectmodalsklad"
              SelectionList="@ViewModel.Sklady.Select(x => x.ID).ToList()"
@@ -38,10 +38,10 @@
 
     <div class="row pb-1">
         <div class="col-2">
-            <a class="btn btn-info" id="uctobd" style="cursor:pointer" @onclick="ChangeObd">Obdobie:@ViewModel.Obdobie </a>
+            <a class="btn btn-info @(ViewModel.Nacitavanie ? "disabled" : "")" id="uctobd" style="cursor:pointer" @onclick="ChangeObd">Obdobie:@ViewModel.Obdobie </a>
         </div>
         <div class="col-2">
-            <a class="btn btn-info" id="skldpick" style="cursor:pointer" @onclick="ChangeSkl">Sklad:@ViewModel.Sklad.ID </a>
+            <a class="btn btn-info @(ViewModel.Nacitavanie ? "disabled" : "")" id="skldpick" style="cursor:pointer" @onclick="ChangeSkl">Sklad:@ViewModel.Sklad.ID </a>
         </div>
     </div>
 
@@ -52,29 +52,29 @@
         </div>
         <div class="col-8 autooverflowx">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-secondary" @onclick="Close">
+                <ButtonBasic type="button" class="btn btn-secondary" onclick="Close">
                     <IconTextClose></IconTextClose>
-                </button>
+                </ButtonBasic>
                 @if (UserService.IsLoggedUserInRoles(Sklad.ZMENAPOLOZIEKROLE))
                 {
-                    <button @onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad")))" type="button" class="btn btn-primary">
+                    <ButtonBasic onclick="@(() => Navigator.NavigateTo(Navigator.AddNextUrl("/ModifPolozSklad")))" type="button" class="btn btn-primary">
                         <IconText Icon="bi-plus">Pridať položku</IconText>
-                    </button>
+                    </ButtonBasic>
 
                 }
                 @if (UserService.IsLoggedUserInRoles(Sklad.SKLADOVEPOHYBYROLE))
                 {
-                    <button type="button" @onclick="Prijem" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">
+                    <ButtonBasic type="button" onclick="Prijem" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">
                         <IconText Icon="bi-chevron-bar-down">Spravovať príjem</IconText>
-                    </button>
-                    <button type="button" @onclick="Vydaj" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">
+                    </ButtonBasic>
+                    <ButtonBasic type="button" onclick="Vydaj" disabled="@(ViewModel.Sklad.ID == "ALL")" class="btn btn-primary">
                         <IconText Icon="bi-chevron-bar-up">Spravovať výdaj</IconText>
-                    </button>
+                    </ButtonBasic>
                 }@if (UserService.IsLoggedUserInRoles(Sklad.SKLADOVEPOHYBYROLE.Concat(Sklad.ROLE_R_SKLADOVEPOHYBY).ToList()))
                 {
-                    <button type="button" @onclick="Uzavriet" disabled="@(ViewModel.Sklad.ID == "ALL" || !ViewModel.AktualneObdobie)" class="btn btn-primary">
+                    <ButtonBasic type="button" onclick="Uzavriet" disabled="@(ViewModel.Sklad.ID == "ALL" || !ViewModel.AktualneObdobie)" class="btn btn-primary">
                         <IconText Icon="bi-calendar3">Uzavrieť obdobie</IconText>
-                    </button>
+                    </ButtonBasic>
                 }
             </div>
         </div>
@@ -193,25 +193,18 @@
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
         }
+        CascadingService.Nacitavanie = true;
         ViewModel.NacitatDostupneSklady();
+        CascadingService.Nacitavanie = false;
     }
 
-    //protected override async Task OnInitializedTransientAsync()
-    //{
-    //    if (!UserService.IsLoggedUserInRoles(Sklad.ROLE_R_SKLAD))
-    //    {
-    //        return;
-    //    }
-    //    await ViewModel.NacitajZoznamy();
-    //}
-
-    protected override async Task OnAfterRenderTransientAsync(bool first)
+    protected override async Task OnInitializedTransientAsync()
     {
-        if (first)
+        if (!UserService.IsLoggedUserInRoles(Sklad.ROLE_R_SKLAD))
         {
-            await ViewModel.NacitajZoznamy();
-            StateHasChanged();
+            return;
         }
+        await ViewModel.NacitajZoznamy();
     }
 
     private async Task Delete(PolozkaSkladu poloz)
@@ -255,15 +248,19 @@
 
     private void Prijem()
     {
+        CascadingService.Nacitavanie = true;
         objectHolder.Add(ViewModel.Sklad);
         objectHolder.Add(ViewModel.Obdobie);
         Navigator.NavigateTo(Navigator.AddNextUrl("/Prijem"));
+        CascadingService.Nacitavanie = false;
     }
     private void Vydaj()
     {
+        CascadingService.Nacitavanie = true;
         objectHolder.Add(ViewModel.Sklad);
         objectHolder.Add(ViewModel.Obdobie);
         Navigator.NavigateTo(Navigator.AddNextUrl("/Vydaj"));
+        CascadingService.Nacitavanie = false;
     }
     private void Uzavriet()
     {

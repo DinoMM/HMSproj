@@ -137,15 +137,23 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-4">
+                    <div class="col-6">
                         <label>Celková suma</label>
                         <input type="text" value="@(ViewModel.CelkovaSuma.ToString("F3"))" disabled="disabled" class="form-control" placeholder="">
                     </div>
-                    <div class="col-5">
+                    <div class="col-6">
                         <label>Celková suma DPH</label>
                         <input type="text" value="@(ViewModel.CelkovaSumaDPH.ToString("F3"))" disabled="disabled" class="form-control" placeholder="">
                     </div>
                 </div>
+                <div class="row mt-2">
+                    <div class="col-12">
+                        <ButtonBasic ID="exfavevi" class="btn btn-outline-dark" Tooltip="@(("bottom", $"Ak existuje faktúra v evidencií ({ViewModel.ExistujucaFaktura.Item1})"))" OnClick="() => CopyToClipboard(ViewModel.ExistujucaFaktura.Item1)">FA <SimpleCheckMark Checked="@(!string.IsNullOrEmpty(ViewModel.ExistujucaFaktura.Item1))" Size="6"></SimpleCheckMark></ButtonBasic>
+
+                        <ButtonBasic ID="exfavevisprac" class="btn btn-outline-dark ms-2 defaultcursor" Tooltip="@(("bottom", $"Stav existujúcej faktúry v evidencií ({(ViewModel.ExistujucaFaktura.Item2 == null ? "Nespracovaná" : ViewModel.ExistujucaFaktura.Item2 == true ? "Spracovaná" : "Stornovaná")})"))">FA-OK <SimpleCheckMarkNull Checked="@(ViewModel.ExistujucaFaktura.Item2 == null ? false : ViewModel.ExistujucaFaktura.Item2 == true ? true : null)" Size="6"></SimpleCheckMarkNull></ButtonBasic>
+                    </div>
+                </div>
+
 
             </div>
 
@@ -154,8 +162,8 @@
         <div class="row pt-2">
             <div class="col text-center">
                 <div class="btn-group" role="group">
-                    <button type="button" @onclick="Close" class="btn btn-secondary"><IconTextClose></IconTextClose></button>
-                    <button type="submit" class="btn btn-primary">
+                    <ButtonBasic type="button" onclick="Close" class="btn btn-secondary"><IconTextClose></IconTextClose></ButtonBasic>
+                    <ButtonBasic type="submit" class="btn btn-primary">
                         @if (string.IsNullOrEmpty(ViewModel.Polozka.ID))
                         {
                             <IconTextCreate></IconTextCreate>
@@ -164,8 +172,8 @@
                         {
                             <IconTextSaveOpen Saved="ViewModel.Saved"></IconTextSaveOpen>
                         }
-                    </button>
-                    <button type="button" disabled="@(!ViewModel.Saved || ViewModel.Polozka.Spracovana)" @onclick="Finnish" class="btn btn-secondary"><IconTextProcess></IconTextProcess></button>
+                    </ButtonBasic>
+                    <ButtonBasic type="button" disabled="@(!ViewModel.Saved || ViewModel.Polozka.Spracovana)" onclick="Finnish" class="btn btn-secondary"><IconTextProcess></IconTextProcess></ButtonBasic>
 
                 </div>
             </div>
@@ -222,23 +230,31 @@
 
     private async Task Save()
     {
-        if (!ViewModel.Saved)
+        CascadingService.Nacitavanie = true;
+        try
         {
-            ViewModel.Uloz();
-            await InfoMod.OpenModal();
-        }
-        else
-        {
-            objectHolder.Add((DBLayer.Models.PohSkup)ViewModel.Polozka);        //nutne poslane polia
-            objectHolder.Add(typeof(DBLayer.Models.Prijemka));
-            if (!ViewModel.Polozka.Spracovana)
+            if (!ViewModel.Saved)
             {
-                Navigator.NavigateTo(Navigator.AddNextUrl($"/ModifPolozPrijemka/{false}"));
+                ViewModel.Uloz();
+                await InfoMod.OpenModal();
             }
             else
             {
-                Navigator.NavigateTo(Navigator.AddNextUrl($"/ModifPolozPrijemka/{true}"));      //readonly rezim
+                objectHolder.Add((DBLayer.Models.PohSkup)ViewModel.Polozka);        //nutne poslane polia
+                objectHolder.Add(typeof(DBLayer.Models.Prijemka));
+                if (!ViewModel.Polozka.Spracovana)
+                {
+                    Navigator.NavigateTo(Navigator.AddNextUrl($"/ModifPolozPrijemka/{false}"));
+                }
+                else
+                {
+                    Navigator.NavigateTo(Navigator.AddNextUrl($"/ModifPolozPrijemka/{true}"));      //readonly rezim
+                }
             }
+        }
+        finally
+        {
+            CascadingService.Nacitavanie = false;
         }
     }
 
@@ -265,7 +281,9 @@
         {
             if (await ApproveProcess.OpenModal(true))
             {
+                CascadingService.Nacitavanie = true;
                 await ViewModel.SpracujPrijemku(InfoModListEmpty);
+                CascadingService.Nacitavanie = false;
             }
         }
     }
@@ -291,9 +309,18 @@
             {
                 return;
             }
+            CascadingService.Nacitavanie = true;
             await ViewModel.NacitajSpracovaneObjednavky();
+            CascadingService.Nacitavanie = false;
             iftobjednavky.StartRender();
         }
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        await JSRuntime.InvokeVoidAsync("showCopyNotification");
+        
     }
 }
 

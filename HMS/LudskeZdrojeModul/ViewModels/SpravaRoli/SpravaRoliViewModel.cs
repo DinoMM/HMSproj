@@ -28,9 +28,12 @@ namespace LudskeZdrojeModul.ViewModels.SpravaRoli
 
         protected override async Task NacitajZoznamyAsync()
         {
-            ZoznamPoloziek = new(await _db.Roles.OrderBy(x => x.Name).ToListAsync());
+            var token = CancellationTokenSource.Token;
+
+            ZoznamPoloziek = new(await _db.Roles.OrderBy(x => x.Name).ToListAsync(token));
             foreach (var item in ZoznamPoloziek)
             {
+                token.ThrowIfCancellationRequested();
                 MoznoVymazatList.Add((item, !_db.UserRoles.Any(x => x.RoleId == item.Id)));
             }
         }

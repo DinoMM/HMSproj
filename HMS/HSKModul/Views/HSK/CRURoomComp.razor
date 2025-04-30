@@ -105,9 +105,11 @@
         }
     }
 
-    private void Save()
+    private async Task Save()
     {
+        CascadingService.Nacitavanie = true;
         ViewModel.Save();
+        CascadingService.Nacitavanie = false;
     }
 
 

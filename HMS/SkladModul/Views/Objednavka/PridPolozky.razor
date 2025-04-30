@@ -49,10 +49,10 @@
 
     <div class="row h-25">
         <div class="col col-1">
-            <button type="button" class="btn btn-secondary" @onclick="Close" tabindex="-1"><IconTextClose></IconTextClose></button>
+            <ButtonBasic type="button" class="btn btn-secondary" onclick="Close" ><IconTextClose></IconTextClose></ButtonBasic>
         </div>
         <div class="col col-1 me-2">
-            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false)) disabled="@(ViewModel.Locked() || !ViewModel.Zmena)" tabindex="-1"><IconTextSave></IconTextSave></button>
+            <ButtonBasic type="button" class="btn btn-primary" onclick=@(() => Save(false)) disabled="@(ViewModel.Locked() || !ViewModel.Zmena)"><IconTextSave></IconTextSave></ButtonBasic>
         </div>
     </div>
 
@@ -187,7 +187,7 @@
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Tab")
+        if (e.Key == "Tab" || e.Key == "Enter")
         {
             ciftpolozky.SetItemsFromList(ViewModel.ZoznamPoloziek, fillOnlyOnEmpty: true);
             ciftpolozky.ValueInFilter = await JSRuntime.InvokeAsync<string>("getInputField", "vyhlid");
@@ -204,15 +204,18 @@
     }
 
 
-    private async Task<bool>
-    Save(bool askUser)  //vrati hodnotu na zaklade toho co uzivatel klikne(true - suhlasi, inak false)
+    private async Task<bool> Save(bool askUser)  //vrati hodnotu na zaklade toho co uzivatel klikne(true - suhlasi, inak false)
     {
+
         if (askUser)
         {
             return await AprovModSave.OpenModal(true);
         }
+        CascadingService.Nacitavanie = true;
         await SaveCommand();
+        CascadingService.Nacitavanie = false;
         return true;        //true lebo ztivatel klikol Uloz
+
     }
 
     private async Task SaveCommand()

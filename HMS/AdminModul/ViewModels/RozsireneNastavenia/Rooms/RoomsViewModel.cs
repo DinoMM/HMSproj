@@ -31,12 +31,15 @@ namespace AdminModul.ViewModels
         {
             await Task.Run(async () =>
             {
-                ZoznamPoloziek = new(await _dbw.HRooms
-                    .ToListAsync());
+                var token = CancellationTokenSource.Token;
 
-                var list = _db.RoomInfos.ToList();
+                ZoznamPoloziek = new(await _dbw.HRooms
+                    .ToListAsync(token));
+
+                var list = await _db.RoomInfos.ToListAsync(token);
                 foreach (var item in ZoznamPoloziek)
                 {
+                    token.ThrowIfCancellationRequested();
                     var found = list.FirstOrDefault(x => x.ID_Room == item.RoomNumber);
                     if (found != null)
                     {
@@ -49,7 +52,6 @@ namespace AdminModul.ViewModels
 
                     moznoVymazatList.Add((item, !_dbw.Rezervations.Any(x => x.RoomNumber == item.RoomNumber))); //jednoducha kontrola, ak by sa chcelo vyhrat tak by sa dalo spravit to ze ked je ukoncena rezervacia po dlhsiom case tak by bolo mozne vymazat
                 }
-
 
             });
         }

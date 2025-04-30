@@ -1,8 +1,8 @@
 ﻿@namespace UniComponents
 
-<div data-toggle="tooltip" data-placement="left" title="@(Disabled ? TooltipMessage : "")">
-    <a @onclick="OnClick" style="@(Disabled ? " pointer-events: none;" : "" ) ">
-        <i href="#" class="bi bi-x-circle btn btn-danger @(Disabled ? " disabled" : "" )"></i>
+<div data-toggle="tooltip" data-placement="left" title="@(Disabled || CascLoading ? TooltipMessage : "")">
+    <a @onclick="OnClick" style="@(Disabled || CascLoading ? " pointer-events: none;" : "" ) ">
+        <i href="#" class="bi bi-x-circle btn btn-danger @(Disabled || CascLoading ? " disabled" : "" )"></i>
     </a>
 </div>
 
@@ -22,10 +22,16 @@
     public EventCallback OnClick { get; set; } = EventCallback.Empty;
 
     /// <summary>
-    /// Nastaví text tooltipu, keď je Disabled => true, Default "Nemožno odstániť"
+    /// Nastaví text tooltipu, keď je Nacitavanie => true, Default "Nemožno odstániť"
     /// </summary>
     [Parameter]
     public string TooltipMessage { get; set; } = "Nemožno odstániť";
+
+    /// <summary>
+    /// Určuje, že bude tlačilo disabled a dá SpinnerLoading  pomocou cascading parameter, default false
+    /// </summary>
+    [CascadingParameter(Name = "CascLoading")]
+    public bool CascLoading { get; set; } = false;
 
 
 }

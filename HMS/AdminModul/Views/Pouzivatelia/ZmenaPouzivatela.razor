@@ -44,11 +44,11 @@
                         <input type="text" value="@ViewModel.UserName" class="form-control mb-2" disabled="disabled" />
                         @if (string.IsNullOrEmpty(ViewModel.UserName))
                         {
-                            <button type="button" class="btn btn-primary" @onclick="PromoteToPouzivatel">Vytvoriť použivateľa</button>
+                            <ButtonBasic type="button" class="btn btn-primary" onclick="PromoteToPouzivatel">Vytvoriť použivateľa</ButtonBasic>
                         }
                         else
                         {
-                            <button type="button" class="btn btn-primary" @onclick="ZmenaHesla">Zmeniť heslo</button>
+                            <ButtonBasic type="button" class="btn btn-primary" onclick="ZmenaHesla">Zmeniť heslo</ButtonBasic>
                         }
                     </div>
                 </div>
@@ -146,7 +146,7 @@
                                         {
                                             if (ViewModel.MiniViewModel is not SkladnikViewModel)
                                             {
-                                                ViewModel.MiniViewModel = new SkladnikViewModel(ViewModel.GetDB(), ViewModel.User);
+                                                ViewModel.MiniViewModel = new SkladnikViewModel(ViewModel.GetDB(), ViewModel.User, CascadingService);
                                             }
                                             var vwModel = (SkladnikViewModel)ViewModel.MiniViewModel;
                                             SetLock(vwModel.LockedIn());
@@ -190,8 +190,8 @@
     <div class="row align-items-center justify-content-center">
         <div class="col-auto mb-2">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
-                <button type="submit" class="btn btn-primary "><IconTextSave></IconTextSave></button>
+                <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"><IconTextClose></IconTextClose></ButtonBasic>
+                <ButtonBasic type="submit" class="btn btn-primary"><IconTextSave></IconTextSave></ButtonBasic>
             </div>
         </div>
     </div>
@@ -232,11 +232,13 @@
 
     public async Task Save()
     {
+        CascadingService.Nacitavanie = true;
         if (await ViewModel.Uloz())
         {
             await InfoModSaved.OpenModal(true);
             //Navigator.NavigateTo(Navigator.RemoveLastUrl());
         }
+        CascadingService.Nacitavanie = false;
     }
 
     public void Close()
@@ -255,10 +257,10 @@
         {
             return;
         }
-
+        CascadingService.Nacitavanie = true;
         InfoModPouzivatelAns.UpdateText("Osobe boli priradené údaje úspešne.");
         var succ = await ViewModel.PromoteToPouzivatel((string)ffucModal.Outputs[0], (string)ffucModal.Outputs[1], (string)ffucModal.Outputs[2], InfoModPouzivatelAns);
-
+        CascadingService.Nacitavanie = false;
         await InfoModPouzivatelAns.OpenModal(true);
         if (succ)
         {
@@ -286,7 +288,9 @@
     {
         if (await zmheslamod.OpenModal(true))
         {
+            CascadingService.Nacitavanie = true;
             var res = await ViewModel.ZmenitHeslo((string)zmheslamod.Outputs[0], (string)zmheslamod.Outputs[1]);
+            CascadingService.Nacitavanie = false;
             if (!string.IsNullOrEmpty(res))
             {
                 InfoModPouzivatelAns.UpdateText(res);
@@ -308,10 +312,12 @@
 
         readonly DBContext _db;
         readonly IdentityUserOwn _user;
-        public SkladnikViewModel(DBContext db, IdentityUserOwn user)
+        readonly UniComponents.Services.ICascadingService _cascadingService;
+        public SkladnikViewModel(DBContext db, IdentityUserOwn user, UniComponents.Services.ICascadingService cascadingService)
         {
             _db = db;
             _user = user;
+            _cascadingService = cascadingService;
 
             ZoznamSklad = _db.Sklady.ToList();
             ZoznamOznacen = _db.SkladUzivatelia.Where(x => x.Uzivatel == _user.Id).ToList();
@@ -341,6 +347,7 @@
 
         public void Uloz()
         {
+            _cascadingService.Nacitavanie = true;
             var zozOzn = _db.SkladUzivatelia.Where(x => x.Uzivatel == _user.Id).ToList();
             foreach (var item in zozOzn)        //najskor vymazeme vsetky zaznamy
             {
@@ -353,6 +360,7 @@
             }
             _db.SaveChanges();
             Saved = true;
+            _cascadingService.Nacitavanie = false;
         }
 
         public bool LockedIn()

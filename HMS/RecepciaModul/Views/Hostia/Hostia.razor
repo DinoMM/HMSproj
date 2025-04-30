@@ -36,10 +36,10 @@
 
         <div class="col-9 autooverflowx">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
-                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRU())" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></button>
-                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
-                <button type="button" class="btn btn-primary" @onclick="OpenFlags"><IconText Icon="bi-flag-fill">Správa značiek</IconText></button>
+                <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"><IconTextClose></IconTextClose></ButtonBasic>
+                <ButtonBasic onclick="Create" disabled="@(!ViewModel.ValidateUserCRU())" type="button" class="btn btn-primary"> <IconTextCreate></IconTextCreate></ButtonBasic>
+                <ButtonBasic type="button" onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></ButtonBasic>
+                <ButtonBasic type="button" class="btn btn-primary" onclick="OpenFlags"><IconText Icon="bi-flag-fill">Správa značiek</IconText></ButtonBasic>
             </div>
         </div>
 
@@ -178,14 +178,18 @@
     {
         if (ViewModel.ValidateUserCRU())
         {
+            CascadingService.Nacitavanie = true;
             SetStartConditionOnVisit();
             Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDHost"));
+            CascadingService.Nacitavanie = false;
         }
     }
 
     public void OpenFlags()
     {
+        CascadingService.Nacitavanie = true;
         Navigator.NavigateTo(Navigator.AddNextUrl("HostFlagy"));
+        CascadingService.Nacitavanie = false;
     }
 
     private void StartOpenPD()

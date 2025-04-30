@@ -77,7 +77,9 @@
     protected override async Task OnInitializedAsync()
     {
         ViewModel.ReadOnlyHost = ReadOnlyHost;
+        CascadingService.Nacitavanie = true;
         await ViewModel.NacitajZoznamy();
+        CascadingService.Nacitavanie = false;
     }
 
     private void Close()
@@ -97,6 +99,8 @@
 
     public void ExternalSave()
     {
+        CascadingService.Nacitavanie = true;
         ViewModel.Ulozit();
+        CascadingService.Nacitavanie = false;
     }
 }

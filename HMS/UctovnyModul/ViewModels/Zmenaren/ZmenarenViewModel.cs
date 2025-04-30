@@ -43,9 +43,11 @@ namespace UctovnyModul.ViewModels
 
         protected override async Task NacitajZoznamyAsync()
         {
+            var token = CancellationTokenSource.Token;
+
             ZoznamPoloziek = new(await _db.ZmenyMien
                .OrderByDescending(x => x.ID)
-               .ToListAsync());
+               .ToListAsync(token));
 
             if (!curencyapiLoaded)
             {

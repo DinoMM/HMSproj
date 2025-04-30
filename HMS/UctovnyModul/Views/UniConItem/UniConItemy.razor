@@ -28,10 +28,10 @@
 
         <div class="col-9">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
-                <button @onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRUD())" class="btn btn-primary"><IconTextCreate></IconTextCreate></button>
-                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
-                <button type="button" class="btn btn-info" @onclick="FindTyp">Typ:&nbsp;@ViewModel.GetTypNazov()</button>
+                <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"><IconTextClose></IconTextClose></ButtonBasic>
+                <ButtonBasic onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRUD())" class="btn btn-primary"><IconTextCreate></IconTextCreate></ButtonBasic>
+                <ButtonBasic type="button" onclick="() => Open(marked)" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary"><IconTextOpen></IconTextOpen></ButtonBasic>
+                <ButtonBasic type="button" class="btn btn-info" onclick="FindTyp">Typ:&nbsp;@ViewModel.GetTypNazov()</ButtonBasic>
 
             </div>
         </div>
@@ -131,8 +131,10 @@
         {
             if (ViewModel.ValidateUserCRUD())
             {
+                CascadingService.Nacitavanie = true;
                 objectHolder.Add(item);
                 Navigator.NavigateTo(Navigator.AddNextUrl("/CRUUniItem"));
+                CascadingService.Nacitavanie = false;
             }
         }
     }
@@ -141,8 +143,10 @@
     {
         if (ViewModel.ValidateUserCRUD())
         {
+            CascadingService.Nacitavanie = true;
             SetStartConditionOnVisit();
             Navigator.NavigateTo(Navigator.AddNextUrl("/CRUUniItem"));
+            CascadingService.Nacitavanie = false;
         }
     }
 
@@ -162,9 +166,11 @@
     {
         if (await ifttype.OpenModal(true))
         {
+            CascadingService.Nacitavanie = true;
             await ViewModel.SpravujZmenuTypu(ifttype.OutSelection.FirstOrDefault());
             ViewModel.ComplexTable.SetMarkedNull();
             ViewModel.ComplexTable.TableSettings.FirstOrDefault(x => x.ID_Prop == "tableheader").HeaderValue = ViewModel.GetHeaderTable();
+            CascadingService.Nacitavanie = false;
         }
     }
 

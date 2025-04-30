@@ -122,6 +122,7 @@
 
     private void Save()
     {
+        CascadingService.Nacitavanie = true;
         if (entityContext.EditContext.Validate() && roomInfoContext.EditContext.Validate()) //manualne validovanie lebo mame dva objekty, chybove hlasky sa nahodia automaticky
         {
             ViewModel.Save();
@@ -130,6 +131,7 @@
         {
             StateHasChanged();
         }
+        CascadingService.Nacitavanie = false;
     }
 
 }

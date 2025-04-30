@@ -11,7 +11,8 @@ namespace SkladModul.ViewModels.Dodavatelia
 {
     public partial class DodavateliaViewModel : AObservableViewModel<Ddodavatel>
     {
-        public ObservableCollection<Ddodavatel> ZoznamDodavatelov { get => ZoznamPoloziek; set => ZoznamPoloziek = value; } 
+        public ObservableCollection<Ddodavatel> ZoznamDodavatelov { get => ZoznamPoloziek; set => ZoznamPoloziek = value; }
+        private List<(Dodavatel, bool)> moznoVymazat = new();
 
         private readonly DBContext _db;
         private readonly UserService _userService;
@@ -34,17 +35,23 @@ namespace SkladModul.ViewModels.Dodavatelia
 
         protected override async Task NacitajZoznamyAsync()
         {
-            ZoznamDodavatelov = new(await _db.Dodavatelia.OrderBy(x => x.Nazov).ToListAsync());
+            var token = CancellationTokenSource.Token;
+            ZoznamDodavatelov = new(await _db.Dodavatelia.OrderBy(x => x.Nazov).ToListAsync(token));
+
+            moznoVymazat.Clear();
+            foreach (var dod in ZoznamDodavatelov)
+            {
+                var res = await _db.Objednavky.AnyAsync(x => x.Dodavatel == dod.ICO || x.Odberatel == dod.ICO, token) 
+                    || await _db.Kasy.AnyAsync(x => x.Dodavatel == dod.ICO, token)
+                    || await _db.Faktury.AnyAsync(x => x.OdKoho == dod.ICO, token);
+
+                moznoVymazat.Add((dod, !res));
+            }
         }
 
         public override bool MoznoVymazat(Ddodavatel dod)
         {
-            var found = _db.Objednavky.Any(x => x.Dodavatel == dod.ICO || x.Odberatel == dod.ICO);    //nesmie byt v objednavkach
-            if (found)
-            {
-                return false;
-            }
-            return true;
+            return moznoVymazat.FirstOrDefault(x => x.Item1.ICO == dod.ICO).Item2;
         }
 
         public override void Vymazat(Ddodavatel dod)

@@ -168,12 +168,12 @@
                 <div class="btn-group" role="group">
                     @if (!ReadOnly)
                     {
-                        <button type="button" class="btn btn-secondary" @onclick="Close"> <IconTextClose></IconTextClose></button>
+                        <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"> <IconTextClose></IconTextClose></ButtonBasic>
                         <SimpleButton ID="ulozbuttonpolozid" Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
                     }
                     else
                     {
-                        <button type="button" class="btn btn-secondary" @onclick="Close"> <IconTextClose></IconTextClose></button>
+                        <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"> <IconTextClose></IconTextClose></ButtonBasic>
                     }
                 </div>
             </div>
@@ -243,14 +243,18 @@
 
     public async Task FindCon()
     {
+        CascadingService.Nacitavanie = true;
         ViewModel.PripravZoznam();
         ViewModel.SetSettings();
         ciftunicon.SetItemsFromList(ViewModel.ZoznamUniConItemsObjekty);
+        CascadingService.Nacitavanie = false;
         await ciftunicon.OpenModal(async (res) =>
         {
             if (res)
             {
+                CascadingService.Nacitavanie = true;
                 ViewModel.SpracujUniCon(ciftunicon.ComplexTable.Marked);
+                CascadingService.Nacitavanie = false;
                 switch (ViewModel.UniConItemPoklDokladuInput)
                 {
                     case DBLayer.Models.PolozkaSkladuConItemPoklDokladu item:

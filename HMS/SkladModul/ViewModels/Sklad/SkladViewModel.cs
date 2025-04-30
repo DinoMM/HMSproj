@@ -27,6 +27,8 @@ namespace SkladModul.ViewModels.Sklad
         public Ssklad Sklad { get; set; } = new();
         public bool NacitaneMnozstvo { get; set; } = false;
         public bool AktualneObdobie { get; set; } = false;
+
+        public List<string> ListObdDes { get; set; } = new();
         //public bool NacitavaniePoloziek { get; private set; } = true;
 
         //[ObservableProperty]
@@ -101,20 +103,22 @@ namespace SkladModul.ViewModels.Sklad
         /// Vráti všetky obdobia pre dany sklad, zoradene
         /// </summary>
         /// <returns></returns>
-        public List<string> GetObdobiaDes()
+        public async Task<List<string>> GetObdobiaDes(CancellationToken token)
         {
             if (Sklad.ID == "ALL")
             {
                 var listOdb = new List<string>() { "AKTU" };
+                token.ThrowIfCancellationRequested();
                 listOdb.AddRange(ObdobiaPreAll().Select(x => Ssklad.ShortFromObdobie(x)).ToList());
+                token.ThrowIfCancellationRequested();
                 return listOdb;
             }
 
-            var list = _db.SkladObdobi.Include(x => x.SkladX)
+            var list = await _db.SkladObdobi.Include(x => x.SkladX)
                 .Where(x => x.Sklad == Sklad.ID)
                 .OrderByDescending(x => x.Obdobie)
                 .Select(x => Ssklad.ShortFromObdobie(x.Obdobie))
-                .ToList();
+                .ToListAsync(token);
             return list;
         }
         private List<DateTime> ObdobiaPreAll()
@@ -154,36 +158,41 @@ namespace SkladModul.ViewModels.Sklad
         {
             //if (ZoznamPoloziek.Count == 0)
             //{
-            
-                if (Sklad.ID == "ALL")      //pri zobrazeni vsetkych poloziek pri mode ALL
-                {
-                    ZoznamPoloziek = new(_db.PolozkySkladu.ToList());
-                    return;
-                }
+            var token = CancellationTokenSource.Token;
 
-                //pridanie relevantnych poloziek skladu podla SKLADU
-                var zoz = _db.PolozkaSkladuMnozstva
-                    .Include(x => x.PolozkaSkladuX)
-                    .Include(x => x.SkladX)
-                    .Where(x => x.Sklad == Sklad.ID)
-                    .ToList();
-                //.ForEachAsync(x => ZoznamPoloziekSkladu.Add(x.PolozkaSkladuX));
-                ZoznamPoloziek = new();
-                foreach (var item in zoz)
-                {
-                    item.PolozkaSkladuX.ActiveNM = item.Active;
-                    ZoznamPoloziek.Add(item.PolozkaSkladuX);
-                }
-                await _sessionStorage.SetItemAsync("SkladPolozkyLoaded", true);
-                //}
-                //else // ak zoznam obsahuje polozky
-                //{
-                //    if (!(await _sessionStorage.GetItemAsync<bool>("SkladPolozkyLoaded")))   //ak je nastavene ze chceme aktualizovat polozky
-                //    {
-                //        await AktualizujPolozky();
-                //    }
-                //}
-            
+            if (Sklad.ID == "ALL")      //pri zobrazeni vsetkych poloziek pri mode ALL
+            {
+                ZoznamPoloziek = new(await _db.PolozkySkladu.ToListAsync(token));
+                return;
+            }
+
+            //pridanie relevantnych poloziek skladu podla SKLADU
+            var zoz = await _db.PolozkaSkladuMnozstva
+                .Include(x => x.PolozkaSkladuX)
+                .Include(x => x.SkladX)
+                .Where(x => x.Sklad == Sklad.ID)
+                .ToListAsync(token);
+            //.ForEachAsync(x => ZoznamPoloziekSkladu.Add(x.PolozkaSkladuX));
+            ZoznamPoloziek = new();
+            foreach (var item in zoz)
+            {
+                item.PolozkaSkladuX.ActiveNM = item.Active;
+                ZoznamPoloziek.Add(item.PolozkaSkladuX);
+                token.ThrowIfCancellationRequested();
+            }
+            await _sessionStorage.SetItemAsync("SkladPolozkyLoaded", true);
+
+            ListObdDes.Clear();
+            ListObdDes.AddRange(await GetObdobiaDes(token));
+            //}
+            //else // ak zoznam obsahuje polozky
+            //{
+            //    if (!(await _sessionStorage.GetItemAsync<bool>("SkladPolozkyLoaded")))   //ak je nastavene ze chceme aktualizovat polozky
+            //    {
+            //        await AktualizujPolozky();
+            //    }
+            //}
+
         }
 
         //public async Task LoadPolozky()

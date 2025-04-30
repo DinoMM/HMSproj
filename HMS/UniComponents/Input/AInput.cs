@@ -63,7 +63,7 @@ namespace UniComponents
         /// <summary>
         /// Určuje, že bude input disabled pomocou cascading parameter, default false
         /// </summary>
-        [CascadingParameter(Name = "CascDisabled")]
+        [CascadingParameter(Name = "CascLoading")]
         public bool CascDisabled { get; set; } = false;
 
         [Parameter]

@@ -1,11 +1,12 @@
 ﻿@namespace UniComponents
 @inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
 
 @if (!Tooltip.HasValue)
 {
-    <button id="@ID" type="@Type" class="@Class @AdditionalClass" disabled="@(Disabled || Nacitavanie || CascDisabled || CascLoading)" @onclick="OnClick">
+    <button id="@ID" type="@Type" class="@Class @AdditionalClass" disabled="@(Disabled || Nacitavanie  || CascLoading)" @onclick="OnClick" style="@Style">
         @ChildContent
-        @if (Nacitavanie || CascLoading)
+        @if (Nacitavanie)
         {
             <SpinnerLoading ExtraSmall="true" />
         }
@@ -13,9 +14,9 @@
 }
 else
 {
-    <button id="@ID" type="@Type" class="@Class position-relative @AdditionalClass" disabled="@(Disabled || Nacitavanie || CascDisabled || CascLoading)" @onclick="ToolTipOnClick">
+    <button id="@ID" type="@Type" class="@Class position-relative @AdditionalClass" disabled="@(Disabled || Nacitavanie || CascLoading)" @onclick="ToolTipOnClick" style="@Style">
         @ChildContent
-        @if (Nacitavanie || CascLoading)
+        @if (Nacitavanie)
         {
             <SpinnerLoading ExtraSmall="true" />
         }
@@ -70,16 +71,22 @@ else
     public bool Nacitavanie { get; set; } = false;
 
     /// <summary>
+    /// Vnutro style, Default ""
+    /// </summary>
+    [Parameter]
+    public string Style { get; set; } = "";
+
+    /// <summary>
     /// Prídavný class, nutnost poslat cez cascading parameter
     /// </summary>
     [CascadingParameter(Name = "AdditionalClass")]
     public string AdditionalClass { get; set; } = "";
 
-    /// <summary>
-    /// Určuje, že bude tlačilo disabled pomocou cascading parameter, default false
-    /// </summary>
-    [CascadingParameter(Name = "CascDisabled")]
-    public bool CascDisabled { get; set; } = false;
+    ///// <summary>
+    ///// Určuje, že bude tlačilo disabled pomocou cascading parameter, default false
+    ///// </summary>
+    //[CascadingParameter(Name = "CascDisabled")]
+    //public bool CascDisabled { get; set; } = false;
 
     /// <summary>
     /// Určuje, že bude tlačilo disabled a dá SpinnerLoading  pomocou cascading parameter, default false
@@ -92,5 +99,10 @@ else
     {
         await JSRuntime.InvokeVoidAsync("updateTooltipShow", ID + "tooltip", false);    //fixne ak zostane tooltip vysieť
         await OnClick.InvokeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await JSRuntime.InvokeVoidAsync("updateTooltipShow", ID + "tooltip", false);
     }
 }

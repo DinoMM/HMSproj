@@ -99,26 +99,26 @@ namespace HMS
                     opt.UseSqlServer($"Data Source={dbsource},{dbport};Database=MyDatabase;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions =>
                 {
                     sqlOptions.EnableRetryOnFailure(
-                        maxRetryCount: 2,
+                        maxRetryCount: 3,
                         maxRetryDelay: TimeSpan.FromSeconds(10),
                         errorNumbersToAdd: null
                         );
                 }
 
                 );
-                    opt.AddInterceptors(new DelayCommandInterceptor(TimeSpan.FromSeconds(1)));  //Testovacie
+                    //opt.AddInterceptors(new DelayCommandInterceptor(TimeSpan.FromSeconds(1)));  //Testovacie
                 });               //(pomohol som si z internetu tutoriály/AI)
 
                 builder.Services.AddDbContext<DataContext>(opt => {
-                    opt.UseSqlServer($"Data Source=localhost,1433;Database=HlavnaDatabaza;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions =>
+                    opt.UseSqlServer($"Data Source={dbsource},{dbport};Database=HlavnaDatabaza;User ID={usr};Password={tpswd};Connect Timeout=30;Encrypt=True;Trust Server Certificate=True;Application Intent=ReadWrite;Multi Subnet Failover=False", sqlServerOptionsAction: sqlOptions =>
                 {
                     sqlOptions.EnableRetryOnFailure(
-                        maxRetryCount: 2,
+                        maxRetryCount: 3,
                         maxRetryDelay: TimeSpan.FromSeconds(10),
                         errorNumbersToAdd: null
                         );
                 });
-                    opt.AddInterceptors(new DelayCommandInterceptor(TimeSpan.FromSeconds(1)));  //Testovacie
+                    //opt.AddInterceptors(new DelayCommandInterceptor(TimeSpan.FromSeconds(1)));  //Testovacie
                 });               //(pomohol som si z internetu tutoriály/AI)
             }
             //pridanie service pre spravu usera a jeho role
@@ -239,9 +239,10 @@ namespace HMS
 
 
 
-
+#if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
             builder.Logging.AddDebug();
+#endif
 
 
             return builder.Build();

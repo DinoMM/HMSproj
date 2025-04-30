@@ -85,7 +85,7 @@
         <div class="row pt-2">
             <div class="col text-center">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+                    <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"><IconTextClose></IconTextClose></ButtonBasic>
                     <SimpleButton ID="ulozbutton" Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
                     <SimpleButton ID="zmazbutton" Type="button" ZmenaTextu="@(("Vymazať", "Vymazať"))" Disabled="!ViewModel.Existuje() ||!ViewModel.MoznoVymazat(ViewModel.KasaInput)" Class="btn btn-danger" OnClick="Vymazat"></SimpleButton>
 
@@ -117,7 +117,9 @@
         {
             return;
         }
+        CascadingService.Nacitavanie = true;
         await ViewModel.NacitajZoznamy();
+        CascadingService.Nacitavanie = false;
     }
 
     public void Close()
@@ -127,6 +129,7 @@
 
     public async Task Save()
     {
+        CascadingService.Nacitavanie = true;
         if (ViewModel.Ulozit())
         {
             await InfoMod.OpenModal(true);
@@ -135,6 +138,7 @@
         {
             await JSRuntime.InvokeVoidAsync("addStyleClassUntilClick", "ulozbutton", "btn-danger");
         }
+        CascadingService.Nacitavanie = false;
     }
 
     public async Task FindKasa()

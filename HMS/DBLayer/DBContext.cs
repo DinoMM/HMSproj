@@ -254,6 +254,5 @@ namespace DBLayer
             return await base.ReaderExecutingAsync(command, eventData, result, cancellationToken);
         }
 
-
     }
 }

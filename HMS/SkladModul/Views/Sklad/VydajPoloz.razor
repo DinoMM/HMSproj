@@ -30,9 +30,9 @@
                 </div>
                 <div class="col-9">
                     <div class="btn-group mb-2" role="group">
-                        <button @onclick="() => Navigator.NavigateTo(Navigator.RemoveLastUrl())" class="btn btn-secondary" type="button"><IconTextClose></IconTextClose></button>
-                        <button @onclick="Create" disabled="@(!ViewModel.IsObdobieActual)" class="btn btn-primary  " type="button"><IconTextCreate></IconTextCreate></button>
-                        <button @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary  " type="button"><IconTextOpen></IconTextOpen> </button>
+                        <ButtonBasic onclick="() => Navigator.NavigateTo(Navigator.RemoveLastUrl())" class="btn btn-secondary" type="button"><IconTextClose></IconTextClose></ButtonBasic>
+                        <ButtonBasic onclick="Create" disabled="@(!ViewModel.IsObdobieActual)" class="btn btn-primary" type="button"><IconTextCreate></IconTextCreate></ButtonBasic>
+                        <ButtonBasic onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary" type="button"><IconTextOpen></IconTextOpen> </ButtonBasic>
                     </div>
                 </div>
             </div>

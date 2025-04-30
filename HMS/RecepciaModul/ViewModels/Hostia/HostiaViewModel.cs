@@ -44,14 +44,17 @@ namespace RecepciaModul.ViewModels
         {
             await Task.Run(async () =>
             {
-                ZoznamPoloziek = new(_db.Hostia.OrderBy(x => x.Surname).ToList());
+                var token = CancellationTokenSource.Token;
+
+                ZoznamPoloziek = new(await _db.Hostia.OrderBy(x => x.Surname).ToListAsync(token));
                 foreach (var item in ZoznamPoloziek)
                 {
-                    item.GuestZ = await _dbw.Users.FirstOrDefaultAsync(x => x.Id == item.Guest);
+                    item.GuestZ = await _dbw.Users.FirstOrDefaultAsync(x => x.Id == item.Guest, token);
 
+                    token.ThrowIfCancellationRequested();
                     item.PokladnicnyDokladZ = Host.GetActivePokladnicneDoklady(item, in _db).FirstOrDefault();  //ziskanie prveho aktivneho pokladnicneho dokladu
 
-                    moznoVymazatList.Add((item, ValidateUserD() && !_db.HostConReservations.Any(x => x.Host == item.ID /*|| x.ReservationZ.DepartureDate <= DateTime.Today.AddDays(-360)*/)));
+                    moznoVymazatList.Add((item, ValidateUserD() && !await _db.HostConReservations.AnyAsync(x => x.Host == item.ID /*|| x.ReservationZ.DepartureDate <= DateTime.Today.AddDays(-360)*/, token)));
                 }
 
                 ZoznamKas.Clear();
@@ -59,7 +62,7 @@ namespace RecepciaModul.ViewModels
                 .Include(x => x.ActualUserX)
                 .Include(x => x.DodavatelX)
                 .OrderBy(x => x.ID)
-                .ToListAsync());         //nacitanie zoznamu kas
+                .ToListAsync(token));         //nacitanie zoznamu kas
 
             });
         }

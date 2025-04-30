@@ -21,15 +21,15 @@
 
         <div class="col-9">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-secondary" @onclick="Close">
+                <ButtonBasic type="button" class="btn btn-secondary" onclick="Close">
                     <IconTextClose></IconTextClose>
-                </button>
-                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">
+                </ButtonBasic>
+                <ButtonBasic onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary">
                     <IconTextCreate></IconTextCreate>
-                </button>
-                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary">
+                </ButtonBasic>
+                <ButtonBasic type="button" onclick="() => Open(marked)" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary">
                     <IconTextOpen></IconTextOpen>
-                </button>
+                </ButtonBasic>
             </div>
         </div>
 
@@ -74,6 +74,9 @@
     new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Obec), HeaderValue = "Obec", CellValue = (item) => item.Obec },
     new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Adresa), HeaderValue = "Adresa", CellValue = (item) => item.Adresa },
     new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Iban), HeaderValue = "Iban", CellValue = (item) => item.Iban },
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.DIC), HeaderValue = "DIC", CellValue = (item) => item.DIC, Visible = false },
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.IC_DPH), HeaderValue = "IČ_DPH", CellValue = (item) => item.IC_DPH, Visible = false },
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Poznámka), HeaderValue = "Poznámka", CellValue = (item) => item.Poznámka, Visible = false },
 
     };
 
@@ -115,8 +118,10 @@
         {
             if (ViewModel.ValidateUserCRUD())
             {
+                CascadingService.Nacitavanie = true;
                 objectHolder.Add(item);
                 Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDodavatel"));
+                CascadingService.Nacitavanie = false;
             }
         }
     }
@@ -142,8 +147,10 @@
     {
         if (ViewModel.ValidateUserCRUD())
         {
+            CascadingService.Nacitavanie = true;
             SetStartConditionOnVisit();
             Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDodavatel"));
+            CascadingService.Nacitavanie = false;
         }
     }
 }

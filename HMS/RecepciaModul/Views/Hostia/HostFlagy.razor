@@ -109,14 +109,14 @@
 
         <div class="col-9">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-secondary" @onclick="Close">
+                <ButtonBasic type="button" class="btn btn-secondary" onclick="Close">
                     <IconTextClose></IconTextClose>
-                </button>
-                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null || !ViewModel.ValidateUserCUD())" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
-                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCUD())" type="button" class="btn btn-primary">
+                </ButtonBasic>
+                <ButtonBasic type="button" onclick="() => Open(marked)" disabled="@(marked == null || !ViewModel.ValidateUserCUD())" class="btn btn-primary"><IconTextOpen></IconTextOpen></ButtonBasic>
+                <ButtonBasic onclick="Create" disabled="@(!ViewModel.ValidateUserCUD())" type="button" class="btn btn-primary">
                     <IconTextCreate></IconTextCreate>
-                </button>
-                <button type="button" @onclick="OpenZozHosti" disabled="@(marked == null)" class="btn btn-primary"><IconText Icon="bi-person-lines-fill">Zoznam hostí so značkou</IconText></button>
+                </ButtonBasic>
+                <ButtonBasic type="button" onclick="OpenZozHosti" disabled="@(marked == null)" class="btn btn-primary"><IconText Icon="bi-person-lines-fill">Zoznam hostí so značkou</IconText></ButtonBasic>
             </div>
         </div>
 
@@ -187,7 +187,7 @@ new() { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", C
         {
             HeaderValue = "Zaznačiť pre odstánenie",
             CellClass = "width10perc",
-            Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await SetToRemoveHost(item)), new RenderFragmentAttribute("Disabled", false), new RenderFragmentAttribute("Disabled", false))
+            Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await SetToRemoveHost(item)), new RenderFragmentAttribute("Disabled", false))
         });
     }
 
@@ -254,16 +254,24 @@ new() { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", C
 
     public async Task Save()
     {
-        if (ViewModel.KontrolaExistencieID())   //ak uz existuje id pri novych flagoch
+        CascadingService.Nacitavanie = true;
+        try
         {
-            await JSRuntime.InvokeVoidAsync("addWarningPopOverUntilClick", "inputflagid", "Vložené označenie už existuje. Zvoľte iné ID.", "right");
-            await JSRuntime.InvokeVoidAsync("addStyleClassUntilClick", "ulozbuttonid", "border-warning");
-            return;
-        }
+            if (ViewModel.KontrolaExistencieID())   //ak uz existuje id pri novych flagoch
+            {
+                await JSRuntime.InvokeVoidAsync("addWarningPopOverUntilClick", "inputflagid", "Vložené označenie už existuje. Zvoľte iné ID.", "right");
+                await JSRuntime.InvokeVoidAsync("addStyleClassUntilClick", "ulozbuttonid", "border-warning");
+                return;
+            }
 
-        if (ViewModel.Ulozit())
+            if (ViewModel.Ulozit())
+            {
+                await InfoModSaved.OpenModal(true);
+            }
+        }
+        finally
         {
-            await InfoModSaved.OpenModal(true);
+            CascadingService.Nacitavanie = false;
         }
     }
 
@@ -279,9 +287,12 @@ new() { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", C
     {
         if (marked != null)
         {
+            CascadingService.Nacitavanie = true;
             await ViewModel.LoadHostiaZFlagy(marked);
+            CascadingService.Nacitavanie = false;
             await cusmodzozhosti.OpenModal(async (res) =>
             {
+                CascadingService.Nacitavanie = true;
                 if (res)
                 {
                     await ViewModel.OdstranHostiZFlagy();
@@ -290,6 +301,7 @@ new() { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", C
                 {
                     ViewModel.OdstraniFlaguHostList.Clear();
                 }
+                CascadingService.Nacitavanie = false;
 
             });
         }

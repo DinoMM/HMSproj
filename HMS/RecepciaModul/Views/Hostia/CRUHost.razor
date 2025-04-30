@@ -85,12 +85,12 @@
 
             <div class="col">
                 @*<div class="row">
-                    <div class="col col-8">
-                        <label>Rodné&nbsp;číslo</label>
-                        <InputText @bind-Value="@ViewModel.HostInput.BirthNumber" disabled="@ReadOnly" class="form-control" placeholder="Rodné číslo" />
-                        <ValidationMessage For="@(() => ViewModel.HostInput.BirthNumber)" />
-                    </div>
-                </div>*@
+                        <div class="col col-8">
+                            <label>Rodné&nbsp;číslo</label>
+                            <InputText @bind-Value="@ViewModel.HostInput.BirthNumber" disabled="@ReadOnly" class="form-control" placeholder="Rodné číslo" />
+                            <ValidationMessage For="@(() => ViewModel.HostInput.BirthNumber)" />
+                        </div>
+                    </div>*@
                 <div class="row">
                     <div class="col col-8">
                         <label>Číslo&nbsp;občianského</label>
@@ -195,7 +195,7 @@
                 <div class="btn-group" role="group">
                     @if (!AsComponent)
                     {
-                        <button type="button" @onclick="Close" class="btn btn-secondary "><IconTextClose></IconTextClose></button>
+                        <ButtonBasic type="button" onclick="Close" class="btn btn-secondary "><IconTextClose></IconTextClose></ButtonBasic>
                     }
                     <SimpleButton ID="ulozbuttonid" Type="submit" disabled="@ReadOnly" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
                 </div>
@@ -270,30 +270,40 @@
 
     public async Task Save()
     {
-        if (await ViewModel.PozriVarovania("ulozbuttonid", new() { "brthdateid", "citizenid", "passportid" }))
+        CascadingService.Nacitavanie = true;
+        try
         {
-            return;
-        }
+            if (await ViewModel.PozriVarovania("ulozbuttonid", new() { "brthdateid", "citizenid", "passportid" }))
+            {
+                return;
+            }
 
-        if (await ViewModel.Uloz())
+            if (await ViewModel.Uloz())
+            {
+                if (HostConFlagyComp != null)
+                {
+                    HostConFlagyComp.ExternalSave();        //ulozenie flagov
+                }
+                if (AsComponent)
+                {
+                    objectHolder.Remove<DBLayer.Models.Host>();
+                    objectHolder.Add(ViewModel.Host);
+                }
+                await InfoModSaved.OpenModal(true);
+            }
+        }
+        finally
         {
-            if (HostConFlagyComp != null)
-            {
-                HostConFlagyComp.ExternalSave();        //ulozenie flagov
-            }
-            if (AsComponent)
-            {
-                objectHolder.Remove<DBLayer.Models.Host>();
-                objectHolder.Add(ViewModel.Host);
-            }
-            await InfoModSaved.OpenModal(true);
+            CascadingService.Nacitavanie = false;
         }
     }
 
     public async Task FindWebUser()
     {
+        CascadingService.Nacitavanie = true;
         ciftguest.SetItemsFromList(await ViewModel.GetListWebUsers());
         ciftguest.ValueInFilter = ViewModel.HostInput.GuestZ?.Email ?? "";
+        CascadingService.Nacitavanie = false;
         await ciftguest.OpenModal(async (res) =>
         {
             if (res)

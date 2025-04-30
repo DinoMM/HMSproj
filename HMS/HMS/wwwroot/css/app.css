@@ -205,3 +205,23 @@ h1:focus {
 .resize-none {
     resize: none;
 }
+
+/*Pre nacitavanie*/
+/*nastavi kurzor na loading 1. krok */
+body.loadingcursor1 {
+    cursor: wait !important;
+}
+/*nastavi kurzor na loading 2 krok */
+.pointereventsnone {
+    pointer-events: none;
+}
+.waitcursor {
+    cursor: wait !important;
+}
+.pointereventsnone2 {
+    pointer-events: none;
+}
+
+.defaultcursor {
+    cursor: default !important;
+}

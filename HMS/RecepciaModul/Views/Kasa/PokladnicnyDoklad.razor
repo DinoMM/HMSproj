@@ -233,17 +233,17 @@
                 <div class="btn-group" role="group">
                     @if (!AsComponent)
                     {
-                        <button type="button" @onclick="Close" class="btn btn-secondary "><IconTextClose></IconTextClose></button>
+                        <ButtonBasic type="button" onclick="Close" class="btn btn-secondary "><IconTextClose></IconTextClose></ButtonBasic>
                     }
                     <SimpleButton ID="ulozbuttonid" Type="submit" disabled="@ReadOnly" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))"></SimpleButton>
                     <SimpleButton ID="zaplatbuttnid" Type="button" disabled="@(ReadOnly || !ViewModel.Existuje() || !ViewModel.JeNastavenaKasa() || !ViewModel.Mapolozky())" OnClick="Buy" ZmenaStavuTextu="ViewModel.JeNastavenaKasa()" ZmenaTextu="@(("Zaplatiť", "Nastavte kasu"))"></SimpleButton>
-                    <button type="button" disabled="@(ViewModel.PDFLoading || !ViewModel.Existuje() || !ViewModel.PoklDokladInput.Spracovana)" class="btn btn-info" @onclick="() => ViewModel.CreatePdf()">
+                    <ButtonBasic type="button" disabled="@(ViewModel.PDFLoading || !ViewModel.Existuje() || !ViewModel.PoklDokladInput.Spracovana)" class="btn btn-info" onclick="() => ViewModel.CreatePdf()">
                         <i class="bi bi-filetype-pdf"></i>
                         @if (ViewModel.PDFLoading)
                         {
                             <SpinnerLoading ExtraSmall="true"></SpinnerLoading>
                         }
-                    </button>
+                    </ButtonBasic>
                 </div>
             </div>
         </div>
@@ -293,7 +293,9 @@
         var foundedPokl = objectHolder.Remove<DBLayer.Models.PokladnicnyDoklad>();   //pokusi sa ziskat objekt z uloziska
         if (foundedPokl != null)
         {
+            CascadingService.Nacitavanie = true;
             var res = ViewModel.SetPoklDokl(foundedPokl);
+            CascadingService.Nacitavanie = false;
             if (!OnlyOneItem)
             {
                 OnlyOneItem = res;
@@ -303,7 +305,9 @@
         var foundedHost = objectHolder.Remove<DBLayer.Models.Host>();   //pokusi sa ziskat objekt z uloziska
         if (foundedHost != null)
         {
+            CascadingService.Nacitavanie = true;
             ViewModel.SetPoklDokl(foundedHost);
+            CascadingService.Nacitavanie = false;
         }
 
         if (AsComponent)
@@ -326,9 +330,9 @@
         {
             return;
         }
-
-
+        CascadingService.Nacitavanie = true;
         await ViewModel.NacitajZoznamy();
+        CascadingService.Nacitavanie = false;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -356,6 +360,7 @@
 
     public async Task Save(bool silent = false)
     {
+        CascadingService.Nacitavanie = true;
         if (await ViewModel.Ulozit(AsComponent))
         {
             if (!silent)
@@ -363,6 +368,7 @@
                 await infomodal.OpenModal(true);
             }
         }
+        CascadingService.Nacitavanie = false;
     }
 
     public void OpenItem(DBLayer.Models.ItemPokladDokladu item)
@@ -388,7 +394,9 @@
     {
         if (await approvmod.OpenModal(true))
         {
+            CascadingService.Nacitavanie = true;
             var result = await ViewModel.Predat(AsComponent);
+            CascadingService.Nacitavanie = false;
             if (result == System.ComponentModel.DataAnnotations.ValidationResult.Success)
             {
                 infomodal.UpdateText("Doklad bol zaplatený");

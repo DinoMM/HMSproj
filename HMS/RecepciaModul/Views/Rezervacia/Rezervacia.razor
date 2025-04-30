@@ -86,7 +86,6 @@
     <BODY>
         @if (legndmodal.Render)
         {
-
             <ul class="gantt__row-bars unselectableText">
                 <li style="background-color: @ViewModel.HEX_PURPLE ; grid-column: 1/16;">Nepotvrdená&nbsp;rezervácia</li>
                 <li style="background-color: @ViewModel.HEX_BLUE ; grid-column: 1/16;">Potvrdená&nbsp;rezervácia</li>
@@ -99,6 +98,9 @@
                 <li style="background-color: @ViewModel.HEX_BLUE ; grid-column: 1/16;" class="stripesstraight">Nezobrazuje&nbsp;sa&nbsp;celá&nbsp;rezervácia</li>
                 <li style="background-color: @ViewModel.HEX_BLUE ; grid-column: 1/16;" class="blackBorderli">Označená&nbsp;rezervácia</li>
             </ul>
+            <hr>
+            <label class="text-success">101, Izba - Uprataná izba</label><br>
+            <label>101, Izba - Neskontrolovaná izba</label>
         }
     </BODY>
 
@@ -168,6 +170,7 @@
         <SpinnerLoading Size="3" />
     </div>
     @InvokeAsync(StateHasChanged);
+    @Task.Delay(20)
     return;
 }
 
@@ -175,14 +178,14 @@
 <div class="gantt">
     <div class="sticky1 ms-1 autooverflowx">
         <div class="sticky1 d-flex" role="group">
-            <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+            <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"><IconTextClose></IconTextClose></ButtonBasic>
             <ButtonBasic ID="addresbuttn" Class="btn btn-primary" Disabled="!ViewModel.ValidateUserC()" OnClick="Create" Tooltip="@(("bottom", "Vytvoriť novú rezerváciu"))"><IconTextCreate></IconTextCreate></ButtonBasic>
             <ButtonBasic ID="setintervaldatebuttn" Class="btn btn-info" OnClick="OpenChangeDate" Tooltip="@(("bottom", "Nastaviť rozpätie dátumov"))"><IconText Icon="bi-calendar-range">@ViewModel.ZoznamDatumovNaZobrazenie[0].ToString("dd.MM.-")@ViewModel.ZoznamDatumovNaZobrazenie.Last().ToString("dd.MM.")</IconText></ButtonBasic>
             <ButtonBasic ID="zoznespracbuttn" Class="btn btn-primary" OnClick="ListRawRes" Tooltip="@(("bottom", "Zobraziť zoznam nespracovaných rezervácií"))"><IconText Icon="bi-hourglass-split">Zoznam nespracovaných</IconText></ButtonBasic>
             <ButtonBasic ID="zoznallbuttn" Class="btn btn-primary" OnClick="ListAll" Tooltip="@(("bottom", "Zobraziť zoznam všetkých rezervácií"))"><IconText Icon="bi-calendar3">Zoznam rezervácií</IconText></ButtonBasic>
             <ButtonBasic ID="showactrualbuttn" Class="btn btn-info" OnClick="ChangeVisibilityRowActual" Tooltip="@(("bottom", "Skryť izby, ktoré nemajú dneska pohyb"))"><IconText Icon="bi-eye">@(showrecentrows ? "Všetky" : "Aktuálne")</IconText></ButtonBasic>
 
-            <button type="button" class="btn btn-info ms-auto" @onclick="LegendModal">Legenda</button>
+            <ButtonBasic type="button" class="btn btn-info ms-auto" onclick="LegendModal">Legenda</ButtonBasic>
 
         </div>
     </div>
@@ -219,7 +222,7 @@
             <div class="gantt__row-first">
                 @if (RoomsToShow.Contains(item))
                 {
-                    <label>@(item.RoomNumber + ", " + item.RoomCategory)</label>
+                    <label class="@(item.RoomInfo.Status == DBLayer.Models.HSKModels.RoomStatus.Upratana ? "text-success" : "")">@(item.RoomNumber + ", " + item.RoomCategory)</label>
                     <a @onclick="@(async () => await HideRow(item))" style="cursor: pointer;">
                         <i class="bi bi-arrow-down"></i>
                     </a>
@@ -320,8 +323,10 @@
         {
             return;
         }
+        CascadingService.Nacitavanie = true;
         await ViewModel.NacitajZoznamy();
         RoomsToShow = new(ViewModel.ZoznamIzieb.ToList());
+        CascadingService.Nacitavanie = false;
         //ZoznamSort = ViewModel.ZoznamVsetkychRezervacii;
     }
 
@@ -405,9 +410,9 @@
 
     private async Task ListRawRes()
     {
-        CascadingService.Disabled = true;
+        CascadingService.Nacitavanie = true;
         await ViewModel.NacitajNespracovaneRezervacie(refresh: false);
-        CascadingService.Disabled = false;
+        CascadingService.Nacitavanie = false;
         while (true)
         {
             if (await nespracRes.OpenModal(true))
@@ -427,10 +432,10 @@
     private async Task ListAll()
     {
         //resaslistmod.Render = true;
-        CascadingService.Disabled = true;
+        CascadingService.Nacitavanie = true;
         await ViewModel.NacitajZoznamRezervacieAll();
         await complexTableAllRes.OnItemsChange(new(System.Collections.Specialized.NotifyCollectionChangedAction.Reset));
-        CascadingService.Disabled = false;
+        CascadingService.Nacitavanie = false;
         if (!await resaslistmod.OpenModal(true))
         {
             ViewModel.ClearChangesDB();

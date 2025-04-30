@@ -3,6 +3,7 @@
 @inject CRUFakturaViewModel ViewModel
 @inject UniComponents.Services.TransientHolderService TranService
 @using Microsoft.AspNetCore.Components.Forms
+@implements IDisposable
 
 <InfoModal @ref="infoMod"
            ID="infomodcruroom"
@@ -110,11 +111,11 @@
                 </div>
                 <div class="row">
                     <div class="col-6">
-                        <FloatingInput T="decimal" Type="number" ID="fsuma" Header="Suma bez DPH" Value="@(Math.Round(ViewModel.Entity.CenaBezDPH, 2))" Disabled="true" ></FloatingInput>
+                        <FloatingInput T="decimal" Type="number" ID="fsuma" Header="Suma bez DPH" Value="@(Math.Round(ViewModel.Entity.CenaBezDPH, 2))" Disabled="true"></FloatingInput>
                         <ValidationMessage For="@(() => ViewModel.Entity.CenaBezDPH)" />
                     </div>
                     <div class="col-6">
-                        <FloatingInput T="decimal" Type="number" ID="fsumaz" Header="Zoznam" Value="@(Math.Round(ViewModel.Cenaz,2))" Disabled="true" ></FloatingInput>
+                        <FloatingInput T="decimal" Type="number" ID="fsumaz" Header="Zoznam" Value="@(Math.Round(ViewModel.Cenaz,2))" Disabled="true"></FloatingInput>
                     </div>
                 </div>
                 <div class="row">
@@ -128,11 +129,11 @@
                 </div>
                 <div class="row">
                     <div class="col-6">
-                        <FloatingInput T="decimal" Type="number" ID="fsumadph" Header="Suma s DPH" Value="@(Math.Round(ViewModel.Entity.CenaSDPH,2))" Disabled="true" ></FloatingInput>
+                        <FloatingInput T="decimal" Type="number" ID="fsumadph" Header="Suma s DPH" Value="@(Math.Round(ViewModel.Entity.CenaSDPH,2))" Disabled="true"></FloatingInput>
                         <ValidationMessage For="@(() => ViewModel.Entity.CenaSDPH)" />
                     </div>
                     <div class="col-6">
-                        <FloatingInput T="decimal" Type="number" ID="fsumadphz" Header="Zoznam" Value="@(Math.Round(ViewModel.Cenadphz,2))" Disabled="true" ></FloatingInput>
+                        <FloatingInput T="decimal" Type="number" ID="fsumadphz" Header="Zoznam" Value="@(Math.Round(ViewModel.Cenadphz,2))" Disabled="true"></FloatingInput>
                     </div>
                 </div>
                 @if (ViewModel.TotalFak > 1)
@@ -355,7 +356,9 @@
     new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Obec), HeaderValue = "Obec", CellValue = (item) => item.Obec },
     new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Adresa), HeaderValue = "Adresa", CellValue = (item) => item.Adresa },
     new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Iban), HeaderValue = "Iban", CellValue = (item) => item.Iban },
-
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.DIC), HeaderValue = "DIC", CellValue = (item) => item.DIC, Visible = false },
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.IC_DPH), HeaderValue = "IČ_DPH", CellValue = (item) => item.IC_DPH, Visible = false },
+    new () { ID_Prop = nameof(DBLayer.Models.Dodavatel.Poznámka), HeaderValue = "Poznámka", CellValue = (item) => item.Poznámka, Visible = false },
     };
 
     List<TableColumnTemplate<string>> tableSettingsFak = new() {
@@ -402,8 +405,10 @@
 
     private async Task Save()
     {
+        CascadingService.Nacitavanie = true;
         await ViewModel.Save();
         StateHasChanged();
+        CascadingService.Nacitavanie = false;
     }
 
     private async Task OnInvalid()
@@ -439,9 +444,11 @@
 
     private async Task FindDod(string? filter, bool pickemptyinst, Action<DBLayer.Models.Dodavatel?> method)
     {
+        CascadingService.Nacitavanie = true;
         ciftDod.SetItemsFromList(await ViewModel.GetDod());
         ciftDod.ValueInFilter = filter ?? "";
         emptyInstance = pickemptyinst;
+        CascadingService.Nacitavanie = false;
         await ciftDod.OpenModal(async (res) =>
         {
             if (res)
@@ -459,6 +466,8 @@
             ViewModel.Entity.OdKoho = dodav?.ICO ?? "";
             ViewModel.Entity.OdKohoX = dodav;
             ViewModel.Entity.IBAN = ViewModel.Entity.OdKohoX.Iban;
+            ViewModel.Entity.DIC = dodav?.DIC ?? "";
+            ViewModel.Entity.IC_DPH = dodav?.IC_DPH ?? "";
         }
     }
 
@@ -487,5 +496,10 @@
             }
             StateHasChanged();
         });
+    }
+
+    public void Dispose()
+    {
+        ViewModel.OwnObservedCollectionPohJ.Dispose();
     }
 }

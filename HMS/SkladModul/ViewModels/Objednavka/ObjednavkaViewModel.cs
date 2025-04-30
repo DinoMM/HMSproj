@@ -67,14 +67,16 @@ namespace SkladModul.ViewModels.Objednavka
         //}
         protected override async Task NacitajZoznamyAsync()
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
-                ZoznamPoloziek = new(_db.Objednavky
+                var token = CancellationTokenSource.Token;
+
+                ZoznamPoloziek = new(await _db.Objednavky
                .Include(x => x.DodavatelX)
                .Include(x => x.OdberatelX)
                .Include(x => x.TvorcaX)
                .OrderByDescending(x => x.ID)
-               .ToList());
+               .ToListAsync(token));
             });
         }
         public override bool MoznoVymazat(OBJ polozka)

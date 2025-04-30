@@ -46,10 +46,10 @@
 
     <div class="row h-25">
         <div class="col col-1">
-            <button type="button" class="btn btn-secondary" @onclick="Close" tabindex="-1"><IconTextClose></IconTextClose></button>
+            <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"><IconTextClose></IconTextClose></ButtonBasic>
         </div>
         <div class="col col-1 me-2">
-            <button type="button" class="btn btn-primary" @onclick=@(() => Save(false)) disabled="@(ReadOnly || !ViewModel.Zmena)" tabindex="-1"><IconTextSave></IconTextSave></button>
+            <ButtonBasic type="button" class="btn btn-primary" onclick=@(() => Save(false)) disabled="@(ReadOnly || !ViewModel.Zmena)"><IconTextSave></IconTextSave></ButtonBasic>
         </div>
     </div>
 
@@ -204,7 +204,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        CascadingService.Nacitavanie = true;
         await ViewModel.LoadZoznam();
+        CascadingService.Nacitavanie = false;
     }
 
 
@@ -221,10 +223,12 @@
 
     private async Task HandleKeyDown(KeyboardEventArgs e)
     {
-        if (e.Key == "Tab")
+        if (e.Key == "Tab" || e.Key == "Enter")
         {
+            CascadingService.Nacitavanie = true;
             ciftpolozky.SetItemsFromList(ViewModel.ZoznamPoloziek, fillOnlyOnEmpty: true);
             ciftpolozky.ValueInFilter = await JSRuntime.InvokeAsync<string>("getInputField", "vyhlid");
+            CascadingService.Nacitavanie = false;
             await ciftpolozky.OpenModal(async (res) =>
             {
                 if (res)
@@ -251,11 +255,13 @@
 
     private async Task SaveCommand()
     {
+        CascadingService.Nacitavanie = true;
         await ViewModel.Uloz(InfoModListBadValue);
         if (ViewModel.Zmena)    //ak je stale Zmena true, znamena ze sa ukladanie nepodarilo, inak sa podarilo
         {
             await InfoMod.OpenModal();  //zobrazi sa info ze nieje mozne ulozit objednavku koli chybnym udajom
         }
+        CascadingService.Nacitavanie = false;
     }
 
 

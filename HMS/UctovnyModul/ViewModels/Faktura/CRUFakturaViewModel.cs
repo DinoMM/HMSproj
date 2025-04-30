@@ -44,6 +44,8 @@ namespace UctovnyModul.ViewModels
 
             OwnObservedCollectionPohJ = new(nacitajZoznamyAsync: async () =>
             {
+                var token = OwnObservedCollectionPohJ.CancellationTokenSource.Token;
+                
                 if (string.IsNullOrEmpty(Entity.Skupina) || Entity.SkupinaX == null)
                 {
                     OwnObservedCollectionPohJ.ZoznamPoloziek = new();
@@ -53,7 +55,7 @@ namespace UctovnyModul.ViewModels
                 OwnObservedCollectionPohJ.ZoznamPoloziek = new(await PohJednotka.GetDbSet(Entity.SkupinaX.GetType(), _db)
                     .Include(x => x.SkupinaX)
                     .Where(x => x.Skupina == Entity.Skupina)
-                    .ToListAsync());
+                    .ToListAsync(token));
                 RefreshSumy();
             },
             moznoVymazat: (item) =>

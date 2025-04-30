@@ -18,7 +18,7 @@
                    AfterRender="OpenKasa">
 
     </CompVyberKasa>
-  }
+}
 
 <CustomModal @ref="uzavretiemod" ID="uzavretiemod" OneButtonOnly="true" Header="Kontrola&nbsp;obdobia" SizeInRem="80">
     <BODY>
@@ -42,14 +42,14 @@
 
         <div class="col-9">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
-                <button @onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRU())" class="btn btn-primary"><IconTextCreate></IconTextCreate></button>
-                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
-                <button type="button" @onclick="ForceOpenKasa" disabled="@(!ViewModel.ValidateUserKasaR())" class="btn btn-info"><IconText Icon="">Pokladňa: @(ViewModel.AktlKasa?.ID ?? "-")</IconText></button>
-                <button type="button" @onclick="OpenUzavierka" class="btn btn-primary"><IconText Icon="bi-calendar3">Uzávierka</IconText></button>
+                <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"><IconTextClose></IconTextClose></ButtonBasic>
+                <ButtonBasic onclick="Create" type="button" disabled="@(!ViewModel.ValidateUserCRU())" class="btn btn-primary"><IconTextCreate></IconTextCreate></ButtonBasic>
+                <ButtonBasic type="button" onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></ButtonBasic>
+                <ButtonBasic type="button" onclick="ForceOpenKasa" disabled="@(!ViewModel.ValidateUserKasaR())" class="btn btn-info"><IconText Icon="">Pokladňa: @(ViewModel.AktlKasa?.ID ?? "-")</IconText></ButtonBasic>
+                <ButtonBasic type="button" onclick="OpenUzavierka" class="btn btn-primary"><IconText Icon="bi-calendar3">Uzávierka</IconText></ButtonBasic>
                 @if (ViewModel.ValidateUserKasaCRUD())
                 {
-                    <button type="button" @onclick="CreateKasa" class="btn btn-primary"> <IconText Icon="bi-pc-display-horizontal">Správa pokladní</IconText></button>
+                    <ButtonBasic type="button" onclick="CreateKasa" class="btn btn-primary"> <IconText Icon="bi-pc-display-horizontal">Správa pokladní</IconText></ButtonBasic>
                 }
             </div>
         </div>
@@ -104,13 +104,13 @@
 
     protected override void OnInitializedMustHave()
     {
-        tableSettings.Insert(2,new() { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.Spracovana), HeaderValue = "Spracovaná", CellComponent = (e) => new RenderFragmentTemplate(typeof(SimpleCheckMarkDiv), new RenderFragmentAttribute("Checked", e.Spracovana)), CellConvert = ((item) => item.Spracovana, typeof(bool)) });
+        tableSettings.Insert(2, new() { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.Spracovana), HeaderValue = "Spracovaná", CellComponent = (e) => new RenderFragmentTemplate(typeof(SimpleCheckMarkDiv), new RenderFragmentAttribute("Checked", e.Spracovana)), CellConvert = ((item) => item.Spracovana, typeof(bool)) });
 
         if (ViewModel.ValidateUserD())
         {
             tableSettings.Add(new()
             {
-                Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))) ,new RenderFragmentAttribute("TooltipMessage", "Nemožno vymazať tento doklad lebo je zaplatený.") )
+                Placeholder = (item) => new RenderFragmentTemplate(typeof(ButtonRemove), new RenderFragmentAttribute("onclick", async () => await Delete(item)), new RenderFragmentAttribute("Disabled", !(ViewModel.MoznoVymazat(item))), new RenderFragmentAttribute("TooltipMessage", "Nemožno vymazať tento doklad lebo je zaplatený."))
             });
         }
 
@@ -146,6 +146,8 @@
         }
     }
 
+
+
     public void Close()
     {
         Navigator.NavigateTo(Navigator.RemoveLastUrl());
@@ -157,8 +159,10 @@
         {
             if (ViewModel.ValidateUserCRU())
             {
+                CascadingService.Nacitavanie = true;
                 objectHolder.Add(item);
                 Navigator.NavigateTo(Navigator.AddNextUrl("/PokladnicnyDoklad"));
+                CascadingService.Nacitavanie = false;
             }
         }
     }
@@ -167,8 +171,10 @@
     {
         if (ViewModel.ValidateUserCRU())
         {
+            CascadingService.Nacitavanie = true;
             SetStartConditionOnVisit();
             Navigator.NavigateTo(Navigator.AddNextUrl("/PokladnicnyDoklad"));
+            CascadingService.Nacitavanie = false;
         }
     }
 
@@ -196,14 +202,18 @@
 
     public async Task ForceOpenKasa()
     {
+        CascadingService.Nacitavanie = true;
         forceask = true;
         ViewModel.NacitajKasy();
         vyberkasamod.StartRender();
+        CascadingService.Nacitavanie = false;
     }
 
     public void CreateKasa()
     {
+        CascadingService.Nacitavanie = true;
         Navigator.NavigateTo(Navigator.AddNextUrl("/CRUDKasa"));
+        CascadingService.Nacitavanie = false;
     }
 
     public async Task OpenUzavierka()

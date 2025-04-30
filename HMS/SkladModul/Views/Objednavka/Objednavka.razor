@@ -44,15 +44,15 @@
         <div class="col-9 autooverflowx">
             <div class="row">
                 <div class="btn-group" role="group">
-                    <button class="btn btn-secondary noflex" type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">
+                    <ButtonBasic class="btn btn-secondary noflex" type="button" onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">
                         <IconTextClose></IconTextClose>
-                    </button>
-                    <button class="btn btn-primary noflex" type="button" @onclick="@(() => {SetStartConditionOnVisit(); Navigator.NavigateTo(Navigator.AddNextUrl("/AddObj")); })">
+                    </ButtonBasic>
+                    <ButtonBasic class="btn btn-primary noflex" type="button" onclick="@(() => {SetStartConditionOnVisit(); Navigator.NavigateTo(Navigator.AddNextUrl("/AddObj")); })">
                         <IconTextCreate></IconTextCreate>
-                    </button>
-                    <button class="btn btn-primary noflex" disabled=@(!IsChecked()) @onclick=@(() => OpenOBJ(marked)) type="button">
+                    </ButtonBasic>
+                    <ButtonBasic class="btn btn-primary noflex" disabled=@(!IsChecked()) onclick=@(() => OpenOBJ(marked)) type="button">
                         <IconTextOpen></IconTextOpen>
-                    </button>
+                    </ButtonBasic>
                     <ButtonBasic ID="findobjbttn" Class="btn btn-primary button-fixed-width" Disabled="ViewModel.Nacitavanie" OnClick="FindObjByItem" Tooltip="@(("bottom", "Vyhľadať objednávky podľa položky"))"><IconText Icon="bi-search">Vyhľadať</IconText></ButtonBasic>
                     
 
@@ -189,12 +189,16 @@
 
     private async Task FindObjByItem()
     {
+        CascadingService.Nacitavanie = true;
         iftcpoloz.SetItemsFromList(await ViewModel.GetPolozkaItems());
+        CascadingService.Nacitavanie = false;
         await iftcpoloz.OpenModal(async (ans) =>
         {
             if (ans)
             {
+                CascadingService.Nacitavanie = true;
                 iftcobj.SetItemsFromList(await ViewModel.GetObjednavkaItems(iftcpoloz.ComplexTable.Marked));
+                CascadingService.Nacitavanie = false;
                 await iftcobj.OpenModal(async (ans) => { });
                 StateHasChanged();
             }

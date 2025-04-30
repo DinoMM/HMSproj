@@ -22,9 +22,9 @@
 
         <div class="col-9">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
-                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary"><IconTextCreate></IconTextCreate></button>
-                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null || !UserService.IsLoggedUserInRoles(IdentityUserOwn.ROLE_CRUD_ZAMESTNANCI))" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
+                <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"><IconTextClose></IconTextClose></ButtonBasic>
+                <ButtonBasic onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary"><IconTextCreate></IconTextCreate></ButtonBasic>
+                <ButtonBasic type="button" onclick="() => Open(marked)" disabled="@(marked == null || !UserService.IsLoggedUserInRoles(IdentityUserOwn.ROLE_CRUD_ZAMESTNANCI))" class="btn btn-primary"><IconTextOpen></IconTextOpen></ButtonBasic>
             </div>
         </div>
 
@@ -89,7 +89,7 @@
             });
         }
 
-        
+
     }
 
 
@@ -118,9 +118,12 @@
         {
             if (UserService.IsLoggedUserInRoles(IdentityUserOwn.ROLE_CRUD_ZAMESTNANCI))
             {
+                CascadingService.Nacitavanie = true;
                 objectHolder.Add(item);
                 Navigator.NavigateTo(Navigator.AddNextUrl("/Cruzam"));
+                CascadingService.Nacitavanie = false;
             }
+
         }
     }
 
@@ -142,10 +145,12 @@
 
     public void Create()
     {
+        CascadingService.Nacitavanie = true;
         if (ViewModel.ValidateUserCRUD())
         {
             SetStartConditionOnVisit();
             Navigator.NavigateTo(Navigator.AddNextUrl("/Cruzam"));
         }
+        CascadingService.Nacitavanie = false;
     }
 }

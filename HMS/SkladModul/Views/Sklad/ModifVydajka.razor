@@ -111,8 +111,8 @@
         <div class="row pt-2">
             <div class="col text-center">
                 <div class="btn-group" role="group">
-                    <button type="button" @onclick="Close" class="btn btn-secondary"><IconTextClose></IconTextClose></button>
-                    <button type="submit" class="btn btn-primary">
+                    <ButtonBasic type="button" onclick="Close" class="btn btn-secondary"><IconTextClose></IconTextClose></ButtonBasic>
+                    <ButtonBasic type="submit" class="btn btn-primary">
                         @if (string.IsNullOrEmpty(ViewModel.Polozka.ID))
                         {
                             <IconTextCreate></IconTextCreate>
@@ -121,8 +121,8 @@
                         {
                             <IconTextSaveOpen Saved="ViewModel.Saved"></IconTextSaveOpen>
                         }
-                    </button>
-                    <button type="button" disabled="@(!ViewModel.Saved || ViewModel.Polozka.Spracovana || (!string.IsNullOrEmpty(ViewModel.Polozka.SkladDo) && !ViewModel.Readonly))" @onclick="Finnish" class="btn btn-secondary"><IconTextProcess></IconTextProcess></button>
+                    </ButtonBasic>
+                    <ButtonBasic type="button" disabled="@(!ViewModel.Saved || ViewModel.Polozka.Spracovana || (!string.IsNullOrEmpty(ViewModel.Polozka.SkladDo) && !ViewModel.Readonly))" onclick="Finnish" class="btn btn-secondary"><IconTextProcess></IconTextProcess></ButtonBasic>
 
                 </div>
             </div>
@@ -176,27 +176,35 @@
 
     private async Task Save()
     {
-        if (!ViewModel.Saved)
+        CascadingService.Nacitavanie = true;
+        try
         {
-            if (await ViewModel.Kontrola(InfoModListBadValue, InfoModListBadDestin))
+            if (!ViewModel.Saved)
             {
-                ViewModel.Uloz();
-                await InfoMod.OpenModal();
-                ViewModel.Saved = true;
-            }
-        }
-        else
-        {
-            objectHolder.Add((DBLayer.Models.PohSkup)ViewModel.Polozka);        //nutne poslane polia
-            objectHolder.Add(typeof(DBLayer.Models.Vydajka));
-            if (!ViewModel.Polozka.Spracovana && !ViewModel.Readonly)
-            {
-                Navigator.NavigateTo(Navigator.AddNextUrl($"/ModifPolozVydajka/{false}"));
+                if (await ViewModel.Kontrola(InfoModListBadValue, InfoModListBadDestin))
+                {
+                    ViewModel.Uloz();
+                    await InfoMod.OpenModal();
+                    ViewModel.Saved = true;
+                }
             }
             else
             {
-                Navigator.NavigateTo(Navigator.AddNextUrl($"/ModifPolozVydajka/{true}"));      //readonly rezim
+                objectHolder.Add((DBLayer.Models.PohSkup)ViewModel.Polozka);        //nutne poslane polia
+                objectHolder.Add(typeof(DBLayer.Models.Vydajka));
+                if (!ViewModel.Polozka.Spracovana && !ViewModel.Readonly)
+                {
+                    Navigator.NavigateTo(Navigator.AddNextUrl($"/ModifPolozVydajka/{false}"));
+                }
+                else
+                {
+                    Navigator.NavigateTo(Navigator.AddNextUrl($"/ModifPolozVydajka/{true}"));      //readonly rezim
+                }
             }
+        }
+        finally
+        {
+            CascadingService.Nacitavanie = false;
         }
     }
 
@@ -223,7 +231,9 @@
         {
             if (await ApproveProcess.OpenModal(true))
             {
+                CascadingService.Nacitavanie = true;
                 await ViewModel.SpracujVydajku(InfoModListEmpty, InfoModListBadValue);
+                CascadingService.Nacitavanie = false;
             }
         }
     }

@@ -1,23 +1,27 @@
 ﻿
 @inherits LayoutComponentBase
 @inject UniComponents.Services.ICascadingService CascadingService
+@inject IJSRuntime JSRuntime
 @implements IDisposable
-@using System.ComponentModel 
+@using System.ComponentModel
 
-<div class="page p-1 fullscreen nooverflowx">
-    <CascadingValue Name="CascDisabled" Value="CascadingService.Disabled">
+<div class="page p-1 fullscreen nooverflowx @(CascadingService.Nacitavanie ? "waitcursor" : "")">
         <CascadingValue Name="CascLoading" Value="CascadingService.Nacitavanie">
-            <main>
+            <main class="@(CascadingService.Nacitavanie ? "pointereventsnone2" : "")">
                 @Body
             </main>
         </CascadingValue>
-    </CascadingValue>
 </div>
 
 @code {
     protected override void OnInitialized()
     {
         ((INotifyPropertyChanged)CascadingService).PropertyChanged += (sender, e) => StateHasChanged(); //ak sa zmeni nejaka prop tak sa refreshne UI
+        CascadingService.NacitavanieMethod = null;
+        CascadingService.NacitavanieMethod = async (bool state) =>
+        {
+            await JSRuntime.InvokeVoidAsync("loadingCursor", state);
+        };
     }
 
     public void Dispose()

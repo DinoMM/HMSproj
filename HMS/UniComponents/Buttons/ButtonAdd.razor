@@ -1,7 +1,7 @@
 ﻿@namespace UniComponents
 
-<a @onclick="OnClick" style="@(Disabled ? " pointer-events: none;" : "" ) ">
-    <i href="#" class="bi bi-plus-circle btn btn-success @(Disabled ? " disabled" : "" )"></i>
+<a @onclick="OnClick" style="@(Disabled || CascLoading ? " pointer-events: none;" : "" ) ">
+    <i href="#" class="bi bi-plus-circle btn btn-success @(Disabled || CascLoading ? " disabled" : "" )"></i>
 </a>
 
 
@@ -18,5 +18,12 @@
     /// </summary>
     [Parameter]
     public EventCallback OnClick { get; set; } = EventCallback.Empty;
+
+    /// <summary>
+    /// Určuje, že bude tlačilo disabled a dá SpinnerLoading  pomocou cascading parameter, default false
+    /// </summary>
+    [CascadingParameter(Name = "CascLoading")]
+    public bool CascLoading { get; set; } = false;
+
 }
 

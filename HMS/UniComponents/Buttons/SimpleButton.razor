@@ -1,7 +1,7 @@
 ﻿@namespace UniComponents
 
 
-<button id="@ID" type="@Type" class="@Class" disabled="@Disabled" 
+<button id="@ID" type="@Type" class="@Class" disabled="@(Disabled || CascLoading)" 
 @onclick="OnClick">
     @switch (ZmenaStavuTextu ? ZmenaTextu.Item1 : ZmenaTextu.Item2)
     {
@@ -69,4 +69,10 @@
 
     [Parameter]
     public RenderFragment? ChildContent { get; set; } = null;
+
+    /// <summary>
+    /// Určuje, že bude tlačilo disabled a dá SpinnerLoading  pomocou cascading parameter, default false
+    /// </summary>
+    [CascadingParameter(Name = "CascLoading")]
+    public bool CascLoading { get; set; } = false;
 }

@@ -40,11 +40,15 @@ namespace UctovnyModul.ViewModels
         {
             await Task.Run(async () =>
             {
+                var token = CancellationTokenSource.Token;
+
                 zoznamPoloziekAll = new(await _db.UniConItemyPoklDokladu
                     .OrderByDescending(x => x.ID)
                     .Include(x => ((PolozkaSkladuConItemPoklDokladu)x).PolozkaSkladuMnozstvaX)
                     .ThenInclude(x => x.PolozkaSkladuX)
-                    .ToListAsync());
+                    .ToListAsync(token));
+
+                token.ThrowIfCancellationRequested();
                 var polozkyRes = zoznamPoloziekAll.Where(x => x is ReservationConItemPoklDokladu)
                     .Select(x => ((ReservationConItemPoklDokladu)x))
                     .ToList();
@@ -54,13 +58,15 @@ namespace UctovnyModul.ViewModels
                         .Include(x => x.Room)
                         .Include(x => x.Coupon)
                         .Include(x => x.Guest)
-                        .FirstOrDefaultAsync(x => x.Id == item.Reservation);
+                        .FirstOrDefaultAsync(x => x.Id == item.Reservation, token);
                     if (found == null)
                     {
                         continue;
                     }
                     item.ReservationZ = found;
                 }
+
+                token.ThrowIfCancellationRequested();
                 ZoznamPoloziek = new();
                 foreach (var item in zoznamPoloziekAll)
                 {
@@ -72,7 +78,7 @@ namespace UctovnyModul.ViewModels
 
                 foreach (var item in zoznamPoloziekAll)
                 {
-                    moznoVymazatList.Add((item, !_db.ItemyPokladDokladu.Any(x => x.UniConItemPoklDokladu == item.ID)));
+                    moznoVymazatList.Add((item, !await _db.ItemyPokladDokladu.AnyAsync(x => x.UniConItemPoklDokladu == item.ID, token)));
                 }
             });
         }

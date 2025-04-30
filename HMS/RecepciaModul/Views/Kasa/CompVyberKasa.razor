@@ -99,7 +99,9 @@
                     {
                         pridKasa.ActualUser = UserService.LoggedUser.Id;
                         objectHolder.Add(pridKasa);
+                        CascadingService.Nacitavanie = true;
                         db.SaveChanges();
+                        CascadingService.Nacitavanie = false;
 
                     }
                     else
@@ -151,8 +153,10 @@
         var found = objectHolder.Remove<DBLayer.Models.Kasa>();
         if (found != null)
         {
+            CascadingService.Nacitavanie = true;
             found.ActualUser = null;
             db.SaveChanges();
+            CascadingService.Nacitavanie = false;
         }
     }
 
@@ -162,20 +166,28 @@
     /// <returns></returns>
     private bool CheckIfUserKasa()
     {
-        if (!firstCheck)
+        CascadingService.Nacitavanie = true;
+        try
         {
-            firstCheck = true;
-            var ckeckifexist = db.Kasy
-                .Include(x => x.DodavatelX)
-                .Include(x => x.ActualUserX)
-                .FirstOrDefault(x => x.ActualUser == UserService.LoggedUser.Id);
-            if (ckeckifexist != null)
+            if (!firstCheck)
             {
-                objectHolder.Add(ckeckifexist);
-                return true;
+                firstCheck = true;
+                var ckeckifexist = db.Kasy
+                    .Include(x => x.DodavatelX)
+                    .Include(x => x.ActualUserX)
+                    .FirstOrDefault(x => x.ActualUser == UserService.LoggedUser.Id);
+                if (ckeckifexist != null)
+                {
+                    objectHolder.Add(ckeckifexist);
+                    return true;
+                }
             }
+            return false;
         }
-        return false;
+        finally
+        {
+            CascadingService.Nacitavanie = false;
+        }
     }
 
 

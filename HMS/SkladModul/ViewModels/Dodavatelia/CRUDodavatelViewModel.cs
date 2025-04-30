@@ -37,6 +37,11 @@ namespace SkladModul.ViewModels.Dodavatelia
         [RegularExpression(@"^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$", ErrorMessage = "Neplatné IBAN èíslo.")]
         public string IBAN { get; set; } = "";
 
+        public string DIC { get; set; } = "";
+
+        public string IC_DPH { get; set; } = "";
+
+        public string Poznamka { get; set; } = "";
         #endregion
 
         public Dodavatel Dod { get; set; } = new();
@@ -63,6 +68,9 @@ namespace SkladModul.ViewModels.Dodavatelia
             Adresa = dod.Adresa;
             IBAN = dod.Iban;
             Dod = dod;
+            DIC = dod.DIC;
+            IC_DPH = dod.IC_DPH;
+            Poznamka = dod.Poznámka;
         }
 
         public async Task<bool> Uloz()
@@ -74,6 +82,9 @@ namespace SkladModul.ViewModels.Dodavatelia
                 Dod.Obec = Obec;
                 Dod.Adresa = Adresa;
                 Dod.Iban = IBAN;
+                Dod.DIC = DIC;
+                Dod.IC_DPH = IC_DPH;
+                Dod.Poznámka = Poznamka;
                 _db.Dodavatelia.Add(Dod);
             }
             else
@@ -82,6 +93,9 @@ namespace SkladModul.ViewModels.Dodavatelia
                 Dod.Obec = Obec;
                 Dod.Adresa = Adresa;
                 Dod.Iban = IBAN;
+                Dod.DIC = DIC;
+                Dod.IC_DPH = IC_DPH;
+                Dod.Poznámka = Poznamka;
             }
 
             await _db.SaveChangesAsync();

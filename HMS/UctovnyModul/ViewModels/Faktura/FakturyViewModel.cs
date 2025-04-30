@@ -31,11 +31,13 @@ namespace UctovnyModul.ViewModels
 
         protected override async Task NacitajZoznamyAsync()
         {
+            var token = CancellationTokenSource.Token;
+
             ZoznamPoloziek = new(await _db.Faktury
                 .Include(x => x.SkupinaX)
                 .Include(x => x.OdKohoX)
                 .OrderByDescending(x => x.Vystavenie)
-                .ToListAsync());
+                .ToListAsync(token));
         }
 
         public override bool MoznoVymazat(Faktura item)

@@ -42,7 +42,9 @@ namespace HSKModul.ViewModels
         {
             await Task.Run(async () =>
             {
-                ZoznamPoloziek = new(_dbw.Rezervations
+                var token = CancellationTokenSource.Token;
+
+                ZoznamPoloziek = new(await _dbw.Rezervations
                     .Include(x => x.Guest)
                     .Include(x => x.Room)
                     .Include(x => x.Coupon)
@@ -53,24 +55,25 @@ namespace HSKModul.ViewModels
                         && x.Status != ReservationStatus.Stornovana.ToString()
                         )
                         .OrderBy(x => x.RoomNumber)
-                        .ToList()
+                        .ToListAsync(token)
                     );
 
                 RelevantHostia.Clear();
                 foreach (var item in ZoznamPoloziek)
                 {
-                    RelevantHostia.AddRange(_db.HostConReservations
+                    RelevantHostia.AddRange(await _db.HostConReservations
                     .Include(y => y.HostX)
                     .Where(y => y.Reservation == item.Id)
-                    .ToList());
+                    .ToListAsync(token));
                 }
 
                 VsetkyIzby.Clear();
-                VsetkyIzby.AddRange(_dbw.HRooms
-                    .ToList());
+                VsetkyIzby.AddRange(await _dbw.HRooms
+                    .ToListAsync(token));
 
                 VsetkyIzby.ForEach(x =>
                 {
+                    token.ThrowIfCancellationRequested();
                     var found = _db.RoomInfos.FirstOrDefault(y => y.ID_Room == x.RoomNumber);
                     if (found != null)  //ak existuje tak pridame 99% sanca (musi existovat)
                     {
@@ -84,6 +87,7 @@ namespace HSKModul.ViewModels
 
                 foreach (var item in VsetkyIzby)    //pre zobrazenie vsetkych izieb
                 {
+                    token.ThrowIfCancellationRequested();
                     var founds = ZoznamPoloziek.Where(x => x.RoomNumber == item.RoomNumber);
                     if (founds.Count() > 0)
                     {

@@ -36,15 +36,18 @@ namespace SkladModul.ViewModels.Sklad
 
         protected override async Task NacitajZoznamyAsync()
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
-                ZoznamPoloziek = new(_db.Vydajky
+                var token = CancellationTokenSource.Token;
+
+                ZoznamPoloziek = new(await _db.Vydajky
                     .Include(x => x.SkladX)
                     .Include(x => x.DruhPohybuX)
                     .Where(x => x.Obdobie >= Obdobie && x.Sklad == Sklad.ID)
                     .OrderByDescending(x => x.Vznik)
-                    .ToList());
+                    .ToListAsync(token));
 
+                token.ThrowIfCancellationRequested();
                 IsObdobieActual = SkladObdobie.IsObdobieActual(Sklad, Obdobie, in _db);
             });
         }

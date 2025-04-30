@@ -165,7 +165,9 @@
         {
             return;
         }
+        CascadingService.Nacitavanie = true;
         await ViewModel.NacitajZoznamy();
+        CascadingService.Nacitavanie = false;
     }
 
     public void Close()
@@ -183,9 +185,11 @@
 
     public async Task Calculate()
     {
+        CascadingService.Nacitavanie = true;
         if (!ViewModel.Vypocitaj())
         {
             await JSRuntime.InvokeVoidAsync("addStyleClassUntilClick", "ulozbutton", "btn-danger");
         }
+        CascadingService.Nacitavanie = false;
     }
 }

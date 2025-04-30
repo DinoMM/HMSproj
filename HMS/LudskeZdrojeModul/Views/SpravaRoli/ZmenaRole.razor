@@ -38,7 +38,7 @@
 
         <div class="row pt-2">
             <div class="col text-center">
-                <button type="button" @onclick="Close" class="btn btn-secondary"><IconTextClose></IconTextClose></button>
+                <ButtonBasic type="button" onclick="Close" class="btn btn-secondary"><IconTextClose></IconTextClose></ButtonBasic>
                 <SimpleButton Type="submit" ZmenaTextu="@(("Uložiť", "Uložiť"))"></SimpleButton>
             </div>
         </div>
@@ -77,6 +77,7 @@
 
     public async Task Update()
     {
+        CascadingService.Nacitavanie = true;
         if (await ViewModel.Uloz())
         {
             await InfoMod.OpenModal(true);
@@ -86,5 +87,6 @@
         {
             await InfoModExist.OpenModal();
         }
+        CascadingService.Nacitavanie = false;
     }
 }

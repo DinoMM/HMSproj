@@ -44,25 +44,33 @@ namespace SkladModul.ViewModels.Sklad
         protected override async Task NacitajZoznamyAsync()
         {
             
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
-                var prijemky = _db.Prijemky
+                var token = CancellationTokenSource.Token;
+
+                var prijemky = await _db.Prijemky
                     .Include(x => x.SkladX)
                     .Include(x => x.DruhPohybuX)
                     .Where(x => x.Obdobie >= Obdobie && x.Sklad == Sklad.ID)
-                    .ToList();     //zoznam prijemok
-                var prevodky = _db.Vydajky.Include(x => x.SkladX).Include(x => x.SkladDoX).Where(x => x.ObdobieDo >= Obdobie && x.SkladDo == Sklad.ID)
-                    .ToList();      //zoznam prevodiek urcene pre aktualny sklad, ignorujeme obdobie kedze mozu mat rozdielne obdobia
+                    .ToListAsync(token);     //zoznam prijemok
+                var prevodky = await _db.Vydajky
+                .Include(x => x.SkladX)
+                .Include(x => x.SkladDoX)
+                .Where(x => x.ObdobieDo >= Obdobie && x.SkladDo == Sklad.ID)
+                    .ToListAsync(token);      //zoznam prevodiek urcene pre aktualny sklad, ignorujeme obdobie kedze mozu mat rozdielne obdobia
 
                 List<PohSkup> spojPrAPre = new(prijemky); //spojenie zoznamov
                 spojPrAPre.AddRange(prevodky);//spojenie zoznamov
+                token.ThrowIfCancellationRequested();
                 ZoznamPoloziek = new(spojPrAPre.OrderByDescending(x => x.Vznik).ToList()); //zoradenie podla datumu
 
-               IsObdobieActual = SkladObdobie.IsObdobieActual(Sklad, Obdobie, in _db);
+                token.ThrowIfCancellationRequested();
+                IsObdobieActual = SkladObdobie.IsObdobieActual(Sklad, Obdobie, in _db);
 
                 MoznoVymazatList = new();
                 foreach (var item in ZoznamPoloziek)
                 {
+                    token.ThrowIfCancellationRequested();
                     MoznoVymazatList.Add((item, MoznoVymazat(item, DBLayer.Models.Prijemka.TOTAL_MAZANIE_PRIJEMOK.Contains(_userService.LoggedUserRole))));
                 }
             });

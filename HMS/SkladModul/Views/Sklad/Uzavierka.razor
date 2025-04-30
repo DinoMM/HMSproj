@@ -1,6 +1,7 @@
 ﻿@namespace SkladModul
 @page "/Sklad/Uzavierka"
 @inject UzavierkaViewModel ViewModel
+@implements IDisposable
 
 <ApproveModal @ref=AprovMod ID="closeseason"
               Text="Naozaj chcete uzavrieť aktuálne obdobie? <br> Vytvorí sa nové podľa aktuálneho mesiaca alebo nasledovnosti"
@@ -28,15 +29,15 @@
         </div>
         <div class="col-5">
             <div class="btn-group" role="group">
-                <button type="button" @onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))" class="btn btn-secondary"><IconTextClose></IconTextClose></button>
-                <button class="btn btn-primary fixed-size-button" @onclick="GeneratePDF" disabled=@(ViewModel.PdfLoading) type="button">
+                <ButtonBasic type="button" onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))" class="btn btn-secondary"><IconTextClose></IconTextClose></ButtonBasic>
+                <ButtonBasic class="btn btn-primary fixed-size-button" onclick="GeneratePDF" disabled=@(ViewModel.PdfLoading) type="button">
                     <IconText Icon="bi-filetype-pdf">Otvoriť</IconText>
                     @if (ViewModel.PdfLoading)
                     {
                         <SpinnerLoading ExtraSmall="true" />
                     }
-                </button>
-                <button type="button" disabled="@(!ViewModel.MoznoUzavrietObdobie())" class="btn btn-primary" @onclick="CloseSeasson"><IconText Icon="bi-calendar3">Uzavrieť obdobie</IconText></button>
+                </ButtonBasic>
+                <ButtonBasic type="button" disabled="@(ViewModel.NacitavaniePoloziek || !ViewModel.MoznoUzavrietObdobie())" class="btn btn-primary" onclick="CloseSeasson"><IconText Icon="bi-calendar3">Uzavrieť obdobie</IconText></ButtonBasic>
             </div>
         </div>
         <div class="col-2"></div>
@@ -97,7 +98,9 @@
 
 @code {
 
-    ApproveModal AprovMod = new();
+        ApproveModal AprovMod = new();
+
+        bool loadUzavierka = false;
 
     protected override void OnInitialized()
     {
@@ -113,13 +116,25 @@
             ViewModel.SetProp(founded1, founded2);      //nasla sa existujuca polozka, nastavujeme model na upravu
             if (ViewModel.CheckActualObdobie())
             {
-                ViewModel.LoadZoznamy();
+                loadUzavierka = true;
             }
         }
         else
         {
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
             return;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            if (loadUzavierka)
+            {
+                await ViewModel.LoadZoznamy();
+                StateHasChanged();
+            }
         }
     }
 
@@ -131,11 +146,25 @@
             {
                 Navigator.NavigateTo(Navigator.RemoveLastUrl());
             }
-        };
+        }
+        ;
     }
 
     private async Task GeneratePDF()
     {
         await ViewModel.VytvorPDF();
+    }
+
+    public void Dispose()
+    {
+        if (loadUzavierka)
+        {
+            try
+            {
+                ViewModel.CancellationTokenSource?.Cancel();
+            }
+            catch (ObjectDisposedException ex) { }
+            ViewModel.CancellationTokenSource?.Dispose();
+        }
     }
 }

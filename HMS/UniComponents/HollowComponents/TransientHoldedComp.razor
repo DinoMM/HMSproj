@@ -110,7 +110,10 @@
 
             if (TransientObject is IObservableViewModel observableVM)   //ak je tento typ tak sa uloží metóda na refresh dát po vstupení na stránku
             {
-                GetHolder().StartMethodAsync = async () => await observableVM.NacitajZoznamy();
+                GetHolder().StartMethodAsync = async () =>
+                {
+                    await observableVM.NacitajZoznamy();
+                };
             }
 
             if (await TransientHolderService.CheckStartConditionAsync())

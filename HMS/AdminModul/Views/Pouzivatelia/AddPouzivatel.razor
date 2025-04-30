@@ -65,7 +65,7 @@
         <div class="row pt-2">
             <div class="col text-center">
                 <div class="btn-group" role="group">
-                    <button type="button" @onclick="Close" class="btn btn-secondary"><IconTextClose></IconTextClose></button>
+                    <ButtonBasic type="button" onclick="Close" class="btn btn-secondary"><IconTextClose></IconTextClose></ButtonBasic>
                     <SimpleButton Type="submit" ZmenaTextu="@(("", "Vytvoriť"))"></SimpleButton>
                 </div>
             </div>
@@ -95,10 +95,12 @@
 
     public async Task Create()
     {
+        CascadingService.Nacitavanie = true;
         if (await ViewModel.Vytvorit())
         {
             await InfoMod.OpenModal(true);
             Navigator.NavigateTo(Navigator.RemoveLastUrl());
         }
+        CascadingService.Nacitavanie = false;
     }
 }

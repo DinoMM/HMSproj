@@ -37,15 +37,17 @@ namespace RecepciaModul.ViewModels
 
         protected override async Task NacitajZoznamyAsync()
         {
-            await Task.Run(() =>
+            await Task.Run(async () =>
             {
-                ZoznamPoloziek = new(_db.HostFlags
+                var token = CancellationTokenSource.Token;
+
+                ZoznamPoloziek = new(await _db.HostFlags
                     .OrderBy(x => x.ID)
-                    .ToList());
+                    .ToListAsync(token));
 
                 foreach (var item in ZoznamPoloziek)
                 {
-                    moznoVymazatList.Add((item, ValidateUserCUD() && !_db.HostConFlags.Any(x => x.HostFlag == item.ID)));
+                    moznoVymazatList.Add((item, ValidateUserCUD() && !await _db.HostConFlags.AnyAsync(x => x.HostFlag == item.ID, token)));
                 }
             });
         }

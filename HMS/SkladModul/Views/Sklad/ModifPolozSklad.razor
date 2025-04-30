@@ -96,7 +96,7 @@
         <div class="row pt-2">
             <div class="col text-center">
                 <div class="btn-group" role="group">
-                    <button @onclick="Close" class="btn btn-secondary " type="button"><IconTextClose></IconTextClose></button>
+                    <ButtonBasic onclick="Close" class="btn btn-secondary " type="button"><IconTextClose></IconTextClose></ButtonBasic>
                     <SimpleButton Disabled="@ViewModel.Saved" ZmenaStavuTextu="@ViewModel.Existuje()" ZmenaTextu="@(("Uložiť" , "Vytvoriť"))"></SimpleButton>
                 </div>
             </div>
@@ -123,6 +123,7 @@
 
     private async Task Save()
     {
+        CascadingService.Nacitavanie = true;
         await ViewModel.Uloz(ApproveMod);
         if (ViewModel.Saved)
         {
@@ -131,6 +132,7 @@
         }
         await InfoMod.OpenModal();
         ViewModel.Saved = true;
+        CascadingService.Nacitavanie = false;
     }
 
     private async Task Close()

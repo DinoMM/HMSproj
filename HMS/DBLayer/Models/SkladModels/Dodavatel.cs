@@ -15,6 +15,9 @@ namespace DBLayer.Models
         public string Obec { get; set; } = default!;
         public string Adresa { get; set; } = default!;
         public string Iban { get; set; } = default!;
+        public string DIC { get; set; } = default!;
+        public string IC_DPH { get; set; } = default!;
+        public string Poznámka { get; set; } = default!;
 
         public object Clone()
         {
@@ -24,7 +27,10 @@ namespace DBLayer.Models
                 Nazov = this.Nazov,
                 Obec = this.Obec,
                 Adresa = this.Adresa,
-                Iban = this.Iban
+                Iban = this.Iban,
+                DIC = this.DIC,
+                IC_DPH = this.IC_DPH,
+                Poznámka = this.Poznámka
             };
         }
 

@@ -25,9 +25,9 @@
 
         <div class="col-9 autooverflowx">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
-                <button type="button" @onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></button>
-                <button type="button" class="btn btn-info" @onclick="async() =>  await ViewModel.ZmenaZobrazenie()">Zobrazenie: @(ViewModel.Zobrazenie ? "Izby" : "Aktuálne")</button>
+                <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"><IconTextClose></IconTextClose></ButtonBasic>
+                <ButtonBasic type="button" onclick="() => Open(marked)" disabled="@(marked == null)" class="btn btn-primary"><IconTextOpen></IconTextOpen></ButtonBasic>
+                <ButtonBasic type="button" class="btn btn-info" onclick="async() =>  await ViewModel.ZmenaZobrazenie()">Zobrazenie: @(ViewModel.Zobrazenie ? "Izby" : "Aktuálne")</ButtonBasic>
             </div>
         </div>
 

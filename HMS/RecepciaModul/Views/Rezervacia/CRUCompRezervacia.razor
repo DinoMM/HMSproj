@@ -232,7 +232,7 @@
                 <div class="row">
                     <div class="col-md-5 col-12">
                         <label>Status</label>
-                        <select id="selectstav" @bind="Marked.Status" disabled="@(ValidateChangeability() || Marked.Room == null || CascadingService.Disabled)" class="form-select @(IsCompleted() || IsStorno() ? " border border-warning " : "")">
+                        <select id="selectstav" @bind="Marked.Status" disabled="@(ValidateChangeability() || Marked.Room == null || CascadingService.Nacitavanie)" class="form-select @(IsCompleted() || IsStorno() ? " border border-warning " : "")">
                             @foreach (var status in SelectValues)
                             {
                                 <option value="@status">@status</option>
@@ -429,7 +429,7 @@ new () { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", 
 
     private async Task Save(bool silent = false)
     {
-        CascadingService.Disabled = true;
+        CascadingService.Nacitavanie = true;
         nacitavanie = true;
         try
         {
@@ -579,7 +579,7 @@ new () { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", 
         finally
         {
             nacitavanie = false;
-            CascadingService.Disabled = false;
+            CascadingService.Nacitavanie = false;
         }
     }
 
@@ -720,7 +720,7 @@ new () { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", 
     }
     private async Task FindRoom()
     {
-        CascadingService.Disabled = true;
+        CascadingService.Nacitavanie = true;
         var inputValue = await iftroom.GetInputValue("inputroom");
         List<DBLayer.Models.Room> listIziebsave = new(ListIzby);
         foreach (var item in listIziebsave)
@@ -744,7 +744,7 @@ new () { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", 
                 }
             }
         }
-        CascadingService.Disabled = false;
+        CascadingService.Nacitavanie = false;
         if (await iftroom.OpenModal(true))
         {
             Marked.RoomNumber = iftroom.OutSelection.FirstOrDefault().RoomNumber;
@@ -886,7 +886,7 @@ new () { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", 
     }
     private async Task AddHostCon()
     {
-        CascadingService.Disabled = true;
+        CascadingService.Nacitavanie = true;
         bool added = false;
         foreach (var item in VyberHosti)        //vyhodime uz pridanych hosti
         {
@@ -898,7 +898,7 @@ new () { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", 
         }
 
         cifthost.SetItemsFromList(ListHostia);
-        CascadingService.Disabled = false;
+        CascadingService.Nacitavanie = false;
         await cifthost.OpenModal(async (res) =>
         {
 
@@ -1001,10 +1001,10 @@ new () { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", 
 
     private async Task ProcessCheckIN()
     {
-        CascadingService.Disabled = true;
+        CascadingService.Nacitavanie = true;
         await Save(silent: true);
         infomod.UpdateText("Chcete spracovať <strong>CHECK-IN</strong>?<br>Uistite sa, že ste uložili všetky potrebné zmeny.");
-        CascadingService.Disabled = false;
+        CascadingService.Nacitavanie = false;
         if (await infomod.OpenModal(true))
         {
             Marked.Status = DBLayer.Models.ReservationStatus.Checked_IN.ToString();
@@ -1015,10 +1015,10 @@ new () { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", 
 
     private async Task ProcessCheckOUT()
     {
-        CascadingService.Disabled = true;
+        CascadingService.Nacitavanie = true;
         await Save(silent: true);
         infomod.UpdateText("Chcete spracovať <strong>CHECK-OUT</strong>?");
-        CascadingService.Disabled = false;
+        CascadingService.Nacitavanie = false;
         if (await infomod.OpenModal(true))
         {
             Marked.Status = DBLayer.Models.ReservationStatus.Checked_OUT.ToString();
@@ -1121,9 +1121,9 @@ new () { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", 
 
     private async Task OpenDoklad()
     {
-        CascadingService.Disabled = true;
+        CascadingService.Nacitavanie = true;
         await Save(silent: true);
-        CascadingService.Disabled = false;
+        CascadingService.Nacitavanie = false;
         OnlyOneItemPD = true;
         MarkedHost = null;  //pre istotu
 
@@ -1132,9 +1132,9 @@ new () { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", 
 
     private async Task OtvorPD(DBLayer.Models.Host host)
     {
-        CascadingService.Disabled = true;
+        CascadingService.Nacitavanie = true;
         await Save(silent: true);
-        CascadingService.Disabled = false;
+        CascadingService.Nacitavanie = false;
         OnlyOneItemPD = false;
         MarkedHost = host;
         compVybkasa.StartRender();

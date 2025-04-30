@@ -14,7 +14,7 @@
 </ApproveModal>
 <ItemFinderTable @ref="itmfindmodal"
                  T="DBLayer.Models.Dodavatel"
-                 ColNames="@(new List<string>() { "IČO", "Názov", "Obec", "Adresa", "IBAN" })"
+                 ColNames="@(new List<string>() { "IČO", "Názov", "Obec", "Adresa", "IBAN", "DIC", "IČ_DPH", "Poznámka" })"
                  ColValues="@ViewModel.GetDodavatelia()"
                  MultiSelect="false"
                  KeyAttributeToo="true"
@@ -27,7 +27,7 @@
         </div>
 
         @* *** *@
-        <div class="container" style="height: 10rem;">
+        <div class="row" style="height: 10rem;">
             <ul class="nav nav-tabs">
                 <li class="nav-item">
                     <a class="nav-link active" data-bs-toggle="tab" href="#home">Dodavateľ</a>
@@ -125,10 +125,10 @@
         <div class="row g-3 pt-2 align-items-center justify-content-center">
             <div class="col-auto">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-secondary" @onclick="GoBack">
+                    <ButtonBasic type="button" class="btn btn-secondary" onclick="GoBack">
                         <IconTextClose></IconTextClose>
-                    </button>
-                    <button type="button" disabled="@(!ViewModel.CorrectDod || !ViewModel.CorrectOdo)" @onclick="GoNext" class="btn btn-primary">
+                    </ButtonBasic>
+                    <ButtonBasic type="button" disabled="@(!ViewModel.CorrectDod || !ViewModel.CorrectOdo)" onclick="GoNext" class="btn btn-primary">
                         @if (!ViewModel.Exist())
                         {
                             <IconTextCreate></IconTextCreate>
@@ -137,8 +137,8 @@
                         {
                             <IconTextSaveOpen Saved="!ViewModel.PozriZmeny()"></IconTextSaveOpen>
                         }
-                    </button>
-                    <button type="button" class="btn btn-danger" @onclick="DelteObj" disabled="@(!ViewModel.Prazdna)"><IconTextDelete></IconTextDelete></button>
+                    </ButtonBasic>
+                    <ButtonBasic type="button" class="btn btn-danger" onclick="DelteObj" disabled="@(!ViewModel.Prazdna)"><IconTextDelete></IconTextDelete></ButtonBasic>
 
                 </div>
             </div>
@@ -165,13 +165,21 @@
 
     private void GoNext()
     {
-        if (ViewModel.PozriZmeny())
+        CascadingService.Nacitavanie = true;
+        try
         {
-            ViewModel.UlozCommand.Execute(null);
-            return;
+            if (ViewModel.PozriZmeny())
+            {
+                ViewModel.UlozCommand.Execute(null);
+                return;
+            }
+            ViewModel.NastavObjednavkuCommand.Execute(null);
+            Navigator.NavigateTo(Navigator.AddNextUrl("/PridatPolozky"));
         }
-        ViewModel.NastavObjednavkuCommand.Execute(null);
-        Navigator.NavigateTo(Navigator.AddNextUrl("/PridatPolozky"));
+        finally
+        {
+            CascadingService.Nacitavanie = false;
+        }
     }
 
     private async Task GoBack()
@@ -193,7 +201,7 @@
 
     private async Task HandleKeyDown(KeyboardEventArgs e, string inputId)
     {
-        if (e.Key == "Tab")
+        if (e.Key == "Tab" || e.Key == "Enter")
         {
             if (ViewModel.CorrectDod && inputId == "ICO1")
             {

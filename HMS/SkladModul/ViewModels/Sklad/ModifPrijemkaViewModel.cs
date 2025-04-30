@@ -33,6 +33,8 @@ namespace SkladModul.ViewModels.Sklad
         public double CelkovaSuma { get; set; } = 0;
         public double CelkovaSumaDPH { get; set; } = 0;
 
+        public (string, bool?) ExistujucaFaktura { get; set; } = ("", false);
+
         public bool AktualneObdobie { get; set; } = true;       //true - mozno vytvorit novu prijemku
         public List<DruhPohybu> DruhyPohybov { get; set; } = new();
 
@@ -62,6 +64,11 @@ namespace SkladModul.ViewModels.Sklad
                     Saved = true;
                 }
                 ObsahujePolozky = _db.PrijemkyPolozky.Any(x => x.Skupina == Polozka.ID);
+                var founded = _db.Faktury.FirstOrDefault(x => x.Skupina == Polozka.ID);
+                if (founded != null)
+                {
+                    ExistujucaFaktura = (founded.ID, founded.Spracovana);
+                }
             }
             else //pre novu prijemku nastavime obdobie
             {
@@ -226,7 +233,7 @@ namespace SkladModul.ViewModels.Sklad
         {
             ZoznamSpracObjednavok.Clear();
             ZoznamSpracObjednavok.AddRange(await _db.Objednavky
-                .Where(x => x.Stav == StavOBJ.Objednana 
+                .Where(x => x.Stav == StavOBJ.Objednana
                 || x.Stav == StavOBJ.Schvalena)
                 .OrderByDescending(x => x.ID)
                 .ToListAsync());

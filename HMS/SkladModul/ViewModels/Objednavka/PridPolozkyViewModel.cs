@@ -78,13 +78,14 @@ namespace SkladModul.ViewModels.Objednavka
             ZoznamPoloziek.Clear();
             if (_userService.IsLoggedUserInRoles(DBLayer.Models.Sklad.ZMENAPOLOZIEKROLE))
             {
-                ZoznamPoloziek = new(await _db.PolozkaSkladuMnozstva
+                ZoznamPoloziek = new((await _db.PolozkaSkladuMnozstva
                     .Include(x => x.PolozkaSkladuX)
                     .Where(x => x.Active)
                     .Select(x => x.PolozkaSkladuX)
                     .OrderBy(x => x.Nazov)
+                    .ToListAsync())
                     .DistinctBy(x => x.ID)
-                    .ToListAsync());
+                    );
                 return;
             }
             var skluz = _db.SkladUzivatelia.Where(x => x.Uzivatel == _userService.LoggedUser.Id).ToList();

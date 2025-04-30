@@ -5,9 +5,10 @@
 @using DBLayer
 @using Microsoft.AspNetCore.Components.Forms
 
-@using HSKModul.ViewModels 
+@using HSKModul.ViewModels
 
 @inject Navigator Navigator
 @inject IJSRuntime JSRuntime
 @inject DBLayer.UserService UserService
 @inject ObjectHolder objectHolder
+@inject UniComponents.Services.ICascadingService CascadingService

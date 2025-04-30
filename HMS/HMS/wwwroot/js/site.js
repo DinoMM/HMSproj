@@ -188,5 +188,37 @@ window.setScrollPosition = (elementId, position) => {
     }
 };
 
+function showCopyNotification() {
+    // Create notification element
+    const notification = document.createElement("div");
+    notification.innerText = "Copied to clipboard";
+
+    // Apply styling
+    notification.style.position = "fixed";
+    notification.style.bottom = "1rem";
+    notification.style.right = "41vw";
+    notification.style.backgroundColor = "#69696B";
+    notification.style.color = "#fff";
+    notification.style.padding = "1rem";
+    notification.style.borderRadius = "5px";
+    notification.style.boxShadow = "0 0 10px rgba(0,0,0,0.3)";
+    notification.style.zIndex = "10000";
+    notification.style.opacity = "1";
+    notification.style.transition = "opacity 0.5s";
+
+    // Append notification to the body
+    document.body.appendChild(notification);
+
+    // Hide and remove after 2 seconds (fade out over 0.5s)
+    setTimeout(() => {
+        notification.style.opacity = "0";
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 500);
+    }, 2000);
+}
+
 
 

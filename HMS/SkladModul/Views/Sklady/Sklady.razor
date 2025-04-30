@@ -21,9 +21,9 @@
 
         <div class="col-9">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
-                <button @onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary"><IconTextCreate></IconTextCreate> </button>
-                <button type="button" @onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary"><IconTextOpen></IconTextOpen> </button>
+                <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"><IconTextClose></IconTextClose></ButtonBasic>
+                <ButtonBasic onclick="Create" disabled="@(!ViewModel.ValidateUserCRUD())" type="button" class="btn btn-primary"><IconTextCreate></IconTextCreate> </ButtonBasic>
+                <ButtonBasic type="button" onclick="Open" disabled="@(marked == null || !ViewModel.ValidateUserCRUD())" class="btn btn-primary"><IconTextOpen></IconTextOpen> </ButtonBasic>
             </div>
         </div>
 

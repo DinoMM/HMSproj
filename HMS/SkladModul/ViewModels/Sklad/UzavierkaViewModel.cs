@@ -38,6 +38,8 @@ namespace SkladModul.ViewModels.Sklad
         public DateTime Obdobie { get; set; }
         public Ssklad Sklad { get; set; }
 
+        public CancellationTokenSource CancellationTokenSource { get; set; }
+
         readonly DBContext _db;
         readonly UserService _uservice;
 
@@ -104,81 +106,105 @@ namespace SkladModul.ViewModels.Sklad
             Obdobie = Ssklad.DateFromShortForm(ob);
         }
 
-        public void LoadZoznamy()       //pred tymto treba spravit kontrolu obdobia
+        public async Task LoadZoznamy()       //pred tymto treba spravit kontrolu obdobia
         {
-            zoznamPoloziekSkladuMnozstva = new(_db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX).Include(x => x.SkladX).Where(x => x.Sklad == Sklad.ID).ToList());
-
-            ZoznamPoloziek = new(zoznamPoloziekSkladuMnozstva.Select(x => x.PolozkaSkladuX).ToList());
-            foreach (var item in ZoznamPoloziek)
+            CancellationTokenSource = new CancellationTokenSource();
+            try
             {
-                zoznamAktualnehoMnozstva.Add(item.Clon());
-            }
-            //TODO kontrola spracovania faktury
-            zoznamPrijateho = Ssklad.GetPoctyZPrijemok(Sklad, Obdobie, in _db);
-            zoznamVydateho = Ssklad.GetPoctyZVydajok(Sklad, Obdobie, in _db);
-            zoznamPredaneho = Ssklad.GetPoctyZPredaja(Sklad, Obdobie, in _db);
-            Ssklad.LoadMnozstvoPoloziek(zoznamAktualnehoMnozstva, Sklad, in _db); //aktualne obdobie
-
-            foreach (var item in zoznamPrijateho)
-            {
-                zoznamPrijatehoZPrijemok.Add(item.Clon());
-            }
-
-            var zoznamPrevodiek = Ssklad.GetPoctyZPrevodiek(Sklad, Obdobie, in _db);    //pripocitanie prevodiek do prijateho mnozstva
-            zoznamPrijateho.AddRange(zoznamPrevodiek);
-            zoznamPrijateho = PolozkaSkladu.ZosumarizujListPoloziek(in zoznamPrijateho);
-
-            zoznamPrevodiekZoSkladu = Ssklad.GetPoctyZPrevodiekZoSkladu(Sklad, Obdobie, in _db);    //pripocitanie prevodiek zo skladu do prijateho mnozstva
-
-            #region vypocitavanie ceny aktualneho skladu
-            DiffMedziVydatymAPrijatym = 0.0;
-            var ZozPrijat = new List<PolozkaSkladu>();
-            //var ZozVydat = new List<PolozkaSkladu>();
-            //var ZozPrevod = new List<PolozkaSkladu>();
-            foreach (var item in ZoznamPoloziek)
-            {
-                var pridItem = item.Clon();
-                pridItem.Cena = 0.0;
-                pridItem.Mnozstvo = 0.0;
-                ZozPrijat.Add(pridItem);
-                //var pridItem2 = pridItem.Clon();
-                //ZozPrijat.Add(pridItem2);
-                //var pridItem3 = pridItem2.Clon();
-                //ZozPrijat.Add(pridItem);
-            }
-            var vsetkyObdobia = _db.SkladObdobi.Include(x => x.SkladX).Where(x => x.Sklad == Sklad.ID).OrderBy(x => x.Obdobie).ToList();
-
-            foreach (var item in vsetkyObdobia)
-            {
-                if (item.Obdobie <= Obdobie)
+                var token = CancellationTokenSource.Token;
+                await Task.Run(() =>
                 {
-                    var prijate = Ssklad.GetPoctyZPrijemok(Sklad, item.Obdobie, in _db);
-                    var vydateAll = Ssklad.GetPoctyZVydajok(Sklad, item.Obdobie, in _db);
-                    var vydatePrevodky = Ssklad.GetPoctyZPrevodiekZoSkladu(Sklad, item.Obdobie, in _db);
-                    double sumaVydate = vydateAll.Sum(x => x.CelkovaCena) - vydatePrevodky.Sum(x => x.CelkovaCena);
-                    var predanePD = Ssklad.GetPoctyZPredaja(Sklad, item.Obdobie, in _db);
+                    zoznamPoloziekSkladuMnozstva = new(_db.PolozkaSkladuMnozstva.Include(x => x.PolozkaSkladuX).Include(x => x.SkladX).Where(x => x.Sklad == Sklad.ID).ToList());
+                    token.ThrowIfCancellationRequested();
 
-                    DiffMedziVydatymAPrijatym += sumaVydate + predanePD.Sum(x => x.CelkovaCena) - prijate.Sum(x => x.CelkovaCena);
+                    ZoznamPoloziek = new(zoznamPoloziekSkladuMnozstva.Select(x => x.PolozkaSkladuX).ToList());
+                    foreach (var item in ZoznamPoloziek)
+                    {
+                        zoznamAktualnehoMnozstva.Add(item.Clon());
+                    }
+                    token.ThrowIfCancellationRequested();
+
+                    //TODO kontrola spracovania faktury
+                    zoznamPrijateho = Ssklad.GetPoctyZPrijemok(Sklad, Obdobie, in _db);
+                    token.ThrowIfCancellationRequested();
+                    zoznamVydateho = Ssklad.GetPoctyZVydajok(Sklad, Obdobie, in _db);
+                    token.ThrowIfCancellationRequested();
+                    zoznamPredaneho = Ssklad.GetPoctyZPredaja(Sklad, Obdobie, in _db);
+                    token.ThrowIfCancellationRequested();
+                    Ssklad.LoadMnozstvoPoloziek(zoznamAktualnehoMnozstva, Sklad, in _db); //aktualne obdobie
+                    token.ThrowIfCancellationRequested();
+
+                    foreach (var item in zoznamPrijateho)
+                    {
+                        zoznamPrijatehoZPrijemok.Add(item.Clon());
+                    }
+
+                    token.ThrowIfCancellationRequested();
+                    var zoznamPrevodiek = Ssklad.GetPoctyZPrevodiek(Sklad, Obdobie, in _db);    //pripocitanie prevodiek do prijateho mnozstva
+                    zoznamPrijateho.AddRange(zoznamPrevodiek);
+                    zoznamPrijateho = PolozkaSkladu.ZosumarizujListPoloziek(in zoznamPrijateho);
+                    token.ThrowIfCancellationRequested();
+
+                    zoznamPrevodiekZoSkladu = Ssklad.GetPoctyZPrevodiekZoSkladu(Sklad, Obdobie, in _db);    //pripocitanie prevodiek zo skladu do prijateho mnozstva
+                    token.ThrowIfCancellationRequested();
+
+                    #region vypocitavanie ceny aktualneho skladu
+                    DiffMedziVydatymAPrijatym = 0.0;
+                    var ZozPrijat = new List<PolozkaSkladu>();
+                    //var ZozVydat = new List<PolozkaSkladu>();
+                    //var ZozPrevod = new List<PolozkaSkladu>();
+                    foreach (var item in ZoznamPoloziek)
+                    {
+                        var pridItem = item.Clon();
+                        pridItem.Cena = 0.0;
+                        pridItem.Mnozstvo = 0.0;
+                        ZozPrijat.Add(pridItem);
+                        //var pridItem2 = pridItem.Clon();
+                        //ZozPrijat.Add(pridItem2);
+                        //var pridItem3 = pridItem2.Clon();
+                        //ZozPrijat.Add(pridItem);
+                    }
+                    token.ThrowIfCancellationRequested();
+                    var vsetkyObdobia = _db.SkladObdobi.Include(x => x.SkladX).Where(x => x.Sklad == Sklad.ID).OrderBy(x => x.Obdobie).ToList();
+                    token.ThrowIfCancellationRequested();
+                    foreach (var item in vsetkyObdobia)
+                    {
+                        token.ThrowIfCancellationRequested();
+                        if (item.Obdobie <= Obdobie)
+                        {
+                            var prijate = Ssklad.GetPoctyZPrijemok(Sklad, item.Obdobie, in _db);
+                            var vydateAll = Ssklad.GetPoctyZVydajok(Sklad, item.Obdobie, in _db);
+                            var vydatePrevodky = Ssklad.GetPoctyZPrevodiekZoSkladu(Sklad, item.Obdobie, in _db);
+                            double sumaVydate = vydateAll.Sum(x => x.CelkovaCena) - vydatePrevodky.Sum(x => x.CelkovaCena);
+                            var predanePD = Ssklad.GetPoctyZPredaja(Sklad, item.Obdobie, in _db);
+
+                            DiffMedziVydatymAPrijatym += sumaVydate + predanePD.Sum(x => x.CelkovaCena) - prijate.Sum(x => x.CelkovaCena);
 
 
-                    ZozPrijat.AddRange(prijate);
-                    ZozPrijat = PolozkaSkladu.ZosumarizujListPoloziek(in ZozPrijat, true);
-                    PolozkaSkladu.SpracListySpolu(ZozPrijat, in vydateAll, (x, y) => x.Mnozstvo -= y.Mnozstvo);
+                            ZozPrijat.AddRange(prijate);
+                            ZozPrijat = PolozkaSkladu.ZosumarizujListPoloziek(in ZozPrijat, true);
+                            PolozkaSkladu.SpracListySpolu(ZozPrijat, in vydateAll, (x, y) => x.Mnozstvo -= y.Mnozstvo);
 
-                    //ZozVydat.AddRange(vydateAll);
-                    //ZozVydat = PolozkaSkladu.ZosumarizujListPoloziek(in ZozVydat);
-                    //ZozPrevod.AddRange(vydatePrevodky);
-                    //ZozPrevod = PolozkaSkladu.ZosumarizujListPoloziek(in ZozPrevod);
-                }
+                            //ZozVydat.AddRange(vydateAll);
+                            //ZozVydat = PolozkaSkladu.ZosumarizujListPoloziek(in ZozVydat);
+                            //ZozPrevod.AddRange(vydatePrevodky);
+                            //ZozPrevod = PolozkaSkladu.ZosumarizujListPoloziek(in ZozPrevod);
+                        }
+                    }
+                    foreach (var item in zoznamAktualnehoMnozstva)
+                    {
+                        token.ThrowIfCancellationRequested();
+                        double num = ZozPrijat.FirstOrDefault(x => x.ID == item.ID)?.Cena ?? 0.0;
+                        item.Cena = double.IsNaN(num) ? 0.0 : num;
+                    }
+
+                    #endregion
+                    NacitavaniePoloziek = false;
+                }, token);
             }
-            foreach (var item in zoznamAktualnehoMnozstva)
-            {
-                double num = ZozPrijat.FirstOrDefault(x => x.ID == item.ID)?.Cena ?? 0.0;
-                item.Cena = double.IsNaN(num) ? 0.0 : num;
-            }
-
-            #endregion 
-            NacitavaniePoloziek = false;
+            catch (TaskCanceledException e) { }
+            catch (OperationCanceledException ex) { }
+            
 
         }
 

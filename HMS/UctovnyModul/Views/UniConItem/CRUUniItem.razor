@@ -158,7 +158,7 @@
         <div class="row pt-2">
             <div class="col text-center">
                 <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-secondary" @onclick="Close"><IconTextClose></IconTextClose></button>
+                    <ButtonBasic type="button" class="btn btn-secondary" onclick="Close"><IconTextClose></IconTextClose></ButtonBasic>
                     <SimpleButton ID="ulozbuttonUniItem" Type="submit" ZmenaStavuTextu="@(!ViewModel.Existuje())" ZmenaTextu="@(("Vytvoriť", "Uložiť"))" Disabled="ViewModel.LoadingZoznam"></SimpleButton>
 
                 </div>
@@ -207,6 +207,7 @@
 
     public async Task Save()
     {
+        CascadingService.Nacitavanie = true;
         if (ViewModel.Ulozit())
         {
             await InfoMod.OpenModal(true);
@@ -215,6 +216,7 @@
         {
             await JSRuntime.InvokeVoidAsync("addStyleClassUntilClick", "ulozbuttonUniItem", "btn-danger");
         }
+        CascadingService.Nacitavanie = false;
     }
 
     public async Task FindTyp()
@@ -227,9 +229,11 @@
 
     public async Task FindCon()
     {
+        CascadingService.Nacitavanie = true;
         await ViewModel.LoadPolozky();
         ViewModel.SetSettings();
         ciftpoloz.SetItemsFromList(ViewModel.Polozky);
+        CascadingService.Nacitavanie = false;
         await ciftpoloz.OpenModal(async (res) =>
         {
             if (res)
