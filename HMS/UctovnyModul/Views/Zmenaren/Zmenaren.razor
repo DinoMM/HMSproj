@@ -191,10 +191,8 @@
 
     public async Task Create()
     {
-        CascadingService.Nacitavanie = true;
         SetStartConditionOnVisit();
         await cuscreatetrans.OpenModal(true);
-        CascadingService.Nacitavanie = false;
     }
 
     public async Task Delete(DBLayer.Models.ZmenaMeny item)

@@ -81,7 +81,7 @@
             tableSettings.Add(new() { ID_Prop = nameof(IdentityUserOwn.Adresa), HeaderValue = "Adresa", CellValue = (item) => item.Adresa ?? "" });
             tableSettings.Add(new() { ID_Prop = nameof(IdentityUserOwn.ObcianskyID), HeaderValue = "Občianský", CellValue = (item) => item.ObcianskyID });
             tableSettings.Add(new() { ID_Prop = nameof(IdentityUserOwn.RodneCislo), HeaderValue = "Rodné č.", CellValue = (item) => item.RodneCislo, Visible = false });
-            tableSettings.Add(new() { ID_Prop = nameof(IdentityUserOwn.Sex), HeaderValue = "Pohlavie", CellValue = (item) => item.GetPohlavie(), Visible = false });
+            tableSettings.Add(new() { ID_Prop = nameof(IdentityUserOwn.Sex), HeaderValue = "Pohlavie", CellValue = (item) => item.GetPohlavie(), CellConvert = ((item) => item.Sex, typeof(bool)), Visible = false });
 
             tableSettings.Add(new()
             {

@@ -92,7 +92,7 @@
         new () { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.ID), HeaderValue = "ID", CellValue = (item) => item.ID },
         new () { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.Vznik), HeaderValue = "Vznik", CellValue = (item) => item.Vznik.ToString("dd.MM.yyyy HH:mm:ss") },
         new () { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.Kasa), HeaderValue = "Pokladňa", CellValue = (item) => item.Kasa ?? "" },
-        new () { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.TypPlatby), HeaderValue = "Typ platby", CellValue = (item) => item.GetTypPlatby()  },
+        new () { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.TypPlatby), HeaderValue = "Typ platby", CellValue = (item) => item.GetTypPlatby(), CellConvert = ((item) => item.TypPlatby, typeof(bool))  },
         new () { ID_Prop = nameof(DBLayer.Models.PokladnicnyDoklad.GetMenoHostaBezPoml), HeaderValue = "Hosť", CellValue = (item) => item.GetMenoHostaBezPoml },
         new () { ID_Prop = "obciansky", HeaderValue = "Občiansky hosťa", CellValue = (item) => item.HostX?.CitizenID ?? "", CellConvert = ((item) => item.HostX?.CitizenID, typeof(string)), Visible = false },
         new () { ID_Prop = "pas", HeaderValue = "Pas hosťa", CellValue = (item) => item.HostX?.Passport ?? "", CellConvert = ((item) => item.HostX?.Passport, typeof(string)), Visible = false },

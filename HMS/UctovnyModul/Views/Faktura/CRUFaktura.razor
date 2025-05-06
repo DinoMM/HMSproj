@@ -419,8 +419,10 @@
 
     private async Task FindDoklad()
     {
+        CascadingService.Nacitavanie = true;
         ciftSkup.SetItemsFromList(await ViewModel.GetSkupiny());
         ciftSkup.ValueInFilter = ViewModel.Entity.Skupina ?? "";
+        CascadingService.Nacitavanie = false;
         await ciftSkup.OpenModal(async (res) =>
         {
             if (res)
@@ -486,7 +488,10 @@
     {
         if (ciftfak.Items == null || ciftfak.Items.Count == 0)
         {
+            CascadingService.Nacitavanie = true;
+            await Task.Delay(10);
             ciftfak.SetItemsFromList(fakturyViewModel.ComplexTable.Items.Select(x => x.ID).Distinct().ToList());
+            CascadingService.Nacitavanie = false;
         }
         await ciftfak.OpenModal(async (res) =>
         {

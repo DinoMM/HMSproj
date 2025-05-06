@@ -1022,6 +1022,7 @@ new () { ID_Prop = nameof(DBLayer.Models.Host.Note), HeaderValue = "Poznámka", 
         if (await infomod.OpenModal(true))
         {
             Marked.Status = DBLayer.Models.ReservationStatus.Checked_OUT.ToString();
+            Marked.Room.RoomInfo.Status = DBLayer.Models.HSKModels.RoomStatus.Neupratana;
             SelectValues = Enum.GetValues(typeof(DBLayer.Models.ReservationStatus));
             await Save(silent: true);
         }

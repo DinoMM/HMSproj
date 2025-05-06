@@ -89,7 +89,8 @@ namespace HMS
                 //tpswd = Environment.GetEnvironmentVariable("PASSWORD_DB_PUBLICUSER");
                 tpswd = Environment.GetEnvironmentVariable("PASSWORD_DB_SA");
 #if ANDROID
-                tpswd = SecureStorage.GetAsync("DB_PSWD_PUBLIC").GetAwaiter().GetResult() ?? "heslo";
+                //tpswd = SecureStorage.GetAsync("DB_PSWD_PUBLIC").GetAwaiter().GetResult() ?? "heslo";
+                tpswd = SecureStorage.GetAsync("DB_PSWD").GetAwaiter().GetResult() ?? "heslo";
 #endif
 #endif
                 var dbsource = SecureStorage.GetAsync("DB_Source").GetAwaiter().GetResult() ?? "localhost";
@@ -239,10 +240,10 @@ namespace HMS
 
 
 
-#if DEBUG
-            builder.Services.AddBlazorWebViewDeveloperTools();
-            builder.Logging.AddDebug();
-#endif
+//#if DEBUG
+//            builder.Services.AddBlazorWebViewDeveloperTools();
+//            builder.Logging.AddDebug();
+//#endif
 
 
             return builder.Build();

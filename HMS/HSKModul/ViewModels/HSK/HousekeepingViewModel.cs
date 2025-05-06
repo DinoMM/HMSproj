@@ -98,6 +98,23 @@ namespace HSKModul.ViewModels
                         ZobrazenieHideList.Add(new Rezervation() { ArrivalDate = new DateTime(), DepartureDate = new DateTime(), RoomNumber = item.RoomNumber, Room = item });    //maketa
                     }
                 }
+
+                bool saveChanges = false;
+                foreach (var item in ZobrazenieHideList.DistinctBy(x => x.RoomNumber))  //kontrola ak nutna kontrola vyhadzuje true a stav je upratana tak zmenime stav
+                {
+                    token.ThrowIfCancellationRequested();
+                    if (item.Room.RoomInfo.NeedKontrola && item.Room.RoomInfo.Status == RoomStatus.Upratana)
+                    {
+                        item.Room.RoomInfo.Status = RoomStatus.NutnaKontrola;
+                        saveChanges = true;
+                    }
+                }
+                if (saveChanges)
+                {
+                    token.ThrowIfCancellationRequested();
+                    _db.SaveChanges();
+                }   
+            
             });
         }
 

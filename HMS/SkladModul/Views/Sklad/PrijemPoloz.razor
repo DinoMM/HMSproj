@@ -76,7 +76,7 @@
 {
         new () { ID_Prop = nameof(DBLayer.Models.PohSkup.ID), HeaderValue = "ID", CellValue = (item) => item.ID },
         new () { ID_Prop = nameof(DBLayer.Models.PohSkup.Vznik), HeaderValue = "Vznik", CellValue = (item) => item.Vznik.ToString("dd.MM.yyyy") },
-        new () { ID_Prop = nameof(DBLayer.Models.PohSkup.Spracovana), HeaderValue = "OK", CellComponent = (e) => new(typeof(SimpleCheckMarkDiv),new RenderFragmentAttribute("Checked", e.Spracovana)) },
+        new () { ID_Prop = nameof(DBLayer.Models.PohSkup.Spracovana), HeaderValue = "OK", CellComponent = (e) => new(typeof(SimpleCheckMarkDiv),new RenderFragmentAttribute("Checked", e.Spracovana)), CellConvert = ((item) => item.Spracovana, typeof(bool)) },
         new () { ID_Prop = nameof(DBLayer.Models.Prijemka.Objednavka), HeaderValue = "Objednávka", CellValue = (item) => item is DBLayer.Models.Prijemka prij ? prij?.Objednavka ?? "" : "", CellConvert = ((item) => item is DBLayer.Models.Prijemka prij ? prij?.Objednavka ?? "" : "" , typeof(string)) },
         new () { ID_Prop = nameof(DBLayer.Models.Prijemka.DodaciID), HeaderValue = "Dodací", CellValue = (item) => item is DBLayer.Models.Prijemka prij ? prij?.DodaciID ?? "" : "", CellConvert = ((item) => item is DBLayer.Models.Prijemka prij ? prij?.DodaciID ?? "" : "" , typeof(string)) },
         new () { ID_Prop = nameof(DBLayer.Models.Prijemka.FakturaID), HeaderValue = "Faktúra", CellValue = (item) => item is DBLayer.Models.Prijemka prij ? prij?.FakturaID ?? "" : "", CellConvert = ((item) => item is DBLayer.Models.Prijemka prij ? prij?.FakturaID ?? "" : "" , typeof(string)) },

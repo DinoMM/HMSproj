@@ -41,19 +41,19 @@
         <div class="col-3 mb-2">
             <SearchManualInput ID="srchinput" Header="Vyhľadaj objednávku..." OnFilterRequest="(e) => ViewModel.ComplexTable?.FilterResults(e) ?? Task.CompletedTask" />
         </div>
-        <div class="col-9 autooverflowx">
+        <div class="col-8 autooverflowx">
             <div class="row">
                 <div class="btn-group" role="group">
-                    <ButtonBasic class="btn btn-secondary noflex" type="button" onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">
+                    <ButtonBasic class="btn btn-secondary " type="button" onclick="@(() => Navigator.NavigateTo(Navigator.RemoveLastUrl()))">
                         <IconTextClose></IconTextClose>
                     </ButtonBasic>
-                    <ButtonBasic class="btn btn-primary noflex" type="button" onclick="@(() => {SetStartConditionOnVisit(); Navigator.NavigateTo(Navigator.AddNextUrl("/AddObj")); })">
+                    <ButtonBasic class="btn btn-primary " type="button" onclick="@(() => {SetStartConditionOnVisit(); Navigator.NavigateTo(Navigator.AddNextUrl("/AddObj")); })">
                         <IconTextCreate></IconTextCreate>
                     </ButtonBasic>
-                    <ButtonBasic class="btn btn-primary noflex" disabled=@(!IsChecked()) onclick=@(() => OpenOBJ(marked)) type="button">
+                    <ButtonBasic class="btn btn-primary " disabled=@(!IsChecked()) onclick=@(() => OpenOBJ(marked)) type="button">
                         <IconTextOpen></IconTextOpen>
                     </ButtonBasic>
-                    <ButtonBasic ID="findobjbttn" Class="btn btn-primary button-fixed-width" Disabled="ViewModel.Nacitavanie" OnClick="FindObjByItem" Tooltip="@(("bottom", "Vyhľadať objednávky podľa položky"))"><IconText Icon="bi-search">Vyhľadať</IconText></ButtonBasic>
+                    <ButtonBasic ID="findobjbttn" Class="btn btn-primary " Disabled="ViewModel.Nacitavanie" OnClick="FindObjByItem" Tooltip="@(("bottom", "Vyhľadať objednávky podľa položky"))"><IconText Icon="bi-search">Vyhľadať</IconText></ButtonBasic>
                     
 
                 </div>

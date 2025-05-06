@@ -20,7 +20,10 @@ else
         {
             <SpinnerLoading ExtraSmall="true" />
         }
-        <Tooltip ID="@(ID + "tooltip")" Position="@Tooltip.Value.position" Text="@Tooltip.Value.text" Class="innerdivfill"></Tooltip>
+        @if (tooltipForceShow)
+        {
+            <Tooltip ID="@(ID + "tooltip")" Position="@Tooltip.Value.position" Text="@Tooltip.Value.text" Class="innerdivfill"></Tooltip>
+        }
     </button>
 }
 
@@ -94,11 +97,15 @@ else
     [CascadingParameter(Name = "CascLoading")]
     public bool CascLoading { get; set; } = false;
 
+    private bool tooltipForceShow = true;
+
 
     private async Task ToolTipOnClick()
     {
         await JSRuntime.InvokeVoidAsync("updateTooltipShow", ID + "tooltip", false);    //fixne ak zostane tooltip vysieť
+        tooltipForceShow = false;
         await OnClick.InvokeAsync();
+        tooltipForceShow = true;
     }
 
     public async ValueTask DisposeAsync()
